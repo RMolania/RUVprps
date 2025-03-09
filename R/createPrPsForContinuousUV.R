@@ -5,8 +5,8 @@
 #' @description
 #' The function creates PRPS sets for a continuous source of unwanted variation defined in the 'main.uv.variable' argument.
 #' For example to correct for library size if defined in the 'uv.variables' argument, several group of pseudo-samples
-#' will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each batch.
-#' Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
+#' will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each
+#'  batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
 
 #' @details
 #' Distinct group of PRPS are created for each source of unwanted variation defined in the 'main.uv.variable' argument
@@ -60,20 +60,19 @@
 #' 'uv.variables' will be excluded. The default is set to 'both'.
 #' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. The default is set to 'TRUE'.
-#' @param plot.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-#' The default is set to 'TRUE'.
+#' @param plot.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
+#' variation. The default is set to 'TRUE'.
 #' @param output.name Character. A character string to specify the name of all PRPS sets that will be created for all
-#' specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name based on
-#' paste0('prps_', uv.variable).
+#' specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name
+#' based on paste0('prps_', uv.variable).
 #' @param prps.group Character. A character string specifying a name for the PRPS data sets created for a specific group.
 #' The default is set to 'NULL'.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
 #' @return SummarizedExperiment A SummarizedExperiment object containing the PRPS data or just PRPS data.
 
-
-#' @importFrom SummarizedExperiment assay
 #' @importFrom dplyr group_by arrange slice desc add_count filter mutate
+#' @importFrom SummarizedExperiment assay
 #' @importFrom tidyr %>%
 #' @import ggplot2
 #' @export
@@ -102,8 +101,7 @@ createPrPsForContinuousUV <- function(
     printColoredMessage(message = '------------The createPrPsForContinuousUV function starts.',
                         color = 'white',
                         verbose = verbose)
-    # Check the function inputs ####
-    # Check inputs ####
+    # Checking the function inputs ####
     if (length(assay.name) > 1) {
         stop('The "assay.name" must be a single assay name.')
     }
@@ -152,7 +150,7 @@ createPrPsForContinuousUV <- function(
     if (is.logical(prps.group)){
         stop('The "prps.group" must be a character or NULL.')
     }
-    # check the SummarizedExperiment ####
+    # Assessing the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -162,17 +160,12 @@ createPrPsForContinuousUV <- function(
             verbose = verbose
             )
     }
-    # data transformation ####
-    printColoredMessage(message = '-- Applying log data transformation:',
-                        color = 'magenta',
-                        verbose = verbose
-                        )
     # Data transformation ####
     printColoredMessage(
-        message = '-- Applying log transformation on the data:',
+        message = '-- Data transformation:',
         color = 'magenta',
         verbose = verbose
-    )
+        )
     if (isTRUE(apply.log) & !is.null(pseudo.count)){
         printColoredMessage(
             message = paste0(
@@ -181,7 +174,8 @@ createPrPsForContinuousUV <- function(
                 assay.name,
                 ' data.'),
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
     } else if (isTRUE(apply.log) & is.null(pseudo.count)){
         printColoredMessage(
@@ -190,7 +184,8 @@ createPrPsForContinuousUV <- function(
                 assay.name,
                 ' data.'),
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         expr.data <- log2(assay(x = se.obj, i = assay.name))
     } else if (isFALSE(apply.log)) {
         printColoredMessage(
@@ -199,27 +194,36 @@ createPrPsForContinuousUV <- function(
                 assay.name,
                 ' data will be used without any log transformation.'),
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         expr.data <- assay(x = se.obj, i = assay.name)
     }
-    # Create homogeneous biological groups of samples ####
+
+    # Creating PRPS data sets ####
     printColoredMessage(
-        message = '-- Creating all possible homogeneous bioloical populations:',
+        message = '-- Creating PRPS sets:',
         color = 'magenta',
         verbose = verbose
         )
-    homo.bio.groups <- createHomogeneousBioGroups(
-        se.obj = se.obj,
-        bio.variables = bio.variables,
-        nb.clusters = nb.bio.clusters,
-        clustering.method = bio.clustering.method,
-        assess.se.obj = FALSE,
-        save.se.obj = FALSE,
-        remove.na = 'none',
-        verbose = verbose
-        )
-    # Create homogeneous groups of samples with respect to unwanted variation ####
+    ## creating PRPS with considering other uv variables ####
     if (!is.null(other.uv.variables)) {
+        ### creating homogeneous biological groups of samples ####
+        printColoredMessage(
+            message = '-- Creating all possible homogeneous bioloical populations:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        homo.bio.groups <- createHomogeneousBioGroups(
+            se.obj = se.obj,
+            bio.variables = bio.variables,
+            nb.clusters = nb.bio.clusters,
+            clustering.method = bio.clustering.method,
+            assess.se.obj = FALSE,
+            save.se.obj = FALSE,
+            remove.na = 'none',
+            verbose = verbose
+        )
+        ## creating homogeneous groups of samples with respect to unwanted variation ####
         printColoredMessage(
             message = paste0(
                 '-- Creating all possible homogeneous sample groups with respect to the',
@@ -243,6 +247,7 @@ createPrPsForContinuousUV <- function(
             homo.uv.groups = homo.uv.groups,
             homo.bio.groups = homo.bio.groups
             )
+        ## putting all biological and unwanted groups together ####
         printColoredMessage(
             message = '-- Creating all possible homogeneous samples groups with respect to both bioloical and unwanted variables:',
             color = 'magenta',
@@ -266,6 +271,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
+        ## checking the samples distribution ####
         bio.batch.groups <- findRepeatingPatterns(
             vec = annot.data$bio.batch,
             n.repeat = c(2 * min.sample.for.ps)
@@ -286,7 +292,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        # create PRPS data for each group of batch * bio ####
+        ## creating PRPS sets ####
         printColoredMessage(
             message = '-- Creating a PRPS set with two pseudo samples for each individual homogeneous group:',
             color = 'magenta',
@@ -330,7 +336,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        # plotting prps sets ####
+        ## plotting the PRPS map ####
         if (isTRUE(plot.prps.map)){
             prps.sets.plot <- sapply(
                 selected.groups,
@@ -374,7 +380,25 @@ createPrPsForContinuousUV <- function(
                     strip.text.x = element_text(size = 15))
             print(prps.map.plot)
         }
-    } else if (is.null(other.uv.variables)){
+    }
+    ## creating PRPS without considering other uv variables ####
+    if (is.null(other.uv.variables)){
+        ### creating homogeneous biological groups of samples ####
+        printColoredMessage(
+            message = '-- Creating all possible homogeneous bioloical populations:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        homo.bio.groups <- createHomogeneousBioGroups(
+            se.obj = se.obj,
+            bio.variables = bio.variables,
+            nb.clusters = nb.bio.clusters,
+            clustering.method = bio.clustering.method,
+            assess.se.obj = FALSE,
+            save.se.obj = FALSE,
+            remove.na = 'none',
+            verbose = verbose
+        )
         printColoredMessage(
             message = paste0(
                 '-- Finding homogeneous biological groups with at least ',
@@ -387,7 +411,7 @@ createPrPsForContinuousUV <- function(
             vec = homo.bio.groups,
             n.repeat = c(2 * min.sample.for.ps)
             )
-        if(length(bio.groups) == 0){
+        if (length(bio.groups) == 0){
             stop(paste0(
                 'There is not any homogeneous biological groups with enough samples',
                 ' to create PRPS for the contenious source of unwanted variation.'))
@@ -402,7 +426,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        # creating PRPS within individual homogeneous biological group ####
+        ## creating PRPS sets ####
         printColoredMessage(
             message = '-- Creating a PRPS set with two pseudo samples for each individual homogeneous biological groups:',
             color = 'magenta',
@@ -431,8 +455,10 @@ createPrPsForContinuousUV <- function(
             function(x) {
                 index.top <- top$sOrder[top$bio.variable == x]
                 index.bot <- bot$sOrder[bot$bio.variable == x]
-                ps.all <- cbind(rowMeans(expr.data[, index.top]),
-                          rowMeans(expr.data[, index.bot]))
+                ps.all <- cbind(
+                    rowMeans(expr.data[, index.top]),
+                    rowMeans(expr.data[, index.bot])
+                    )
                 colnames(ps.all) <- rep(paste0(main.uv.variable, '||', x), ncol(ps.all))
                 ps.all
             })
@@ -449,7 +475,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
         )
-        # plot prps sets ####
+        ## plotting the PRPS map ####
         uv.var <- groups <- new.g <- bio.variable <- NULL
         if(isTRUE(plot.prps.map)){
             prps.sets.plot <- sapply(

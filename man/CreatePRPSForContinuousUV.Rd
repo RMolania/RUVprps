@@ -77,12 +77,12 @@ the sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes th
 excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
 'uv.variables' will be excluded. The default is set to 'both'.}
 
-\item{plot.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-The default is set to 'TRUE'.}
+\item{plot.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
+variation. The default is set to 'TRUE'.}
 
 \item{output.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
-specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name based on
-paste0('prps_', uv.variable).}
+specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name
+based on paste0('prps_', uv.variable).}
 
 \item{prps.group}{Character. A character string specifying a name for the PRPS data sets created for a specific group.
 The default is set to 'NULL'.}
@@ -98,8 +98,8 @@ SummarizedExperiment A SummarizedExperiment object containing the PRPS data or j
 \description{
 The function creates PRPS sets for a continuous source of unwanted variation defined in the 'main.uv.variable' argument.
 For example to correct for library size if defined in the 'uv.variables' argument, several group of pseudo-samples
-will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each batch.
-Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
+will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each
+batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
 }
 \details{
 Distinct group of PRPS are created for each source of unwanted variation defined in the 'main.uv.variable' argument

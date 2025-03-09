@@ -1,4 +1,4 @@
-#' Creates pseudo-replicates of pseudo samples (PRPS) in supervised manner.
+#' Creates pseudo-replicates of pseudo-samples (PRPS) in supervised manner.
 
 #' @author Ramyar Molania
 
@@ -45,8 +45,8 @@
 #' @param other.uv.clustering.method Character. A character string indicating the clustering method used to group each
 #' continuous unwanted variable. The options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
 #' We refer to the createHomogeneousUVGroups() function for more details.
-#' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous unwanted
-#' variable. The default is set to 3.
+#' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
+#' unwanted variable. The default is set to 3.
 #' @param check.prps.connectedness Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
 #' The default is set to 'TRUE'. See the details for more information.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.
@@ -55,9 +55,9 @@
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
 #' function will be applied inside the function. The default is set to 'TRUE'.
 #' @param remove.na Character. A character string indicating whether to remove NA or missing values from either the 'assays',
-#' the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
-#' excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
-#' 'uv.variables' will be excluded. The default is set to 'both'.
+#' the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will
+#' be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables'
+#' and uv.variables' will be excluded. The default is set to 'both'.
 #' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. The default is set to 'TRUE'.
 #' @param plot.output Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
@@ -68,9 +68,8 @@
 #' @param prps.group Character. A character string specifying a name for the PRPS data sets created for a specific group.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
-#' @return Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a list
-#' that contains all the results.
-
+#' @return Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a
+#' list that contains all the results.
 
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
@@ -99,11 +98,12 @@ createPrPsSupervised <- function(
         prps.group = NULL,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The createPrPsSupervised function starts:',
-                        color = 'white',
-                        verbose = verbose
-                        )
-    # define categorical and continuous variables ####
+    printColoredMessage(
+        message = '------------The createPrPsSupervised function starts:',
+        color = 'white',
+        verbose = verbose
+        )
+    # Finding categorical and continuous variables ####
     uv.class <- sapply(
         uv.variables,
         function(x) class(colData(se.obj)[[x]])
@@ -111,7 +111,7 @@ createPrPsSupervised <- function(
     categorical.uv <- names(uv.class[which(uv.class %in% c('character', 'factor'))])
     continuous.uv <- uv.variables[!uv.variables %in% categorical.uv]
 
-    # prps for categorical variables ####
+    # Creating PRPS for categorical variables ####
     if (length(categorical.uv) > 0) {
         printColoredMessage(
             message = '-- Create PRPS for all categorical sources of unwanted variation:',
@@ -178,11 +178,13 @@ createPrPsSupervised <- function(
             }
         }
     }
+    # Creating PRPS for continuous variables ####
     if (length(continuous.uv) > 0) {
-        printColoredMessage(message = '-- Create PRPS for all continuous sources of unwanted variation:',
-                            color = 'magenta',
-                            verbose = verbose
-                            )
+        printColoredMessage(
+            message = '-- Creating PRPS for all continuous sources of unwanted variation:',
+            color = 'magenta',
+            verbose = verbose
+            )
         if (!save.se.obj) {
             continuous.uv.prps <- lapply(
                 continuous.uv,
@@ -241,11 +243,13 @@ createPrPsSupervised <- function(
             }
         }
     }
-    # save the output ####
+    # Saving the output ####
     if (isTRUE(save.se.obj)) {
-        printColoredMessage(message = '------------The createPrPsSupervised function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The createPrPsSupervised function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj)
     } else{
         printColoredMessage(

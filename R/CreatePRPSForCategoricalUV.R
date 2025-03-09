@@ -101,15 +101,15 @@ createPrPsForCategoricalUV <- function(
     printColoredMessage(message = '------------The createPrPsForCategoricalUV function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs ####
-    if (length(assay.name) > 1) {
-        stop('The "assay.name" must be a single assay name.')
+    # Checking the function inputs ####
+    if (length(assay.name) > 1 | is.logical(assay.name)) {
+        stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
     }
     if (is.null(assay.name)) {
         stop('The "assay.name" cannot be empty.')
     }
-    if (is.null(bio.variables)){
-        stop('The "bio.variables" cannot be empty')
+    if (is.null(bio.variables) | is.logical(bio.variables)){
+        stop('The "bio.variables" cannot be empty or logical.')
     }
     if (length(main.uv.variable) > 1) {
         stop('The function can only take a single categorical uv variable for the "main.uv.variable" argument.')
@@ -166,7 +166,7 @@ createPrPsForCategoricalUV <- function(
 
     # Data transformation ####
     printColoredMessage(
-        message = '-- Applying log transformation on the data:',
+        message = '-- Data transformation:',
         color = 'magenta',
         verbose = verbose
         )
@@ -213,7 +213,7 @@ createPrPsForCategoricalUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        ### create homogeneous sample groups with respect to biology ####
+        ### creating homogeneous sample groups with respect to biology ####
         printColoredMessage(
             message = '-- Creating homogeneous sample groups with respect to the variable(s) provided by "bio.variables":',
             color = 'magenta',
@@ -236,13 +236,13 @@ createPrPsForCategoricalUV <- function(
             ' samples. Then, PRPS cannot be created.')
             )
 
-        ## create homogeneous sample groups with respect to unwanted variables ####
+        ## creating homogeneous sample groups with respect to unwanted variables ####
         printColoredMessage(
             message = '-- Creating homogeneous sample groups with respect to the variable(s) provided "other.uv.variables":',
             color = 'blue',
             verbose = verbose
             )
-        ## create all possible sample groups with respect to other.uv.variables ####
+        ## creating all possible sample groups with respect to other.uv.variables ####
         homo.uv.groups <- createHomogeneousUVGroups(
             se.obj = se.obj,
             uv.variables = other.uv.variables,
@@ -303,7 +303,7 @@ createPrPsForCategoricalUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        ## check connection between PRPS sets ####
+        ## checking connection between PRPS sets ####
         if (isTRUE(check.prps.connectedness)){
             printColoredMessage(
                 message = paste0(
@@ -401,7 +401,7 @@ createPrPsForCategoricalUV <- function(
             )
         samples.dis <- table(all.groups$bio.groups, all.groups$uv.group)
 
-        ### check connection between PRPS sets ####
+        ### checking connection between PRPS sets ####
         if (isTRUE(check.prps.connectedness)){
             printColoredMessage(
                 message = paste0(
@@ -417,7 +417,7 @@ createPrPsForCategoricalUV <- function(
                 batch.name = main.uv.variable
                 )
         }
-        ## check samples abundance ####
+        ## checking samples abundance ####
         printColoredMessage(
             message = '-- Checking samples abundance of groups before create PRPS:',
             color = 'magenta',
@@ -470,7 +470,7 @@ createPrPsForCategoricalUV <- function(
             color = 'blue',
             verbose = verbose)
     }
-    ## plot PRPS map #####
+    # Plotting the PRPS map #####
     if (isTRUE(plot.prps.map)) {
         ## PRPS map plot
         printColoredMessage(
@@ -520,8 +520,8 @@ createPrPsForCategoricalUV <- function(
             guides(color = guide_legend(title = "PS"))
         if(isTRUE(verbose)) print(prps.map.plot)
     }
-    # Save the results ####
-    ## select output name ####
+    # Saving the results ####
+    ## selecting  output name ####
     if (!is.null(other.uv.variables)) {
         output.name <- paste0(
             main.uv.variable,
@@ -581,18 +581,21 @@ createPrPsForCategoricalUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        printColoredMessage(message = '------------The createPrPsForCategoricalUV function finished.',
-                            color = 'white',
-                            verbose = verbose
-                            )
+        printColoredMessage(
+            message = '------------The createPrPsForCategoricalUV function finished.',
+            color = 'white',
+            verbose = verbose
+        )
         return(se.obj)
     }
     ## save the output in as data frame ####
     if(isFALSE(save.se.obj)) {
-        printColoredMessage(message = '------------The createPrPsForCategoricalUV function finished.',
-                            color = 'white',
-                            verbose = verbose)
-        if(isTRUE(plot.prps.map)){
+        printColoredMessage(
+            message = '------------The createPrPsForCategoricalUV function finished.',
+            color = 'white',
+            verbose = verbose
+            )
+        if (isTRUE(plot.prps.map)){
             return(list(
                 prps.sets = prps.sets,
                 prps.map.plot = prps.map.plot)
@@ -600,7 +603,6 @@ createPrPsForCategoricalUV <- function(
         } else if (isFALSE(plot.prps.map)){
             return(list(prps.sets = prps.sets))
         }
-
     }
 }
 
