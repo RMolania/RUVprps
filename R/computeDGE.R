@@ -137,18 +137,31 @@ computeDGE <- function(
         }
 
         # Data log transformation ####
-        printColoredMessage(
-            message = '-- Applying data log transformation:',
-            color = 'magenta',
-            verbose = verbose
+        if (isTRUE(apply.log)){
+            printColoredMessage(
+                message = '-- Applying log transformation on all the specified assay(s):',
+                color = 'magenta',
+                verbose = verbose
             )
-        all.assays <- applyLog(
-            se.obj = se.obj,
-            assay.names = levels(assay.names),
-            pseudo.count = pseudo.count,
-            assessment = 'DGE',
-            verbose = verbose
+            all.assays <- applyLog(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                pseudo.count = pseudo.count,
+                assessment = 'computing "PCA"',
+                verbose = verbose
             )
+        }
+        if (isFALSE(apply.log)){
+            printColoredMessage(
+                message = '-- The specified assay(s) will be used for DGE, without applying log transformation.',
+                color = 'blue',
+                verbose = verbose
+            )
+            all.assays <- lapply(
+                levels(assay.names),
+                function(x) assay(x = se.obj, i = x))
+            names(all.assays) <- levels(assay.names)
+        }
         # Apply Wilcoxon test ####
         if (method == 'wilcoxon'){
             printColoredMessage(

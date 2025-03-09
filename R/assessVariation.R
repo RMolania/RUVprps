@@ -267,16 +267,16 @@ assessVariation <- function(
         if (length(setdiff(assay.names, names(assays(se.obj)))) > 0)
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
-    if(is.null(variables)){
+    if (is.null(variables)){
         stop('The "variables" cannot be empty or NULL.')
     }
-    if(is.logical(plots.to.exclude)){
+    if (is.logical(plots.to.exclude)){
         stop('The "to.exclude" must be a vector or NULL.')
     }
     if (isFALSE(is.logical(apply.log))) {
         stop('The "apply.log" must be "TRUE" or "FALSE".')
     }
-    if(isTRUE(apply.log)){
+    if (isTRUE(apply.log)){
         if(length(pseudo.count) > 1 | pseudo.count < 0 | is.null(pseudo.count))
             stop('The "pseudo.count" must be 0 or a postive numeric value.')
     }
@@ -292,19 +292,19 @@ assessVariation <- function(
         stop('The "center" must be "TRUE" or "FALSE".')
     }
 
-    if(isTRUE(sli.nb.pcs) > compute.nb.pcs){
+    if (isTRUE(sli.nb.pcs) > compute.nb.pcs){
         stop('The "sli.nb.pcs" cannot be larger than "compute.nb.pcs".')
     }
-    if(isTRUE(ari.nb.pcs) > compute.nb.pcs){
+    if (isTRUE(ari.nb.pcs) > compute.nb.pcs){
         stop('The "ari.nb.pcs" cannot be larger than "compute.nb.pcs".')
     }
-    if(isTRUE(nb.pcs.toplot.pca) > compute.nb.pcs){
+    if (isTRUE(nb.pcs.toplot.pca) > compute.nb.pcs){
         stop('The "nb.pcs.toplot.pca" cannot be larger than "compute.nb.pcs".')
     }
-    if(isTRUE(vca.nb.pcs) > compute.nb.pcs){
+    if (isTRUE(vca.nb.pcs) > compute.nb.pcs){
         stop('The "vca.nb.pcs" cannot be larger than "compute.nb.pcs".')
     }
-    if(isTRUE(lra.nb.pcs) > compute.nb.pcs){
+    if (isTRUE(lra.nb.pcs) > compute.nb.pcs){
         stop('The "lra.nb.pcs" cannot be larger than "compute.nb.pcs".')
     }
     if (fast.pca & is.null(compute.nb.pcs)) {
@@ -322,7 +322,7 @@ assessVariation <- function(
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else assay.names <- factor(x = assay.names, levels = assay.names)
-    if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+    if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 

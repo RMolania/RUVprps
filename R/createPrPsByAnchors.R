@@ -108,21 +108,29 @@ createPrPsByAnchors <- function(
     # Checking input #####
     if (is.list(assay.name)) {
         stop('The "assay.name" must be the name of an assay in the SummarizedExperiment object.')
-    } else if (length(assay.name) > 1) {
+    }
+    if (length(assay.name) > 1) {
         stop('The "assay.name" must be a single name of an assay in the SummarizedExperiment object..')
-    } else if (is.null(uv.variable)) {
+    }
+    if (is.null(uv.variable)) {
         stop('The "uv.variable" cannot be empty. Note, unknown sources of UV can be found by the "identifyUnknownUV" function.')
-    } else if (length(uv.variable) > 1) {
+    }
+    if (length(uv.variable) > 1) {
         stop('The "uv.variable" must be a single variable name in the SummarizedExperiment object.')
-    } else if (!uv.variable %in% colnames(colData(se.obj))) {
+    }
+    if (!uv.variable %in% colnames(colData(se.obj))) {
         stop('The "uv.variable" cannot be found in the SummarizedExperiment object')
-    } else if (k.anchor == 0) {
+    }
+    if (k.anchor == 0) {
         stop('The k.anchor cannot be 0.')
-    } else if (! normalization %in% c("LogNormalize", "SCT")) {
+    }
+    if (! normalization %in% c("LogNormalize", "SCT")) {
         stop('The " normalization" must be one of the "LogNormalize" or "SCT".')
-    } else if (!reduction %in% c("cca", "rpca", 'rlsi')) {
+    }
+    if (!reduction %in% c("cca", "rpca", 'rlsi')) {
         stop('The "reduction" should be one of the "cca", "rpca" or "rlsi"')
-    } else if (sum(hvg %in% row.names(se.obj)) != length(hvg)) {
+    }
+    if (sum(hvg %in% row.names(se.obj)) != length(hvg)) {
         stop('All the "hvg" genes are not found in the SummarizedExperiment object.')
     }
 

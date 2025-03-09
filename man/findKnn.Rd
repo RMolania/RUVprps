@@ -2,7 +2,7 @@
 % Please edit documentation in R/findKnn.R
 \name{findKnn}
 \alias{findKnn}
-\title{Find k-nearest neighbors in RNA-seq data.}
+\title{Finding k-nearest neighbors in RNA-seq data.}
 \usage{
 findKnn(
   se.obj,
@@ -32,75 +32,79 @@ findKnn(
 \arguments{
 \item{se.obj}{A summarized experiment object.}
 
-\item{assay.name}{Symbol. A symbol for the selection of the name of the assay in the SummarizedExperiment object to be
-used to find k nearest neighbors.}
+\item{assay.name}{Character. A character string representing the name of the assay in the SummarizedExperiment object
+to be used to find k nearest neighbors.}
 
-\item{uv.variable}{Symbol. A symbol that indicates the name of the column in the sample annotation of the
-SummarizedExperiment object. The 'uv.variable' can be either categorical and continuous. If 'uv.variable' is a continuous
+\item{uv.variable}{Character. A character string that indicates the name of the column in the sample annotation of the
+SummarizedExperiment object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous
 variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.}
 
-\item{data.input}{Symbol. A symbol that indicates which data format should be used as input for finding the k nearest
-neighbors data. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of the data will be
-used as input. If 'expr' is selected, the expression data will be used as input. The default is set to 'expr'.}
+\item{data.input}{Character. A character string that indicates which data should be used as input for finding
+the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
+the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
+to 'expr'.}
 
-\item{nb.pcs}{Numeric. A numeric valuse that indicates the number PCs should be used as data input for finding the k
-nearest neighbors. The nb.pcs' must be set when the "data.input = PCs". The default is set to 2.}
+\item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
+nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.}
 
 \item{center}{Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
 subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
+\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
 is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-mean square otherwise. The default is FALSE}
+mean square otherwise. The default is set to 'FALSE'.}
 
-\item{svd.bsparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed. The default
-is bsparam(). We refer to the 'runSVD' function from the BiocSingular R package.}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.}
 
-\item{clustering.method}{Symbol. A symbol indicating the choice of clustering method for grouping the 'uv.variable'
-if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.}
+\item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the
+'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
+set to 'kmeans'.}
 
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
 continuous variable. The default is 3.}
 
 \item{nb.knn}{Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute. The default
-is set 3.}
+is set to 3.}
 
 \item{hvg}{Vector. A vector of the names of the highly variable genes. These genes will be used to select the input
 data. The default is NULL.}
 
-\item{normalization}{Symbol. A symbol that indicates which normalization method should be applied  on the dara before
-finding the knn. The default is 'cpm'. If is set to NULL, no normalization will be applied.}
+\item{normalization}{Character. A character string that indicates which normalization method should be applied on the
+data before finding the knn. The default is 'cpm'. If set to NULL, no normalization will be applied.}
 
-\item{regress.out.variables}{Symbol. A symbol or symbols that indicates the column name(s) in the sample annotation in
-the SummarizedExperiment. These variables will be regressed out from the data before
-finding KNN. The default is set to NULL, indicates the regression will not be applied.}
+\item{regress.out.variables}{Character. A character string or strings that indicate the column name(s) in the sample
+annotation in the SummarizedExperiment. These variables will be regressed out from the data before
+finding KNN. The default is set to NULL, indicating that regression will not be applied.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
+The default is set to  TRUE'.}
 
 \item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 assay before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-to set to 'TRUE'. See the checkSeObj() function for more details.}
+to TRUE. See the checkSeObj() function for more details.}
 
-\item{remove.na}{Symbol. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
+\item{remove.na}{Character. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
 The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
 the checkSeObj function for more details.}
 
-\item{output.name}{Symbol. A symbol specifying the name of output file. If is 'NULL', the function will select a name
-based on "paste0(uv.variable, '|' , assay.name)".}
+\item{output.name}{Character. A character string specifying the name of the output file. If set to 'NULL', the function
+will select a name based on "paste0(uv.variable, '|' , assay.name)".}
 
-\item{prps.group}{Symbol. A symbol specifying the name of the PRPS group. If is 'NULL', the function will select a name
-based on "paste0('prps|mnn|', uv.variable)".}
+\item{prps.group}{Character. A character string specifying the name of the PRPS group. If set to 'NULL', the function
+will select a name based on "paste0('prps|mnn|', uv.variable)".}
 
 \item{save.se.obj}{Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
-or to output the result as list. By default it is set to 'TRUE'.}
+or to output the result as a list. By default, it is set to 'TRUE'.}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }
 \description{
-This function finds k nearest neighbors samples in RNA-seq data. The k nearest neighbors will be used to create pseudo
-sample within individual batches.
+This function finds k nearest neighbors samples for individual samples in RNA-seq data. Further, the distance between
+individual neighbors are also calculated. The k nearest neighbors will be used to create pseudo-samples within individual
+batches.
 }
 \author{
 Ramyar Molania

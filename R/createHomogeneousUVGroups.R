@@ -81,13 +81,14 @@ createHomogeneousUVGroups <- function(
             message = '-- Assessing the SummarizedExperiment object:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = NULL,
             variables = uv.variables,
             remove.na = remove.na,
-            verbose = verbose)
+            verbose = verbose
+            )
     }
 
     # Finding the class of biological variables ####
@@ -276,7 +277,7 @@ createHomogeneousUVGroups <- function(
         verbose =  verbose
     )
     ## use both continuous and categorical ####
-    if (length(categorical.uv.var) > 0 & length(continuous.uv.groups) > 0 ){
+    if (length(categorical.uv.var) > 0 & length(continuous.uv.var) > 0 ){
         printColoredMessage(
             message = '- Creating all possible combination of the groups using both continuous and categorical variables:',
             color = 'blue',

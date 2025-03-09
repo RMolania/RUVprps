@@ -24,7 +24,7 @@ applyLog <- function(
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
-    if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+    if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
@@ -35,14 +35,14 @@ applyLog <- function(
             # log transformation ####
             if (!is.null(pseudo.count)) {
                 printColoredMessage(
-                    message = paste0('- Apply log2 on the "', x, '" + ', pseudo.count, ' (pseudo.count) data.'),
+                    message = paste0('- Applying log2 on the "', x, '" + ', pseudo.count, ' (pseudo.count) data.'),
                     color = 'blue',
                     verbose = verbose
                     )
                 expr <- log2(assay(x = se.obj, i = x) + pseudo.count)
             } else if (is.null(pseudo.count)){
                 printColoredMessage(
-                    message = paste0('- Apply log2 on the "', x, '" data.'),
+                    message = paste0('- Applying log2 on the "', x, '" data.'),
                     color = 'blue',
                     verbose = verbose
                     )

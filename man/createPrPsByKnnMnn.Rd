@@ -7,18 +7,26 @@
 createPrPsByKnnMnn(
   se.obj,
   assay.name,
-  uv.variable,
+  main.uv.variable,
+  clustering.method = "kmeans",
+  nb.clusters = 3,
   filter.prps.sets = TRUE,
-  max.prps.sets = 10,
+  max.prps.sets = 3,
+  select.extreme.groups = TRUE,
+  other.uv.variables = NULL,
+  other.uv.clustering.method = "kmeans",
+  nb.other.uv.clusters = 2,
+  min.sample.for.ps = 3,
+  min.batch.to.cover = "all",
+  use.all.possible.batches = TRUE,
+  check.prps.connectedness = TRUE,
   data.input = "expr",
   nb.pcs = 2,
   center = TRUE,
   scale = FALSE,
   svd.bsparam = bsparam(),
-  clustering.method = "kmeans",
-  nb.clusters = 3,
-  k.nn = 2,
-  mnn = 1,
+  nb.knn = 2,
+  nb.mnn = 1,
   hvg = NULL,
   normalization = "CPM",
   apply.cosine.norm = FALSE,
@@ -28,6 +36,7 @@ createPrPsByKnnMnn(
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
   assess.se.obj = TRUE,
+  plot.output = TRUE,
   remove.na = "both",
   save.se.obj = TRUE,
   output.name = NULL,
@@ -42,33 +51,9 @@ createPrPsByKnnMnn(
 be used to first find k nearest neighbors and them mutual nearest neighbors data. This data must the one that will be
 used for the RUV-III normalization.}
 
-\item{uv.variable}{Symbol. Indicates the name of a column in the sample annotation of the SummarizedExperiment object.
+\item{main.uv.variable}{Symbol. Indicates the name of a column in the sample annotation of the SummarizedExperiment object.
 The 'uv.variable' can be either categorical and continuous. If 'uv.variable' is a continuous variable, this will be
 divided into 'nb.clusters' groups using the 'clustering.method'.}
-
-\item{filter.prps.sets}{Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if they are
-higher than the 'max.prps.sets' value. The default is 'TRUE'. The high number of PRPS sets will just increase the
-computational time for the RUV-III normalization.}
-
-\item{max.prps.sets}{Numeric. A numeric value specifying the maximum number for PRPS set across each pair of batches.
-The default is set to 20.}
-
-\item{data.input}{Symbol. Indicates which data should be used an input for finding the k nearest neighbors data. Options
-include: 'expr' and 'pcs'. If 'pcs' is selected, the first PCs of the data will be used as input. If 'expr' is selected,
-the data will be selected as input.}
-
-\item{nb.pcs}{Numeric. A numeric value indicating the number PCs should be used as data input for finding the k nearest
-neighbors. The nb.pcs' must be set when the "data.input = PCs". The default is 2.}
-
-\item{center}{Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
-subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
-
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
-is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-mean square otherwise. The default is FALSE}
-
-\item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
-We refer to the 'runSVD' function from the BiocSingular R package.}
 
 \item{clustering.method}{Symbol.A symbol indicating the choice of clustering method for grouping the 'uv.variable'
 if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.}
@@ -76,9 +61,50 @@ if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quan
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
 continuous variable. The default is 3.}
 
-\item{k.nn}{Numeric. The maximum number of nearest neighbors to compute. The default is set 3.}
+\item{filter.prps.sets}{Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if they are
+higher than the 'max.prps.sets' value. The default is 'TRUE'. The high number of PRPS sets will just increase the
+computational time for the RUV-III normalization.}
 
-\item{mnn}{Numeric. The maximum number of nearest neighbors to compute. The default is set 1.}
+\item{max.prps.sets}{Numeric. A numeric value specifying the maximum number for PRPS set across each pair of batches.
+The default is set to 10.}
+
+\item{other.uv.variables}{Character. A character string or character vector representing the label of unwanted
+variable(s), such as library size, etc., within the sample annotation (colData) of the SummarizedExperiment object.
+This can comprise a vector containing either categorical, continuous, or a combination of both variables. These variables
+will be considered when generating PRPS sets for the "main.uv.variable". This can help avoid potential contamination
+from the "other.uv.variables" in the PRPS data of the "main.uv.variable". The default is set to 'NULL'.}
+
+\item{other.uv.clustering.method}{Character. A character string indicating which clustering method should be used to
+group each continuous unwanted variable, if specified in the "other.uv.variables". The options include 'kmeans', 'cut',
+and 'quantile'. The default is 'kmeans'. We refer to the createHomogeneousUVGroups() function for more details.}
+
+\item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous unwanted
+variable. The default is set to 3.}
+
+\item{min.sample.for.ps}{Nummeric.}
+
+\item{min.batch.to.cover}{Numeric. The maximum number of nearest neighbors to compute. The default is set 3.}
+
+\item{check.prps.connectedness}{Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
+The default is set to TRUE. See the details for more information.}
+
+\item{data.input}{Character. A character string that indicates which data should be used as input for finding
+the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
+the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
+to 'expr'.}
+
+\item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
+nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.}
+
+\item{center}{Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
+subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
+
+\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
+is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
+mean square otherwise. The default is set to 'FALSE'.}
+
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.}
 
 \item{hvg}{Vector. A vector of the names of the highly variable genes. These genes will be used to find the anchors
 samples across the batches. The default is NULL.}
@@ -86,8 +112,7 @@ samples across the batches. The default is NULL.}
 \item{normalization}{Symbol. Indicates which normalization methods should be applied before finding the knn. The default
 is 'cpm'. If is set to NULL, no normalization will be applied.}
 
-\item{apply.cosine.norm}{Logical. Idicates whether to apply cosine normalization on the data or not. The default is
-set to 'FALSE'.}
+\item{apply.cosine.norm}{TTT}
 
 \item{regress.out.variables}{Symbols. Indicates the columns names that contain biological variables in the
 SummarizedExperiment object. These variables will be regressed out from the data before finding genes that are highly
@@ -108,6 +133,8 @@ is SerialParam(). We refer to the 'findMutualNN' function from the BiocNeighbors
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
 function for more details.}
 
+\item{plot.output}{TTTT}
+
 \item{remove.na}{Symbol. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
 The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
 the checkSeObj function for more details.}
@@ -116,12 +143,18 @@ the checkSeObj function for more details.}
 or to output the result as list. By default it is set to TRUE.}
 
 \item{output.name}{Symbol. A symbol specifying the name of output file. If is 'NULL', the function will select a name
-based on "paste0(uv.variable, '||' , assay.name)".}
+based on "paste0(uv.variable, '|', 'anchor', '|', assay.name))".}
 
 \item{prps.group}{Symbol. A symbol specifying the name of the output file. If is 'NULL', the function will select a name
 based on "paste0('prps_mnn_', uv.variable)".}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+
+\item{select.extereme.groups}{TTT}
+
+\item{min.knn}{description}
+
+\item{min.mnn}{description}
 }
 \value{
 The SummarizedExperiment object that contain all the PPRS data, knn, mnn and plot results in the metadata, or

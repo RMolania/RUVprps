@@ -86,7 +86,7 @@ getMetricFromSeObj <- function(
             all.outputs[[x]] <- se.obj@metadata[[slot]][[x]][[assessment.type]][[assessment]][[method]][[variables]][[file.name]]
         }
         printColoredMessage(
-            message = paste0('- Obtain the ', message.to.print, ' the "', x , '" data.'),
+            message = paste0('- Obtaining the ', message.to.print, ' the "', x , '" data.'),
             color = 'blue',
             verbose = verbose
         )

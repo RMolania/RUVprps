@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsForContinuousUV.R
 \name{createPrPsForContinuousUV}
 \alias{createPrPsForContinuousUV}
-\title{Create PRPS for a continuous source of unwanted variation.}
+\title{Creates PRPS for a continuous source of unwanted variation.}
 \usage{
 createPrPsForContinuousUV(
   se.obj,
@@ -18,9 +18,6 @@ createPrPsForContinuousUV(
   apply.log = TRUE,
   pseudo.count = 1,
   assess.se.obj = TRUE,
-  assess.variables = FALSE,
-  cat.cor.coef = c(0.9, 0.9),
-  cont.cor.coef = c(0.9, 0.9),
   remove.na = "both",
   plot.prps.map = TRUE,
   output.name = NULL,
@@ -32,40 +29,40 @@ createPrPsForContinuousUV(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Symbol. A symbol specifying an assay (data) name within the SummarizedExperiment object. The selected
-assay should be the one that will be used for RUV-III normalization.}
+\item{assay.name}{Character. A character string specifying an assay (data) name within the SummarizedExperiment object.
+The selected assay should be the one that will be used for RUV-III normalization.}
 
-\item{bio.variables}{Symbol. A symbol or symbols representing the label of biological variable(s), such as cancer
-subtypes, tumor purity, ... within the sample annotation (colData) of the SummarizedExperiment object. This can comprise
-a vector containing of either categorical, continuous, or a combination of both variables.}
+\item{bio.variables}{Character. A character string or character vector representing the label of biological variable(s),
+such as cancer subtypes, tumor purity, etc., within the sample annotation (colData) of the SummarizedExperiment object.
+This can comprise a vector containing either categorical, continuous, or a combination of both variables.}
 
-\item{main.uv.variable}{Symbol. A symbol representing the label of a continuous unwanted variable, such as library
-size, ... within the sample annotation (colData) of the SummarizedExperiment object. Sets of PRPS will be created for
-removing the impact of this variable from the data.}
+\item{main.uv.variable}{Character. A character string representing the label of a continuous unwanted variable, such
+as library size, etc., within the sample annotation (colData) of the SummarizedExperiment object. Sets of PRPS will be
+created for removing the impact of this variable from the data.}
 
-\item{other.uv.variables}{Symbol. A symbol or symbols representing the label of unwanted variable(s), such as batch
-effects, ... within the sample annotation (colData) of the SummarizedExperiment object. This can comprise a vector
-containing either categorical, continuous, or a combination of both variables. These variable(s) will be considered
-when generating PRPS data fo the "main.uv.variable". The default is set to 'NULL'. Refere to the details of the function
-for more information.}
+\item{other.uv.variables}{Character. A character string or character vector representing the label of unwanted variable(s),
+such as batch effects, etc., within the sample annotation (colData) of the SummarizedExperiment object. This can
+comprise a vector containing either categorical, continuous, or a combination of both variables. These variables will
+be considered when generating PRPS data for the "main.uv.variable". The default is set to 'NULL'. Refer to the function
+details for more information.}
 
 \item{min.sample.for.ps}{Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
-to be averaged to create one pseudo-sample (PS). The default it is set to 3.}
+to be averaged to create one pseudo-sample (PS). The default is set to 3.}
 
-\item{bio.clustering.method}{Symbol. A symbol indicating which clustering method should be used to group each continuous
-biological variable, if they are specified. The options include 'kmeans', cut' and 'quantile'. The default is to 'kmeans'.
-We refer to the createHomogeneousBioGroups() function for more details.}
+\item{bio.clustering.method}{Character. A character string indicating which clustering method should be used to group
+each continuous biological variable, if specified. The options include 'kmeans', 'cut', and 'quantile'. The default is
+'kmeans'. We refer to the createHomogeneousBioGroups() function for more details.}
 
 \item{nb.bio.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
-variable. The default it set to 2. Then individual continuous biological variable will be divided into 2 groups using
-the "bio.clustering.method" .}
+variable. The default is set to 2. Then individual continuous biological variables will be divided into 2 groups using
+the "bio.clustering.method".}
 
-\item{other.uv.clustering.method}{Symbol. A symbol specifying which clustering method should be used to group each
-continuous unwanted variable specified in the "other.uv.variables". The options include 'kmeans', cut' and 'quantile'.
-The default is to 'kmeans'. We refer to the createHomogeneousUVGroups() function for more details.}
+\item{other.uv.clustering.method}{Character. A character string specifying which clustering method should be used to
+group each continuous unwanted variable specified in the "other.uv.variables". The options include 'kmeans', 'cut',
+and 'quantile'. The default is 'kmeans'. We refer to the createHomogeneousUVGroups() function for more details.}
 
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
-unwanted variable specified in the "other.uv.variables". The default it set to 2.}
+unwanted variable specified in the "other.uv.variables". The default is set to 2.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.}
 
@@ -73,39 +70,25 @@ unwanted variable specified in the "other.uv.variables". The default it set to 2
 The default is set to 1.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
-will be applied inside the function. The default is set to 'TRUE'.}
+function will be applied inside the function. The default is set to 'TRUE'.}
 
-\item{assess.variables}{Logical. Indicates whether to assess the association between the biological or unwanted
-variable(s) separately. The default is set to 'FALSE'. We refer to the 'assessVariableAssociation' for more details.}
-
-\item{cat.cor.coef}{Vector of two numerical values. Indicates the cut-off of the correlation coefficient between each
-pair of categorical variables. The first one is between each pair of 'uv.variables' and the second one is between each
-pair of 'bio.variables'. The correlation is computed by the function ContCoef from the DescTools package. If the correlation
-of a pair of variable is higher than the cut-off, then only the variable that has the highest number of factor will be
-kept and the other one will be excluded from the remaining analysis. By default they are both set to 0.7.}
-
-\item{cont.cor.coef}{Vector of two numerical values. Indicates the cut-off of the Spearman correlation coefficient
-between each pair of continuous variables. The first one is between each pair of 'uv.variables' and the second one is
-between each pair of 'bio.variables'. If the correlation of a pair of variable is higher than the cut-off, then only
-the variable that has the highest variance will be kept and the other one will be excluded from the remaining analysis.
-By default they are both set to 0.7.}
-
-\item{remove.na}{Symbol. A symbol Indicating whether to remove NA or missing values from either the 'assays', the
-'sample.annotation', both' or 'none'. If 'assays' is selected, the genes that contains NA or missing values will be
-excluded. If sample.annotation' is selected, the samples that contains NA or missing values for any 'bio.variables' and
-'uv.variables' will be excluded. The default is set to both'.}
+\item{remove.na}{Character. A character string indicating whether to remove NA or missing values from either the 'assays',
+the sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
+excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
+'uv.variables' will be excluded. The default is set to 'both'.}
 
 \item{plot.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-The default is 'TRUE'.}
+The default is set to 'TRUE'.}
 
-\item{output.name}{Symbol. A symbol to specify the name of all PRPS sets that will be created for all specified
-source (s) of unwanted variation. The default is set to 'NULL'. Then, the function creates a name based on
+\item{output.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
+specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name based on
 paste0('prps_', uv.variable).}
 
-\item{prps.group}{Symbol.}
+\item{prps.group}{Character. A character string specifying a name for the PRPS data sets created for a specific group.
+The default is set to 'NULL'.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-or to output the result as list. The default by is set to 'TRUE'.}
+or to output the result as a list. The default is set to 'TRUE'.}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }

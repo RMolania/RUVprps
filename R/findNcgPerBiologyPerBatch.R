@@ -235,11 +235,11 @@ findNcgPerBiologyPerBatch <- function(
                         color = 'white',
                         verbose = verbose)
 
-    # Check functions inputs ####
-    if(length(assay.name) > 1 | is.logical(assay.name)){
+    # Check ingfunctions inputs ####
+    if (length(assay.name) > 1 | is.logical(assay.name)){
         stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
     }
-    if(nb.ncg >= 1 | nb.ncg <= 0){
+    if (nb.ncg >= 1 | nb.ncg <= 0){
         stop('The "nb.ncg" should be a positve value  0 < nb.ncg < 1.')
     }
     if (!ncg.selection.method %in% c('prod', 'sum', 'avergae', 'auto', 'non.overlap')){
@@ -251,13 +251,13 @@ findNcgPerBiologyPerBatch <- function(
     if (top.rank.uv.genes > 1 | top.rank.uv.genes <= 0){
         stop('The "top.rank.uv.genes" must be a positve value  0 < top.rank.uv.genes < 1.')
     }
-    if( grid.nb < 1 | grid.nb > nrow(se.obj)){
+    if (grid.nb < 1 | grid.nb > nrow(se.obj)){
         stop(paste0('The "grid.nb" must be a positve value  0 < grid.nb < ', nrow(se.obj), '.'))
     }
-    if(!grid.group %in% c('bio', 'uv', 'both')){
+    if (!grid.group %in% c('bio', 'uv', 'both')){
         stop('The "grid.group" must be one of "bio", "uv" or "non.overlap".')
     }
-    if(!grid.direction %in% c('increase', 'decrease', 'auto')){
+    if (!grid.direction %in% c('increase', 'decrease', 'auto')){
         stop('The "grid.direction" must be one of "increase", "decrease" or "auto".')
     }
     if (is.null(min.sample.for.aov)){
@@ -331,7 +331,7 @@ findNcgPerBiologyPerBatch <- function(
             stop('The "uv.percentile" must be a postive value between 0 and 1.')
     }
 
-    # Check the SummarizedExperiment object ####
+    # Checking the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -1453,18 +1453,19 @@ findNcgPerBiologyPerBatch <- function(
     }
 
     printColoredMessage(
-        message = paste0('A set of ', sum(ncg.selected), ' genes are selected for NCG.'),
+        message = paste0(
+            'A set of ',
+            sum(ncg.selected),
+            ' genes are selected for NCG.'),
         color = 'blue',
         verbose = verbose
-    )
-
-    ## Plotting ####
+        )
+    # Plotting ####
     printColoredMessage(
         message = '- Generating a heatmap plot of all the ranks of all the NCGs across all the variables',
         color = 'magenta',
         verbose = verbose
-    )
-
+        )
     all.uv.bio.tests <- lapply(
         c(all.bio.tests, all.uv.tests),
         function(x){

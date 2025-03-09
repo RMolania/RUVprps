@@ -22,12 +22,14 @@
 #' @param nb.ncg Numeric. Specifies the number of genes to be chosen as negative control genes (NCG) when the '
 #' ncg.selection.method' is set to 'auto'. This value corresponds to a fraction of the total genes in the SummarizedExperiment
 #'  object. The default is 0.1.
-#' @param ncg.selection.method Character. Specifies the method used to select negative control genes (NCG). The available options
-#' are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default method is 'non.overlap'.
-#' @param top.rank.bio.genes Numeric. Specifies the fraction of top-ranked genes that are highly affected by biological variation.
-#' These genes have the highest MAD values. The default is 0.5.
-#' @param top.rank.uv.genes Numeric. Specifies the fraction of top-ranked genes that are highly affected by unwanted variation
-#' variables. These genes have the highest F-statistics and correlation coefficients. The default is 0.5.
+#' @param hvg.method Character. A character vector indicating how to select the highly variable genes. The option are
+#' 'var' and 'mad'. The default it set to 'var'.
+#' @param ncg.selection.method Character. Specifies the method used to select negative control genes (NCG). The available
+#' options are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default method is 'non.overlap'.
+#' @param top.rank.bio.genes Numeric. Specifies the fraction of top-ranked genes that are highly affected by biological
+#' variation. These genes have the highest MAD values. The default is 0.5.
+#' @param top.rank.uv.genes Numeric. Specifies the fraction of top-ranked genes that are highly affected by unwanted
+#' variation variables. These genes have the highest F-statistics and correlation coefficients. The default is 0.5.
 #' @param uv.percentile Numeric. The percentile cut-off for selecting genes that are highly affected by unwanted variation.
 #' The default is 0.8.
 #' @param bio.percentile Numeric. The percentile cut-off for selecting genes that are highly affected by biological variation.
@@ -42,14 +44,14 @@
 #' genes that are highly affected by biological variation. The default is 'CPM'. Refer to the 'applyOtherNormalization'
 #' function for further details.
 #' @param regress.out.variables Character. Specifies which variables to regress out from the data prior to analysis.
-#' @param min.sample.for.mad Numeric. The minimum number of samples required to perform MAD analysis on each gene within homogeneous
-#' sample groups. The default is 3.
+#' @param min.sample.for.mad Numeric. The minimum number of samples required to perform MAD analysis on each gene within
+#' homogeneous sample groups. The default is 3.
 #' @param min.sample.for.aov Numeric. The minimum number of samples required for ANOVA analysis between categorical sources
 #' of variation with individual gene expression. The default is 3.
-#' @param min.sample.for.correlation Numeric. The minimum number of samples required for correlation analyses between continuous
-#' sources of unwanted variation and individual gene expression. The default is 10.
-#' @param corr.method Character. The correlation method to use for the analysis. Options are 'pearson' or 'spearman'. The default
-#' is 'spearman'.
+#' @param min.sample.for.correlation Numeric. The minimum number of samples required for correlation analyses between
+#' continuous sources of unwanted variation and individual gene expression. The default is 10.
+#' @param corr.method Character. The correlation method to use for the analysis. Options are 'pearson' or 'spearman'.
+#' The default is set to 'spearman'.
 #' @param a Numeric. The significance level used for the confidence intervals in the correlation analysis. The default is 0.05.
 #' @param rho Numeric. The hypothesized correlation value to be used in the hypothesis testing. The default is 0.
 #' @param anova.method Character. The ANOVA method to use. Options are 'aov' or 'welch'. The default is 'aov'. Refer to the function
@@ -102,11 +104,73 @@
 #' @import ggplot2
 #' @export
 
+# assay.name = 'RawCount',
+# uv.variables = uv.variables,
+# top.rank.bio.genes = 0.99,
+# top.rank.uv.genes = 0.10,
+# normalization = 'CPM',
+# nb.ncg = .1,
+# ncg.selection.method = 'non.overlap',
+# grid.direction = 'increase',
+# nb.clusters = 10,
+# variables.to.assess.ncg = c(uv.variables, bio.variables),
+# apply.log = TRUE,
+# nb.pcs = 10,
+# assess.se.obj = FALSE,
+# ncg.group = 'read.scenario3', plot.output = F
+#
+#
+#
+# se.obj = read.se.obj
+# assay.name = 'RawCount'
+# uv.variables = c(uv.variables, bio.variables)
+# nb.ncg = 0.1
+# ncg.selection.method = 'non.overlap'
+# top.rank.bio.genes = 0.5
+# top.rank.uv.genes = 0.5
+# bio.percentile = 0.2
+# uv.percentile = 0.2
+# grid.group = 'uv'
+# grid.direction = 'decrease'
+# grid.nb = 20
+# clustering.method = 'kmeans'
+# nb.clusters = 3
+# normalization = 'CPM'
+# regress.out.variables = NULL
+# min.sample.for.mad = 3
+# min.sample.for.aov = 3
+# min.sample.for.correlation = 10
+# corr.method = "spearman"
+# a = 0.05
+# rho = 0
+# anova.method = 'aov'
+# assess.ncg = TRUE
+# variables.to.assess.ncg = NULL
+# nb.pcs = 5
+# scale = FALSE
+# center = TRUE
+# apply.log = TRUE
+# pseudo.count = 1
+# assess.se.obj = TRUE
+# remove.na = 'both'
+# save.se.obj = TRUE
+# output.name = NULL
+# ncg.group = NULL
+# plot.output = TRUE
+# use.imf = FALSE
+# save.imf = FALSE
+# imf.name = NULL
+# verbose = TRUE
+
+
+
+
 findNcgsUnSupervised <- function(
         se.obj,
         assay.name,
         uv.variables,
         nb.ncg = 0.1,
+        hvg.method = 'var',
         ncg.selection.method = 'non.overlap',
         top.rank.bio.genes = 0.5,
         top.rank.uv.genes = 0.5,
@@ -275,11 +339,13 @@ findNcgsUnSupervised <- function(
         printColoredMessage(
             message = paste0(
                 '- Applying log2 + ',
-                pseudo.count,' (pseudo.count) on the ',
+                pseudo.count,
+                ' (pseudo.count) on the ',
                 assay.name,
                 ' data.'),
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
     } else if (isTRUE(apply.log) & is.null(pseudo.count)){
         printColoredMessage(
@@ -310,7 +376,7 @@ findNcgsUnSupervised <- function(
             color = 'magenta',
             verbose = verbose
             )
-        ## identify genes that are highly affected by unwanted variation ####
+        ## identifying genes that are highly affected by unwanted variation ####
         printColoredMessage(
             message = '-- Finding genes that are highly affected by each specified source(s) of unwanted variation:',
             color = 'orange',
@@ -343,7 +409,7 @@ findNcgsUnSupervised <- function(
                         vec = colData(se.obj)[[x]],
                         n.repeat = min.sample.for.aov
                         )
-                    if( isTRUE(length(keep.samples) == 0)){
+                    if (isTRUE(length(keep.samples) == 0)){
                         stop(paste0(
                             'There are not enough samples to perform ANOVA between individual gene expression and the ',
                             x,
@@ -446,10 +512,12 @@ findNcgsUnSupervised <- function(
         )
         if (!is.null(normalization)) {
             data.to.use <- expr.data.nor
-        } else data.to.use <- expr.data
+        } else if (is.null(normalization)){
+            data.to.use <- expr.data
+        }
 
         #### regress out variables ####
-        if(!is.null(regress.out.variables)){
+        if (!is.null(regress.out.variables)){
             printColoredMessage(
                 message = paste0(
                     'The ',
@@ -491,16 +559,23 @@ findNcgsUnSupervised <- function(
             n.repeat = min.sample.for.mad
             )
         if (isTRUE(length(selected.homo.uv.groups) > 0)){
-            bio.genes <- sapply(
-                selected.homo.uv.groups,
-                function(x){
-                    index.samples <- homo.uv.groups == x
-                    matrixStats::rowMads(x = data.to.use[ , index.samples, drop = FALSE])
-                })
-            bio.genes <- matrixStats::rowMedians(bio.genes)
-            bio.genes <- data.frame(bio.mad = bio.genes)
-            set.seed(3322)
-            bio.genes$bio.ranks <- rank(x = bio.genes$bio.mad, ties.method = 'random')
+            if (hvg.method == 'var'){
+                batch.design <- design.matrix(a = homo.uv.groups)
+                bio.genes <- scran::modelGeneVar(x = data.to.use, design = batch.design)
+                bio.genes$bio.ranks <- rank(x = bio.genes$bio, ties.method = 'random')
+                }
+            if (hvg.method == 'mad'){
+                bio.genes <- sapply(
+                    selected.homo.uv.groups,
+                    function(x){
+                        index.samples <- homo.uv.groups == x
+                        matrixStats::rowMads(x = data.to.use[ , index.samples, drop = FALSE])
+                    })
+                bio.genes <- matrixStats::rowMedians(bio.genes)
+                bio.genes <- data.frame(bio.mad = bio.genes)
+                set.seed(3322)
+                bio.genes$bio.ranks <- rank(x = bio.genes$bio.mad, ties.method = 'random')
+                }
             } else if (isTRUE(length(selected.homo.uv.groups) == 0))
             stop(paste0(
                 'There is no any homogenous sample groups with at least ',
@@ -508,7 +583,6 @@ findNcgsUnSupervised <- function(
                 ' samples to perform MAD.')
                 )
     }
-
     # Intermediate file ####
     ## read intermediate file ####
     if (isTRUE(use.imf)){
@@ -701,11 +775,16 @@ findNcgsUnSupervised <- function(
             })))
         printColoredMessage(
             message = paste0(
-                '- Select ', length(top.uv.genes), ' genes with the UV F-statistics higher than ',
-                ' (' , uv.percentile* 100, '% percentile), and exclude any genes presents in ',
+                '- Selecting ',
+                length(top.uv.genes),
+                ' genes with the UV F-statistics higher than ',
+                ' (' , uv.percentile* 100,
+                '% percentile), and exclude any genes presents in ',
                 length(top.bio.genes),
                 ' genes with the biological F-statistics higher than ',
-                ' (' , bio.percentile* 100, '% percentile).'),
+                ' (' ,
+                bio.percentile* 100,
+                '% percentile).'),
             color = 'blue',
             verbose = verbose)
         top.uv.genes <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
@@ -765,8 +844,11 @@ findNcgsUnSupervised <- function(
                 con <- parse(text = paste0("nb.ncg", ">", "length(ncg.selected)"))
                 printColoredMessage(
                     message = paste0(
-                        '- The number of selected genes ', length(ncg.selected),
-                        ' is less than the number (', nb.ncg ,') of specified genes ',
+                        '- The number of selected genes ',
+                        length(ncg.selected),
+                        ' is less than the number (',
+                        nb.ncg ,
+                        ') of specified genes ',
                         'by "nb.ncg". A grid search will be performed.'),
                     color = 'blue',
                     verbose = verbose)
@@ -872,7 +954,7 @@ findNcgsUnSupervised <- function(
                 message(' ')
                 printColoredMessage(
                     message = paste0(
-                        '- Update the selection. Select top ',
+                        '- Updating the selection. Select top ',
                         top.rank.uv.genes,
                         '% of highly affected genes by the unwanted variation, and then exclude any genes in top ',
                         top.rank.bio.genes,
@@ -1038,6 +1120,10 @@ findNcgsUnSupervised <- function(
         } else ncg.selected <- row.names(se.obj) %in% ncg.selected
     }
 
+    pp <- singscore::getStableGenes(n_stable = 7000)
+    mm <- intersect(pp, row.names(se.obj)[ncg.selected])
+    ncg.selected <- row.names(se.obj) %in% mm
+
     printColoredMessage(
         message = paste0(
             'A set of ',
@@ -1074,7 +1160,7 @@ findNcgsUnSupervised <- function(
             temp.data
         })
     temp.data <- do.call(cbind, temp.data)
-    temp.data$bio <- bio.genes$bio.ranks
+    temp.data$Biology <- bio.genes$bio.ranks
     temp.data$NCG <- ncg.selected
     ha <- ComplexHeatmap::rowAnnotation(
         NCG = temp.data$NCG,
@@ -1087,6 +1173,7 @@ findNcgsUnSupervised <- function(
         show_row_names = FALSE,
         right_annotation = ha,
         column_names_rot = 45,
+        col = viridis::magma(n = 20),
         heatmap_legend_param = list(
             title = 'Ranks',
             title_gp = grid::gpar(fontsize = 14),

@@ -1,56 +1,60 @@
-#' Find k-nearest neighbors in RNA-seq data.
+#' Finding k-nearest neighbors in RNA-seq data.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function finds k nearest neighbors samples in RNA-seq data. The k nearest neighbors will be used to create pseudo
-#' sample within individual batches.
+#' This function finds k nearest neighbors samples for individual samples in RNA-seq data. Further, the distance between
+#' individual neighbors are also calculated. The k nearest neighbors will be used to create pseudo-samples within individual
+#' batches.
 
 #' @param se.obj A summarized experiment object.
-#' @param assay.name Symbol. A symbol for the selection of the name of the assay in the SummarizedExperiment object to be
-#' used to find k nearest neighbors.
-#' @param uv.variable Symbol. A symbol that indicates the name of the column in the sample annotation of the
-#' SummarizedExperiment object. The 'uv.variable' can be either categorical and continuous. If 'uv.variable' is a continuous
+#' @param assay.name Character. A character string representing the name of the assay in the SummarizedExperiment object
+#' to be used to find k nearest neighbors.
+#' @param uv.variable Character. A character string that indicates the name of the column in the sample annotation of the
+#' SummarizedExperiment object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous
 #' variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.
-#' @param data.input Symbol. A symbol that indicates which data format should be used as input for finding the k nearest
-#' neighbors data. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of the data will be
-#' used as input. If 'expr' is selected, the expression data will be used as input. The default is set to 'expr'.
-#' @param nb.pcs Numeric. A numeric valuse that indicates the number PCs should be used as data input for finding the k
-#' nearest neighbors. The nb.pcs' must be set when the "data.input = PCs". The default is set to 2.
+#' @param data.input Character. A character string that indicates which data should be used as input for finding
+#' the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
+#' the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
+#' to 'expr'.
+#' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
+#' nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.
 #' @param center Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
 #' subtracting the column means of the assay from their corresponding columns. The default is TRUE.
-#' @param scale Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
+#' @param scale Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
 #' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-#' mean square otherwise. The default is FALSE
-#' @param svd.bsparam Symbol. A BiocParallelParam object specifying how parallelization should be performed. The default
-#' is bsparam(). We refer to the 'runSVD' function from the BiocSingular R package.
-#' @param clustering.method Symbol. A symbol indicating the choice of clustering method for grouping the 'uv.variable'
-#' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
+#' mean square otherwise. The default is set to 'FALSE'.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+#' is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.
+#' @param clustering.method Character. A character string indicating the choice of clustering method for grouping the
+#' 'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
+#' set to 'kmeans'.
 #' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
 #' continuous variable. The default is 3.
 #' @param nb.knn Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute. The default
-#' is set 3.
+#' is set to 3.
 #' @param hvg Vector. A vector of the names of the highly variable genes. These genes will be used to select the input
 #' data. The default is NULL.
-#' @param normalization Symbol. A symbol that indicates which normalization method should be applied  on the dara before
-#' finding the knn. The default is 'cpm'. If is set to NULL, no normalization will be applied.
-#' @param regress.out.variables Symbol. A symbol or symbols that indicates the column name(s) in the sample annotation in
-#' the SummarizedExperiment. These variables will be regressed out from the data before
-#' finding KNN. The default is set to NULL, indicates the regression will not be applied.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.
+#' @param normalization Character. A character string that indicates which normalization method should be applied on the
+#' data before finding the knn. The default is 'cpm'. If set to NULL, no normalization will be applied.
+#' @param regress.out.variables Character. A character string or strings that indicate the column name(s) in the sample
+#' annotation in the SummarizedExperiment. These variables will be regressed out from the data before
+#' finding KNN. The default is set to NULL, indicating that regression will not be applied.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
+#' The default is set to  TRUE'.
 #' @param pseudo.count Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 #' assay before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-#' to set to 'TRUE'. See the checkSeObj() function for more details.
-#' @param remove.na Symbol. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
+#' to TRUE. See the checkSeObj() function for more details.
+#' @param remove.na Character. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
 #' The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
 #' the checkSeObj function for more details.
+#' @param output.name Character. A character string specifying the name of the output file. If set to 'NULL', the function
+#' will select a name based on "paste0(uv.variable, '|' , assay.name)".
+#' @param prps.group Character. A character string specifying the name of the PRPS group. If set to 'NULL', the function
+#' will select a name based on "paste0('prps|mnn|', uv.variable)".
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
-#'  or to output the result as list. By default it is set to 'TRUE'.
-#' @param output.name Symbol. A symbol specifying the name of output file. If is 'NULL', the function will select a name
-#' based on "paste0(uv.variable, '|' , assay.name)".
-#' @param prps.group Symbol. A symbol specifying the name of the PRPS group. If is 'NULL', the function will select a name
-#' based on "paste0('prps|mnn|', uv.variable)".
+#' or to output the result as a list. By default, it is set to 'TRUE'.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
 #' @importFrom SummarizedExperiment assay colData
@@ -89,19 +93,26 @@ findKnn <- function(
     # Checking the inputs #####
     if (is.list(assay.name)) {
         stop('The "assay.name" cannot be a list.')
-    } else if (length(assay.name) > 1) {
+    }
+    if (length(assay.name) > 1) {
         stop('The "assay.name" must be the name of signle assay in the SummarizedExperiment object.')
-    } else if (is.null(uv.variable)) {
+    }
+    if (is.null(uv.variable)) {
         stop('The "uv.variable" variable cannot be empty.')
-    } else if (length(uv.variable) > 1) {
+    }
+    if (length(uv.variable) > 1) {
         stop('The "uv.variable" must contain the name of signle variable in the SummarizedExperiment object.')
-    } else if (!data.input %in% c('expr', 'pcs')) {
+    }
+    if (!data.input %in% c('expr', 'pcs')) {
         stop('The "data.input" must be one of the "expr" or "pcs".')
-    } else if (data.input == 'pcs' & is.null(nb.pcs)) {
+    }
+    if (data.input == 'pcs' & is.null(nb.pcs)) {
         stop('The valuse of "nb.pcs" must be sepcified when the data.input = pcs.')
-    } else if ( nb.knn == 0) {
+    }
+    if (nb.knn == 0) {
         stop('The  nb.knn cannot be 0.')
-    } else if (!uv.variable %in% colnames(colData(se.obj))) {
+    }
+    if (!uv.variable %in% colnames(colData(se.obj))) {
         stop('The "uv.variable" variable cannot be found in the SummarizedExperiment object.')
     }
     if (!is.null(hvg)) {
@@ -136,7 +147,7 @@ findKnn <- function(
         verbose = verbose
         )
     initial.variable <- se.obj[[uv.variable]]
-    if(is.numeric(initial.variable)){
+    if (is.numeric(initial.variable)){
         se.obj[[uv.variable]] <- groupContinuousVariable(
             se.obj = se.obj,
             variable = uv.variable,
@@ -146,23 +157,18 @@ findKnn <- function(
             verbose = verbose
         )
     }
-    if(!is.numeric(initial.variable)){
-        length.variable <- length(unique(initial.variable))
-        if( length.variable == 1){
-            stop('To create MNN, the "uv.variable" must have at least two groups/levels.')
-        } else if (length.variable > 1){
-            printColoredMessage(
-                message = paste0(
-                    '- The "',
-                    uv.variable,
-                    '" is a categorical variable with ',
-                    length(unique(se.obj[[uv.variable]])),
-                    ' levels.'),
-                color = 'blue',
-                verbose = verbose
-            )
-            se.obj[[uv.variable]] <- factor(x = se.obj[[uv.variable]])
-        }
+    if (!is.numeric(initial.variable)){
+        printColoredMessage(
+            message = paste0(
+                '- The "',
+                uv.variable,
+                '" is a categorical variable with ',
+                length(unique(se.obj[[uv.variable]])),
+                ' levels.'),
+            color = 'blue',
+            verbose = verbose
+        )
+        se.obj[[uv.variable]] <- factor(x = se.obj[[uv.variable]])
     }
 
     # Checking sample sizes of each sub group ####
@@ -179,13 +185,14 @@ findKnn <- function(
         stop(paste0(
             'All subgroups of the unwanted variable have less than ',
              nb.knn + 1,
-            ' samples. KNN cannot be found.'))
+            ' samples. KNN cannot be found.')
+            )
     } else if (length(sub.group.sample.size) != length(unique(se.obj[[uv.variable]])) ){
         printColoredMessage(
             message = paste0(
                 'All or some subgroups of the unwanted variable have less than ',
                  nb.knn + 1,
-                ' samples. Then KNN for those sub-groups cannot be created.'),
+                ' (nb.knn + 1) samples. Then KNN for those sub-groups cannot be created.'),
             color = 'red',
             verbose = verbose
         )
@@ -194,10 +201,10 @@ findKnn <- function(
             message = paste0(
                 '- All the sub-groups of the unwanted variable have at least ',
                  nb.knn + 1,
-                ' samples.'),
+                ' (nb.knn + 1) samples.'),
             color = 'blue',
             verbose = verbose
-        )
+            )
     }
 
     # Data normalization and transformation and regression ####
@@ -214,7 +221,7 @@ findKnn <- function(
             if (!is.null(normalization) & is.null(regress.out.variables)) {
                 printColoredMessage(
                     message = paste0(
-                        '- applying the ',
+                        '- Applying the ',
                         normalization,
                         ' on the samples from the "',
                         x,
@@ -238,7 +245,7 @@ findKnn <- function(
             if (!is.null(normalization) & !is.null(regress.out.variables)) {
                 printColoredMessage(
                     message = paste0(
-                        '- applying the ',
+                        '- Applying the ',
                         normalization,
                         ' on the samples from "',
                         x,
@@ -276,10 +283,10 @@ findKnn <- function(
             }
             ## regression ####
             if (is.null(normalization) & !is.null(regress.out.variables)){
-                if(isTRUE(apply.log)){
+                if (isTRUE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- applying log transformation and then regressing out the ',
+                            '- Applying log transformation and then regressing out the ',
                             paste0(regress.out.variables, collapse = '&'),
                             ' variable(s) on the samples ',
                             x,
@@ -287,7 +294,7 @@ findKnn <- function(
                         color = 'blue',
                         verbose = verbose
                     )
-                    if(!is.null(pseudo.count)){
+                    if (!is.null(pseudo.count)){
                         norm.data <- log2(assay(se.obj[, selected.samples], assay.name) + pseudo.count)
                     } else {
                         norm.data <- log2(assay(se.obj[, selected.samples], i = assay.name))
@@ -296,7 +303,9 @@ findKnn <- function(
                 } else if (isFALSE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- regress out ', paste0(regress.out.variables, collapse = '&'), x,
+                            '- Regressing out ',
+                            paste0(regress.out.variables, collapse = '&'),
+                            x,
                             '" group from the data.'),
                         color = 'blue',
                         verbose = verbose
@@ -318,10 +327,10 @@ findKnn <- function(
             }
             ## log transformation ####
             if (is.null(normalization) & is.null(regress.out.variables)) {
-                if(isTRUE(apply.log)){
+                if (isTRUE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- applying the log2 within the samples from "',
+                            '- Applying the log2 within the samples from "',
                             x,
                             '" group data.'),
                         color = 'blue',
@@ -336,7 +345,9 @@ findKnn <- function(
                 } else if (isFALSE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- no library size normalization and transformation is applied on samples from ', x, '" group data.'),
+                            '- No library size normalization and transformation is applied on data from ',
+                            x,
+                            '" group data.'),
                         color = 'blue',
                         verbose = verbose
                     )
@@ -360,7 +371,7 @@ findKnn <- function(
             ## data input: expression matrix with hvg #####
             if (data.input == 'expr' & !is.null(hvg)) {
                 printColoredMessage(
-                    message = '- selecting the gene expression matrix with the highly variable genes as the data input.',
+                    message = '- Selecting the gene expression matrix with the highly variable genes as the data input.',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -370,8 +381,8 @@ findKnn <- function(
             if (data.input == 'expr' & is.null(hvg)) {
                 printColoredMessage(
                     message = paste0(
-                        '- selecting the gene expression matrix with all genes as the data input for',
-                        'the sub-group: ',
+                        '- Selecting the gene expression matrix with all genes as the data input for',
+                        ' the sub-group: ',
                         x,
                         '.'
                         ),
@@ -384,7 +395,7 @@ findKnn <- function(
             if (data.input == 'pcs' & !is.null(hvg)) {
                 printColoredMessage(
                     message = paste0(
-                        '- performing PCA on the gene expression matrix using highly',
+                        '- Performing PCA on the gene expression matrix using highly',
                         ' variable genes and using PCs as the data input.'),
                     color = 'blue',
                     verbose = verbose
@@ -401,7 +412,7 @@ findKnn <- function(
             ## data input: PCA all genes #####
             if (data.input == 'pcs' & is.null(hvg)) {
                 printColoredMessage(
-                    message = '- performing PCA on the gene expression matrix and select PCs as the data input.',
+                    message = '- Performing PCA on the gene expression matrix and selecting PCs as the data input.',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -455,7 +466,7 @@ findKnn <- function(
             knn.samples <- RANN::nn2(
                 data = norm.data,
                 query = norm.data,
-                k = c( nb.knn + 1),
+                k = c (nb.knn + 1),
                 treetype = 'bd'
                 )
             knn.index <- as.data.frame(knn.samples$nn.idx)
@@ -463,7 +474,16 @@ findKnn <- function(
             selected.samples <- se.obj[[uv.variable]] == sub.group.sample.size[x]
             ovral.cell.no <- sapply(
                 1:ncol(knn.index),
-                function(x) all.samples.index[selected.samples][knn.index[ , x]])
+                function(x) all.samples.index[selected.samples][knn.index[ , x]]
+                )
+            ## sanity check
+            if ( length(unique(se.obj$library.size[as.vector(ovral.cell.no)])) != 1 ){
+                stop('There are something wrong with the sample annotation.')
+            }
+            if (!unique(se.obj$library.size[as.vector(ovral.cell.no)]) == sub.group.sample.size[x] ){
+                stop('There are something wrong with the sample annotation.')
+            }
+
             colnames(ovral.cell.no) <- paste0('overal.index', 1:c( nb.knn + 1))
             knn.index <- as.data.frame(cbind(ovral.cell.no , knn.index))
             # distance between all knn ####
@@ -481,7 +501,10 @@ findKnn <- function(
             colnames(knn.dis) <- paste0('distance1_', 2:c( nb.knn + 1))
             knn.index.dist <- cbind(knn.index, knn.dis)
             if (isTRUE(nb.knn > 1)) {
-                all.comb <- combn(x = paste0('dataset.index', 2:c(nb.knn + 1)), m = 2)
+                all.comb <- combn(
+                    x = paste0('dataset.index', 2:c(nb.knn + 1)),
+                    m = 2
+                    )
                 all.comb.names <- combn(x = 2:c(nb.knn + 1), m = 2)
                 for (z in 1:ncol(all.comb)) {
                     pair.dist <- unlist(lapply(

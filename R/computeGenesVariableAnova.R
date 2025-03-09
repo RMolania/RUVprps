@@ -160,18 +160,32 @@ computeGenesVariableAnova <- function(
         }
 
         # Data transformation ####
-        printColoredMessage(
-            message = '-- Applying log transformation on the data:',
-            color = 'magenta',
-            verbose = verbose
+        # Data log transformation ####
+        if (isTRUE(apply.log)){
+            printColoredMessage(
+                message = '-- Applying log transformation on all the specified assay(s):',
+                color = 'magenta',
+                verbose = verbose
             )
-        all.assays <- applyLog(
-            se.obj = se.obj,
-            assay.names = levels(assay.names),
-            pseudo.count = pseudo.count,
-            assessment = 'ANOVA',
-            verbose = verbose
-        )
+            all.assays <- applyLog(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                pseudo.count = pseudo.count,
+                assessment = 'computing "PCA"',
+                verbose = verbose
+            )
+        }
+        if (isFALSE(apply.log)){
+            printColoredMessage(
+                message = '-- The specified assay(s) will be used for ANOVA, without applying log transformation.',
+                color = 'blue',
+                verbose = verbose
+            )
+            all.assays <- lapply(
+                levels(assay.names),
+                function(x) assay(x = se.obj, i = x))
+            names(all.assays) <- levels(assay.names)
+        }
 
         # Applying ANOVA ####
         printColoredMessage(

@@ -23,7 +23,7 @@ checkPRPSconnectedness <- function(
         printColoredMessage(
             message = paste0(
                 sum(colsum.data.input == 0),
-                ' batches of the ',
+                ' batche(s) of the ',
                 batch.name ,
                 ' do not have at least ',
                 min.samples,
@@ -34,7 +34,7 @@ checkPRPSconnectedness <- function(
         stop(message = paste0(
                 'So, no PRPS sets can be created for those batches. This may result in unsatisfactory removal of the ',
                 batch.name,
-                ' effects. Possibly, decreasing min.samples value can help.'))
+                ' effects.'))
     } else {
         selected.groups <- rowSums(data.input >= min.samples) > 1
         if (sum(selected.groups) == 0) {

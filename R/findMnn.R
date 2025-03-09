@@ -1,54 +1,68 @@
-#' Find mutual nearest neighbors in RNA-seq data.
+#' Finding mutual nearest neighbors in RNA-seq data.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function finds mutual nearest neighbors between all pairs of batches in RNA-seq data. The mutual nearest neighbors
-#' will be used to find and create pseudo samples and eventually pseudo-replicates for RUV-III normalization.
+#' This function finds mutual nearest neighbors between all pairs of specified batches in RNA-seq data. The mutual nearest
+#' neighbors will be used to find and create pseudo samples and eventually pseudo-replicates for RUV-III normalization.
 
 #' @param se.obj A summarized experiment object.
-#' @param assay.name Symbol. A symbol that indicates the name of the assay in the SummarizedExperiment object. This data
-#' should be the one that will be used as input for RUV-III normalization.
-#' @param uv.variable Symbol. A symbol indicating the name of the column in the SummarizedExperiment object. The
-#' 'uv.variable' can be either categorical and continuous. If 'uv.variable' is a continuous variable, this will be
+#' @param assay.name Character. A character string that indicates the name of the assay in the SummarizedExperiment
+#' object. This data should be the one that will be used as input for RUV-III normalization.
+#' @param uv.variable Character. A character string indicating the name of the column in the SummarizedExperiment object.
+#' The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous variable, this will be
 #' divided into 'nb.clusters' groups using the 'clustering.method' method.
-#' @param mnn Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The default
-#' is set 1.
-#' @param clustering.method Symbol. A symbol that indicates the choice of clustering method for grouping the 'uv.variable'
-#' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
+#' @param nb.mnn Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
+#' default is set to 1.
+#' @param clustering.method Character. A character string that indicates the choice of clustering method for grouping the
+#' 'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
+#' set to 'kmeans'.
 #' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
 #' continuous variable. The default is 3.
-#' @param normalization Symbol. A Symbol that indicates which normalization methods should be applied before finding the
-#' knn. The option are 'CPM', 'TMM', 'VST'. The default is 'CPM'. Refer to the 'applyOtherNormalization' for more details.
-#' @param apply.cosine.norm Logical. Idicates whether to apply cosine normalization on the data or not. The default is
-#' set to 'FALSE'.
-#' @param regress.out.variables Symbol. A symbol or vector of symbols indicating the column name(s) that contain
-#' biological variable(s) in the SummarizedExperiment object. These variables will be regressed out from the data before
-#' finding genes that are highly affected by unwanted variation variable. The default is set to 'NULL', indicates the
-#' regression will not be applied.
-#' @param hvg Vector. A vector of the names of the highly variable genes. These genes will be used to find mutual nearest
-#' neighbors samples across the batches. The default is set to 'NULL'. The 'findBioGenes' function can be used for specify
-#' a set of genes.
+#' @param data.input Character. A character string that indicates which data should be used as input for finding the k
+#' nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of the data will
+#' be used as input. If 'expr' is selected, the expression data will be used as input. The default is set to 'expr'.
+#' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
+#' nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.
+#' @param center Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
+#' subtracting the column means of the assay from their corresponding columns. The default is TRUE.
+#' @param scale Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
+#' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
+#' mean square otherwise. The default is set to 'FALSE'.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+#'  is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.
+#' @param normalization Character. A character string that indicates which normalization methods should be applied before
+#' finding the knn. The options are 'CPM', 'TMM', 'VST'. The default is 'CPM'. Refer to the 'applyOtherNormalization'
+#' for more details.
+#' @param apply.cosine.norm Logical. Indicates whether to apply cosine normalization on the data or not. The default is
+#'  set to 'FALSE'.
+#' @param regress.out.variables Character. A character string or vector of character strings indicating the column name(s)
+#' that contain biological variable(s) in the SummarizedExperiment object. These variables will be regressed out from the
+#' data before finding genes that are highly affected by unwanted variation. The default is set to 'NULL', indicating
+#' the regression will not be applied.
+#' @param hvg Character vector. A character vector of the names of the highly variable genes. These genes will be used to
+#' find mutual nearest neighbors across the batches. The default is set to 'NULL'. The 'findBioGenes' function can be
+#' used to specify a set of genes.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is TRUE.
-#' Please, note, any RNA-seq data (assays) must be in log scale before computing RLE.
+#' Please note, any RNA-seq data (assays) must be in log scale before computing RLE.
 #' @param pseudo.count Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
 #' log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.
-#' @param mnn.bpparam Symbol. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-#' . The default is SerialParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.
-#' @param mnn.nbparam Symbol. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-#' . The default is KmknnParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.
+#' @param mnn.bpparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+#' The default is SerialParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.
+#' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+#' The default is KmknnParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
 #' function for more details.
-#' @param remove.na Symbol. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
-#' The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
-#' the checkSeObj function for more details.
+#' @param remove.na Character. Specifies whether to remove NA or missing values from the assays or not. The options are
+#' 'assays' and 'none'. The default is "assays", so all the NA or missing values from the assay(s) will be removed before
+#' computing RLE. See the checkSeObj function for more details.
 #' @param plot.output Logical. If 'TRUE', the function plots the distribution of MNN across the batches.
-#' @param output.name Symbol. A symbol specifying the name of output file. If is 'NULL', the function will select a name
-#' based on "paste0(uv.variable, '||' , assay.name)".
-#' @param prps.group Symbol. A symbol specifying the name of the PRPS group. If is 'NULL', the function will select a name
-#' based on "paste0('prps|mnn|', uv.variable)".
-#' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object
-#'  or to output the result as list. By default it is set to TRUE.
+#' @param output.name Character. A character string specifying the name of the output file. If 'NULL', the function will
+#' select a name based on "paste0(uv.variable, '||' , assay.name)".
+#' @param prps.group Character. A character string specifying the name of the PRPS group. If 'NULL', the function will
+#' select a name based on "paste0('prps|mnn|', uv.variable)".
+#' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
+#' object or to output the result as a list. By default, it is set to TRUE.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
 #' @importFrom SummarizedExperiment assay colData
@@ -56,6 +70,7 @@
 #' @importFrom BiocParallel SerialParam
 #' @importFrom utils setTxtProgressBar
 #' @export
+
 
 findMnn <- function(
         se.obj,
@@ -91,13 +106,17 @@ findMnn <- function(
     # Check inputs #####
     if (is.list(assay.name)) {
         stop('The "assay.name" cannot be a list.')
-    } else if (length(assay.name) > 1) {
+    }
+    if (length(assay.name) > 1) {
         stop('The "assay.name" must be the name of signle assay in the SummarizedExperiment object.')
-    } else if (is.null(uv.variable)) {
+    }
+    if (is.null(uv.variable)) {
         stop('The "uv.variable" variable cannot be empty.')
-    } else if (length(uv.variable) > 1) {
+    }
+    if (length(uv.variable) > 1) {
         stop('The "uv.variable" must contain the name of signle variable in the SummarizedExperiment object.')
-    } else if (!uv.variable %in% colnames(colData(se.obj))) {
+    }
+    if (!uv.variable %in% colnames(colData(se.obj))) {
         stop('The "uv.variable" variable cannot be found in the SummarizedExperiment object.')
     }
     if (!is.null(hvg)) {
@@ -110,7 +129,7 @@ findMnn <- function(
                 stop('The length of the "hvg" cannot be larger than the row numbers of the SammarizedExperiment object.')
             }
         }
-        if(is.character(hvg)){
+        if (is.character(hvg)){
             if (sum(hvg %in% row.names(se.obj)) != length(hvg)){
                 stop('All the hvg genes are not found in the SummarizedExperiment object.')
             } else if (length(hvg) > nrow(se.obj)){
@@ -147,7 +166,7 @@ findMnn <- function(
         color = 'magenta',
         verbose = verbose
     )
-    if(is.numeric(initial.variable)){
+    if (is.numeric(initial.variable)){
         se.obj[[uv.variable]] <- groupContinuousVariable(
             se.obj = se.obj,
             variable = uv.variable,
@@ -157,9 +176,9 @@ findMnn <- function(
             verbose = verbose
         )
     }
-    if(!is.numeric(initial.variable)){
+    if (!is.numeric(initial.variable)){
         length.variable <- length(unique(initial.variable))
-        if( length.variable == 1){
+        if (length.variable == 1){
             stop('To create MNN, the "uv.variable" must have at least two groups/levels.')
         } else if (length.variable > 1){
             printColoredMessage(
@@ -189,14 +208,15 @@ findMnn <- function(
     if (length(sub.group.sample.size) == 0){
         stop(paste0(
             'All subgroups of the unwanted variable have less than ',
-            mnn + 1,
-            ' samples. MNN cannot be found.'))
+            nb.mnn + 1,
+            ' (nb.mnn + 1) samples. MNN cannot be found.')
+            )
     } else if (length(sub.group.sample.size) != length(unique(se.obj[[uv.variable]])) ){
         printColoredMessage(
             message = paste0(
                 'All or some subgroups of the unwanted variable have less than ',
-                mnn + 1,
-                ' samples. '),
+                nb.mnn + 1,
+                ' (nb.mnn + 1) samples. '),
             color = 'red',
             verbose = verbose
         )
@@ -205,7 +225,7 @@ findMnn <- function(
             message = paste0(
                 '- All the subgroups of the unwanted variable have at least, ',
                 nb.mnn + 1,
-                ' samples'),
+                ' (nb.mnn + 1) samples'),
             color = 'blue',
             verbose = verbose
         )
@@ -225,7 +245,7 @@ findMnn <- function(
             if (!is.null(normalization) & is.null(regress.out.variables)) {
                 printColoredMessage(
                     message = paste0(
-                        '- applying the ',
+                        '- Applying ',
                         normalization,
                         ' on the samples from the "',
                         x,
@@ -249,7 +269,7 @@ findMnn <- function(
             if (!is.null(normalization) & !is.null(regress.out.variables)) {
                 printColoredMessage(
                     message = paste0(
-                        '- applying the ',
+                        '- Applying ',
                         normalization,
                         ' on the samples from "',
                         x,
@@ -290,7 +310,7 @@ findMnn <- function(
                 if(isTRUE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- applying log transformation and then regressing out the ',
+                            '- Applying log transformation and then regressing out the ',
                             paste0(regress.out.variables, collapse = '&'),
                             ' variable(s) on the samples ',
                             x,
@@ -307,7 +327,9 @@ findMnn <- function(
                 } else if (isFALSE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- regress out ', paste0(regress.out.variables, collapse = '&'), x,
+                            '- Regressing out ',
+                            paste0(regress.out.variables, collapse = '&'),
+                            x,
                             '" group from the data.'),
                         color = 'blue',
                         verbose = verbose
@@ -332,7 +354,7 @@ findMnn <- function(
                 if(isTRUE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- applying the log2 within the samples from "',
+                            '- Applying the log2 within the samples from "',
                             x,
                             '" group data.'),
                         color = 'blue',
@@ -347,7 +369,9 @@ findMnn <- function(
                 } else if (isFALSE(apply.log)){
                     printColoredMessage(
                         message = paste0(
-                            '- no library size normalization and transformation is applied on samples from ', x, '" group data.'),
+                            '- No library size normalization and transformation is applied on samples from ',
+                            x,
+                            '" group data.'),
                         color = 'blue',
                         verbose = verbose
                     )
@@ -363,7 +387,7 @@ findMnn <- function(
         message = '-- Selecting the data input for knn analysis',
         color = 'magenta',
         verbose = verbose
-    )
+        )
     all.data.input <- lapply(
         sub.group.sample.size,
         function(x){
@@ -371,7 +395,7 @@ findMnn <- function(
             ## data input: expression matrix with hvg #####
             if (data.input == 'expr' & !is.null(hvg)) {
                 printColoredMessage(
-                    message = '- selecting the gene expression matrix with the highly variable genes as the data input.',
+                    message = '- Selecting the gene expression matrix with the highly variable genes as the data input.',
                     color = 'blue',
                     verbose = verbose
                 )
@@ -381,7 +405,7 @@ findMnn <- function(
             if (data.input == 'expr' & is.null(hvg)) {
                 printColoredMessage(
                     message = paste0(
-                        '- selecting the gene expression matrix with all genes as the data input for',
+                        '- Selecting the gene expression matrix with all genes as the data input for',
                         'the sub-group: ',
                         x,
                         '.'),
@@ -394,7 +418,7 @@ findMnn <- function(
             if (data.input == 'pcs' & !is.null(hvg)) {
                 printColoredMessage(
                     message = paste0(
-                        '- performing PCA on the gene expression matrix using highly',
+                        '- Performing PCA on the gene expression matrix using highly',
                         ' variable genes and using PCs as the data input.'),
                     color = 'blue',
                     verbose = verbose
@@ -411,7 +435,7 @@ findMnn <- function(
             ## data input: PCA all genes #####
             if (data.input == 'pcs' & is.null(hvg)) {
                 printColoredMessage(
-                    message = '- performing PCA on the gene expression matrix and select PCs as the data input.',
+                    message = '- Performing PCA on the gene expression matrix and select PCs as the data input.',
                     color = 'blue',
                     verbose = verbose
                 )
@@ -468,9 +492,9 @@ findMnn <- function(
                 verbose = verbose
                 )
             # select data
-            if(isTRUE(apply.cosine.norm)){
+            if (isTRUE(apply.cosine.norm)){
                 printColoredMessage(
-                    message = '--applying cosine normalization of the data.',
+                    message = '-- Applying cosine normalization of the data.',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -485,15 +509,6 @@ findMnn <- function(
             } else {
                 data1 = all.data.input[[pairs.batch[1, x]]]
                 data2 = all.data.input[[pairs.batch[2, x]]]
-            }
-            if(!is.null(hvg)){
-                printColoredMessage(
-                    message = '--using HVG.',
-                    color = 'blue',
-                    verbose = verbose
-                )
-                data1 <- data1[ , hvg]
-                data2 <- data2[ , hvg]
             }
             mnn.samples <- BiocNeighbors::findMutualNN(
                 data1 = data1,
@@ -510,19 +525,18 @@ findMnn <- function(
             mnn.data <- data.frame(
                 group1 = rep(pairs.batch[1, x], length(mnn.samples$first)),
                 group2 = rep(pairs.batch[2, x], length(mnn.samples$second)),
-                sample.no.1 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[1, x]][mnn.samples$first],
-                sample.no.2 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[2, x]][mnn.samples$second],
-                sample.no.a = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[1, x]]])[mnn.samples$first])),
-                sample.no.b = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[2, x]]])[mnn.samples$second]))
+                overal.index.1 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[1, x]][mnn.samples$first],
+                overal.index.2 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[2, x]][mnn.samples$second],
+                overal.index.1.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[1, x]]])[mnn.samples$first])),
+                overal.index.2.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[2, x]]])[mnn.samples$second]))
             )
             # Sanity check ###
-            if(!all.equal(mnn.data$sample.no.1, mnn.data$sample.no.a)){
+            if (!all.equal(mnn.data$overal.index.1, mnn.data$overal.index.1.1)){
                 stop('There something wrong with the MNN.')
             }
-            if(!all.equal(mnn.data$sample.no.2, mnn.data$sample.no.b)){
+            if (!all.equal(mnn.data$overal.index.2, mnn.data$overal.index.2.1)){
                 stop('There something wrong with the MNN.')
             }
-
             printColoredMessage(
                 message = paste0('* ', nrow(mnn.data), ' mnn are found.'),
                 color = 'blue',

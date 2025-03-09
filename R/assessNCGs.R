@@ -74,7 +74,7 @@ assessNCGs <- function(
         verbose = TRUE
         ){
     # Selection of NCGs ####
-    if(ncg.type == 'supervised'){
+    if (ncg.type == 'supervised'){
         if(ncg.set.names == 'all'){
             ncgs <- se.obj@metadata$NCG$supervised[[ncg.group]]$ncg.set
         } else {
@@ -90,7 +90,7 @@ assessNCGs <- function(
             }
         }
     }
-    if(ncg.type == 'un.supervised'){
+    if (ncg.type == 'un.supervised'){
         if(ncg.set.names == 'all'){
             ncgs <- se.obj@metadata$NCG$un.supervised[[ncg.group]]$ncg.set
         } else {

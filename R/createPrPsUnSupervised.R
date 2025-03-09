@@ -1,4 +1,4 @@
-#' Create unsupervised pseudo-replicates of pseudo samples (PRPS).
+#' Creates unsupervised pseudo-replicates of pseudo samples (PRPS).
 
 #' @author Ramyar Molania
 
@@ -211,7 +211,7 @@ createPrPsUnSupervised <- function(
             se.obj <- createPrPsByMnn(
                 se.obj = se.obj,
                 assay.name = assay.name,
-                uv.variable = i,
+                main.uv.variable = i,
                 filter.prps.sets = filter.prps.sets,
                 max.prps.sets = max.prps.sets,
                 clustering.method = clustering.method,

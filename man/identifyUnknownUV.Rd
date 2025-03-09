@@ -2,7 +2,7 @@
 % Please edit documentation in R/indentifyUnknownUV.R
 \name{identifyUnknownUV}
 \alias{identifyUnknownUV}
-\title{Identify potential unknown sources of unwanted variation in RNA-seq data.}
+\title{Identifies potential unknown sources of unwanted variation in RNA-seq data.}
 \usage{
 identifyUnknownUV(
   se.obj,

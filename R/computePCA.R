@@ -70,7 +70,7 @@ computePCA <- function(
                         verbose = verbose)
 
     # Check to override or not ####
-    if(isTRUE(override.check)){
+    if (isTRUE(override.check)){
         if(isTRUE(fast.pca)){
             method <- 'fast.svd'
         } else method <- 'ordinary.svd'
@@ -85,7 +85,7 @@ computePCA <- function(
             file.name = 'data',
             verbose = verbose
         )
-        if(is.logical(override.check)){
+        if (is.logical(override.check)){
             compute.metric <- FALSE
         } else if (is.list(override.check)) {
             compute.metric <- TRUE
@@ -93,7 +93,7 @@ computePCA <- function(
         }
     } else if (isFALSE(override.check)) compute.metric <- TRUE
 
-    if(isTRUE(compute.metric)){
+    if (isTRUE(compute.metric)){
         # Check the inputs ####
         if (is.null(assay.names)) {
             stop('The "assay.names" cannot be empty.')
@@ -104,14 +104,14 @@ computePCA <- function(
             stop('To perform fast PCA, the number of PCs (left singular vectors) must be specified.')
         }
         if (isTRUE(apply.log)){
-            if(pseudo.count < 0){
+            if (pseudo.count < 0){
                 stop('The value of "pseudo.count" cannot be negative.')
             }
             if (is.null(pseudo.count)){
                 stop('A value for the "pseudo.count" must be specified.')
             }
         }
-        if(!remove.na %in% c('assays','none')){
+        if (!remove.na %in% c('assays','none')){
             stop('The "remove.na" must be on of the "assays" or "none"')
         }
         if (isTRUE(scale)) {
@@ -125,7 +125,7 @@ computePCA <- function(
         if (length(assay.names) == 1 && assay.names == 'all') {
             assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
         } else  assay.names <- factor(x = assay.names , levels = assay.names)
-        if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+        if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
         }
         # Assess the SummarizedExperiment object ####
@@ -138,18 +138,32 @@ computePCA <- function(
                 verbose = verbose)
         }
         # Data transformation ####
-        printColoredMessage(
-            message = '-- Applying data log transformation:',
-            color = 'magenta',
-            verbose = verbose
+        if (isTRUE(apply.log)){
+            printColoredMessage(
+                message = '-- Applying log transformation on all the specified assay(s):',
+                color = 'magenta',
+                verbose = verbose
             )
-        all.assays <- applyLog(
-            se.obj = se.obj,
-            assay.names = levels(assay.names),
-            pseudo.count = pseudo.count,
-            assessment = 'computing "PCA"',
-            verbose = verbose
-        )
+            all.assays <- applyLog(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                pseudo.count = pseudo.count,
+                assessment = 'computing "PCA"',
+                verbose = verbose
+            )
+        }
+        if (isFALSE(apply.log)){
+            printColoredMessage(
+                message = '-- The specified assay(s) will be used for PCA without applying log transformation.',
+                color = 'blue',
+                verbose = verbose
+            )
+            all.assays <- lapply(
+                levels(assay.names),
+                function(x) assay(x = se.obj, i = x))
+            names(all.assays) <- levels(assay.names)
+        }
+
         # Compute SVD ####
         printColoredMessage(
             message = '-- Perform singular value decomposition (SVD):',

@@ -78,16 +78,16 @@ plotStudyOutline <- function(
             paste(not.found.variables, collapse = ', '),
             ' cannot be found in the SummarizedExperiment object.'))
     }
-    if (!variable.to.sort %in% colnames(colData(se.obj))){
+    if (sum(variable.to.sort %in% colnames(colData(se.obj))) != length(variable.to.sort) ){
         stop('The "variable.to.sort" cannot be found in the SummarizedExperiment object.')
     }
-    if (remove.na %in% c('assays', 'sample.annotation', 'both', 'none')){
+    if (!remove.na %in% c('assays', 'sample.annotation', 'both', 'none')){
         stop('The "remove.na" must be one of the "assays", "sample.annotation", "both" or "none".')
     }
-    if (legend.direction %in% c('horizontal', 'vertical')){
+    if (!legend.direction %in% c('horizontal', 'vertical')){
         stop('The "legend.direction" must be one of the "horizontal" or "vertical".')
     }
-    if (heatmap.legend.side %in% c('right', 'top', 'bottom', 'left')){
+    if (!heatmap.legend.side %in% c('right', 'top', 'bottom', 'left')){
         stop('The "legend.direction" must be one of the "right", "top", "bottom" or "left".')
     }
     if (!is.logical(plot.output)){

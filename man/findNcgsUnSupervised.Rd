@@ -9,6 +9,7 @@ findNcgsUnSupervised(
   assay.name,
   uv.variables,
   nb.ncg = 0.1,
+  hvg.method = "var",
   ncg.selection.method = "non.overlap",
   top.rank.bio.genes = 0.5,
   top.rank.uv.genes = 0.5,
@@ -60,14 +61,17 @@ that contain unwanted variables. If all unwanted variation is unknown, the 'iden
 ncg.selection.method' is set to 'auto'. This value corresponds to a fraction of the total genes in the SummarizedExperiment
 object. The default is 0.1.}
 
-\item{ncg.selection.method}{Character. Specifies the method used to select negative control genes (NCG). The available options
-are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default method is 'non.overlap'.}
+\item{hvg.method}{Character. A character vector indicating how to select the highly variable genes. The option are
+'var' and 'mad'. The default it set to 'var'.}
 
-\item{top.rank.bio.genes}{Numeric. Specifies the fraction of top-ranked genes that are highly affected by biological variation.
-These genes have the highest MAD values. The default is 0.5.}
+\item{ncg.selection.method}{Character. Specifies the method used to select negative control genes (NCG). The available
+options are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default method is 'non.overlap'.}
 
-\item{top.rank.uv.genes}{Numeric. Specifies the fraction of top-ranked genes that are highly affected by unwanted variation
-variables. These genes have the highest F-statistics and correlation coefficients. The default is 0.5.}
+\item{top.rank.bio.genes}{Numeric. Specifies the fraction of top-ranked genes that are highly affected by biological
+variation. These genes have the highest MAD values. The default is 0.5.}
+
+\item{top.rank.uv.genes}{Numeric. Specifies the fraction of top-ranked genes that are highly affected by unwanted
+variation variables. These genes have the highest F-statistics and correlation coefficients. The default is 0.5.}
 
 \item{bio.percentile}{Numeric. The percentile cut-off for selecting genes that are highly affected by biological variation.
 The default is 0.8.}
@@ -95,17 +99,17 @@ function for further details.}
 
 \item{regress.out.variables}{Character. Specifies which variables to regress out from the data prior to analysis.}
 
-\item{min.sample.for.mad}{Numeric. The minimum number of samples required to perform MAD analysis on each gene within homogeneous
-sample groups. The default is 3.}
+\item{min.sample.for.mad}{Numeric. The minimum number of samples required to perform MAD analysis on each gene within
+homogeneous sample groups. The default is 3.}
 
 \item{min.sample.for.aov}{Numeric. The minimum number of samples required for ANOVA analysis between categorical sources
 of variation with individual gene expression. The default is 3.}
 
-\item{min.sample.for.correlation}{Numeric. The minimum number of samples required for correlation analyses between continuous
-sources of unwanted variation and individual gene expression. The default is 10.}
+\item{min.sample.for.correlation}{Numeric. The minimum number of samples required for correlation analyses between
+continuous sources of unwanted variation and individual gene expression. The default is 10.}
 
-\item{corr.method}{Character. The correlation method to use for the analysis. Options are 'pearson' or 'spearman'. The default
-is 'spearman'.}
+\item{corr.method}{Character. The correlation method to use for the analysis. Options are 'pearson' or 'spearman'.
+The default is set to 'spearman'.}
 
 \item{a}{Numeric. The significance level used for the confidence intervals in the correlation analysis. The default is 0.05.}
 

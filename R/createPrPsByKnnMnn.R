@@ -2,51 +2,68 @@
 
 #' @author Ramyar Molania
 
+
 #' @description
 #' This function uses the k and mutual nearest neighbors approaches to create PRPS in the RNA-seq data. This function
 #' can be used in situation that the biological variation are entirely unknown. The function applies the 'findKnn' function
 #' to find similar samples per batch and then average them to create pseudo-samples. Then, function uses the 'findMnn' to
 #' match up pseudo samples across batches to create pseudo-replicates.
 
+
 #' @param se.obj A summarized experiment object.
 #' @param assay.name Symbol. A symbol indicating the name of the assay in the SummarizedExperiment object. This assay will
 #' be used to first find k nearest neighbors and them mutual nearest neighbors data. This data must the one that will be
 #' used for the RUV-III normalization.
-#' @param uv.variable Symbol. Indicates the name of a column in the sample annotation of the SummarizedExperiment object.
+#' @param main.uv.variable Symbol. Indicates the name of a column in the sample annotation of the SummarizedExperiment object.
 #' The 'uv.variable' can be either categorical and continuous. If 'uv.variable' is a continuous variable, this will be
 #' divided into 'nb.clusters' groups using the 'clustering.method'.
-#' @param data.input Symbol. Indicates which data should be used an input for finding the k nearest neighbors data. Options
-#' include: 'expr' and 'pcs'. If 'pcs' is selected, the first PCs of the data will be used as input. If 'expr' is selected,
-#' the data will be selected as input.
-#' @param filter.prps.sets Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if they are
-#' higher than the 'max.prps.sets' value. The default is 'TRUE'. The high number of PRPS sets will just increase the
-#' computational time for the RUV-III normalization.
-#' @param max.prps.sets Numeric. A numeric value specifying the maximum number for PRPS set across each pair of batches.
-#' The default is set to 20.
-#' @param nb.pcs Numeric. A numeric value indicating the number PCs should be used as data input for finding the k nearest
-#' neighbors. The nb.pcs' must be set when the "data.input = PCs". The default is 2.
-#' @param center Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
-#' subtracting the column means of the assay from their corresponding columns. The default is TRUE.
-#' @param scale Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
-#' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-#' mean square otherwise. The default is FALSE
-#' @param svd.bsparam A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
-#' We refer to the 'runSVD' function from the BiocSingular R package.
 #' @param clustering.method Symbol.A symbol indicating the choice of clustering method for grouping the 'uv.variable'
 #' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
 #' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
 #' continuous variable. The default is 3.
-#' @param k.nn Numeric. The maximum number of nearest neighbors to compute. The default is set 3.
-#' @param mnn Numeric. The maximum number of nearest neighbors to compute. The default is set 1.
+#' @param filter.prps.sets Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if they are
+#' higher than the 'max.prps.sets' value. The default is 'TRUE'. The high number of PRPS sets will just increase the
+#' computational time for the RUV-III normalization.
+#' @param max.prps.sets Numeric. A numeric value specifying the maximum number for PRPS set across each pair of batches.
+#' The default is set to 10.
+#' @param select.extereme.groups TTT
+#' @param other.uv.variables Character. A character string or character vector representing the label of unwanted
+#' variable(s), such as library size, etc., within the sample annotation (colData) of the SummarizedExperiment object.
+#' This can comprise a vector containing either categorical, continuous, or a combination of both variables. These variables
+#' will be considered when generating PRPS sets for the "main.uv.variable". This can help avoid potential contamination
+#' from the "other.uv.variables" in the PRPS data of the "main.uv.variable". The default is set to 'NULL'.
+#' @param other.uv.clustering.method Character. A character string indicating which clustering method should be used to
+#' group each continuous unwanted variable, if specified in the "other.uv.variables". The options include 'kmeans', 'cut',
+#' and 'quantile'. The default is 'kmeans'. We refer to the createHomogeneousUVGroups() function for more details.
+#' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous unwanted
+#' variable. The default is set to 3.
+#' @param min.sample.for.ps Nummeric.
+#' @param min.batch.to.cover Numeric. The maximum number of nearest neighbors to compute. The default is set 3.
+#' @param data.input Character. A character string that indicates which data should be used as input for finding
+#' the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
+#' the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
+#' to 'expr'.
+#' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
+#' nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.
+#' @param center Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
+#' subtracting the column means of the assay from their corresponding columns. The default is TRUE.
+#' @param scale Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
+#' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
+#' mean square otherwise. The default is set to 'FALSE'.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+#' is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.
+#' @param min.knn description
+#' @param min.mnn description
 #' @param hvg Vector. A vector of the names of the highly variable genes. These genes will be used to find the anchors
 #' samples across the batches. The default is NULL.
 #' @param normalization Symbol. Indicates which normalization methods should be applied before finding the knn. The default
 #' is 'cpm'. If is set to NULL, no normalization will be applied.
-#' @param apply.cosine.norm Logical. Idicates whether to apply cosine normalization on the data or not. The default is
-#' set to 'FALSE'.
+#' @param apply.cosine.norm TTT
 #' @param regress.out.variables Symbols. Indicates the columns names that contain biological variables in the
 #' SummarizedExperiment object. These variables will be regressed out from the data before finding genes that are highly
 #' affected by unwanted variation variable. The default is NULL, indicates the regression will not be applied.
+#' @param check.prps.connectedness Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
+#' The default is set to TRUE. See the details for more information.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is TRUE.
 #' Please, note, any RNA-seq data (assays) must be in log scale before computing RLE.
 #' @param pseudo.count Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
@@ -62,11 +79,13 @@
 #' the checkSeObj function for more details.
 #' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object
 #' or to output the result as list. By default it is set to TRUE.
+#' @param plot.output TTTT
 #' @param output.name Symbol. A symbol specifying the name of output file. If is 'NULL', the function will select a name
-#' based on "paste0(uv.variable, '||' , assay.name)".
+#' based on "paste0(uv.variable, '|', 'anchor', '|', assay.name))".
 #' @param prps.group Symbol. A symbol specifying the name of the output file. If is 'NULL', the function will select a name
 #' based on "paste0('prps_mnn_', uv.variable)".
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+
 #' @return The SummarizedExperiment object that contain all the PPRS data, knn, mnn and plot results in the metadata, or
 #' a list of the results.
 
@@ -78,21 +97,30 @@
 #' @importFrom RANN nn2
 #' @export
 
+
 createPrPsByKnnMnn <- function(
         se.obj,
         assay.name,
-        uv.variable,
+        main.uv.variable,
+        clustering.method = 'kmeans',
+        nb.clusters = 3,
         filter.prps.sets = TRUE,
-        max.prps.sets = 10,
+        max.prps.sets = 3,
+        select.extreme.groups = TRUE,
+        other.uv.variables = NULL,
+        other.uv.clustering.method = 'kmeans',
+        nb.other.uv.clusters = 2,
+        min.sample.for.ps = 3,
+        min.batch.to.cover = 'all',
+        use.all.possible.batches = TRUE,
+        check.prps.connectedness = TRUE,
         data.input = 'expr',
         nb.pcs = 2,
         center = TRUE,
         scale = FALSE,
         svd.bsparam = bsparam(),
-        clustering.method = 'kmeans',
-        nb.clusters = 3,
-        k.nn = 2,
-        mnn = 1,
+        nb.knn = 2,
+        nb.mnn = 1,
         hvg = NULL,
         normalization = 'CPM',
         apply.cosine.norm = FALSE,
@@ -102,6 +130,7 @@ createPrPsByKnnMnn <- function(
         mnn.bpparam = SerialParam(),
         mnn.nbparam = KmknnParam(),
         assess.se.obj = TRUE,
+        plot.output = TRUE,
         remove.na = 'both',
         save.se.obj = TRUE,
         output.name = NULL,
@@ -112,37 +141,53 @@ createPrPsByKnnMnn <- function(
                         color = 'white',
                         verbose = verbose)
 
-    # Assess SummarizedExperiment object ####
+    # Assessing the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
-            variables = uv.variable,
+            variables = c(main.uv.variable, other.uv.variables),
             remove.na = remove.na,
             verbose = verbose
         )
     }
-    # Assessing and grouping the unwanted variable ####
+    # Assessing and grouping the main unwanted variable ####
     printColoredMessage(
         message = '- Assessing and grouping the unwanted variable:',
         color = 'magenta',
         verbose = verbose
         )
-    initial.variable <- se.obj[[uv.variable]]
+    initial.variable <- se.obj[[main.uv.variable]]
     if (is.numeric(initial.variable)){
-        se.obj[[uv.variable]] <- groupContinuousVariable(
+        se.obj[[main.uv.variable]] <- groupContinuousVariable(
             se.obj = se.obj,
-            variable = uv.variable,
+            variable = main.uv.variable,
             nb.clusters = nb.clusters,
             clustering.method = clustering.method,
-            perfix = '_group',
+            perfix = '_',
             verbose = verbose
         )
+        if (isTRUE(select.extreme.groups)){
+            printColoredMessage(
+                message = paste0(
+                    '- Selecting the two subgroups of ',
+                    main.uv.variable,
+                    ' with highest and lowest values.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            max.group <- se.obj[[main.uv.variable]][initial.variable == max(initial.variable)]
+            min.group <- se.obj[[main.uv.variable]][initial.variable == min(initial.variable)]
+            selected.samples <- se.obj[[main.uv.variable]] %in% c(max.group, min.group)
+            se.obj <- se.obj[ , selected.samples]
+            se.obj[[main.uv.variable]] <- droplevels(se.obj[[main.uv.variable]])
+            initial.variable <- initial.variable[selected.samples]
+        }
     }
     if (!is.numeric(initial.variable)){
         length.variable <- length(unique(initial.variable))
         if (length.variable == 1){
-            stop('To create PRPS, the "uv.variable" must have at least two groups/levels.')
+            stop('To create PRPS, the "main.uv.variable" must have at least two groups/levels.')
         } else if (length.variable > 1){
             printColoredMessage(
                 message = paste0(
@@ -158,355 +203,848 @@ createPrPsByKnnMnn <- function(
         }
     }
 
-    # Checking sample sizes of each sub group ####
-    ## KNN ####
-    sub.group.sample.size.knn <- findRepeatingPatterns(
-        vec = se.obj[[uv.variable]],
-        n.repeat = nb.knn + 1
-        )
-    if (length(sub.group.sample.size.knn) == 0){
-        stop(paste0(
-            'All subgroups of the unwanted variable have less than ',
-            nb.knn + 1,
-            ' samples. KNN cannot be found.'))
-    } else if (length(sub.group.sample.size.knn) != length(unique(se.obj[[uv.variable]])) ){
+    # Creating PRPS data with knn and mnn ####
+    if (!is.null(other.uv.variables)){
         printColoredMessage(
-            message = paste0(
-                'All or some subgroups of the unwanted variable have less than ',
-                nb.knn + 1,
-                ' samples. Then KNN for those sub-groups cannot be created.'),
-            color = 'red',
+            message = '- Creating PRPS data by considering other specified variables',
+            color = 'magenta',
             verbose = verbose
         )
-    } else {
+        ## Considering other specified variables ####
+        # Grouping the other unwanted variables ####
         printColoredMessage(
-            message = paste0(
-                '- All the sub-groups of the unwanted variable have at least ',
-                nb.knn + 1,
-                ' samples.'),
+            message = '-- Assessing and grouping the other specified unwanted variable(s):',
             color = 'blue',
             verbose = verbose
         )
-    }
-    ## MNN ####
-    sub.group.sample.size.mnn <- findRepeatingPatterns(
-        vec = se.obj[[uv.variable]],
-        n.repeat = nb.mnn + 1
-    )
-    if (length(sub.group.sample.size.mnn) == 0){
-        stop(paste0(
-            'All subgroups of the unwanted variable have less than ',
-            nb.mnn + 1,
-            ' samples. MNN cannot be found.'))
-    } else if (length(sub.group.sample.size.mnn) != length(unique(se.obj[[uv.variable]])) ){
-        printColoredMessage(
-            message = paste0(
-                'All or some subgroups of the unwanted variable have less than ',
-                nb.mnn + 1,
-                ' samples. '),
-            color = 'red',
+        homo.uv.groups <- createHomogeneousUVGroups(
+            se.obj = se.obj,
+            uv.variables = other.uv.variables,
+            nb.clusters = nb.other.uv.clusters,
+            clustering.method = other.uv.clustering.method,
+            assess.se.obj = FALSE,
+            save.se.obj = FALSE,
+            remove.na = 'none',
             verbose = verbose
         )
-    } else {
+        all.uv.groups <- data.frame(
+            main.uv = se.obj[[main.uv.variable]],
+            other.uv = homo.uv.groups
+        )
+        min.sample.size <- max(
+            min.sample.for.ps,
+            nb.mnn,
+            nb.knn
+            )
+        # Finding and plotting covered batches ####
+        covered.batches <- lapply(
+            unique(all.uv.groups$other.uv),
+            function(x){
+                subgroups.size <- findRepeatingPatterns(
+                    vec = all.uv.groups$main.uv[all.uv.groups$other.uv == x],
+                    n.repeat = min.sample.size
+                )
+            })
+        names(covered.batches) <- unique(all.uv.groups$other.uv)
+        covered.batches.plot <- table(all.uv.groups$main.uv, all.uv.groups$other.uv) %>%
+            data.frame(.) %>%
+            dplyr::mutate(selected = Freq >= min.sample.size) %>%
+            ggplot(data = ., aes(x = Var2, y = Var1, color = selected)) +
+            geom_point() +
+            geom_text(aes(label = Freq , hjust = 0.5, vjust = 0.5), color = 'black', size = 5) +
+            xlab('Homogeneous groups (other unwanted variables)') +
+            ylab('Main unwanted variable') +
+            theme_bw() +
+            theme(
+                legend.key = element_blank(),
+                axis.line = element_line(colour = 'black', linewidth = 1),
+                axis.title.x = element_text(size = 16),
+                axis.title.y = element_text(size = 16),
+                axis.text.y = element_text(size = 14),
+                axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                legend.text = element_text(size = 14),
+                legend.title = element_text(size = 18),
+                strip.text.y = element_text(size = 0)
+            )
+        if (isTRUE(plot.output)) print(covered.batches.plot)
+
+        # Checking covered batches ####
         printColoredMessage(
-            message = paste0(
-                '- All the subgroups of the unwanted variable have at least, ',
-                nb.mnn + 1,
-                ' samples.'),
+            message = '-- Checking the distribution of the "main.uv.variable" across the "other.uv.variables":',
             color = 'blue',
             verbose = verbose
         )
-    }
-
-    # Finding common sub-groups ####
-    common.sub.groups <- intersect(
-        sub.group.sample.size.knn,
-        sub.group.sample.size.mnn
+        selected.covered.batches <- lapply(
+            1:length(covered.batches),
+            function(x) length(covered.batches[[x]])
         )
-    if(length(common.sub.groups) == 0){
-        stop('There is not')
-    } else if (length(common.sub.groups) == 1){
-        stop('')
-    } else if (length(common.sub.groups) > 1){
-        printColoredMessage()
-    }
-    uv.variable
-
-    se.obj <- se.obj[ , se.obj[[uv.variable]] %in% common.sub.groups]
-    # Finding k nearest neighbor ####
-    printColoredMessage(
-        message = '-- Finding k nearest neighbor, applying the findKnn function:',
-        color = 'magenta',
-        verbose = verbose
-        )
-    se.obj <- findKnn(
-        se.obj = se.obj,
-        assay.name = assay.name,
-        uv.variable = uv.variable,
-        data.input = data.input,
-        nb.pcs = nb.pcs,
-        center = center,
-        scale = scale,
-        svd.bsparam = svd.bsparam,
-        clustering.method = clustering.method,
-        nb.clusters = nb.clusters,
-        nb.knn = nb.knn,
-        hvg = hvg,
-        normalization = normalization,
-        regress.out.variables = regress.out.variables,
-        apply.log = apply.log,
-        pseudo.count = pseudo.count,
-        assess.se.obj = assess.se.obj,
-        remove.na = remove.na,
-        output.name = output.name,
-        prps.group = prps.group,
-        save.se.obj = save.se.obj,
-        verbose = verbose
-    )
-    if (is.null(output.name)) {
-        output.name.knn <- paste0(uv.variable, '|' , assay.name)
-    } else output.name.knn <- output.name
-    if (is.null(prps.group)){
-        prps.group.mnn <- paste0('prps|knnMnn|', uv.variable)
-    } else prps.group.mnn <- prps.group
-    all.knn <- se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$knn[[output.name.knn]]
-    if (isFALSE(save.se.obj)) {
-        se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$knn[[output.name.knn]] <- NULL
-    }
-
-    # Find mutual nearest neighbor ####
-    printColoredMessage(
-        message = '-- Finding mutual nearest neighbors by applying the findMnn function:',
-        color = 'magenta',
-        verbose = verbose
-    )
-    se.obj <- findMnn(
-        se.obj = se.obj,
-        assay.name = assay.name,
-        uv.variable = uv.variable,
-        clustering.method = clustering.method,
-        nb.clusters = nb.clusters,
-        nb.mnn = nb.mnn,
-        hvg = hvg,
-        normalization = normalization,
-        apply.cosine.norm = apply.cosine.norm,
-        regress.out.variables = regress.out.variables,
-        apply.log = apply.log,
-        pseudo.count = pseudo.count,
-        assess.se.obj = assess.se.obj,
-        mnn.bpparam = mnn.bpparam,
-        mnn.nbparam = mnn.nbparam,
-        remove.na = remove.na,
-        output.name = output.name,
-        prps.group = prps.group,
-        save.se.obj = save.se.obj,
-        verbose = verbose
-    )
-    if (is.null(output.name)) {
-        output.name.mnn <- paste0(uv.variable, '|' , assay.name)
-    } else output.name.mnn <- output.name
-    if (is.null(prps.group)){
-        prps.group.mnn <- paste0('prps|knnMnn|', uv.variable)
-    } else prps.group.mnn <- prps.group
-    all.mnn <- se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$mnn[[output.name.mnn]]
-    if (isFALSE(save.se.obj)) {
-        se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$mnn[[output.name.mnn]] <- NULL
-    }
-
-    # Finding similar sample sets ####
-    printColoredMessage(
-        message = '-- Finding all possible similar samples across batches:',
-        color = 'magenta',
-        verbose = verbose
-        )
-    ## find the knn for each mnn set ####
-    printColoredMessage(
-        message = '- Finding similar samples using the KNN and MNN data:',
-        color = 'orange',
-        verbose = verbose
-    )
-    printColoredMessage(
-        message = '* matching the MNN sets with the corresponding KNN sets:',
-        color = 'blue',
-        verbose = verbose
-    )
-    mnn.sets <- NULL
-    all.prps.sets <- lapply(
-        1:nrow(all.mnn),
-        function(x) {
-            # ps set 1
-            ps.set.1 <- all.knn[ , c(1:c(nb.knn + 1))] == all.mnn$sample.no.1[x]
-            ps.set.1 <- all.knn[rowSums(ps.set.1) > 0 , ]
-            ps.set.1$mnn.sets <- paste0(sort(c(all.mnn[x , 3], all.mnn[x , 4])), collapse = '_')
-            ps.set.1$mnn.sets.data <- paste0(sort(c(all.mnn[x , 1], all.mnn[x , 2])), collapse = '_')
-            if (nrow(ps.set.1) > 1) {
-                ps.set.1 <- ps.set.1[ps.set.1$rank.aver.dist == min(ps.set.1$rank.aver.dist) , ]
+        if (sum(selected.covered.batches == 1) == length(selected.covered.batches)){
+            stop(paste0(
+                ' Non of the sample groups with respect to the other unwanted variables that have at least ',
+                max(min.sample.for.ps, min.mnn),
+                ' samples across at least two sub-groups of the ',
+                main.uv.variable,
+                ' variable.'))
+        }
+        if (sum(selected.covered.batches == length(unique(all.uv.groups$main.uv))) == 0){
+            printColoredMessage(
+                message = paste0(
+                    '- Non of the sample groups with respect to the other unwanted variables have at least ',
+                    max(min.sample.for.ps, min.mnn),
+                    ' samples across all the sub-groups of the "',
+                    main.uv.variable,
+                    '" variable.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            if (isFALSE(check.prps.connectedness)){
+                printColoredMessage(
+                    message = '-- We recommend applying the "check.prps.connectedness"',
+                    color = 'red',
+                    verbose = verbose
+                )
+            } else if (isTRUE(check.prps.connectedness)){
+                checkPRPSconnectedness(
+                    data.input = table(all.uv.groups$main.uv, all.uv.groups$other.uv),
+                    min.samples = c(min.mnn, min.sample.for.ps),
+                    batch.name = main.uv.variable,
+                    verbose = verbose
+                )
             }
-            # ps set 2
-            ps.set.2 <- all.knn[, c(1:c(nb.knn + 1))] == all.mnn$sample.no.2[x]
-            ps.set.2 <- all.knn[rowSums(ps.set.2) > 0 , ]
-            ps.set.2$mnn.sets <- paste0(sort(c(all.mnn[x , 3], all.mnn[x , 4])), collapse = '_')
-            ps.set.2$mnn.sets.data <- paste0(sort(c(all.mnn[x , 1], all.mnn[x , 2])), collapse = '_')
-            if (nrow(ps.set.2) > 1) {
-                ps.set.2 <- ps.set.2[ps.set.2$rank.aver.dist == min(ps.set.2$rank.aver.dist) , ]
-            }
-            prps.set <- rbind(ps.set.1, ps.set.2)
-            prps.set
-        })
-    all.prps.sets <- do.call(rbind, all.prps.sets)
-
-    if (is.null(all.prps.sets)) {
-        stop('PRPS cannot be created. You may want to increase the value of the mnn.')
-    }
-    ### sanity check ####
-    if(nrow(all.prps.sets) == 2*nrow(all.mnn)){
+        }
+        if (sum(selected.covered.batches == length(unique(all.uv.groups$main.uv))) > 0  ){
+            printColoredMessage(
+                message = paste0(
+                    '-- There are ',
+                    sum(selected.covered.batches == length(unique(all.uv.groups$main.uv))) ,
+                    ' groups with respect to the other unwanted variables that have at least ',
+                    min.sample.size,
+                    ' samples across all sub-groups of the ',
+                    main.uv.variable,
+                    ' variable.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+        # Find K nearest neighbor ####
         printColoredMessage(
-            message = paste0('* The nrow of the matched MNN and KNN is ', nrow(all.prps.sets), '.'),
+            message = '-- Finding k nearest neighbor by applying the findKnn function:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        all.possible.batches <- lapply(
+            unique(all.uv.groups$other.uv),
+            function(x){
+                possible.batch <- findRepeatingPatterns(
+                    vec = all.uv.groups[all.uv.groups$other.uv == x, ]$main.uv,
+                    n.repeat = max(min.sample.for.ps, nb.mnn)
+                )
+                if (length(possible.batch) > 1){
+                    combn(x = possible.batch , m = 2)
+                } else NA
+
+            })
+        names(all.possible.batches) <- unique(all.uv.groups$other.uv)
+        all.possible.batches <- all.possible.batches[!is.na(all.possible.batches)]
+        all.knn <- lapply(
+            1:length(all.possible.batches),
+            function(x){
+                se.obj <- findKnn(
+                    se.obj = se.obj[ , homo.uv.groups == names(all.possible.batches)[x] ],
+                    assay.name = assay.name,
+                    uv.variable = main.uv.variable,
+                    data.input = data.input,
+                    nb.pcs = nb.pcs,
+                    center = center,
+                    scale = scale,
+                    svd.bsparam = svd.bsparam,
+                    clustering.method = clustering.method,
+                    nb.clusters = nb.clusters,
+                    nb.knn = nb.knn,
+                    hvg = hvg,
+                    normalization = normalization,
+                    regress.out.variables = regress.out.variables,
+                    apply.log = apply.log,
+                    pseudo.count = pseudo.count,
+                    assess.se.obj = assess.se.obj,
+                    remove.na = remove.na,
+                    output.name = output.name,
+                    prps.group = prps.group,
+                    save.se.obj = FALSE,
+                    verbose = verbose
+                )
+                se.obj$other.group <- names(all.possible.batches[x])
+                se.obj
+            })
+        names(all.knn) <- names(all.possible.batches)
+
+        # Find mutual nearest neighbors ####
+        printColoredMessage(
+            message = '-- Finding mutual nearest neighbors by applying the findMnn function:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        all.mnn <- lapply(
+            1:length(all.possible.batches),
+            function(x){
+                se.obj <- findMnn(
+                    se.obj = se.obj[ , homo.uv.groups == names(all.possible.batches)[x] ],
+                    assay.name = assay.name,
+                    uv.variable = main.uv.variable,
+                    nb.mnn = nb.mnn,
+                    clustering.method = clustering.method,
+                    nb.clusters = nb.clusters,
+                    data.input = data.input,
+                    nb.pcs = nb.pcs,
+                    center = center,
+                    scale = scale,
+                    svd.bsparam = svd.bsparam,
+                    normalization = normalization,
+                    apply.cosine.norm = apply.cosine.norm,
+                    regress.out.variables = regress.out.variables,
+                    hvg = hvg,
+                    apply.log = apply.log,
+                    pseudo.count = pseudo.count,
+                    mnn.bpparam = mnn.bpparam,
+                    mnn.nbparam = mnn.nbparam,
+                    assess.se.obj = assess.se.obj,
+                    remove.na = remove.na,
+                    plot.output = FALSE,
+                    output.name = output.name,
+                    prps.group = prps.group,
+                    save.se.obj = FALSE,
+                    verbose = verbose
+                    )
+                se.obj$mnn$other.group <- names(all.possible.batches[x])
+                se.obj
+            })
+        ## All mnn plots ####
+        all.mnn.plots <-  lapply(
+            1:length(all.possible.batches),
+            function(x){
+                all.mnn[[x]]$mnn.plot + ggtitle(names(all.possible.batches[x]))
+            })
+        all.mnn.plots <- ggarrange(plotlist = all.mnn.plots)
+        if (isTRUE(plot.output)) print(all.mnn.plots)
+        ## All mnn data ####
+        all.mnn <- lapply(
+            1:length(all.possible.batches),
+            function(x){
+                all.mnn[[x]]$mnn
+            })
+        names(all.mnn) <- names(all.possible.batches)
+
+        # Matching mnn and knn  data ####
+        printColoredMessage(
+            message = '* Matching the MNN sets with the corresponding KNN sets:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        mnn.sets <- NULL
+        all.prps.sets <-  lapply(
+            names(all.possible.batches),
+            function(i){
+                sub.all.knn <- all.knn[[i]]
+                sub.all.mnn <- all.mnn[[i]]
+                sub.prps.sets <- lapply(
+                    1:nrow(sub.all.mnn),
+                    function(x) {
+                        # ps set 1
+                        ps.set.1 <- sub.all.knn[ , c(1:c(nb.knn + 1))] == sub.all.mnn$overal.index.1[x]
+                        ps.set.1 <- sub.all.knn[rowSums(ps.set.1) > 0 , ]
+                        ps.set.1$mnn.sets <- paste0(
+                            sort(c(sub.all.mnn[x , 3], sub.all.mnn[x , 4])),
+                            collapse = '_'
+                        )
+                        ps.set.1$mnn.sets.data <- paste0(sort(c(sub.all.mnn[x , 1], sub.all.mnn[x , 2])), collapse = '_')
+                        if (nrow(ps.set.1) > 1) {
+                            ps.set.1 <- ps.set.1[ps.set.1$rank.aver.dist == min(ps.set.1$rank.aver.dist) , ]
+                        }
+                        # ps set 2
+                        ps.set.2 <- sub.all.knn[, c(1:c(nb.knn + 1))] == sub.all.mnn$overal.index.2[x]
+                        ps.set.2 <- sub.all.knn[rowSums(ps.set.2) > 0 , ]
+                        ps.set.2$mnn.sets <- paste0(sort(c(sub.all.mnn[x , 3], sub.all.mnn[x , 4])), collapse = '_')
+                        ps.set.2$mnn.sets.data <- paste0(sort(c(sub.all.mnn[x , 1], sub.all.mnn[x , 2])), collapse = '_')
+                        if (nrow(ps.set.2) > 1) {
+                            ps.set.2 <- ps.set.2[ps.set.2$rank.aver.dist == min(ps.set.2$rank.aver.dist) , ]
+                        }
+                        prps.set <- rbind(ps.set.1, ps.set.2)
+                        prps.set
+                    })
+                sub.prps.sets <- do.call(rbind, sub.prps.sets)
+            })
+        names(all.prps.sets) <- names(all.possible.batches)
+
+        if (is.null(all.prps.sets)) {
+            stop('PRPS cannot be created. You may want to increase the value of the mnn.')
+        }
+        ### sanity check ####
+        if(nrow(all.prps.sets) == 2*nrow(all.mnn)){
+            printColoredMessage(
+                message = paste0(
+                    '* The nrow of the matched MNN and KNN is ',
+                    nrow(all.prps.sets),
+                    '.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        } else {
+            stop('For individual MNN set, the corresponding KNN sets cannot be found. Check the the input.')
+        }
+
+        ## add the average of the knn sets for each PRPS set and then rank them ####
+        printColoredMessage(
+            message = '* Average the knn sets for each MNN set and then rank them:',
             color = 'blue',
             verbose = verbose
         )
-    } else stop('For individual MNN set, the corresponding KNN sets cannot be found. Check the the input.')
-
-    ## add the average of the knn sets for each PRPS set and then rank them ####
-    printColoredMessage(
-        message = '* Average the knn sets for each MNN set and then rank them:',
-        color = 'blue',
-        verbose = verbose
-    )
-    aver.mnn.sets <- NULL
-    all.prps.sets$aver.mnn.sets <- unlist(lapply(
-        seq(1, nrow(all.prps.sets), 2),
-        function(x)
-            rep(mean(all.prps.sets$aver.dist[x:(x + 1)]), 2))
+        aver.mnn.sets <- NULL
+        all.prps.sets$aver.mnn.sets <- unlist(lapply(
+            seq(1, nrow(all.prps.sets), 2),
+            function(x)
+                rep(mean(all.prps.sets$aver.dist[x:(x + 1)]), 2))
         )
-    set.seed(2233)
-    all.prps.sets$rank.aver.mnn.sets <- rank(x = all.prps.sets$aver.mnn.sets, ties.method = 'random')
+        set.seed(2233)
+        all.prps.sets$rank.aver.mnn.sets <- rank(
+            x = all.prps.sets$aver.mnn.sets,
+            ties.method = 'random'
+        )
 
-    ## filter PRPS sets ####
-    if (isTRUE(filter.prps.sets)) {
+        ## filter PRPS sets ####
+        if (isTRUE(filter.prps.sets)) {
+            printColoredMessage(
+                message = '- Filtering the PRPS sets across each pair of batches:',
+                color = 'orange',
+                verbose = verbose
+            )
+            printColoredMessage(
+                message = paste0(
+                    '- The maximum number of PRPS sets across each pairs of batches is ',
+                    max.prps.sets,
+                    '.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            printColoredMessage(
+                message = paste0(
+                    '- The PRPS sets will be filtered based on the distances between each knn sets.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            all.prps.sets <- lapply(
+                unique(all.prps.sets$mnn.sets.data),
+                function(x) {
+                    temp.prps.set <- all.prps.sets[all.prps.sets$mnn.sets.data == x ,]
+                    if (length(unique(temp.prps.set$mnn.sets)) >= max.prps.sets) {
+                        printColoredMessage(
+                            message = paste0(
+                                '* The number of PRPS sets across the batches "',
+                                x,
+                                '" is ',
+                                length(unique(temp.prps.set$mnn.sets)), '.' ),
+                            color = 'blue',
+                            verbose = verbose
+                        )
+                        temp.prps.set <- arrange(temp.prps.set, aver.mnn.sets, mnn.sets)
+                        printColoredMessage(
+                            message = paste0(
+                                '* ',
+                                length(unique(temp.prps.set$mnn.sets)) - max.prps.sets,
+                                ' PRPS sets are removed.' ),
+                            color = 'blue',
+                            verbose = verbose
+                        )
+                        temp.prps.set <- temp.prps.set[1:c(2 * max.prps.sets) , ]
+                    } else if (length(unique(temp.prps.set$mnn.sets))  < max.prps.sets) {
+                        printColoredMessage(
+                            message = paste0(
+                                '* The number of PRPS sets across the batches "',
+                                x,
+                                '" is ',
+                                length(unique(temp.prps.set$mnn.sets)) , '.' ),
+                            color = 'blue',
+                            verbose = verbose
+                        )
+                        temp.prps.set <- all.prps.sets[all.prps.sets$mnn.sets.data == x ,]
+                    }
+                    return(temp.prps.set)
+                })
+            all.prps.sets <- do.call(rbind, all.prps.sets)
+        }
         printColoredMessage(
-            message = '- Filter the PRPS sets across each pair of batches:',
+            message = paste0(
+                '- ',
+                length(unique(all.prps.sets$mnn.sets)),
+                ' PRPS stes are found in total.'),
+            color = 'blue',
+            verbose = verbose
+        )
+
+        ## Creating PRPS data ####
+        printColoredMessage(
+            message = '-- Creating PRPS data matrix:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        ## apply log ####
+        printColoredMessage(
+            message = '- Applying data log transformation before creating the PRPS expression data:',
+            color = 'blue',
+            verbose = verbose
+        )
+        if (isTRUE(apply.log) & !is.null(pseudo.count)) {
+            printColoredMessage(
+                message = paste0(
+                    '- Applying log2 on the "',
+                    assay.name,
+                    '" + ',
+                    pseudo.count,
+                    ' (pseudo.count)  data.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
+        } else if (isTRUE(apply.log) & is.null(pseudo.count)) {
+            printColoredMessage(
+                message = paste0(
+                    'Applying log2 on the "',
+                    assay.name,
+                    '" data.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            expr.data <- log2(assay(x = se.obj, i = assay.name))
+        } else if (isFALSE(apply.log)) {
+            printColoredMessage(
+                message = paste0(
+                    'The "',
+                    assay.name,
+                    '" data will be used without any log transformation.' ),
+                color = 'blue',
+                verbose = verbose
+            )
+            expr.data <- assay(x = se.obj, i = assay.name)
+        }
+        printColoredMessage(
+            message = '- Aeveraging samples to create pseudo samples:',
+            color = 'blue',
+            verbose = verbose
+        )
+        i <- '2010'
+        prps.data <- lapply(
+            names(all.prps.sets),
+            function(i){
+                sub.data <- expr.data[ , homo.uv.groups == i ]
+                sub.prps.sets <- all.prps.sets[[i]]
+                prps.data <- lapply(
+                    unique(sub.prps.sets$mnn.sets),
+                    function(x) {
+                        temp.prps <- sub.prps.sets[sub.prps.sets$mnn.sets == x, ]
+                        index.a <- unlist(unname(temp.prps[1, grep('overal', colnames(temp.prps))]))
+                        index.b <- unlist(unname(temp.prps[2, grep('overal', colnames(temp.prps))]))
+                        prps.a <- rowMeans(sub.data[, index.a])
+                        prps.b <- rowMeans(sub.data[, index.b])
+                        prps <- cbind(prps.a, prps.b)
+                        colnames(prps) <- paste(
+                            main.uv.variable,
+                            temp.prps$mnn.sets,
+                            i,
+                            sep = '_')
+                        return(prps)
+                    })
+                prps.data <- do.call(cbind, prps.data)
+            })
+        prps.data <- do.call(cbind, prps.data)
+
+        ## sanity check ####
+        if (!sum(table(colnames(prps.data)) == 2) == ncol(prps.data) / 2) {
+            stop('There someting wrong with PRPS sets.')
+        }
+        se.obj[[uv.variable]] <- initial.variable
+    }
+
+    # Using other.uv.variables ####
+    if (is.null(other.uv.variables)){
+        # Checking sample sizes of each sub group ####
+        ## KNN ####
+        sub.group.sample.size.knn <- findRepeatingPatterns(
+            vec = se.obj[[uv.variable]],
+            n.repeat = nb.knn + 1
+        )
+        if (length(sub.group.sample.size.knn) == 0){
+            stop(paste0(
+                'All subgroups of the unwanted variable have less than ',
+                nb.knn + 1,
+                ' (nb.knn + 1) samples. KNN cannot be found.'))
+        } else if (length(sub.group.sample.size.knn) != length(unique(se.obj[[uv.variable]])) ){
+            printColoredMessage(
+                message = paste0(
+                    'All or some subgroups of the unwanted variable have less than ',
+                    nb.knn + 1,
+                    ' (nb.knn + 1) samples. Then KNN for those sub-groups cannot be created.'),
+                color = 'red',
+                verbose = verbose
+            )
+        } else {
+            printColoredMessage(
+                message = paste0(
+                    '- All the sub-groups of the unwanted variable have at least ',
+                    nb.knn + 1,
+                    ' nb.knn + 1 samples.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+        ## MNN ####
+        sub.group.sample.size.mnn <- findRepeatingPatterns(
+            vec = se.obj[[uv.variable]],
+            n.repeat = nb.mnn + 1
+        )
+        if (length(sub.group.sample.size.mnn) == 0){
+            stop(paste0(
+                'All subgroups of the unwanted variable have less than ',
+                nb.mnn + 1,
+                ' (nb.mnn + 1) samples. MNN cannot be found.'))
+        } else if (length(sub.group.sample.size.mnn) != length(unique(se.obj[[uv.variable]])) ){
+            printColoredMessage(
+                message = paste0(
+                    'All or some subgroups of the unwanted variable have less than ',
+                    nb.mnn + 1,
+                    ' (nb.mnn + 1) samples.'),
+                color = 'red',
+                verbose = verbose
+            )
+        } else {
+            printColoredMessage(
+                message = paste0(
+                    '- All the subgroups of the unwanted variable have at least, ',
+                    nb.mnn + 1,
+                    ' (nb.mnn + 1) samples.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+
+        # Finding common sub-groups ####
+        common.sub.groups <- intersect(
+            sub.group.sample.size.knn,
+            sub.group.sample.size.mnn
+        )
+        if (length(common.sub.groups) == 0){
+            stop('There is not')
+        } else if (length(common.sub.groups) == 1){
+            stop('')
+        } else if (length(common.sub.groups) > 1){
+            printColoredMessage()
+        }
+
+        se.obj <- se.obj[ , se.obj[[uv.variable]] %in% common.sub.groups]
+        # Finding k nearest neighbor ####
+        printColoredMessage(
+            message = '-- Finding k nearest neighbor by applying the findKnn function:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        se.obj <- findKnn(
+            se.obj = se.obj,
+            assay.name = assay.name,
+            uv.variable = main.uv.variable,
+            data.input = data.input,
+            nb.pcs = nb.pcs,
+            center = center,
+            scale = scale,
+            svd.bsparam = svd.bsparam,
+            clustering.method = clustering.method,
+            nb.clusters = nb.clusters,
+            nb.knn = nb.knn,
+            hvg = hvg,
+            normalization = normalization,
+            regress.out.variables = regress.out.variables,
+            apply.log = apply.log,
+            pseudo.count = pseudo.count,
+            assess.se.obj = assess.se.obj,
+            remove.na = remove.na,
+            output.name = output.name,
+            prps.group = prps.group,
+            save.se.obj = save.se.obj,
+            verbose = verbose
+        )
+        if (is.null(output.name)) {
+            output.name.knn <- paste0(uv.variable, '|' , assay.name)
+        } else output.name.knn <- output.name
+        if (is.null(prps.group)){
+            prps.group.mnn <- paste0('prps|knnMnn|', uv.variable)
+        } else prps.group.mnn <- prps.group
+        all.knn <- se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$knn[[output.name.knn]]
+        if (isFALSE(save.se.obj)) {
+            se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$knn[[output.name.knn]] <- NULL
+        }
+
+        # Find mutual nearest neighbor ####
+        printColoredMessage(
+            message = '-- Finding mutual nearest neighbors by applying the findMnn function:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        se.obj <- findMnn(
+            se.obj = se.obj,
+            assay.name = assay.name,
+            uv.variable = uv.variable,
+            nb.mnn = nb.mnn,
+            clustering.method = clustering.method,
+            nb.clusters = nb.clusters,
+            data.input = data.input,
+            nb.pcs = nb.pcs,
+            center = center,
+            scale = scale,
+            svd.bsparam = svd.bsparam,
+            normalization = normalization,
+            apply.cosine.norm = apply.cosine.norm,
+            regress.out.variables = regress.out.variables,
+            hvg = hvg,
+            apply.log = apply.log,
+            pseudo.count = pseudo.count,
+            mnn.bpparam = mnn.bpparam,
+            mnn.nbparam = mnn.nbparam,
+            assess.se.obj = assess.se.obj,
+            remove.na = remove.na,
+            plot.output = plot.output,
+            output.name = output.name,
+            prps.group = prps.group,
+            save.se.obj = save.se.obj,
+            verbose = verbose
+        )
+        if (is.null(output.name)) {
+            output.name.mnn <- paste0(uv.variable, '|' , assay.name)
+        } else output.name.mnn <- output.name
+        if (is.null(prps.group)){
+            prps.group.mnn <- paste0('prps|knnMnn|', uv.variable)
+        } else prps.group.mnn <- prps.group
+        all.mnn <- se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$mnn[[output.name.mnn]]
+        if (isFALSE(save.se.obj)) {
+            se.obj@metadata$PRPS$un.supervised[[prps.group.mnn]]$KnnMnn$mnn[[output.name.mnn]] <- NULL
+        }
+
+        # Finding similar sample sets ####
+        printColoredMessage(
+            message = '-- Finding all possible similar samples across batches:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        ## find the knn for each mnn set ####
+        printColoredMessage(
+            message = '- Finding similar samples using the KNN and MNN data:',
             color = 'orange',
             verbose = verbose
-            )
+        )
         printColoredMessage(
-            message = paste0( '- The maximum number of PRPS sets per batch is set to ', max.prps.sets, '.'),
-            color = 'blue',
-            verbose = verbose
-            )
-        printColoredMessage(
-            message = paste0(
-                '- The PRPS sets will be filtered based on the distances between each knn sets.'),
+            message = '* Matching the MNN sets with the corresponding KNN sets:',
             color = 'blue',
             verbose = verbose
         )
+        mnn.sets <- NULL
         all.prps.sets <- lapply(
-            unique(all.prps.sets$mnn.sets.data),
+            1:nrow(all.mnn),
             function(x) {
-                temp.prps.set <- all.prps.sets[all.prps.sets$mnn.sets.data == x ,]
-                if (length(unique(temp.prps.set$mnn.sets)) >= max.prps.sets) {
-                    printColoredMessage(
-                        message = paste0(
-                            '* The number of PRPS sets across the batches "', x, '" is ',
-                            length(unique(temp.prps.set$mnn.sets)), '.' ),
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    temp.prps.set <- arrange(temp.prps.set, aver.mnn.sets, mnn.sets)
-                    printColoredMessage(
-                        message = paste0('* ', length(unique(temp.prps.set$mnn.sets)) - max.prps.sets, ' PRPS sets are removed.' ),
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    temp.prps.set <- temp.prps.set[1:c(2 * max.prps.sets) , ]
-                } else if (length(unique(temp.prps.set$mnn.sets))  < max.prps.sets) {
-                    printColoredMessage(
-                        message = paste0(
-                            '* The number of PRPS sets across the batches "', x, '" is ',
-                            length(unique(temp.prps.set$mnn.sets)) , '.' ),
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    temp.prps.set <- all.prps.sets[all.prps.sets$mnn.sets.data == x ,]
+                # ps set 1
+                ps.set.1 <- all.knn[ , c(1:c(nb.knn + 1))] == all.mnn$overal.index.1[x]
+                ps.set.1 <- all.knn[rowSums(ps.set.1) > 0 , ]
+                ps.set.1$mnn.sets <- paste0(
+                    sort(c(all.mnn[x , 3], all.mnn[x , 4])),
+                    collapse = '_'
+                )
+                ps.set.1$mnn.sets.data <- paste0(sort(c(all.mnn[x , 1], all.mnn[x , 2])), collapse = '_')
+                if (nrow(ps.set.1) > 1) {
+                    ps.set.1 <- ps.set.1[ps.set.1$rank.aver.dist == min(ps.set.1$rank.aver.dist) , ]
                 }
-                return(temp.prps.set)
+                # ps set 2
+                ps.set.2 <- all.knn[, c(1:c(nb.knn + 1))] == all.mnn$overal.index.2[x]
+                ps.set.2 <- all.knn[rowSums(ps.set.2) > 0 , ]
+                ps.set.2$mnn.sets <- paste0(sort(c(all.mnn[x , 3], all.mnn[x , 4])), collapse = '_')
+                ps.set.2$mnn.sets.data <- paste0(sort(c(all.mnn[x , 1], all.mnn[x , 2])), collapse = '_')
+                if (nrow(ps.set.2) > 1) {
+                    ps.set.2 <- ps.set.2[ps.set.2$rank.aver.dist == min(ps.set.2$rank.aver.dist) , ]
+                }
+                prps.set <- rbind(ps.set.1, ps.set.2)
+                prps.set
             })
         all.prps.sets <- do.call(rbind, all.prps.sets)
-    }
-    printColoredMessage(
-        message = paste0('- ', length(unique(all.prps.sets$mnn.sets)), ' PRPS stes are found in total.'),
-        color = 'blue',
-        verbose = verbose
-    )
 
-    # Create PRPS data ####
-    printColoredMessage(
-        message = '-- Create PRPS expression data:',
-        color = 'magenta',
-        verbose = verbose
-        )
-    ## apply log ####
-    printColoredMessage(
-        message = '- Data log transformation before creating the PRPS expression data:',
-        color = 'blue',
-        verbose = verbose
-        )
-    if (isTRUE(apply.log) & !is.null(pseudo.count)) {
-        printColoredMessage(
-            message = paste0(
-                '- Applying log2 on the "',
-                assay.name, '" + ',
-                pseudo.count,
-                ' (pseudo.count)  data.'),
-            color = 'blue',
-            verbose = verbose
-        )
-        expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
-    } else if (isTRUE(apply.log) & is.null(pseudo.count)) {
-        printColoredMessage(
-            message = paste0(
-                'Applying log2 on the "',
-                assay.name,
-                '" data.'),
-            color = 'blue',
-            verbose = verbose
-        )
-        expr.data <- log2(assay(x = se.obj, i = assay.name))
-    } else if (isFALSE(apply.log)) {
-        printColoredMessage(
-            message = paste0(
-                'The "',
-                assay.name,
-                '" data will be used without any log transformation.' ),
-            color = 'blue',
-            verbose = verbose
-        )
-        expr.data <- assay(x = se.obj, i = assay.name)
-    }
-    printColoredMessage(
-        message = '- Aeveraging samples to create pseudo samples:',
-        color = 'blue',
-        verbose = verbose
-        )
-    prps.data <- lapply(
-        unique(all.prps.sets$mnn.sets),
-        function(x) {
-            temp.prps <- all.prps.sets[all.prps.sets$mnn.sets == x, ]
-            index.a <- unlist(unname(temp.prps[1, grep('overal', colnames(temp.prps))]))
-            index.b <- unlist(unname(temp.prps[2, grep('overal', colnames(temp.prps))]))
-            prps.a <- rowMeans(expr.data[, index.a])
-            prps.b <- rowMeans(expr.data[, index.b])
-            prps <- cbind(prps.a, prps.b)
-            colnames(prps) <- paste(uv.variable, temp.prps$mnn.sets, sep = '_')
-            return(prps)
-        })
-    prps.data <- do.call(cbind, prps.data)
-    ## sanity check ####
-    if (!sum(table(colnames(prps.data)) == 2) == ncol(prps.data) / 2) {
-        stop('There someting wrong with PRPS sets.')
-    }
+        if (is.null(all.prps.sets)) {
+            stop('PRPS cannot be created. You may want to increase the value of the mnn.')
+        }
+        ### sanity check ####
+        if(nrow(all.prps.sets) == 2*nrow(all.mnn)){
+            printColoredMessage(
+                message = paste0(
+                    '* The nrow of the matched MNN and KNN is ',
+                    nrow(all.prps.sets),
+                    '.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        } else {
+            stop('For individual MNN set, the corresponding KNN sets cannot be found. Check the the input.')
+        }
 
-    se.obj[[uv.variable]] <- initial.variable
+        ## add the average of the knn sets for each PRPS set and then rank them ####
+        printColoredMessage(
+            message = '* Average the knn sets for each MNN set and then rank them:',
+            color = 'blue',
+            verbose = verbose
+        )
+        aver.mnn.sets <- NULL
+        all.prps.sets$aver.mnn.sets <- unlist(lapply(
+            seq(1, nrow(all.prps.sets), 2),
+            function(x)
+                rep(mean(all.prps.sets$aver.dist[x:(x + 1)]), 2))
+        )
+        set.seed(2233)
+        all.prps.sets$rank.aver.mnn.sets <- rank(
+            x = all.prps.sets$aver.mnn.sets,
+            ties.method = 'random'
+        )
+
+        ## filter PRPS sets ####
+        if (isTRUE(filter.prps.sets)) {
+            printColoredMessage(
+                message = '- Filtering the PRPS sets across each pair of batches:',
+                color = 'orange',
+                verbose = verbose
+            )
+            printColoredMessage(
+                message = paste0(
+                    '- The maximum number of PRPS sets across each pairs of batches is ',
+                    max.prps.sets,
+                    '.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            printColoredMessage(
+                message = paste0(
+                    '- The PRPS sets will be filtered based on the distances between each knn sets.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            all.prps.sets <- lapply(
+                unique(all.prps.sets$mnn.sets.data),
+                function(x) {
+                    temp.prps.set <- all.prps.sets[all.prps.sets$mnn.sets.data == x ,]
+                    if (length(unique(temp.prps.set$mnn.sets)) >= max.prps.sets) {
+                        printColoredMessage(
+                            message = paste0(
+                                '* The number of PRPS sets across the batches "',
+                                x,
+                                '" is ',
+                                length(unique(temp.prps.set$mnn.sets)), '.' ),
+                            color = 'blue',
+                            verbose = verbose
+                        )
+                        temp.prps.set <- arrange(temp.prps.set, aver.mnn.sets, mnn.sets)
+                        printColoredMessage(
+                            message = paste0(
+                                '* ',
+                                length(unique(temp.prps.set$mnn.sets)) - max.prps.sets,
+                                ' PRPS sets are removed.' ),
+                            color = 'blue',
+                            verbose = verbose
+                        )
+                        temp.prps.set <- temp.prps.set[1:c(2 * max.prps.sets) , ]
+                    } else if (length(unique(temp.prps.set$mnn.sets))  < max.prps.sets) {
+                        printColoredMessage(
+                            message = paste0(
+                                '* The number of PRPS sets across the batches "',
+                                x,
+                                '" is ',
+                                length(unique(temp.prps.set$mnn.sets)) , '.' ),
+                            color = 'blue',
+                            verbose = verbose
+                        )
+                        temp.prps.set <- all.prps.sets[all.prps.sets$mnn.sets.data == x ,]
+                    }
+                    return(temp.prps.set)
+                })
+            all.prps.sets <- do.call(rbind, all.prps.sets)
+        }
+        printColoredMessage(
+            message = paste0(
+                '- ',
+                length(unique(all.prps.sets$mnn.sets)),
+                ' PRPS stes are found in total.'),
+            color = 'blue',
+            verbose = verbose
+        )
+
+        # Create PRPS data ####
+        printColoredMessage(
+            message = '-- Creating PRPS data:',
+            color = 'magenta',
+            verbose = verbose
+        )
+        ## apply log ####
+        printColoredMessage(
+            message = '- Applying data log transformation before creating the PRPS expression data:',
+            color = 'blue',
+            verbose = verbose
+        )
+        if (isTRUE(apply.log) & !is.null(pseudo.count)) {
+            printColoredMessage(
+                message = paste0(
+                    '- Applying log2 on the "',
+                    assay.name,
+                    '" + ',
+                    pseudo.count,
+                    ' (pseudo.count)  data.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
+        } else if (isTRUE(apply.log) & is.null(pseudo.count)) {
+            printColoredMessage(
+                message = paste0(
+                    'Applying log2 on the "',
+                    assay.name,
+                    '" data.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            expr.data <- log2(assay(x = se.obj, i = assay.name))
+        } else if (isFALSE(apply.log)) {
+            printColoredMessage(
+                message = paste0(
+                    'The "',
+                    assay.name,
+                    '" data will be used without any log transformation.' ),
+                color = 'blue',
+                verbose = verbose
+            )
+            expr.data <- assay(x = se.obj, i = assay.name)
+        }
+        printColoredMessage(
+            message = '- Aeveraging samples to create pseudo samples:',
+            color = 'blue',
+            verbose = verbose
+        )
+        prps.data <- lapply(
+            unique(all.prps.sets$mnn.sets),
+            function(x) {
+                temp.prps <- all.prps.sets[all.prps.sets$mnn.sets == x, ]
+                index.a <- unlist(unname(temp.prps[1, grep('overal', colnames(temp.prps))]))
+                index.b <- unlist(unname(temp.prps[2, grep('overal', colnames(temp.prps))]))
+                prps.a <- rowMeans(expr.data[, index.a])
+                prps.b <- rowMeans(expr.data[, index.b])
+                prps <- cbind(prps.a, prps.b)
+                colnames(prps) <- paste(uv.variable, temp.prps$mnn.sets, sep = '_')
+                return(prps)
+            })
+        prps.data <- do.call(cbind, prps.data)
+        ## sanity check ####
+        if (!sum(table(colnames(prps.data)) == 2) == ncol(prps.data) / 2) {
+            stop('There someting wrong with PRPS sets.')
+        }
+
+        se.obj[[uv.variable]] <- initial.variable
+    }
 
     # Save the results ####
     ## select output name ####

@@ -22,40 +22,40 @@ plotGenesPartialCorrelation(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to obtain the computed correlations. The default is set to "all, which
-indicates all the assays of the SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character string or a vector of character strings specifying the names of the assays
+in the SummarizedExperiment object for which the computed correlations are to be obtained. The default is set to "all,"
+indicating that all assays of the SummarizedExperiment object will be selected.}
 
-\item{variable}{Symbol. A symbol that indicates the column name of the SummarizedExperiment object that has been used
+\item{variable}{Character. A character string indicating the column name in the SummarizedExperiment object that was used
 to compute partial correlation.}
 
-\item{method}{Symbol. A symbol that indicates which correlation methods has been computed for the "variable". The options
-are 'pearson' or "spearman". The default is set to 'spearman'.}
+\item{method}{Character. A character string specifying the correlation method used for the "variable". The options
+are 'pearson' or 'spearman'. The default is set to 'spearman'.}
 
-\item{plot.type}{Symbol. A symbol specifying how to plot the results of the partial pairwise gene correlation. The
-options are:}
+\item{plot.type}{Character. A character string specifying how to plot the results of the partial pairwise gene correlation.
+The options are: 'scatter plot', 'bar plot', and 'histogram'. The default is set to 'bar plot'.}
 
-\item{filter.genes}{Logical. Indicates to filter genes before generating the plots or not. The default is set to 'TRUE'.}
+\item{filter.genes}{Logical. Indicates whether to filter genes before generating the plots. The default is set to 'TRUE'.}
 
 \item{corr.dif.cutoff}{Numeric. A numeric value to be used as a cutoff for filtering genes. The default is set to
 0.4.}
 
-\item{plot.ncol}{Numeric. Indicates number of columns in the plot grid. When the number of selected assay is more than
-1, the function puts all the RLE boxplots in one grid.}
+\item{plot.ncol}{Numeric. Specifies the number of columns in the plot grid. When more than one assay is selected,
+the function arranges all the RLE boxplots in one grid.}
 
-\item{plot.nrow}{Numeric. Indicates number of rows in the plot grid. When the number of selected assay is more than
-3, the function puts all the RLE boxplots in one grid.}
+\item{plot.nrow}{Numeric. Specifies the number of rows in the plot grid. When more than three assays are selected, the function
+arranges all the RLE boxplots in one grid.}
 
-\item{plot.output}{Logical. Indicates to print the histogram of partial correlation coefficients or not. The default is
-set to 'FLASE'.}
+\item{plot.output}{Logical. Indicates whether to print the histogram of partial correlation coefficients. The default is
+set to 'FALSE'.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object or
-to output the result as list. By default it is set to TRUE.}
+output the result as a list. By default, this is set to 'TRUE'.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If 'TRUE', displays messages for different steps of the function.}
 }
 \value{
-The SummarizedExperiment object that contains the correlation plots or a list of the correlation plots
+The SummarizedExperiment object containing the correlation plots or a list of correlation plots
 for individual assays.
 }
 \description{

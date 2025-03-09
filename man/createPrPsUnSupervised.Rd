@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsUnSupervised.R
 \name{createPrPsUnSupervised}
 \alias{createPrPsUnSupervised}
-\title{Create unsupervised pseudo-replicates of pseudo samples (PRPS).}
+\title{Creates unsupervised pseudo-replicates of pseudo samples (PRPS).}
 \usage{
 createPrPsUnSupervised(
   se.obj,

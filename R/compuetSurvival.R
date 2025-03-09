@@ -352,7 +352,7 @@ computeSurvival <- function(
                             color = 'white',
                             verbose = verbose
         )
-        if (is.null(genes)){
+        if (!is.null(genes)){
             if (isTRUE(return.survival.plot) & isTRUE(return.p.value)){
                 return(list(
                     all.genes.survial.plots = all.genes.survial.plots,

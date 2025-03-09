@@ -279,7 +279,7 @@ plotRLE <- function(
             all.rle.plots[[i]]$labels$caption <- NULL
         }
         printColoredMessage(
-            message = '-- Put all the RLE plots of all assays together.',
+            message = '-- Putting all the RLE plots of all assays together.',
             color = 'magenta',
             verbose = verbose
             )
@@ -302,8 +302,11 @@ plotRLE <- function(
                             size = 18),
                         bottom = text_grob(
                             label = paste0(
-                                'Analysis: ', 'centred gene medians and then boxplots of samples.\n',
-                                'Highlighted ', median.points.color, ' dots are boxplots medians.'),
+                                'Analysis: ',
+                                'centred gene medians and then boxplots of samples.\n',
+                                'Highlighted ',
+                                median.points.color,
+                                ' dots are boxplots medians.'),
                             color = "black",
                             hjust = 1,
                             x = 1,

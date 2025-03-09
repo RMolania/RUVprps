@@ -1,4 +1,4 @@
-#' Create pseudo-replicates of pseudo samples (PRPS) in supervised manner.
+#' Creates pseudo-replicates of pseudo samples (PRPS) in supervised manner.
 
 #' @author Ramyar Molania
 
@@ -25,62 +25,52 @@
 #'
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Symbol. A symbol used to specify the assay name within the SummarizedExperiment object. The selected
-#' assay should be the one that will be used for RUV-III-PRPS normalization.
-#' @param bio.variables Symbol. A symbol or symbols representing the label of biological variable(s), such as cancer
-#' subtypes, tumour purity, ... within the SummarizedExperiment object. This can comprise a vector containing either
-#' categorical, continuous, or a combination of both variables.
-#' @param uv.variables Symbol. A symbol or symbols representing the label of unwanted variable(s), such as batch effects,
-#' library size, ... within the SummarizedExperiment object. This can comprise a vector containing either categorical,
-#' continuous, or a combination of both variables.
+#' @param assay.name Character. A character string used to specify the assay name within the SummarizedExperiment object.
+#' The selected assay should be the one that will be used for RUV-III-PRPS normalization.
+#' @param bio.variables Character. A character string or character vector representing the label of biological variable(s),
+#' such as cancer subtypes, tumor purity, etc., within the SummarizedExperiment object. This can comprise a vector
+#' containing either categorical, continuous, or a combination of both variables.
+#' @param uv.variables Character. A character string or character vector representing the label of unwanted variable(s),
+#' such as batch effects, library size, etc., within the SummarizedExperiment object. This can comprise a vector containing
+#' either categorical, continuous, or a combination of both variables.
 #' @param apply.other.uv.variables Logical. Determines whether to include other specified unwanted variables when generating
 #' PRPS sets for individual ones. The default is set to 'TRUE'.
 #' @param min.sample.for.ps Numeric. Indicates the minimum number of biologically homogeneous samples to be averaged
-#' to create one pseudo-sample. The default it is set to 3.
-#' @param bio.clustering.method Symbol. A symbol indicating the clustering method used to group each continuous biological
-#' variable. The option include 'kmeans', cut' and 'quantile'. The default is to 'kmeans'. We refer to the
-#' createHomogeneousBioGroups() function for more details.
+#' to create one pseudo-sample. The default is set to 3.
+#' @param bio.clustering.method Character. A character string indicating the clustering method used to group each
+#' continuous biological variable. The options include 'kmeans', 'cut', and 'quantile'. The default is 'kmeans'. We refer
+#' to the createHomogeneousBioGroups() function for more details.
 #' @param nb.bio.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
-#' variable. The default it set to 3.
-#' @param other.uv.clustering.method Symbol. A symbol indicating the clustering method used to group each continuous unwanted
-#' variable. The option include 'kmeans', cut' and 'quantile'. The default is to 'kmeans'. We refer to the
-#' createHomogeneousUVGroups() function for more details.
-#' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
-#' variable. The default it set to 3.
+#' variable. The default is set to 3.
+#' @param other.uv.clustering.method Character. A character string indicating the clustering method used to group each
+#' continuous unwanted variable. The options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
+#' We refer to the createHomogeneousUVGroups() function for more details.
+#' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous unwanted
+#' variable. The default is set to 3.
 #' @param check.prps.connectedness Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
 #' The default is set to 'TRUE'. See the details for more information.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
-#' will be applied inside the function. The default is set to 'TRUE'.
-#' @param assess.variables Logical. Indicates whether to assess the association between the biological or unwanted
-#' variable(s) separately. The default is set to 'FALSE'. We refer to the 'assessVariableAssociation' for more details.
-#' @param cat.cor.coef Vector of two numerical values. Indicates the cut-off of the correlation coefficient between each
-#' pair of categorical variables. The first one is between each pair of 'uv.variables' and the second one is between each
-#' pair of 'bio.variables'. The correlation is computed by the function ContCoef from the DescTools package. If the correlation
-#' of a pair of variable is higher than the cut-off, then only the variable that has the highest number of factor will be
-#' kept and the other one will be excluded from the remaining analysis. By default they are both set to 0.7.
-#' @param cont.cor.coef Vector of two numerical values. Indicates the cut-off of the Spearman correlation coefficient
-#' between each pair of continuous variables. The first one is between each pair of 'uv.variables' and the second one is
-#' between each pair of 'bio.variables'. If the correlation of a pair of variable is higher than the cut-off, then only
-#' the variable that has the highest variance will be kept and the other one will be excluded from the remaining analysis.
-#' By default they are both set to 0.7.
-#' @param remove.na Symbol. A symbol Indicating whether to remove NA or missing values from either the 'assays', the
-#' 'sample.annotation', both' or 'none'. If 'assays' is selected, the genes that contains NA or missing values will be
-#' excluded. If sample.annotation' is selected, the samples that contains NA or missing values for any 'bio.variables' and
-#' 'uv.variables' will be excluded. The default is set to both'.
+#' function will be applied inside the function. The default is set to 'TRUE'.
+#' @param remove.na Character. A character string indicating whether to remove NA or missing values from either the 'assays',
+#' the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
+#' excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
+#' 'uv.variables' will be excluded. The default is set to 'both'.
 #' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-#' or to output the result as list. The default by is set to 'TRUE'.
+#' or to output the result as a list. The default is set to 'TRUE'.
 #' @param plot.output Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
 #' The default is 'TRUE'.
-#' @param output.name Symbol. A symbol to specify the name of all PRPS sets that will be created for all specified source(s)
-#' of unwanted variation. The default is set to 'NULL'. The, the function creates a name based on paste0('prps_', uv.variable).
-#' @param  prps.group TTT
+#' @param output.name Character. A character string to specify the name of all PRPS sets that will be created for all
+#' specified source(s) of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a
+#' name based on paste0('prps_', uv.variable).
+#' @param prps.group Character. A character string specifying a name for the PRPS data sets created for a specific group.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
-#' @return A SummarizedExperiment object that contains all the PRPS data and PPRS map plots in the metadata or a list
+#' @return Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a list
 #' that contains all the results.
+
 
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
@@ -102,9 +92,6 @@ createPrPsSupervised <- function(
         apply.log = TRUE,
         pseudo.count = 1,
         assess.se.obj = TRUE,
-        assess.variables = FALSE,
-        cat.cor.coef = c(0.7, 0.7),
-        cont.cor.coef = c(0.7, 0.7),
         remove.na = 'both',
         save.se.obj = TRUE,
         plot.output = TRUE,
@@ -180,8 +167,6 @@ createPrPsSupervised <- function(
                     nb.other.uv.clusters = nb.other.uv.clusters,
                     apply.log = apply.log,
                     pseudo.count = pseudo.count,
-                    cat.cor.coef = cat.cor.coef,
-                    cont.cor.coef = cont.cor.coef,
                     check.prps.connectedness = check.prps.connectedness,
                     assess.se.obj = FALSE,
                     save.se.obj = save.se.obj,
@@ -216,8 +201,6 @@ createPrPsSupervised <- function(
                         nb.bio.clusters = nb.bio.clusters,
                         other.uv.clustering.method = other.uv.clustering.method,
                         nb.other.uv.clusters = nb.other.uv.clusters,
-                        cat.cor.coef = cat.cor.coef,
-                        cont.cor.coef = cont.cor.coef,
                         apply.log = apply.log,
                         assess.se.obj = FALSE,
                         save.se.obj = save.se.obj,
@@ -246,8 +229,6 @@ createPrPsSupervised <- function(
                     nb.bio.clusters = nb.bio.clusters,
                     other.uv.clustering.method = other.uv.clustering.method,
                     nb.other.uv.clusters = nb.other.uv.clusters,
-                    cat.cor.coef = cat.cor.coef,
-                    cont.cor.coef = cont.cor.coef,
                     apply.log = apply.log,
                     assess.se.obj = FALSE,
                     save.se.obj = save.se.obj,
@@ -267,9 +248,11 @@ createPrPsSupervised <- function(
                             verbose = verbose)
         return(se.obj)
     } else{
-        printColoredMessage(message = '------------The createPrPsSupervised function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The createPrPsSupervised function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         if (length(continuous.uv) > 0 &
             length(categorical.uv) > 0) {
             return(
