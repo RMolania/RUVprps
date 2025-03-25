@@ -17,7 +17,8 @@ checkPRPSconnectedness <- function(
         data.input,
         min.samples,
         batch.name,
-        verbose = TRUE) {
+        verbose = TRUE
+        ) {
     colsum.data.input <- colSums(data.input >= min.samples)
     if (sum(colsum.data.input == 0) > 0) {
         printColoredMessage(
@@ -63,28 +64,25 @@ checkPRPSconnectedness <- function(
                     verbose = verbose
                 )
             }
-            data.input <-
-                data.input[selected.groups, , drop = FALSE]
-            connection.check <- lapply(1:nrow(data.input),
-                                       function(x) {
-                                           groups.a <- names(which(data.input[x,] >= min.samples))
-                                           sub.connections <-
-                                               lapply(c(1:nrow(data.input))[-x],
-                                                      function(y) {
-                                                          groups.b <- names(which(data.input[y, ] >= min.samples))
-                                                          inter.samples <-
-                                                              intersect(groups.a, groups.b)
-                                                          if (length(inter.samples) > 0) {
-                                                              sort(unique(c(
-                                                                  groups.a, groups.b
-                                                              )), decreasing = FALSE)
-                                                          } else
-                                                              sort(groups.a, decreasing = FALSE)
-                                                      })
-                                           sort(unique(unlist(
-                                               Filter(Negate(is.null), sub.connections)
-                                           )), decreasing = FALSE)
-                                       })
+            data.input <- data.input[selected.groups, , drop = FALSE]
+            connection.check <- lapply(
+                1:nrow(data.input),
+                function(x) {
+                    groups.a <- names(which(data.input[x, ] >= min.samples))
+                    sub.connections <-
+                        lapply(c(1:nrow(data.input))[-x], function(y) {
+                            groups.b <- names(which(data.input[y, ] >= min.samples))
+                            inter.samples <-
+                                intersect(groups.a, groups.b)
+                            if (length(inter.samples) > 0) {
+                                sort(unique(c(groups.a, groups.b)), decreasing = FALSE)
+                            } else
+                                sort(groups.a, decreasing = FALSE)
+                        })
+                    sort(unique(unlist(Filter(
+                        Negate(is.null), sub.connections
+                    ))), decreasing = FALSE)
+                })
             covered.batches <-
                 Filter(Negate(is.null), connection.check)
             covered.batches <-
