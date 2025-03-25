@@ -69,7 +69,7 @@
 #' The default is set to 'NULL'.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
-#' @return SummarizedExperiment A SummarizedExperiment object containing the PRPS data or just PRPS data.
+#' @return Either a SummarizedExperiment object containing the PRPS data or just PRPS data.
 
 #' @importFrom dplyr group_by arrange slice desc add_count filter mutate
 #' @importFrom SummarizedExperiment assay
