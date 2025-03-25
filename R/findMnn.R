@@ -1,4 +1,4 @@
-#' Finding mutual nearest neighbors in RNA-seq data.
+#' Find mutual nearest neighbors in RNA-seq data.
 
 #' @author Ramyar Molania
 
@@ -71,7 +71,6 @@
 #' @importFrom utils setTxtProgressBar
 #' @export
 
-
 findMnn <- function(
         se.obj,
         assay.name,
@@ -143,7 +142,7 @@ findMnn <- function(
         hvg <- rep(TRUE, nrow(se.obj))
     }
 
-    # Assess the SummarizedExperiment object #####
+    # Assessing the SummarizedExperiment object #####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -160,7 +159,7 @@ findMnn <- function(
     initial.sample.names <- colnames(se.obj)
     colnames(se.obj) <- paste0('sample_', seq(ncol(se.obj)))
 
-    # Assess and group the unwanted variable ####
+    # Assessing and grouping the unwanted variable ####
     printColoredMessage(
         message = '- Assessing and grouping the unwanted variable:',
         color = 'magenta',
@@ -477,6 +476,7 @@ findMnn <- function(
         max = ncol(pairs.batch),
         style = 3
         )
+    ## finding MNN between each pairs of batches ####
     all.mnn <- lapply(
         1:ncol(pairs.batch),
         function(x) {
@@ -491,7 +491,7 @@ findMnn <- function(
                 color = 'blue',
                 verbose = verbose
                 )
-            # select data
+            # applying cosine normalization ####
             if (isTRUE(apply.cosine.norm)){
                 printColoredMessage(
                     message = '-- Applying cosine normalization of the data.',
@@ -510,6 +510,7 @@ findMnn <- function(
                 data1 = all.data.input[[pairs.batch[1, x]]]
                 data2 = all.data.input[[pairs.batch[2, x]]]
             }
+            # applying mnn function ####
             mnn.samples <- BiocNeighbors::findMutualNN(
                 data1 = data1,
                 data2 = data2,
@@ -518,9 +519,11 @@ findMnn <- function(
                 BPPARAM = mnn.bpparam,
                 mnn.nbparam = KmknnParam()
                 )
+            # checking the results of the mnn function ####
             if (is.null(mnn.samples)){
-                stop('* MNN cannot be found.')
+                stop('- MNN cannot be found.')
             }
+            # putting all the results of the mnn together ####
             group1 <- group2 <- NULL
             mnn.data <- data.frame(
                 group1 = rep(pairs.batch[1, x], length(mnn.samples$first)),
@@ -529,8 +532,8 @@ findMnn <- function(
                 overal.index.2 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[2, x]][mnn.samples$second],
                 overal.index.1.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[1, x]]])[mnn.samples$first])),
                 overal.index.2.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[2, x]]])[mnn.samples$second]))
-            )
-            # Sanity check ###
+                )
+            # applying a sanity check ####
             if (!all.equal(mnn.data$overal.index.1, mnn.data$overal.index.1.1)){
                 stop('There something wrong with the MNN.')
             }
@@ -538,7 +541,10 @@ findMnn <- function(
                 stop('There something wrong with the MNN.')
             }
             printColoredMessage(
-                message = paste0('* ', nrow(mnn.data), ' mnn are found.'),
+                message = paste0(
+                    '- ',
+                    nrow(mnn.data),
+                    ' MNN are found.'),
                 color = 'blue',
                 verbose = verbose
             )
@@ -546,11 +552,15 @@ findMnn <- function(
             return(mnn.data)
         })
     all.mnn <- do.call(rbind, all.mnn)
+    se.obj[[uv.variable]] <- initial.variable
+    colnames(se.obj) <- initial.sample.names
+    all.mnn$sample.ids.1 <- colnames(se.obj)[all.mnn$overal.index.1]
+    all.mnn$sample.ids.2 <- colnames(se.obj)[all.mnn$overal.index.2]
     if (is.null(all.mnn)){
         stop('MNN are not found across any batches. You may want to increase the valeu of the mnn.')
     }
 
-    # Plot the distribution of MNN  ####
+    # Plotting the distribution of MNN  ####
     p.mnn <- ggplot(all.mnn, aes(x = group1, y = group2)) +
         geom_point() +
         geom_count() +
@@ -576,21 +586,22 @@ findMnn <- function(
     if (isTRUE(plot.output)) print(p.mnn)
     message(' ')
     printColoredMessage(
-        message = paste0('- in total ' , nrow(all.mnn), ' mnn are found.'),
+        message = paste0(
+            '- in total ' ,
+            nrow(all.mnn),
+            ' MNN are found.'),
         color = 'blue',
         verbose = verbose
         )
     if (isTRUE(sum(is.na(all.mnn))))
-        stop('There are NA in the MNN.')
-    se.obj[[uv.variable]] <- initial.variable
-    colnames(se.obj) <- initial.sample.names
+        stop('There are NA in the MNN. This is not supported.')
 
-    # Save the results ####
-    ## select prps name ####
+    # Saving the results ####
+    ## selecting prps name ####
     if(is.null(prps.group)){
         prps.group <- paste0('prps|knnMnn|', uv.variable)
     }
-    ## select output name ####
+    ## selecting output name ####
     if (is.null(output.name))
         output.name <- paste0(uv.variable, '|' , assay.name)
 
