@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsSupervised.R
 \name{createPrPsSupervised}
 \alias{createPrPsSupervised}
-\title{Creates pseudo-replicates of pseudo samples (PRPS) in supervised manner.}
+\title{Creates pseudo-replicates of pseudo-samples (PRPS) in supervised manner.}
 \usage{
 createPrPsSupervised(
   se.obj,
@@ -48,8 +48,8 @@ PRPS sets for individual ones. The default is set to 'TRUE'.}
 continuous unwanted variable. The options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
 We refer to the createHomogeneousUVGroups() function for more details.}
 
-\item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous unwanted
-variable. The default is set to 3.}
+\item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
+unwanted variable. The default is set to 3.}
 
 \item{min.sample.for.ps}{Numeric. Indicates the minimum number of biologically homogeneous samples to be averaged
 to create one pseudo-sample. The default is set to 3.}
@@ -73,9 +73,9 @@ The default is set to 1.}
 function will be applied inside the function. The default is set to 'TRUE'.}
 
 \item{remove.na}{Character. A character string indicating whether to remove NA or missing values from either the 'assays',
-the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
-excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
-'uv.variables' will be excluded. The default is set to 'both'.}
+the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will
+be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables'
+and uv.variables' will be excluded. The default is set to 'both'.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
 or to output the result as a list. The default is set to 'TRUE'.}
@@ -92,8 +92,8 @@ name based on paste0('prps_', uv.variable).}
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }
 \value{
-Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a list
-that contains all the results.
+Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a
+list that contains all the results.
 }
 \description{
 This function creates different PRPS sets when all sources of unwanted and biological variation are known.
