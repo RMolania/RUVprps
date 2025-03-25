@@ -1,4 +1,4 @@
-#' Finding k-nearest neighbors in RNA-seq data.
+#' Find k-nearest neighbors in RNA-seq data.
 
 #' @author Ramyar Molania
 
@@ -120,7 +120,7 @@ findKnn <- function(
             stop('All the hvg genes are not found in the SummarizedExperiment object.')
     }
 
-    # Assessing SummarizedExperiment object ####
+    # Assessing the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -183,14 +183,14 @@ findKnn <- function(
         )
     if (length(sub.group.sample.size) == 0){
         stop(paste0(
-            'All subgroups of the unwanted variable have less than ',
+            'All subgroups of the specified unwanted variable have less than ',
              nb.knn + 1,
             ' samples. KNN cannot be found.')
             )
     } else if (length(sub.group.sample.size) != length(unique(se.obj[[uv.variable]])) ){
         printColoredMessage(
             message = paste0(
-                'All or some subgroups of the unwanted variable have less than ',
+                'All or some subgroups of the specified unwanted variable have less than ',
                  nb.knn + 1,
                 ' (nb.knn + 1) samples. Then KNN for those sub-groups cannot be created.'),
             color = 'red',
@@ -199,7 +199,7 @@ findKnn <- function(
     } else {
         printColoredMessage(
             message = paste0(
-                '- All the sub-groups of the unwanted variable have at least ',
+                '- All the sub-groups of the specified unwanted variable have at least ',
                  nb.knn + 1,
                 ' (nb.knn + 1) samples.'),
             color = 'blue',
@@ -360,7 +360,7 @@ findKnn <- function(
 
     # Selecting input data for KNN analysis ####
     printColoredMessage(
-        message = '-- Selecting the data input for knn analysis',
+        message = '-- Selecting the data input for the knn analysis',
         color = 'magenta',
         verbose = verbose
         )
@@ -457,7 +457,7 @@ findKnn <- function(
             ## find knn ####
             printColoredMessage(
                 message = paste0(
-                    '* Finding k nearest neighbors within the "',
+                    '- Finding k nearest neighbors within the "',
                     sub.group.sample.size[x],
                     '" sub-group.'),
                 color = 'blue',
@@ -470,17 +470,20 @@ findKnn <- function(
                 treetype = 'bd'
                 )
             knn.index <- as.data.frame(knn.samples$nn.idx)
-            colnames(knn.index) <- paste0('dataset.index', c(1:c( nb.knn + 1)))
+            colnames(knn.index) <- paste0('dataset.index', c(1:c(nb.knn + 1)))
             selected.samples <- se.obj[[uv.variable]] == sub.group.sample.size[x]
             ovral.cell.no <- sapply(
                 1:ncol(knn.index),
-                function(x) all.samples.index[selected.samples][knn.index[ , x]]
+                function(x) {
+                    all.samples.index.temp <- all.samples.index[selected.samples]
+                    all.samples.index.temp[knn.index[ , x]]
+                    }
                 )
-            ## sanity check
-            if ( length(unique(se.obj$library.size[as.vector(ovral.cell.no)])) != 1 ){
+            ## sanity check ####
+            if ( length(unique(se.obj[[uv.variable]][as.vector(ovral.cell.no)])) != 1 ){
                 stop('There are something wrong with the sample annotation.')
             }
-            if (!unique(se.obj$library.size[as.vector(ovral.cell.no)]) == sub.group.sample.size[x] ){
+            if (!unique(se.obj[[uv.variable]][as.vector(ovral.cell.no)]) == sub.group.sample.size[x] ){
                 stop('There are something wrong with the sample annotation.')
             }
 
@@ -490,15 +493,15 @@ findKnn <- function(
             ## find knn ####
             printColoredMessage(
                 message = paste0(
-                    '* Calculating all pairwise distances between the k nearest neighbors within the "',
+                    '- Calculating all pairwise distances between the k nearest neighbors within the "',
                     sub.group.sample.size[x],
                     '" subgroup.'),
                 color = 'blue',
                 verbose = verbose
-            )
+                )
             knn.dis <- round(as.data.frame(knn.samples$nn.dists), digits = 3)
             knn.dis <- knn.dis[,-1, drop = FALSE]
-            colnames(knn.dis) <- paste0('distance1_', 2:c( nb.knn + 1))
+            colnames(knn.dis) <- paste0('distance1_', 2:c(nb.knn + 1))
             knn.index.dist <- cbind(knn.index, knn.dis)
             if (isTRUE(nb.knn > 1)) {
                 all.comb <- combn(
@@ -539,7 +542,19 @@ findKnn <- function(
             return(knn.index.dist)
         })
     all.knn <- do.call(rbind, all.knn)
+    all.knn <- all.knn[order(all.knn$overal.index1) , ]
+    row.names(all.knn) <- c(1:ncol(se.obj))
+    sample.ids <- unlist(lapply(colnames(se.obj), function(x) sub("_[^_]*$", "", x)))
+    all.knn$sample.ids.1 <- sample.ids[all.knn$overal.index1]
+    samples.ids <- sapply(
+        1:nb.knn,
+        function(x){
+            sample.ids[all.knn[ , x+1]]
+        })
+    colnames(samples.ids) <- paste0('sample.ids.', c(c(1:nb.knn) + 1))
+    all.knn <- cbind(all.knn , samples.ids)
     se.obj[[uv.variable]] <- initial.variable
+    colnames(se.obj) <- sample.ids
 
     # Saving the results ####
     ## select prps name ####
@@ -599,6 +614,3 @@ findKnn <- function(
         return(all.knn)
     }
 }
-
-
-
