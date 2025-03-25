@@ -18,7 +18,6 @@ createPrPsByKnnMnn(
   nb.other.uv.clusters = 2,
   min.sample.for.ps = 3,
   min.batch.to.cover = "all",
-  use.all.possible.batches = TRUE,
   check.prps.connectedness = TRUE,
   data.input = "expr",
   nb.pcs = 2,
