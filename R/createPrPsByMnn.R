@@ -230,7 +230,7 @@ createPrPsByMnn <- function(
                 ' normalization on the data before finding MNN.'),
             color = 'blue',
             verbose = verbose
-        )
+            )
         norm.data <- applyOtherNormalizations(
             se.obj = se.obj,
             assay.name = assay.name,
@@ -241,7 +241,7 @@ createPrPsByMnn <- function(
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = TRUE
-        )
+            )
     }
     ## normalization and regression ####
     if (!is.null(normalization) & !is.null(regress.out.variables)) {
@@ -310,19 +310,20 @@ createPrPsByMnn <- function(
             )
             norm.data <- assay(x = se.obj, i = assay)
         }
-        sample.info <- as.data.frame(colData(se.obj))
+        sample.info <- as.data.frame(colData(se.obj)[regress.out.variables])
+        colnames(sample.info) <- paste0('variable', 1:ncol(sample.info))
+        regress.out.variables <- colnames(sample.info)
         norm.data <- t(norm.data)
         lm.formua <- paste('sample.info', regress.out.variables, sep = '$')
         norm.data <- lm(as.formula(paste(
             'norm.data',
             paste0(lm.formua, collapse = '+') ,
-            sep = '~'
-        )))
+            sep = '~'))
+            )
         norm.data <- t(norm.data$residuals)
         colnames(norm.data) <- colnames(norm.data)
         row.names(norm.data) <- row.names(norm.data)
         norm.data
-
     }
     ## log transformation ####
     if (is.null(normalization) & is.null(regress.out.variables)) {
@@ -389,12 +390,12 @@ createPrPsByMnn <- function(
                     ' levels.'),
                 color = 'blue',
                 verbose = verbose
-            )
+                )
             se.obj[[main.uv.variable]] <- factor(x = se.obj[[main.uv.variable]])
         }
     }
 
-    # Create PRPS data ####
+    # Creating PRPS data ####
     if (!is.null(other.uv.variables)){
         ## other uv variable is TRUE ####
         # assessing and grouping the other unwanted variable ####
@@ -417,6 +418,12 @@ createPrPsByMnn <- function(
             main.uv = se.obj[[main.uv.variable]],
             other.uv = homo.uv.groups
             )
+        # finding subgroups that has enough samples for PRPS ####
+        printColoredMessage(
+            message = '- Finding subgroups with respect to other unwanted variable(s) that have enoug samples for PRPS:',
+            color = 'magenta',
+            verbose = verbose
+            )
         covered.batches <- lapply(
             unique(all.uv.groups$other.uv),
             function(x){
@@ -426,10 +433,25 @@ createPrPsByMnn <- function(
                 )
             })
         names(covered.batches) <- unique(all.uv.groups$other.uv)
+        printColoredMessage(
+            message = paste0(
+                '- There are ',
+                length(covered.batches),
+                ' subgroups that have enough samples for PRPS.'),
+            color = 'blue',
+            verbose = verbose
+            )
         covered.batches.table <- as.data.frame(
             table(all.uv.groups$main.uv, all.uv.groups$other.uv)
             )
         covered.batches.table$selected <- covered.batches.table$Freq >= max(min.sample.for.ps, min.mnn)
+        if(isTRUE(plot.output)){
+            printColoredMessage(
+                message = '- Plotting distribution of samples across subgroups with respect to other unwanted variable(s):',
+                color = 'magenta',
+                verbose = verbose
+            )
+        }
         covered.batches.table <- ggplot(covered.batches.table, aes(x = Var2, y = Var1, color = selected)) +
             geom_point() +
             geom_text(aes(label = Freq , hjust = 0.5, vjust = 0.5), color = 'black') +
@@ -448,6 +470,7 @@ createPrPsByMnn <- function(
                 strip.text.y = element_text(size = 0)
             )
         if (isTRUE(plot.output)) print(covered.batches.table)
+
         selected.covered.batches <- lapply(
             1:length(covered.batches),
             function(x) length(covered.batches[[x]])
@@ -500,13 +523,12 @@ createPrPsByMnn <- function(
                 verbose = verbose
             )
         }
-
         # find mutual nearest neighbor ####
         printColoredMessage(
             message = '-- Creating PRPS data across all pairs of the subgroups:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         all.possible.batches <- lapply(
             unique(all.uv.groups$other.uv),
             function(x){
@@ -522,8 +544,8 @@ createPrPsByMnn <- function(
         names(all.possible.batches) <- unique(all.uv.groups$other.uv)
         all.possible.batches <- all.possible.batches[!is.na(all.possible.batches)]
         prps.data <- assay(x = se.obj, i = assay.name)
-        sample.annotation <- as.data.frame(colData(x = se.obj))
-
+        sample.annotation <- as.data.frame(x = colData(x = se.obj))
+        colnames(sample.annotation) <- colnames(colData(x = se.obj))
         all.prps.data <- lapply(
             1:length(all.possible.batches),
             function(x){
@@ -540,7 +562,7 @@ createPrPsByMnn <- function(
                                 pairs.batch[2 , y],
                                 '" subgroups within the "',
                                 names(all.possible.batches)[x],
-                                ' " subgroup.'),
+                                '" subgroup.'),
                             color = 'orange',
                             verbose = verbose
                         )
@@ -753,7 +775,7 @@ createPrPsByMnn <- function(
                                 message = '** Applying log transformation on the data before creating PRPS. ',
                                 color = 'blue',
                                 verbose = verbose
-                            )
+                                )
                             data.a <- log2(data.a + pseudo.count)
                             data.b <- log2(data.b + pseudo.count)
                         } else {
@@ -761,7 +783,7 @@ createPrPsByMnn <- function(
                                 message = '** the data will be used without any transformation. ',
                                 color = 'blue',
                                 verbose = verbose
-                            )
+                                )
                         }
                         all.prps.data <- lapply(
                             1:length(all.prps.index),
@@ -814,17 +836,39 @@ createPrPsByMnn <- function(
                     groups = names(all.possible.batches[x]))
                 )
             })
-
+        ### putting all the PRPS data together ####
+        printColoredMessage(
+            message = '-- Putting all the PRPS data togather: ',
+            color = 'blue',
+            verbose = verbose
+            )
         all.prps.expr.data <- lapply(
             1:length(all.prps.data),
             function(x){
                 all.prps.data[[x]]$sub.prps.epxr.data
             })
         all.prps.expr.data <- do.call(cbind, all.prps.expr.data)
+        printColoredMessage(
+            message = paste0(
+                '-- The totall number of ',
+                ncol(all.prps.expr.data),
+                ' pseudo-samples are created.'),
+            color = 'blue',
+            verbose = verbose
+            )
+        if (sum(is.na(all.prps.expr.data)) > 0){
+            stop('The PRPS data contains NA, this is not supported.')
+        }
         se.obj[[main.uv.variable]] <- initial.variable
         sample.annotation <- as.data.frame(colData(x = se.obj))
+        colnames(sample.annotation) <- colnames(colData(x = se.obj))
 
-        ### plot PRPS map ####
+        ### plotting PRPS map ####
+        printColoredMessage(
+            message = '-- Plotting all the PRPS data togather: ',
+            color = 'blue',
+            verbose = verbose
+            )
         all.prps.plot <- lapply(
             1:length(all.prps.data),
             function(x){
@@ -862,33 +906,70 @@ createPrPsByMnn <- function(
             all.prps.plot$prps.set,
             sep = '||'
             )
-        prps.map <- ggplot(all.prps.plot, aes(x = new.g, y = var)) +
-            geom_point() +
-            facet_grid(~new.g, scales = 'free', space = 'free') +
-            scale_x_discrete(expand = c(0, 0.5)) +
-            xlab('') +
-            ylab(main.uv.variable) +
-            # xlim(c(
-            #     min(se.obj[[main.uv.variable]]),
-            #     max(se.obj[[main.uv.variable]])
-            # )) +
-            # geom_hline(yintercept = c(
-            #     min(se.obj[[main.uv.variable]]),
-            #     max(se.obj[[main.uv.variable]])), color = 'gray70') +
-            theme_bw() +
-            theme(
-                legend.key = element_blank(),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.title.x = element_text(size = 16),
-                axis.title.y = element_text(size = 16),
-                axis.text.y = element_text(size = 14),
-                axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
-                legend.text = element_text(size = 14),
-                legend.title = element_text(size = 18),
-                strip.text.y = element_text(size = 0),
-                strip.text.x = element_text(size = 0)
+
+        all.prps.plot$new.group <- 'PRPS sets'
+        all.uv <- data.frame(
+            set.name = rep(main.uv.variable, ncol(se.obj)),
+            group.name = rep(main.uv.variable, ncol(se.obj)),
+            prps.set = c(1:ncol(se.obj)),
+            rep = rep(main.uv.variable, ncol(se.obj)),
+            var = se.obj[[main.uv.variable]],
+            new.g = rep('UV', ncol(se.obj)),
+            new.group = rep('UV', ncol(se.obj))
             )
-        if (isTRUE(plot.output)) print(prps.map)
+        new <- rbind(all.uv , all.prps.plot)
+        new$new.group <- factor(x = new$new.group, levels = c('PRPS sets', 'UV'))
+        if (is.numeric(se.obj[[main.uv.variable]])){
+            prps.map.plot <- ggplot(data = new, aes(x = new.g , y = var , color = rep)) +
+                geom_boxplot() +
+                geom_point() +
+                scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
+                facet_grid(.~new.group, scales = 'free', space = 'free') +
+                scale_x_discrete(expand = c(0, 0.5)) +
+                xlab(main.uv.variable) +
+                ylab('Homogeneous groups') +
+                ylim(c(
+                    min(se.obj[[main.uv.variable]]),
+                    max(se.obj[[main.uv.variable]])
+                )) +
+                geom_hline(yintercept = c(
+                    min(se.obj[[main.uv.variable]]),
+                    max(se.obj[[main.uv.variable]])), color = 'gray70') +
+                theme_bw() +
+                theme(
+                    legend.key = element_blank(),
+                    axis.line = element_line(colour = 'black', linewidth = 1),
+                    axis.title.x = element_text(size = 16),
+                    axis.title.y = element_text(size = 16),
+                    axis.text.y = element_text(size = 14),
+                    axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                    legend.text = element_text(size = 14),
+                    legend.title = element_text(size = 18),
+                    strip.text.y = element_text(size = 15)
+                    )
+        }
+        if (!is.numeric(se.obj[[main.uv.variable]])){
+            prps.map.plot <- ggplot(data = new, aes(x = new.g , y = var , color = rep)) +
+                geom_point(size = 3) +
+                scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
+                facet_grid(.~new.group, scales = 'free', space = 'free') +
+                scale_x_discrete(expand = c(0, 0.5)) +
+                xlab(main.uv.variable) +
+                ylab('Homogeneous groups') +
+                theme_bw() +
+                theme(
+                    legend.key = element_blank(),
+                    axis.line = element_line(colour = 'black', linewidth = 1),
+                    axis.title.x = element_text(size = 16),
+                    axis.title.y = element_text(size = 16),
+                    axis.text.y = element_text(size = 14),
+                    axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                    legend.text = element_text(size = 14),
+                    legend.title = element_text(size = 18),
+                    strip.text.y = element_text(size = 15)
+                )
+        }
+        if (isTRUE(plot.output)) print(prps.map.plot)
 
         ### sample annotation ####
         all.prps.sample.annot <- lapply(
@@ -901,12 +982,11 @@ createPrPsByMnn <- function(
                 sample.annot
             })
         all.prps.sample.annot <- do.call(rbind, all.prps.sample.annot)
-
     }
 
     ## other uv variable is FALSE ####
     if (is.null(other.uv.variables)){
-        ## check the sample size of each group in the variable ####
+        ### checking the sample size of each group in the variable ####
         subgroups.size <- findRepeatingPatterns(
             vec = se.obj[[main.uv.variable]],
             n.repeat = max(min.sample.for.ps, min.mnn)
@@ -946,15 +1026,16 @@ createPrPsByMnn <- function(
                 )
             }
         }
-        # find mutual nearest neighbor ####
+        ### finding mutual nearest neighbor ####
         printColoredMessage(
             message = '-- Creating PRPS data across all pairs of the subgroups:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         pairs.batch <- combn(x = subgroups.size, m = 2)
         prps.data <- assay(x = se.obj, i = assay.name)
         sample.annotation <- as.data.frame(colData(x = se.obj))
+        colnames(sample.annotation) <- colnames(colData(x = se.obj))
         all.prps.data <- lapply(
             1:ncol(pairs.batch),
             function(y){
@@ -975,7 +1056,7 @@ createPrPsByMnn <- function(
                 ## highly variable genes ####
                 if (is.null(hvg)){
                     printColoredMessage(
-                        message = '* highly variable are not specified, then using all genes.',
+                        message = '- highly variable genes are not specified, then all genes will be used.',
                         color = 'blue',
                         verbose = verbose
                     )
@@ -984,7 +1065,7 @@ createPrPsByMnn <- function(
                 }
                 if (!is.null(hvg)){
                     printColoredMessage(
-                        message = '* using the specified highly variable genes.',
+                        message = '- using the specified highly variable genes.',
                         color = 'blue',
                         verbose = verbose
                     )
@@ -1006,7 +1087,7 @@ createPrPsByMnn <- function(
                 ## finding mnn for data b ####
                 printColoredMessage(
                     message = paste0(
-                        '* Finding ',
+                        '- Finding ',
                         min.sample.for.ps,
                         ' nearest neighbours for each sample of the "',
                         pairs.batch[2 , y],
@@ -1015,28 +1096,28 @@ createPrPsByMnn <- function(
                         '" subgroup:'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 knn.data.a.b <- RANN::nn2(
                     data = t(data.a),
                     query = t(data.b),
                     k = min.sample.for.ps
-                )
+                    )
                 ## obtaining knn index ####
                 printColoredMessage(
-                    message = '** obtaining the knn indexs.',
+                    message = ' -- obtaining the knn indexs.',
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 knn.data.a.b.index <- knn.data.a.b$nn.idx
                 colnames(knn.data.a.b.index) <- paste0('knn', seq(min.sample.for.ps))
                 row.names(knn.data.a.b.index) <- c(1:ncol(data.b))
 
                 ## obtaining the distance ####
                 printColoredMessage(
-                    message = '** obtaining the distances.',
+                    message = '-- obtaining the distances.',
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 knn.data.a.b.distance <- as.data.frame(knn.data.a.b$nn.dists)
                 colnames(knn.data.a.b.distance) <- paste0('knn', seq(min.sample.for.ps))
                 row.names(knn.data.a.b.distance) <- c(1:ncol(data.b))
@@ -1045,7 +1126,7 @@ createPrPsByMnn <- function(
                 ## finding knn for data a ####
                 printColoredMessage(
                     message = paste0(
-                        '* Finding ',
+                        '- Finding ',
                         min.sample.for.ps,
                         ' nearest neighbours for each sample of the "',
                         pairs.batch[1 , y],
@@ -1054,17 +1135,17 @@ createPrPsByMnn <- function(
                         '" subgroups:'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 knn.data.b.a <- RANN::nn2(
                     data = t(data.b),
                     query = t(data.a),
                     k = min.sample.for.ps
-                )
+                    )
                 printColoredMessage(
-                    message = '** Obtaining the knn indexs.',
+                    message = '-- Obtaining the knn indexs.',
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 knn.data.b.a.index <- knn.data.b.a$nn.idx
                 colnames(knn.data.b.a.index) <- paste0('knn', seq(min.sample.for.ps))
                 row.names(knn.data.b.a.index) <- c(1:ncol(data.a))
@@ -1073,7 +1154,7 @@ createPrPsByMnn <- function(
                     message = '** Obtaining the distances.',
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 knn.data.b.a.distance <- as.data.frame(knn.data.b.a$nn.dists)
                 colnames(knn.data.b.a.distance) <- paste0('knn', seq(min.sample.for.ps))
                 row.names(knn.data.b.a.distance) <- c(1:ncol(data.a))
@@ -1082,21 +1163,21 @@ createPrPsByMnn <- function(
                 ## final mnn ####
                 printColoredMessage(
                     message = paste0(
-                        '* Finding MNN between the "',
+                        '- Finding MNN between the "',
                         pairs.batch[1 , y],
                         '" using "' ,
                         pairs.batch[2 , y],
                         '" subgroups:'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 all.mnn <- BiocNeighbors::findMutualNN(
                     data1 = t(data.a),
                     data2 = t(data.b),
                     k1 = min.mnn,
                     BNPARAM = mnn.nbparam,
                     BPPARAM = mnn.bpparam
-                )
+                    )
                 printColoredMessage(
                     message = paste0(
                         '** ',
@@ -1104,13 +1185,13 @@ createPrPsByMnn <- function(
                         ' MNN are found.'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 ## create prps index ####
                 printColoredMessage(
-                    message = paste0('* creating PRPS indexs and score.'),
+                    message = paste0('- creating PRPS indexs and score.'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 all.prps.index <- lapply(
                     1:length(all.mnn$first),
                     function(z){
@@ -1119,23 +1200,23 @@ createPrPsByMnn <- function(
                         prps.index <- data.frame(
                             set.a = sample.to.ave.a,
                             set.b = sample.to.ave.b
-                        )
+                            )
                         samples.ids <- data.frame(
                             set.a = row.names(sample.annot.a)[sample.to.ave.a],
                             set.b = row.names(sample.annot.b)[sample.to.ave.b]
-                        )
+                            )
                         avre.dist.a <- knn.data.b.a.distance[all.mnn$first[z] , 'aver.dist' ]
                         avre.dist.b <- knn.data.a.b.distance[all.mnn$second[z] , 'aver.dist' ]
                         list(
                             prps.index = prps.index,
                             aver.dist = c(avre.dist.a + avre.dist.b)/2,
                             samples.ids = samples.ids
-                        )
+                            )
                     })
                 names(all.prps.index) <- paste0('prps.set', 1:length(all.mnn$first))
                 if (isTRUE(filter.prps.sets)){
                     printColoredMessage(
-                        message = '* Filtering the number of PRPS sets.',
+                        message = '- Filtering the number of PRPS sets.',
                         color = 'blue',
                         verbose = verbose
                     )
@@ -1144,11 +1225,11 @@ createPrPsByMnn <- function(
                             message = '* The number of the PRPS set is larger than the specified "max.prps.sets", filtering PRPS sets.',
                             color = 'blue',
                             verbose = verbose
-                        )
+                            )
                         aver.dists <- sapply(
                             1:length(all.prps.index),
                             function(p) all.prps.index[[p]]$aver.dist
-                        )
+                            )
                         names(aver.dists) <- 1:length(all.prps.index)
                         aver.dists <- aver.dists[order(aver.dists, decreasing = FALSE)]
                         select.prps <- names(aver.dists)[1:max.prps.sets]
@@ -1166,15 +1247,15 @@ createPrPsByMnn <- function(
                 ## prps data
                 # finding PRPS sets ####
                 printColoredMessage(
-                    message = '* Creating the PRPS data:',
+                    message = '- Creating the PRPS data:',
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 data.a <- prps.data[ , colnames(data.a)]
                 data.b <- prps.data[ , colnames(data.b)]
                 if (isTRUE(apply.log)){
                     printColoredMessage(
-                        message = '** Applying log transformation on the data before creating PRPS. ',
+                        message = '-- Applying log transformation on the data before averaging samples to create PS. ',
                         color = 'blue',
                         verbose = verbose
                     )
@@ -1182,7 +1263,7 @@ createPrPsByMnn <- function(
                     data.b <- log2(data.b + pseudo.count)
                 } else {
                     printColoredMessage(
-                        message = '** the data will be used without any transformation. ',
+                        message = '-- the data will be used without any transformation for averaging samples to create PS. ',
                         color = 'blue',
                         verbose = verbose
                     )
@@ -1218,7 +1299,12 @@ createPrPsByMnn <- function(
                     all.prps.sample.annot = all.prps.sample.annot
                 )
             })
-
+        ### putting all the PRPS data together ####
+        printColoredMessage(
+            message = '-- Putting all the PRPS data togather: ',
+            color = 'blue',
+            verbose = verbose
+            )
         all.prps.expr.data <- lapply(
             1:length(all.prps.data),
             function(x){
@@ -1227,58 +1313,98 @@ createPrPsByMnn <- function(
         all.prps.expr.data <- do.call(cbind, all.prps.expr.data)
         se.obj[[main.uv.variable]] <- initial.variable
         sample.annotation <- as.data.frame(colData(x = se.obj))
-
-        ### plot PRPS map ####
+        colnames(sample.annotation) <- colnames(colData(x = se.obj))
+        ### plotting PRPS map ####
         printColoredMessage(
             message = '- Plotting the PRPS map:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         all.prps.sample.annot <- lapply(
             1:length(all.prps.data),
             function(x){
+                print(x)
                 sample.annot <- all.prps.data[[x]]$all.prps.sample.annot
-                sample.annot <- do.call(rbind, sample.annot )
+                possible.max.prps.sets <- length(sample.annot)
+                sample.annot <- do.call(rbind, sample.annot)
                 sample.annot$group <- paste0(
                     unique(names(all.prps.data[[x]]$all.prps.sample.annot)),
-                    rep(paste0('||set', 1:min.sample.for.ps), each = min.sample.for.ps)
+                    rep(paste0('||set', 1:possible.max.prps.sets), each = min.sample.for.ps)
                     )
                 sample.annot <- sample.annot %>%
                     pivot_longer(-c(group), values_to = 'var', names_to = 'rep')
-                sample.annot$lib.size <- se.obj[[main.uv.variable]][ sample.annot$var]
+                sample.annot$var.obj <- unlist(lapply(
+                    sample.annot$var,
+                    function(g){
+                        se.obj[[main.uv.variable]][colnames(se.obj) == g]
+                    }))
                 sample.annot
             })
         all.prps.sample.annot <- do.call(rbind, all.prps.sample.annot)
-        prps.map <- ggplot(all.prps.sample.annot, aes(x = group, y = lib.size, color = rep)) +
-            geom_boxplot() +
-            geom_point() +
-            facet_grid(~group, scales = 'free', space = 'free') +
-            scale_x_discrete(expand = c(0, 0.5)) +
-            xlab('') +
-            ylab(main.uv.variable) +
-            # xlim(c(
-            #     min(se.obj[[main.uv.variable]]),
-            #     max(se.obj[[main.uv.variable]])
-            # )) +
-            # geom_hline(yintercept = c(
-            #     min(se.obj[[main.uv.variable]]),
-            #     max(se.obj[[main.uv.variable]])), color = 'gray70') +
-            theme_bw() +
-            theme(
-                legend.key = element_blank(),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.title.x = element_text(size = 16),
-                axis.title.y = element_text(size = 16),
-                axis.text.y = element_text(size = 14),
-                axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
-                legend.text = element_text(size = 14),
-                legend.title = element_text(size = 18),
-                strip.text.y = element_text(size = 0),
-                strip.text.x = element_text(size = 0)
+        all.prps.sample.annot$new.group <- 'PRPS sets'
+        all.uv <- data.frame(
+            group = rep(main.uv.variable, ncol(se.obj)),
+            rep = rep(main.uv.variable, ncol(se.obj)),
+            var = colnames(se.obj),
+            var.obj = se.obj[[main.uv.variable]],
+            new.group = rep('UV', ncol(se.obj))
             )
-        if (isTRUE(plot.output)) print(prps.map)
+        new <- rbind(all.uv , all.prps.sample.annot)
+        new$new.group <- factor(x = new$new.group, levels = c('UV', 'PRPS sets'))
+        if (is.numeric(se.obj[[main.uv.variable]])){
+            prps.map.plot <- ggplot(data = new, aes(x = group , y = var.obj , color = rep)) +
+                geom_boxplot() +
+                geom_point() +
+                scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
+                facet_grid(.~new.group, scales = 'free', space = 'free') +
+                scale_x_discrete(expand = c(0, 0.5)) +
+                xlab(main.uv.variable) +
+                ylab('Homogeneous groups') +
+                ylim(c(
+                    min(se.obj[[main.uv.variable]]),
+                    max(se.obj[[main.uv.variable]])
+                )) +
+                geom_hline(yintercept = c(
+                    min(se.obj[[main.uv.variable]]),
+                    max(se.obj[[main.uv.variable]])), color = 'gray70') +
+                theme_bw() +
+                theme(
+                    legend.key = element_blank(),
+                    axis.line = element_line(colour = 'black', linewidth = 1),
+                    axis.title.x = element_text(size = 16),
+                    axis.title.y = element_text(size = 16),
+                    axis.text.y = element_text(size = 14),
+                    axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                    legend.text = element_text(size = 14),
+                    legend.title = element_text(size = 18),
+                    strip.text.y = element_text(size = 15)
+                )
 
-        ## sample annotation ####
+        }
+        if (!is.numeric(se.obj[[main.uv.variable]])){
+            prps.map.plot <- ggplot(data = new, aes(x = group , y = var.obj , color = rep)) +
+                geom_point(size = 3) +
+                scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
+                facet_grid(.~new.group, scales = 'free', space = 'free') +
+                scale_x_discrete(expand = c(0, 0.5)) +
+                xlab(main.uv.variable) +
+                ylab('Homogeneous groups') +
+                theme_bw() +
+                theme(
+                    legend.key = element_blank(),
+                    axis.line = element_line(colour = 'black', linewidth = 1),
+                    axis.title.x = element_text(size = 16),
+                    axis.title.y = element_text(size = 16),
+                    axis.text.y = element_text(size = 14),
+                    axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                    legend.text = element_text(size = 14),
+                    legend.title = element_text(size = 18),
+                    strip.text.y = element_text(size = 15)
+                )
+        }
+        if (isTRUE(plot.output)) print(prps.map.plot)
+
+        ### sample annotation ####
         all.prps.sample.annot <- lapply(
             1:length(all.prps.data),
             function(x){
@@ -1290,7 +1416,7 @@ createPrPsByMnn <- function(
         all.prps.sample.annot <- do.call(rbind, all.prps.sample.annot)
     }
 
-    # Save the results ####
+    # Saving the results ####
     ## select output name ####
     if (is.null(output.name))
         output.name <- paste0(main.uv.variable, '|', 'mnn', '|', assay.name)
@@ -1336,7 +1462,7 @@ createPrPsByMnn <- function(
         printColoredMessage(message = '------------The createPrPsByMnn function finished.',
                             color = 'white',
                             verbose = verbose)
-        return(prps.data = all.prps.data)
+        return(prps.data = all.prps.expr.data)
     }
 }
 
