@@ -143,8 +143,8 @@
 #' @param plot.output Logical. Indicates whether to generate output plots.
 #' @param save.imf Logical. Indicates whether to save the intermediate file. If 'TRUE', the function saves the results
 #' of the statistical analyses in the metadata of the SummarizedExperiment object. If users want to change the parameters
-#' including 'nb.ncg', 'ncg.selection.method', 'top.rank.bio.genes', and 'top.rank.uv.genes', the analyses will not be re-calculated.
-#' The default is set to 'FALSE'.
+#' including 'nb.ncg', 'ncg.selection.method', 'top.rank.bio.genes', and 'top.rank.uv.genes', the analyses will not be
+#' re-calculated. The default is set to 'FALSE'.
 #' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to 'FALSE'.
 #' @param imf.name Character string. A name to save the intermediate file. If 'NULL', the function generates a name.
 #' @param verbose Logical. If 'TRUE', shows messages of different steps of the function.
@@ -1347,7 +1347,6 @@ findNcgAcrossSamples <- function(
                 verbose = verbose)
             }
     }
-
     printColoredMessage(
         message = paste0(
             'A set of ',
@@ -1361,8 +1360,7 @@ findNcgAcrossSamples <- function(
         message = '- Generating a heatmap plot of all the ranks of all the NCGs across all the variables',
         color = 'magenta',
         verbose = verbose
-    )
-
+        )
     all.uv.bio.tests <- lapply(
         c(all.bio.tests, all.uv.tests),
         function(x){
@@ -1379,6 +1377,7 @@ findNcgAcrossSamples <- function(
                 temp.data
             }
         })
+    all.uv.bio.tests <- Filter(Negate(is.null), all.uv.bio.tests)
     all.uv.bio.tests <- do.call(cbind, all.uv.bio.tests)
     temp.data <- lapply(
         seq(3, ncol(all.uv.bio.tests), 3),
@@ -1391,7 +1390,7 @@ findNcgAcrossSamples <- function(
     temp.data$ncg <- ncg.selected
     ha <- ComplexHeatmap::rowAnnotation(
         NCG = temp.data$ncg,
-        col = list(NCG = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
+        col = list(ncg = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
     )
     ncg.plot <- ComplexHeatmap::Heatmap(
         temp.data[ , seq_len(ncol(temp.data) - 1)],

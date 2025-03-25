@@ -163,8 +163,6 @@
 # verbose = TRUE
 
 
-
-
 findNcgsUnSupervised <- function(
         se.obj,
         assay.name,
@@ -190,6 +188,7 @@ findNcgsUnSupervised <- function(
         a = 0.05,
         rho = 0,
         anova.method = 'aov',
+        filter.ncgs = FALSE,
         assess.ncg = TRUE,
         variables.to.assess.ncg = NULL,
         nb.pcs = 5,
@@ -1119,10 +1118,11 @@ findNcgsUnSupervised <- function(
             }
         } else ncg.selected <- row.names(se.obj) %in% ncg.selected
     }
-
-    pp <- singscore::getStableGenes(n_stable = 7000)
-    mm <- intersect(pp, row.names(se.obj)[ncg.selected])
-    ncg.selected <- row.names(se.obj) %in% mm
+    if (isTRUE(filter.ncgs)){
+        pp <- singscore::getStableGenes(n_stable = 7000)
+        mm <- intersect(pp, row.names(se.obj)[ncg.selected])
+        ncg.selected <- row.names(se.obj) %in% mm
+    }
 
     printColoredMessage(
         message = paste0(
@@ -1151,6 +1151,7 @@ findNcgsUnSupervised <- function(
             }
             all.test.res
         })
+    all.test.res <- Filter(Negate(is.null), all.test.res)
     all.test.res <- do.call(cbind, all.test.res)
     temp.data <- lapply(
         seq(1, ncol(all.test.res), 2),
@@ -1165,7 +1166,7 @@ findNcgsUnSupervised <- function(
     ha <- ComplexHeatmap::rowAnnotation(
         NCG = temp.data$NCG,
         col = list(NCG = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
-    )
+        )
     ncg.plot <- ComplexHeatmap::Heatmap(
         temp.data[ , seq_len(ncol(temp.data) - 1)],
         cluster_rows = TRUE,

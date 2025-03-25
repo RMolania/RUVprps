@@ -1470,7 +1470,6 @@ findNcgPerBiologyPerBatch <- function(
         c(all.bio.tests, all.uv.tests),
         function(x){
             if (!is.null(x)){
-                print(x)
                 temp.data <- get(x)
                 temp.data <- lapply(
                     names(temp.data),
@@ -1491,6 +1490,7 @@ findNcgPerBiologyPerBatch <- function(
                 temp.data
             }
         })
+    all.uv.bio.tests <- Filter(Negate(is.null), all.uv.bio.tests)
     all.uv.bio.tests <- do.call(cbind, all.uv.bio.tests)
     temp.data <- lapply(
         seq(1, ncol(all.uv.bio.tests), 2),
