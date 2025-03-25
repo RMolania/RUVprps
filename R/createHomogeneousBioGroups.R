@@ -51,7 +51,7 @@ createHomogeneousBioGroups <- function(
     printColoredMessage(message = '------------The createHomogeneousBioGroups function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check  the inputs ####
+    # Checking the inputs ####
     if (is.null(bio.variables)){
         stop('The "bio.variables" cannot be empty.')
     }
@@ -63,6 +63,9 @@ createHomogeneousBioGroups <- function(
     }
     if (!clustering.method %in% c('kmeans', 'cut', 'quantile')){
         stop('The "clustering.method" must be one of: "kmeans", "cut" or "quantile".')
+    }
+    if (!is.numeric(nb.clusters) | is.logical(nb.clusters) | nb.clusters < 0){
+        stop('The "nb.clusters" must be a postive numeric value.')
     }
     if (!remove.na %in% c('sample.annotation', 'none')){
         stop('The "remove.na" mist be either "sample.annotation" or "none".')
@@ -136,6 +139,11 @@ createHomogeneousBioGroups <- function(
                 return(keep.variable)
             }))
     }
+    # Checking categorical variable ####
+    if (length(categorical.bio.var) > 0){
+        categorical.bio.data <- as.data.frame(colData(se.obj)[, categorical.bio.var, drop = FALSE])
+    }
+
     ## continuous variables ####
     continuous.bio.var <- bio.variables[class.bio.var %in% c('numeric', 'integer')]
     if (length(continuous.bio.var) > 0){
@@ -263,11 +271,6 @@ createHomogeneousBioGroups <- function(
                 paste , collapse = "..")
         }
     }
-
-    # Checking categorical variable ####
-    if (length(categorical.bio.var) > 0){
-        categorical.bio.data <- as.data.frame(colData(se.obj)[, categorical.bio.var, drop = FALSE])
-    }
     # Create all possible homogeneous groups ####
     printColoredMessage(
         message = '-- Creating all possible combination of the groups:',
@@ -275,7 +278,7 @@ createHomogeneousBioGroups <- function(
         verbose =  verbose
         )
     ## use both continuous and categorical ####
-    if (length(categorical.bio.var) > 0 & length(continuous.bio.groups) > 0 ){
+    if (length(categorical.bio.var) > 0 & length(continuous.bio.var) > 0 ){
         printColoredMessage(
             message = '- Creating all possible combination of the groups using both continuous and categorical variables:',
             color = 'blue',
