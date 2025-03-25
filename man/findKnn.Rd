@@ -2,7 +2,7 @@
 % Please edit documentation in R/findKnn.R
 \name{findKnn}
 \alias{findKnn}
-\title{Finding k-nearest neighbors in RNA-seq data.}
+\title{Find k-nearest neighbors in RNA-seq data.}
 \usage{
 findKnn(
   se.obj,

@@ -148,7 +148,7 @@ identifyUnknownUV <- function(
     printColoredMessage(message = '------------The indentifyUnknownUV function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs ####
+    # Checking inputs ####
     if (is.null(assay.name)){
         stop('The "assay.name" cannot be empty.')
     }
@@ -260,7 +260,7 @@ identifyUnknownUV <- function(
         stop('The "output.name" should be eitehr NULL or a character.')
     }
 
-    # Remove current estimates for the assay ####
+    # Removing current unwanted variation estimates for the assay ####
     if (isTRUE(remove.current.estimates)){
         printColoredMessage(
             message = paste0('The current estimated unknown batches:'),
@@ -288,7 +288,7 @@ identifyUnknownUV <- function(
                 )
         }
     }
-    # Check the SummarizedExperiment object ####
+    # Checking the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -298,31 +298,31 @@ identifyUnknownUV <- function(
             verbose = verbose
             )
     }
-    # Data transformation ####
-    # Data log transformation ####
+    # Data transformation and regression ####
     if (isTRUE(apply.log)){
+        ## data log transformation ####
         printColoredMessage(
             message = '-- Applying log transformation on all the specified assay(s):',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         expr.data <- applyLog(
             se.obj = se.obj,
             assay.names = assay.name,
             pseudo.count = pseudo.count,
             assessment = 'RLE or PCA'
-        )[[assay.name]]
+            )[[assay.name]]
     }
     if (isFALSE(apply.log)){
         printColoredMessage(
             message = '-- The specified assay will be used without applying log transformation.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         expr.data <- assay(x = se.obj, i = assay.name)
 
     }
-    # Regress out bio variables and bio gene sets ####
+    ### regressing out bio variables and bio gene sets ####
     if (!is.null(regress.out.bio.variables) | !is.null(regress.out.bio.gene.sets)){
         printColoredMessage(
             message = '-- Regressing out "regress.out.bio.variables" and "regress.out.bio.gene.sets" from the data:',

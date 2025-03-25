@@ -93,7 +93,7 @@ or to output the result as a list. The default is set to 'TRUE'.}
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }
 \value{
-SummarizedExperiment A SummarizedExperiment object containing the PRPS data or just PRPS data.
+Either a SummarizedExperiment object containing the PRPS data or just PRPS data.
 }
 \description{
 The function creates PRPS sets for a continuous source of unwanted variation defined in the 'main.uv.variable' argument.

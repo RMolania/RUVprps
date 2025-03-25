@@ -169,8 +169,8 @@ choose a name automatically.}
 
 \item{save.imf}{Logical. Indicates whether to save the intermediate file. If 'TRUE', the function saves the results
 of the statistical analyses in the metadata of the SummarizedExperiment object. If users want to change the parameters
-including 'nb.ncg', 'ncg.selection.method', 'top.rank.bio.genes', and 'top.rank.uv.genes', the analyses will not be re-calculated.
-The default is set to 'FALSE'.}
+including 'nb.ncg', 'ncg.selection.method', 'top.rank.bio.genes', and 'top.rank.uv.genes', the analyses will not be
+re-calculated. The default is set to 'FALSE'.}
 
 \item{imf.name}{Character string. A name to save the intermediate file. If 'NULL', the function generates a name.}
 

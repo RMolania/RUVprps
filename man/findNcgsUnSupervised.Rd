@@ -29,6 +29,7 @@ findNcgsUnSupervised(
   a = 0.05,
   rho = 0,
   anova.method = "aov",
+  filter.ncgs = FALSE,
   assess.ncg = TRUE,
   variables.to.assess.ncg = NULL,
   nb.pcs = 5,

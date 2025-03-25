@@ -12,13 +12,15 @@ createPrPsUnSupervised(
   clustering.method = "kmeans",
   nb.clusters = 3,
   hvg = NULL,
+  apply.other.uv = TRUE,
+  select.extereme.groups = FALSE,
+  min.batches.to.cover = "all",
+  filter.prps.sets = TRUE,
+  max.prps.sets = 3,
   anchor.features = 2000,
   anchor.scale = TRUE,
-  filter.prps.sets = TRUE,
   min.ps.samples = 3,
   max.ps.samples = "inf",
-  max.prps.sets = 10,
-  normalization.method = "LogNormalize",
   sct.clip.range = NULL,
   reduction = "cca",
   l2.norm = TRUE,
@@ -35,11 +37,12 @@ createPrPsUnSupervised(
   center = TRUE,
   scale = FALSE,
   svd.bsparam = bsparam(),
-  mnn = 1,
+  min.mnn = 1,
   k.nn = 2,
   normalization = "CPM",
   apply.cosine.norm = FALSE,
   regress.out.variables = NULL,
+  check.prps.connectedness = FALSE,
   apply.log = TRUE,
   pseudo.count = 1,
   mnn.bpparam = SerialParam(),
@@ -73,24 +76,21 @@ continuous variable. The default is 3.}
 \item{hvg}{Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
 anchor samples across different batches. The default value is set to 'NULL'}
 
+\item{filter.prps.sets}{TTTT}
+
+\item{max.prps.sets}{Numeric. The maximum number of PRPS sets across batches. The default in 10.}
+
 \item{anchor.features}{Numeric. A numeric value indicating the provided number of features to be used in anchor finding.
 The default is 2000. We refer to the FindIntegrationAnchors R function for more details.}
 
 \item{anchor.scale}{Logical. Whether or not to scale the features provided. Only set to FALSE if you have previously scaled
 the features you want to use for each object in the object.list.}
 
-\item{filter.prps.sets}{TTTT}
-
 \item{min.ps.samples}{Numeric. The minimum number of samples to be averaged to create a pseudo-sample. The default
 is 3. The minimum value is 2.}
 
 \item{max.ps.samples}{Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
 The default is 'inf'. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.}
-
-\item{max.prps.sets}{Numeric. The maximum number of PRPS sets across batches. The default in 10.}
-
-\item{normalization.method}{Symbol. Indicate which normalization methods should be used before finding the anchors.
-The options are "LogNormalize" or "SCT". The default is "LogNormalize".}
 
 \item{sct.clip.range}{Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
 clipped to. The default is 'NULL'. We refer to the FindIntegrationAnchors R function for more details.}
@@ -136,8 +136,6 @@ mean square otherwise. The default is FALSE}
 \item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
 We refer to the 'runSVD' function from the BiocSingular R package.}
 
-\item{mnn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
-
 \item{k.nn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
 
 \item{normalization}{Symbol. Indicates which normalization methods should be applied before finding the knn. The default
@@ -175,6 +173,11 @@ object or to output the result as list. By default it is set to TRUE.}
 \item{prps.group}{Symbol.}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+
+\item{normalization.method}{Symbol. Indicate which normalization methods should be used before finding the anchors.
+The options are "LogNormalize" or "SCT". The default is "LogNormalize".}
+
+\item{mnn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
 }
 \description{
 This function uses the 'createUnSupervisedPRPSbyAnchors' or 'createUnSupervisedPRPSbyMNN' to create PRPS sets of all
