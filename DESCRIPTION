@@ -21,6 +21,7 @@ Imports:
     ggrepel,
     limma,
     qvalue,
+    scran,
     singscore,
     NbClust,
     Rcpp,
