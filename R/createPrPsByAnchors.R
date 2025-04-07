@@ -71,49 +71,6 @@
 #' @importFrom stats setNames
 #' @export
 
-
-
-se.obj = brca.se.obj
-assay.name = 'RawCount'
-main.uv.variable = 'library.size'
-clustering.method = 'kmeans'
-nb.clusters = 3
-filter.prps.sets = TRUE
-max.prps.sets = 3
-min.sample.for.ps = 3
-max.sample.for.ps = 10
-select.extereme.groups = FALSE
-other.uv.variables = 'Years'
-other.uv.clustering.method = 'kmeans'
-nb.other.uv.clusters = 2
-hvg = NULL
-min.batches.to.cover = 'all'
-apply.log = TRUE
-pseudo.count = 1
-anchor.features = 2000
-scale = TRUE
-normalization = "LogNormalize"
-sct.clip.range = NULL
-reduction = "cca"
-l2.norm = TRUE
-dims = 1:2
-k.anchor = 3
-k.filter = 10
-k.score = 10
-max.features = 200
-nn.method = "annoy"
-n.trees = 50
-eps = 0
-assess.se.obj = TRUE
-remove.na = 'both'
-save.se.obj = TRUE
-output.name = NULL
-plot.output = TRUE
-prps.group = NULL
-verbose = TRUE
-
-
-
 createPrPsByAnchors <- function(
         se.obj,
         assay.name,
