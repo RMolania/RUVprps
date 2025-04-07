@@ -85,14 +85,14 @@ plotGenesVariableAnova <- function(
         sub.file.name = NULL,
         required.function = 'computeGenesPartialCorrelation',
         message.to.print = 'ANOVA'
-    )
+        )
     # Generate different plots of F-statistic and p values of  ANOVA ####
     ## generate boxplots of the ANOVA F-statistics fo each assay ####
     printColoredMessage(
         message = '-- Generating boxplots of the lo2 of the ANOVA F-statistics:',
         color = 'magenta',
         verbose = verbose
-    )
+        )
     aov.fvals <- NULL
     all.aov.fvals.boxplots <- lapply(
         levels(assay.names),
@@ -186,7 +186,7 @@ plotGenesVariableAnova <- function(
         message = '-- Generating p-value histograms of the ANOVA F-statistics:',
         color = 'magenta',
         verbose = verbose
-    )
+        )
     ## specified ylim ####
     breaks <- seq(from = 0, to = 1, by = .1)
     ylim.pvalue <- sapply(

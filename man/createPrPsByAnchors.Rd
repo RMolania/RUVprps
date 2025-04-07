@@ -17,6 +17,7 @@ createPrPsByAnchors(
   select.extereme.groups = FALSE,
   other.uv.variables = NULL,
   other.uv.clustering.method = "kmeans",
+  check.prps.connectedness = TRUE,
   nb.other.uv.clusters = 2,
   hvg = NULL,
   min.batches.to.cover = "all",
@@ -39,6 +40,7 @@ createPrPsByAnchors(
   assess.se.obj = TRUE,
   remove.na = "both",
   save.se.obj = TRUE,
+  plot.output = TRUE,
   output.name = NULL,
   prps.group = NULL,
   verbose = TRUE
@@ -130,6 +132,8 @@ is 3. The minimum value is 2.}
 
 \item{max.ps.samples}{Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
 The default is 'inf'. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.}
+
+\item{plot.output.}{TTT}
 }
 \description{
 This functions employs the FindIntegrationAnchors function from the Seurat R package to create PRPS sets for the
