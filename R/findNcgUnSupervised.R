@@ -99,69 +99,11 @@
 #' @importFrom BiocSingular bsparam
 #' @importFrom BiocSingular runSVD
 #' @importFrom tidyr pivot_longer
+#' @importFrom scran modelGeneVar
 #' @importFrom Rfast correls
 #' @importFrom stats aov
 #' @import ggplot2
 #' @export
-
-# assay.name = 'RawCount',
-# uv.variables = uv.variables,
-# top.rank.bio.genes = 0.99,
-# top.rank.uv.genes = 0.10,
-# normalization = 'CPM',
-# nb.ncg = .1,
-# ncg.selection.method = 'non.overlap',
-# grid.direction = 'increase',
-# nb.clusters = 10,
-# variables.to.assess.ncg = c(uv.variables, bio.variables),
-# apply.log = TRUE,
-# nb.pcs = 10,
-# assess.se.obj = FALSE,
-# ncg.group = 'read.scenario3', plot.output = F
-#
-#
-#
-# se.obj = read.se.obj
-# assay.name = 'RawCount'
-# uv.variables = c(uv.variables, bio.variables)
-# nb.ncg = 0.1
-# ncg.selection.method = 'non.overlap'
-# top.rank.bio.genes = 0.5
-# top.rank.uv.genes = 0.5
-# bio.percentile = 0.2
-# uv.percentile = 0.2
-# grid.group = 'uv'
-# grid.direction = 'decrease'
-# grid.nb = 20
-# clustering.method = 'kmeans'
-# nb.clusters = 3
-# normalization = 'CPM'
-# regress.out.variables = NULL
-# min.sample.for.mad = 3
-# min.sample.for.aov = 3
-# min.sample.for.correlation = 10
-# corr.method = "spearman"
-# a = 0.05
-# rho = 0
-# anova.method = 'aov'
-# assess.ncg = TRUE
-# variables.to.assess.ncg = NULL
-# nb.pcs = 5
-# scale = FALSE
-# center = TRUE
-# apply.log = TRUE
-# pseudo.count = 1
-# assess.se.obj = TRUE
-# remove.na = 'both'
-# save.se.obj = TRUE
-# output.name = NULL
-# ncg.group = NULL
-# plot.output = TRUE
-# use.imf = FALSE
-# save.imf = FALSE
-# imf.name = NULL
-# verbose = TRUE
-
 
 findNcgsUnSupervised <- function(
         se.obj,
@@ -560,7 +502,7 @@ findNcgsUnSupervised <- function(
         if (isTRUE(length(selected.homo.uv.groups) > 0)){
             if (hvg.method == 'var'){
                 batch.design <- design.matrix(a = homo.uv.groups)
-                bio.genes <- scran::modelGeneVar(x = data.to.use, design = batch.design)
+                bio.genes <- modelGeneVar(x = data.to.use, design = batch.design)
                 bio.genes$bio.ranks <- rank(x = bio.genes$bio, ties.method = 'random')
                 }
             if (hvg.method == 'mad'){
