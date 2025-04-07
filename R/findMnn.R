@@ -47,9 +47,9 @@
 #' Please note, any RNA-seq data (assays) must be in log scale before computing RLE.
 #' @param pseudo.count Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
 #' log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.
-#' @param mnn.bpparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+#' @param bpparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 #' The default is SerialParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.
-#' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+#' @param nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 #' The default is KmknnParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
 #' function for more details.
@@ -89,8 +89,8 @@ findMnn <- function(
         hvg = NULL,
         apply.log = TRUE,
         pseudo.count = 1,
-        mnn.bpparam = SerialParam(),
-        mnn.nbparam = KmknnParam(),
+        bpparam = SerialParam(),
+        nbparam = KmknnParam(),
         assess.se.obj = TRUE,
         remove.na = 'both',
         plot.output = TRUE,
@@ -136,7 +136,7 @@ findMnn <- function(
             } else if (length(hvg) <= 3){
                 stop('The number of "hvg" must be at least 3')
             }
-            hvg <- row.names(se.obj) %in% hvgs
+            hvg <- row.names(se.obj) %in% hvg
         }
     } else if (is.null(hvg)){
         hvg <- rep(TRUE, nrow(se.obj))
@@ -516,18 +516,17 @@ findMnn <- function(
                 data2 = data2,
                 k1 = nb.mnn,
                 k2 = nb.mnn,
-                BPPARAM = mnn.bpparam,
-                mnn.nbparam = KmknnParam()
+                BPPARAM = bpparam,
+                nbparam = KmknnParam()
                 )
             # checking the results of the mnn function ####
             if (is.null(mnn.samples)){
                 stop('- MNN cannot be found.')
             }
             # putting all the results of the mnn together ####
-            group1 <- group2 <- NULL
             mnn.data <- data.frame(
-                group1 = rep(pairs.batch[1, x], length(mnn.samples$first)),
-                group2 = rep(pairs.batch[2, x], length(mnn.samples$second)),
+                group.1 = rep(pairs.batch[1, x], length(mnn.samples$first)),
+                group.2 = rep(pairs.batch[2, x], length(mnn.samples$second)),
                 overal.index.1 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[1, x]][mnn.samples$first],
                 overal.index.2 = all.samples.index[se.obj[[uv.variable]] == pairs.batch[2, x]][mnn.samples$second],
                 overal.index.1.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[1, x]]])[mnn.samples$first])),
@@ -561,7 +560,7 @@ findMnn <- function(
     }
 
     # Plotting the distribution of MNN  ####
-    p.mnn <- ggplot(all.mnn, aes(x = group1, y = group2)) +
+    p.mnn <- ggplot(all.mnn, aes(x = group.1, y = group.2)) +
         geom_point() +
         geom_count() +
         ggtitle('Distribution of MNN across batches') +
