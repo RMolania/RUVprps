@@ -32,8 +32,8 @@ createPrPsByKnnMnn(
   regress.out.variables = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
-  mnn.bpparam = SerialParam(),
-  mnn.nbparam = KmknnParam(),
+  bpparam = SerialParam(),
+  nbparam = KmknnParam(),
   assess.se.obj = TRUE,
   plot.output = TRUE,
   remove.na = "both",
@@ -123,10 +123,10 @@ Please, note, any RNA-seq data (assays) must be in log scale before computing RL
 \item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
 log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.}
 
-\item{mnn.bpparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed. The default
+\item{bpparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed. The default
 is SerialParam(). We refer to the 'findMutualNN' function from the BiocNeighbors R package for more details.}
 
-\item{mnn.nbparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+\item{nbparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 . The default is KmknnParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
