@@ -300,9 +300,8 @@ identifyUnknownUV <- function(
             verbose = verbose
             )
     }
-    # Data transformation and regression ####
+    # Data log transformation ####
     if (isTRUE(apply.log)){
-        ## data log transformation ####
         printColoredMessage(
             message = '-- Applying log transformation on all the specified assay(s):',
             color = 'magenta',
@@ -324,164 +323,163 @@ identifyUnknownUV <- function(
         expr.data <- assay(x = se.obj, i = assay.name)
 
     }
-    ### regressing out bio variables and bio gene sets ####
-    if (!is.null(regress.out.bio.variables) | !is.null(regress.out.bio.gene.sets)){
-        printColoredMessage(
-            message = '-- Regressing out "regress.out.bio.variables" and "regress.out.bio.gene.sets" from the data:',
-            color = 'magenta',
-            verbose = verbose
-            )
+    # Regressing out variables and biological gene sets ####
+    ## regressing out biological variables ####
+    if (!is.null(regress.out.bio.variables) & is.null(regress.out.bio.gene.sets)){
         printColoredMessage(
             message = paste0(
-                '- Note, we do not recommend regressing out any biological variation, ',
-                'if they are largely associated with the unwanted variation.'),
-            color = 'red',
+                '- The ',
+                paste0(regress.out.bio.variables, collapse = ' & '),
+                ' variables will be regressed out from the data,',
+                ' please make sure your data is log transformed.'),
+            color = 'blue',
+            verbose = verbose
+        )
+        expr.data <- t(expr.data)
+        lm.formula <- paste('se.obj', regress.out.bio.variables, sep = '$')
+        adjusted.data <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
+        expr.data <- t(adjusted.data$residuals)
+        colnames(expr.data) <- colnames(se.obj)
+        row.names(expr.data) <- row.names(se.obj)
+        }
+    ## regressing out biological gene sets ####
+    if (is.null(regress.out.bio.variables) & !is.null(regress.out.bio.gene.sets)){
+        printColoredMessage(
+            message = '- Calculating sample scores for individual gene sets of the "regress.out.bio.gene.sets" list.',
+            color = 'blue',
+            verbose = verbose
+        )
+        ranked.data <- rankGenes(expr.data)
+        regress.out.bio.gene.sets <- sapply(
+            regress.out.bio.gene.sets,
+            function(x) singscore::simpleScore(
+                rankData = ranked.data,
+                upSet = x)$TotalScore
+        )
+        rm(ranked.data)
+        printColoredMessage(
+            message = paste0(
+                '- The sample scores of individual gene list of ',
+                'regress.out.bio.gene.sets',
+                ' will be regressed out from the data,',
+                ' please make sure your data is log transformed.'),
+            color = 'blue',
+            verbose = verbose)
+        expr.data <- t(expr.data)
+        adjusted.data <- lm(expr.data~ regress.out.bio.gene.sets)
+        expr.data <- t(adjusted.data$residuals)
+        colnames(expr.data) <- colnames(se.obj)
+        row.names(expr.data) <- row.names(se.obj)
+        }
+    ## regressing out biological variable and biological gene sets ####
+    if (!is.null(regress.out.bio.variables) & !is.null(regress.out.bio.gene.sets)){
+        printColoredMessage(
+            message = paste0(
+                '- The sample scores of individual gene list of ',
+                ' "regress.out.bio.gene.sets" and the ',
+                paste0(regress.out.bio.variables, collapse = ' & '),
+                ' variables will be regressed out from the data,',
+                ' please make sure your data is log transformed.'),
+            color = 'blue',
             verbose = verbose
             )
-        ## sample scoring for regress.out.bio.gene.sets ####
-        if (!is.null(regress.out.bio.gene.sets)){
-            printColoredMessage(
-                message = '- Calculating sample scores for individual gene sets of the "regress.out.bio.gene.sets" list.',
-                color = 'blue',
-                verbose = verbose
-                )
-            ranked.data <- rankGenes(expr.data)
-            regress.out.bio.gene.sets <- sapply(
-                regress.out.bio.gene.sets,
-                function(x) singscore::simpleScore(
-                    rankData = ranked.data,
-                    upSet = x)$TotalScore)
-            rm(ranked.data)
+        ranked.data <- rankGenes(expr.data)
+        regress.out.bio.gene.sets <- sapply(
+            regress.out.bio.gene.sets,
+            function(x) singscore::simpleScore(
+                rankData = ranked.data,
+                upSet = x)$TotalScore
+            )
+        all.variables <- as.data.frame(cbind(
+            regress.out.bio.gene.sets,
+            as.data.frame(colData(se.obj)[, regress.out.bio.variables, drop = FALSE]))
+            )
+        lm.formula <- paste('all.variables', colnames(all.variables), sep = '$')
+        expr.data <- t(expr.data)
+        adjusted.data <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
+        expr.data <- t(adjusted.data$residuals)
+        colnames(expr.data) <- colnames(se.obj)
+        row.names(expr.data) <- row.names(se.obj)
         }
-        if (!is.null(regress.out.bio.variables) & is.null(regress.out.bio.gene.sets)){
-            ## regress out bio variables ####
-            printColoredMessage(
-                message = paste0(
-                    '- The ',
-                    paste0(regress.out.bio.variables, collapse = ' & '),
-                    ' variables will be regressed out from the data,',
-                    ' please make sure your data is log transformed.'),
-                color = 'blue',
-                verbose = verbose
-                )
-            expr.data <- t(expr.data)
-            lm.formula <- paste('se.obj', regress.out.bio.variables, sep = '$')
-            adjusted.data <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
-            expr.data <- t(adjusted.data$residuals)
-            colnames(expr.data) <- colnames(se.obj)
-            row.names(expr.data) <- row.names(se.obj)
-        } else if (is.null(regress.out.bio.variables) & !is.null(regress.out.bio.gene.sets)){
-            ## regress out gene sets ####
-            printColoredMessage(
-                message = paste0(
-                    '- The sample scores of individual gene list of ',
-                    'regress.out.bio.gene.sets',
-                    ' will be regressed out from the data,',
-                    ' please make sure your data is log transformed.'),
-                color = 'blue',
-                verbose = verbose)
-            expr.data <- t(expr.data)
-            adjusted.data <- lm(expr.data~ regress.out.bio.gene.sets)
-            expr.data <- t(adjusted.data$residuals)
-            colnames(expr.data) <- colnames(se.obj)
-            row.names(expr.data) <- row.names(se.obj)
-        } else if (!is.null(regress.out.bio.variables) & !is.null(regress.out.bio.gene.sets)){
-            ## regress out both variable and gene sets  ####
-            printColoredMessage(
-                message = paste0(
-                    '- The sample scores of individual gene list of ',
-                    ' "regress.out.bio.gene.sets" and the ',
-                    paste0(regress.out.bio.variables, collapse = ' & '),
-                    ' variables will be regressed out from the data,',
-                    ' please make sure your data is log transformed.'),
-                color = 'blue',
-                verbose = verbose)
-            all.variables <- as.data.frame(cbind(
-                regress.out.bio.gene.sets,
-                as.data.frame(colData(se.obj)[, regress.out.bio.variables, drop = FALSE])))
-            lm.formula <- paste('all.variables', colnames(all.variables), sep = '$')
-            expr.data <- t(expr.data)
-            adjusted.data <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
-            expr.data <- t(adjusted.data$residuals)
-            colnames(expr.data) <- colnames(se.obj)
-            row.names(expr.data) <- row.names(se.obj)
-        }
-    }
 
-    # Select data input for clustering ####
+    # Selecting data input for clustering ####
     printColoredMessage(
         message = '-- Selecting input data for clustering:',
         color = 'magenta',
         verbose = verbose
         )
-    ## pca all genes ####
-    if (approach == 'pca' & is.null(ncg)){
-        printColoredMessage(
-            message = paste0(
-                '- Applying PCA on the data and use the first ',
-                nb.pcs,
-                ' PCs as an input for clustering.'),
-            color = 'blue',
-            verbose = verbose
+    ## PCA approach ####
+    if (approach == 'pca'){
+        if (is.null(ncg)){
+            ### PCA on all genes ####
+            printColoredMessage(
+                message = paste0(
+                    '- Applying PCA on the data and use the first ',
+                    nb.pcs,
+                    ' PCs as an input for clustering.'),
+                color = 'blue',
+                verbose = verbose
             )
-        set.seed(2233)
-        sv.dec <- runSVD(
-            x = t(expr.data),
-            k = nb.pcs,
-            BSPARAM = svd.bsparam,
-            center = center,
-            scale = scale
+            set.seed(2233)
+            sv.dec <- runSVD(
+                x = t(expr.data),
+                k = nb.pcs,
+                BSPARAM = svd.bsparam,
+                center = center,
+                scale = scale
             )
-        input.data <- sv.dec$u
-        colnames(input.data) <- c(paste0('PC', 1:ncol(input.data)))
-        if (clustering.methods == 'nbClust'){
-            input.data.name <- paste0(
+            input.data <- sv.dec$u
+            colnames(input.data) <- c(paste0('PC', 1:ncol(input.data)))
+            if (clustering.methods == 'nbClust'){
+                input.data.name <- paste0(
+                    approach,
+                    '|AllGenes_nbClust.',
+                    nbClust.method,
+                    'Clustering')
+            } else input.data.name <- paste0(
                 approach,
-                '|AllGenes_nbClust.',
-                nbClust.method,
-                'Clustering')
-        } else input.data.name <- paste0(
-            approach,
-            '|AllGenes|',
-            clustering.methods,
-            'Clustering'
-            )
-    }
-    ## pca on ncg ####
-    if (approach == 'pca' & !is.null(ncg)){
-        printColoredMessage(
-            message = paste0(
-                '- Applying PCA on the data using the "ncg" gene only, and use the first ',
-                nb.pcs,
-                ' PCs as an input for clustering.'),
-            color = 'blue',
-            verbose = verbose
-            )
-        set.seed(2233)
-        sv.dec <- runSVD(
-            x = t(expr.data[ncg , ]),
-            k = nb.pcs,
-            BSPARAM = svd.bsparam,
-            center = center,
-            scale = scale)
-        input.data = sv.dec$u
-        if (clustering.methods == 'nbClust'){
-            input.data.name <- paste0(
-                approach,
-                '|NCG|nbClust.',
-                nbClust.method,
+                '|AllGenes|',
+                clustering.methods,
                 'Clustering'
-                )
-        } else input.data.name <- paste0(
-            approach,
-            '|NCG|',
-            clustering.methods,
-            'Clustering'
             )
+        }
+        if (!is.null(ncg)){
+            ### PCA on all NCG ####
+            printColoredMessage(
+                message = paste0(
+                    '- Applying PCA on the data using the "ncg" gene only, and use the first ',
+                    nb.pcs,
+                    ' PCs as an input for clustering.'),
+                color = 'blue',
+                verbose = verbose
+            )
+            set.seed(2233)
+            sv.dec <- runSVD(
+                x = t(expr.data[ncg , ]),
+                k = nb.pcs,
+                BSPARAM = svd.bsparam,
+                center = center,
+                scale = scale)
+            input.data = sv.dec$u
+            if (clustering.methods == 'nbClust'){
+                input.data.name <- paste0(
+                    approach,
+                    '|NCG|nbClust.',
+                    nbClust.method,
+                    'Clustering'
+                )
+            } else input.data.name <- paste0(
+                approach,
+                '|NCG|',
+                clustering.methods,
+                'Clustering'
+            )
+        }
     }
-    ## rle ####
+    ## RLE approach ####
     if (approach == 'rle'){
         if (is.null(ncg)){
+            ### RLE on all the genes ####
             printColoredMessage(
                 message = paste0('- Applying tge RLE on the data.'),
                 color = 'blue',
@@ -499,6 +497,7 @@ identifyUnknownUV <- function(
                     )
             } else input.data.name <- paste0(approach, '.', rle.comp,'|AllGenes|', clustering.methods, 'Clustering')
         } else if (!is.null(ncg)){
+            ### RLE on all the NCG ####
             printColoredMessage(
                 message = '- Applying the RLE on the data using only "ncg" genes.',
                 color = 'blue',
@@ -539,7 +538,7 @@ identifyUnknownUV <- function(
             input.data <- colIQRs(rle.data)
         }
     }
-    ## sample scoring ####
+    ## Sample scoring approach ####
     if (approach == 'sample.scoring'){
         if (is.null(uv.gene.sets)){
             all.uv.gene.sets <- list(ncg = ncg)
@@ -560,7 +559,8 @@ identifyUnknownUV <- function(
             names(all.uv.gene.sets),
             function(x) singscore::simpleScore(
                 rankData = ranked.data,
-                upSet = all.uv.gene.sets[[x]])$TotalScore)
+                upSet = all.uv.gene.sets[[x]])$TotalScore
+            )
         # names(input.data) <- names(all.uv.gene.sets)
         rm(ranked.data)
         if (clustering.methods == 'nbClust'){
@@ -577,7 +577,6 @@ identifyUnknownUV <- function(
             'Clustering'
             )
     }
-
     # Clustering ####
     printColoredMessage(
         message = '- Clustering the inpute data',
@@ -712,7 +711,7 @@ identifyUnknownUV <- function(
 
     }
 
-    # Number of possible batches ####
+    # Reporting the number of the possible batches ####
     printColoredMessage(
         message = paste0(
             length(unique(uv.sources)),
@@ -720,7 +719,8 @@ identifyUnknownUV <- function(
             assay.name,
             ' data.'),
         color = 'blue',
-        verbose = verbose)
+        verbose = verbose
+        )
 
     # Plotting the outputs ####
     currentCols <-  c(
