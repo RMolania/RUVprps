@@ -1,5 +1,5 @@
 
-# RUVIII-PRPS
+# RUVprps software package
 
 <!-- badges: start -->
 <!-- badges: end -->
