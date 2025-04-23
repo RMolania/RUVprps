@@ -4,8 +4,10 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-RUVIII-PRPS: Removing unwanted variation from large-scale RNA sequencing data with PRPS
-Please cite the appropriate article when you use results from the software in a publication. Such citations are the main means by which the authors receive professional credit for their work.
+RUVprps is a comprehensive and user-friendly software package that streamlines the use of the RUV-III method for 
+end-to-end RNA-seq data normalization, irrespective of whether data comes from a single study or multiple studies. 
+RUV-III is a powerful method that effectively removes sources of unwanted variation such as library size, batch effects,
+and tumor purity, from complex transcriptomic datasets. 
 
 The RUVIII-PRPS software package itself can be cited as:
 
