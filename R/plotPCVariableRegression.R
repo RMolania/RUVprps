@@ -1,26 +1,28 @@
-#' Generate line-dot plot of the PC variable regression analysis.
+#' Generates line-dot plot of the PC variable regression analysis.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function generate a dot-line plot between the first cumulative PCs and the regression R squared obtained
+#' This function generate a dot-line plot between the first n cumulative PCs and the regression R squared obtained
 #' from the regression analysis. An ideal normalization should results a low R squared with unwanted variation
 #' variables and high R squared with known biology.
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or vector of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object to generate a vector correlation. The default is "all, which indicates all
-#' the assays of the SummarizedExperiment object will be selected.
-#' @param variable Symbol. A symbol indicating the name of the column in the sample annotation of the SummarizedExperiment object.
-#' The variable must be a continuous variable such as library size, tumor purity, ... .
-#' @param fast.pca Logical. Indicates whether to use the PCA calculated using a specific number of PCs instead of the
-#' full range to speed up the process, by default is set to 'TRUE'.
-#' @param nb.pcs Numeric. A numeric value specifying the number of first PCs to be used to plot the r squared.
-#' The default is set to 10.
-#' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment class
-#' object 'se.obj' or to output the result. By default it is set to TRUE.
-#' @param plot.output Logical. Indicates whether to plot the correlation statistics, by default it is set to TRUE.
-#' @param verbose Logical. If TRUE, displaying process messages is enabled.
+#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
+#' in the SummarizedExperiment object to generate a vector correlation. The default is "all", which indicates that all
+#' assays in the SummarizedExperiment object will be selected.
+#' @param variable Character. A character string indicating the name of the column in the sample annotation
+#' (i.e., `colData`) of the SummarizedExperiment object. The variable must be a continuous variable,
+#' such as library size, tumor purity, etc.
+#' @param fast.pca Logical. Indicates whether to use PCA calculated using a specific number of principal components
+#' to speed up the process. By default, this is set to TRUE.
+#' @param nb.pcs Numeric. A numeric value specifying the number of leading principal components to use
+#' when plotting the R-squared values. The default is 10.
+#' @param plot.output Logical. If TRUE, the correlation statistics will be plotted. Default is TRUE.
+#' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
+#' or to return the results directly. By default, this is set to TRUE.
+#' @param verbose Logical. If TRUE, process messages will be displayed.
+
 
 #' @return A SummarizedExperiment object containing the line-dot plots for the continuous variable and if requested
 #'  the associated plot.
@@ -36,8 +38,8 @@ plotPCVariableRegression <- function(
         variable,
         fast.pca = TRUE,
         nb.pcs = 10,
-        save.se.obj = TRUE,
         plot.output = TRUE,
+        save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(message = '------------The plotPCVariableRegression function starts:',
@@ -47,9 +49,11 @@ plotPCVariableRegression <- function(
     # Check the inputs ####
     if (is.null(assay.names)) {
         stop('The "assay.names" cannot be empty')
-    } else if (is.list(assay.names)){
+    }
+    if (is.list(assay.names)){
         stop('The "assay.names" must be a vector of the assay names(s).')
-    } else if (is.null(variable)) {
+    }
+    if (is.null(variable)) {
         stop('The "variable" cannot be empty')
     }
 
@@ -57,12 +61,12 @@ plotPCVariableRegression <- function(
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
-    if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+    if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
     # Select colors ####
-    if(length(levels(assay.names)) < 9 ){
+    if (length(levels(assay.names)) < 9 ){
         data.sets.colors <- RColorBrewer::brewer.pal(8, 'Dark2')[1:length(levels(assay.names))]
         names(data.sets.colors) <- levels(assay.names)
     } else {
@@ -77,7 +81,7 @@ plotPCVariableRegression <- function(
         color = 'magenta',
         verbose = verbose
     )
-    if(isTRUE(fast.pca)){
+    if (isTRUE(fast.pca)){
         method = 'fast.svd'
     } else method = 'svd'
     all.reg.rseq <- getMetricFromSeObj(
@@ -125,13 +129,13 @@ plotPCVariableRegression <- function(
                     axis.title.y = element_text(size = 14),
                     axis.text.x = element_text(size = 12, angle = 35, vjust = 1, hjust = 1),
                     axis.text.y = element_text(size = 12))
-            if(isTRUE(plot.output) & length(assay.names) == 1) print(reg.plot)
+            if (isTRUE(plot.output) & length(assay.names) == 1) print(reg.plot)
             return(reg.plot)
         })
     names(all.reg.plots) <- levels(assay.names)
 
     # overall plots ####
-    if(length(assay.names) > 1){
+    if (length(assay.names) > 1){
         printColoredMessage(
             message = paste0('-- Put all the R squared vs. PCs line-dot plots togather:'),
             color = 'magenta',
@@ -181,7 +185,7 @@ plotPCVariableRegression <- function(
             message = '- The individual assay the R squared vs. PCs line-dot plots are combined into one.',
             color = 'blue',
             verbose = verbose)
-        if(isTRUE(plot.output))
+        if (isTRUE(plot.output))
             suppressMessages(print(overall.reg.plot))
     }
 
@@ -215,7 +219,7 @@ plotPCVariableRegression <- function(
             verbose = verbose)
 
         ## add overall vector correlation plot of all assays ####
-        if(length(assay.names) > 1){
+        if (length(assay.names) > 1){
             se.obj <- addOverallPlotToSeObj(
                 se.obj = se.obj,
                 slot = 'Plots',
@@ -247,7 +251,7 @@ plotPCVariableRegression <- function(
         printColoredMessage(message = '------------The plotPCVariableRegression function finished.',
                             color = 'white',
                             verbose = verbose)
-        if(length(assay.names) == 1){
+        if (length(assay.names) == 1){
             return(all.pc.var.reg.plots = list(all.reg.plots = all.reg.plots))
         } else{
             return(all.pc.var.reg.plots = list(
