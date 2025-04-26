@@ -432,7 +432,6 @@ createPrPsForContinuousUV <- function(
             color = 'magenta',
             verbose = verbose
             )
-        uv.variable <- n <- everything <- NULL
         annot.data <- data.frame(
             uv.variable = colData(se.obj)[[main.uv.variable]],
             bio.variable = homo.bio.groups
@@ -476,7 +475,6 @@ createPrPsForContinuousUV <- function(
             verbose = verbose
         )
         ## plotting the PRPS map ####
-        uv.var <- groups <- new.g <- bio.variable <- NULL
         if(isTRUE(plot.prps.map)){
             prps.sets.plot <- sapply(
                 selected.groups,

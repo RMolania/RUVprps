@@ -481,7 +481,6 @@ createPrPsForCategoricalUV <- function(
         if(!is.null(other.uv.variables)){
             groups <- all.groups$bio.batch
         } else groups <- homo.bio.groups
-        catvar <- use <- n <- NULL
         sample.info <- as.data.frame(
             x = colData(se.obj),
             stringsAsFactors = FALSE
