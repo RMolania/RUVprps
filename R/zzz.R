@@ -26,6 +26,9 @@ utils::globalVariables(
       'groups',
       'uv.var',
       'set',
-      'pvalue'
-      )
+      'pvalue',
+      'samples.nb',
+      'Groups',
+      'p.vals',
+      'everything')
     )
