@@ -1,4 +1,4 @@
-#' Compute the average Silhouette coefficients.
+#' Computes the average Silhouette coefficients.
 
 #' @author Ramyar Molania
 
@@ -12,25 +12,28 @@
 #' Nature Biotechnology, 2023
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or vector of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object to generate barplot or scatter plots of the computed adjusted rand index. By default all
-#' the assays of the SummarizedExperiment object will be selected.
-#' @param variables Symbol. Indicates one or two column names in the SummarizedExperiment object that contains categorical
-#' variables such as sample subtypes or batches.
-#' @param silhouette.method Symbol. A symbol Indicates what computed ARI methods should be used for plotting. The "ari.method" must be
-#' specified based on the "computeARI" function. The default is "hclust.complete.euclidian", which is the default of the
-#' the "computeARI" function. We refer to the "computeARI" function for more detail
-#' @param plot.type Symbol.Indicates how to plot the adjusted rand index. The options are "single.plot" and "combined.plot".
-#' If a variable is provided, then the "plot.type" must be set to "single.plot", so, the function generates a barplot of the
-#' adjusted rand index. If two variables are provided and "plot.type" is set to "combined.plot", then the function generates
-#' a scatter plot of the adjusted rand index of each variable against each other.
-#' @param plot.output Logical. If TRUE, the individual barplots or scatter plots will be printed while functions is running.
-#' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment  object
-#' or to output the result as list. By default it is set to TRUE.
-#' @param verbose Logical. If TRUE, displaying process messages is enabled.
+#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the dataset(s)
+#' in the SummarizedExperiment object to generate barplots or scatter plots of the computed Silhouette coefficients.
+#' By default, all assays in the SummarizedExperiment object will be selected.
+#' @param variables Character. A character or character vectors of the column names in the SummarizedExperiment object
+#' that the silhouette coefficient has been calculated by the 'computeSilhouette' function.
+#' @param silhouette.method Character. Indicates which computed Silhouette method should be used for plotting. The method
+#' must match one of those defined in the "computeSilhouette()" function. The default is "sil.euclidian", which is also
+#' the default of the 'computeSilhouette()' function. Refer to the 'computeSilhouette()' function for more details.
+#' @param plot.type Character. Indicates how to plot the adjusted Silhouette coefficients.
+#' Options are "single.plot" and "combined.plot". If a single variable is provided, "plot.type" must be set to "single.plot",
+#' which generates a barplot of the Silhouette coefficients. If two variables are provided and "plot.type" is set to
+#' "combined.plot", the function generates a scatter plot of the Silhouette coefficients for each variable against each
+#' other. The default is set to 'single.plot'.
+#' @param plot.output Logical. If TRUE, the individual barplots or scatter plots will be printed during function execution.
+#' The default is set to 'TRUE'.
+#' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment object
+#' or to return the results as a list. The default is set to 'TRUE'.
+#' @param verbose Logical. If TRUE, process messages will be displayed.
+#'
+#' @return A SummarizedExperiment object or a list containing all the plots of the computed average Silhouette coefficients
+#' for the categorical variables.
 
-#' @return A SummarizedExperiment object or a list that containing all the plots of the computed average Silhouette coefficients
-#' on the categorical variable.
 
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom ggrepel geom_text_repel
@@ -69,7 +72,7 @@ plotSilhouette <- function(
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
-    if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+    if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
@@ -108,7 +111,8 @@ plotSilhouette <- function(
                 printColoredMessage(
                     message = paste0('- Create barplot of the silhouette coefficient for the "', x, '" data.'),
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 p.silhouette <- ggplot() +
                     geom_col(aes(y = all.silhouette[[x]], x = 1)) +
                     ylab('Silhouette ') +
@@ -169,7 +173,10 @@ plotSilhouette <- function(
                     size = 18),
                 bottom = text_grob(
                     label = paste0(
-                        'Analysis: ', 'average silhouette coefficient using the first PCs and the ', variables, ' variable.'),
+                        'Analysis: ',
+                        'average silhouette coefficient using the first PCs and the ',
+                        variables,
+                        ' variable.'),
                     color = "black",
                     hjust = 1,
                     x = 1,
@@ -179,7 +186,7 @@ plotSilhouette <- function(
                 message = '- The individual assay silhouette coefficient barplot are combined into one.',
                 color = 'blue',
                 verbose = verbose)
-            if(isTRUE(plot.output))
+            if (isTRUE(plot.output))
                 suppressMessages(print(overall.single.silhouette.plot))
         }
 
@@ -246,7 +253,7 @@ plotSilhouette <- function(
                         axis.text.x = element_text(size = 12),
                         axis.text.y = element_text(size = 12)
                     )
-                if(isTRUE(plot.output) & length(assay.names) == 1) print(p.combined)
+                if (isTRUE(plot.output) & length(assay.names) == 1) print(p.combined)
                 return(p.combined)
             })
         names(all.combined.silhouette.plots) <- levels(assay.names)
@@ -304,7 +311,7 @@ plotSilhouette <- function(
             message = '- Save all the silhouette coefficient barplots to the "metadata" in the SummarizedExperiment object:',
             color = 'blue',
             verbose = verbose)
-        if(plot.type == 'single.plot'){
+        if (plot.type == 'single.plot'){
             se.obj <- addMetricToSeObj(
                 se.obj = se.obj,
                 slot = 'Metrics',
@@ -337,7 +344,7 @@ plotSilhouette <- function(
             )
 
         if (length(assay.names) > 1) {
-            if(plot.type == 'single.plot'){
+            if (plot.type == 'single.plot'){
                 se.obj <- addOverallPlotToSeObj(
                     se.obj = se.obj,
                     slot = 'Plots',
@@ -361,8 +368,9 @@ plotSilhouette <- function(
                 )
             }
             printColoredMessage(
-                message = paste0('- The combined silhouette coefficient barplot all the assays is saved to the ',
-                                 ' "se.obj@metadata$plot$Silhouette" in the SummarizedExperiment object.'),
+                message = paste0(
+                    '- The combined silhouette coefficient barplot all the assays is saved to the ',
+                    ' "se.obj@metadata$plot$Silhouette" in the SummarizedExperiment object.'),
                 color = 'blue',
                 verbose = verbose)
         }
@@ -372,7 +380,7 @@ plotSilhouette <- function(
             verbose = verbose)
         return(se.obj = se.obj)
 
-        ## return only the adjusted rand index results ####
+        ## return only the Silhouette coefficients results ####
     }
     if (isFALSE(save.se.obj)) {
         printColoredMessage(
@@ -384,7 +392,7 @@ plotSilhouette <- function(
             color = 'white',
             verbose = verbose)
         if (plot.type == 'single.plot') {
-            if(length(assay.names) == 1){
+            if (length(assay.names) == 1){
                 return(all.silhouette.plots = list(all.single.silhouette.plots = all.single.silhouette.plots))
             } else {
                 return(all.silhouette.plots = list(
@@ -392,7 +400,7 @@ plotSilhouette <- function(
                         overall.single.silhouette.plot = overall.single.silhouette.plot ))
             }
         } else if (plot.type == 'combined.plot') {
-            if(length(assay.names) == 1){
+            if (length(assay.names) == 1){
                 return(all.silhouette.plots = list(all.combined.silhouette.plots = all.combined.silhouette.plots))
             } else{
                 return(all.silhouette.plots = list(
