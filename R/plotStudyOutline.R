@@ -147,7 +147,7 @@ plotStudyOutline <- function(
     #             heatmap_legend_param = list(title_gp = grid::gpar(fontsize = legend.font.size), legend_direction = legend.direction))
     #     }
     # }
-    currentCols <-  c(
+    currentCols <- c(
         RColorBrewer::brewer.pal(8, "Dark2")[-5],
         RColorBrewer::brewer.pal(10, "Paired"),
         RColorBrewer::brewer.pal(12, "Set3"),
