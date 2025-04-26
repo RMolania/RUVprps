@@ -7,15 +7,42 @@
 #' RUV-III normalization of RNA-seq data. This function can be used in situations in which biological variation are unknown.
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character. A string indicating the assay name within the SummarizedExperiment object for the
-#' creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.
-#' @param uv.variable Character. A string specifying the name of columns in the sample annotation of the SummarizedExperiment
-#' object. This variable can be categorical or continuous. If a continuous variable is provided, it will be
-#' divided into groups using the clustering method.
-#' @param clustering.method Character. A string indicating the choice of clustering method for grouping the 'uv.variable'
+#' @param assay.name Character. A character string indicating the assay name within the SummarizedExperiment object that
+#' should be used for the creation of PRPS data. The assay must be the one that will be used as data input for the
+#' RUV-III-PRPS normalization.
+#' @param main.uv.variable Character. Indicates the name of a column in the sample annotation of the SummarizedExperiment
+#' object. PRPS data will be created for this variable. The 'main.uv.variable' can be either categorical or continuous.
+#' If 'main.uv.variable' is a continuous variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.
+#' @param clustering.method Character. A string indicating the choice of clustering method for grouping the 'main.uv.variable'
 #' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
-#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
-#' continuous variable. The default is 3.
+#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'main.uv.variable' is
+#' a continuous variable. The default is set to 3.
+#' @param other.uv.variables Character. A character string or character vector representing the name(s) of the columns of
+#' unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
+#' continuous, or a combination. These variables will be considered when generating PRPS sets for the "main.uv.variable"
+#' to help avoid potential contamination in PRPS data. The default is set to 'NULL'
+#' @param other.uv.clustering.method Character. A character string indicating which clustering method should be used to
+#' group each continuous unwanted variable, if specified in "other.uv.variables". Options include 'kmeans', 'cut',
+#' and 'quantile'. The default is set to 'kmeans'. See createHomogeneousUVGroups() for more details.
+#' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
+#' unwanted variable specified in the 'other.uv.variables'. The default is set to 3.
+#' @param filter.prps.sets Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if
+#' they are higher than the 'max.prps.sets' value. A high number of PRPS sets will increase the computational time for
+#' the RUV-III normalization. The default is set to 'TRUE'.
+#' @param max.prps.sets Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches(
+#' subgrouos of the 'main.uv.variable'). The default is set to 10.
+#' @param min.batches.to.cover Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
+#' 'all', indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.
+#' @param select.extreme.groups Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
+#' clusters, when the 'main.uv.variable' is a continuous variable. Default is set to 'TRUE'. This will increase the
+#' variation between PR sets in order to better capture the unwanted variation.
+#' @param min.sample.for.ps Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
+#' to 3. The minum value is 2.
+#' @param max.sample.for.ps Numeric. Maximun number of samples required for pseudo-replicate creation. The default is set
+#' to 3. The minum value is 10.
+#' @param check.prps.connectedness Logical. Indicates whether to assess the 'connectedness' between the PRPS sets across
+#' all batches. Default is set to 'TRUE', indicating if there is not connections between all PRPS sets across all batches,
+#' the function will give error.We refer to the checkPRPSconnectedness() function for more details.
 #' @param hvg Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
 #' anchor samples across different batches. The default value is set to 'NULL'.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is 'TRUE'.
@@ -25,13 +52,8 @@
 #' finding. The default is 2000. We refer to the FindIntegrationAnchors R function for more details.
 #' @param scale Logical. Whether or not to scale the features provided. Only set to FALSE if you have previously scaled
 #' the features you want to use for each object in the object.list.
-#' @param min.ps.samples Numeric. The minimum number of samples to be averaged to create a pseudo-sample. The default
-#' is 3. The minimum value is 2.
-#' @param max.ps.samples Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
-#' The default is 'inf'. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.
-#' @param max.prps.sets Numeric. The maximum number of PRPS sets across batches. The default is 10.
 #' @param normalization Character. Indicate which normalization methods should be used before finding the anchors.
-#' The options are "LogNormalize" or "SCT". The default is "LogNormalize".
+#' The options are "LogNormalize" or "SCT". The default is set "LogNormalize".
 #' @param sct.clip.range Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
 #' clipped to. The default is 'NULL'. We refer to the FindIntegrationAnchors R function for more details.
 #' @param reduction Character. Indicates which dimensional reduction to perform when finding anchors. The options are
@@ -54,13 +76,14 @@
 #' @param remove.na Character. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
 #' The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
 #' the checkSeObj function for more details.
-#' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
-#' object or to output the result as a list. By default, it is set to TRUE.
-#' @param plot.output. TTT
+#' @param plot.output Logical. If 'TRUE', the function plots the distribution of MNN across the batches and PRPS sets
+#' across the 'main.uv.variable'.
 #' @param output.name Character. A string specifying the name of the output file. If it is 'NULL', the function will
 #' select a name based on "paste0(uv.variable, '|', 'anchor', '|', assay.name)".
 #' @param prps.group Character. A string specifying the name of the PRPS group. If it is 'NULL', the function will select
 #' a name based on "paste0('prps|anchor|', uv.variable)".
+#' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
+#' object or to output the result as a list. By default, it is set to TRUE.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
 #' @importFrom Seurat VariableFeatures FindIntegrationAnchors
@@ -77,17 +100,17 @@ createPrPsByAnchors <- function(
         main.uv.variable,
         clustering.method = 'kmeans',
         nb.clusters = 3,
-        filter.prps.sets = TRUE,
-        max.prps.sets = 3,
-        min.sample.for.ps = 3,
-        max.sample.for.ps = 10,
-        select.extereme.groups = FALSE,
         other.uv.variables = NULL,
         other.uv.clustering.method = 'kmeans',
-        check.prps.connectedness = TRUE,
         nb.other.uv.clusters = 2,
-        hvg = NULL,
+        filter.prps.sets = TRUE,
+        max.prps.sets = 3,
         min.batches.to.cover = 'all',
+        select.extreme.groups = FALSE,
+        min.sample.for.ps = 3,
+        max.sample.for.ps = 10,
+        check.prps.connectedness = TRUE,
+        hvg = NULL,
         apply.log = TRUE,
         pseudo.count = 1,
         anchor.features = 2000,
@@ -104,12 +127,12 @@ createPrPsByAnchors <- function(
         nn.method = "annoy",
         n.trees = 50,
         eps = 0,
-        assess.se.obj = TRUE,
         remove.na = 'both',
         save.se.obj = TRUE,
         plot.output = TRUE,
         output.name = NULL,
         prps.group = NULL,
+        assess.se.obj = TRUE,
         verbose = TRUE
         ) {
     printColoredMessage(message = '------------The createPrPsByAnchors function starts:',
@@ -171,7 +194,7 @@ createPrPsByAnchors <- function(
             perfix = '_group',
             verbose = verbose
         )
-        if (isTRUE(select.extereme.groups)){
+        if (isTRUE(select.extreme.groups)){
             max.group <- se.obj[[main.uv.variable]][initial.variable == max(initial.variable)]
             min.group <- se.obj[[main.uv.variable]][initial.variable == min(initial.variable)]
             selected.samples <- se.obj[[main.uv.variable]] %in% c(max.group, min.group)
@@ -283,7 +306,7 @@ createPrPsByAnchors <- function(
         if (sum(selected.covered.batches == 1) == length(selected.covered.batches)){
             stop(paste0(
                 ' Non of the sample groups with respect to the other unwanted variables that have at least ',
-                max(min.sample.for.ps, min.mnn),
+                max(min.sample.for.ps, k.anchor),
                 ' samples across at least two sub-groups of the ',
                 main.uv.variable,
                 ' variable.'))
@@ -292,7 +315,7 @@ createPrPsByAnchors <- function(
             printColoredMessage(
                 message = paste0(
                     '- Non of the sample groups with respect to the other unwanted variables have at least ',
-                    max(min.sample.for.ps, min.mnn),
+                    max(min.sample.for.ps, k.anchor),
                     ' samples across all the sub-groups of the "',
                     main.uv.variable,
                     '" variable.'),
@@ -715,13 +738,13 @@ createPrPsByAnchors <- function(
                 temp.data <- lapply(
                     1:length(prps.sets),
                     function(y) {
-                        if(length(prps.sets[[y]]) >= min.ps.samples){
+                        if(length(prps.sets[[y]]) >= min.sample.for.ps){
                             rowMeans(expr.data[, prps.sets[[y]], drop = FALSE])
                         }
                     })
                 temp.data <- do.call(cbind, temp.data)
                 colnames(temp.data) <- rep(
-                    x = paste0(uv.variable, '.unsu.', x),
+                    x = paste0(main.uv.variable, '.unsu.', x),
                     ncol(temp.data)
                 )
                 return(temp.data)
@@ -733,7 +756,7 @@ createPrPsByAnchors <- function(
         if(sum(is.na(prps.data)) !=0){
             stop( 'There NA in the PRPS data, please check the data input and parameters.')
         }
-        se.obj[[uv.variable]] <- initial.variable
+        se.obj[[main.uv.variable]] <- initial.variable
 
     }
 
@@ -741,9 +764,9 @@ createPrPsByAnchors <- function(
     # Saving the output ####
     ## select output name ####
     if(is.null(output.name))
-        output.name <- paste0(uv.variable, '|', 'anchor', '|', assay.name)
+        output.name <- paste0(main.uv.variable, '|', 'anchor', '|', assay.name)
     if (is.null(prps.group))
-        prps.group <- paste0('prps|anchor|', uv.variable)
+        prps.group <- paste0('prps|anchor|', main.uv.variable)
     if (isTRUE(save.se.obj)) {
         if (!'PRPS' %in% names(se.obj@metadata)) {
             se.obj@metadata[['PRPS']] <- list()
