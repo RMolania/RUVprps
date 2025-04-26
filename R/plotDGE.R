@@ -84,8 +84,6 @@ plotDGE <- function(
         required.function = 'computeDGE',
         message.to.print = 'DGE'
     )
-    p.vals <- everything <- NULL
-
     # Generate p-values histograms for each contrast ####
     ## specified ylim for histograms ####
     breaks <- seq(from = 0, to = 1, by = .1)
