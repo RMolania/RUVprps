@@ -2,7 +2,7 @@
 % Please edit documentation in R/findBioGenes.R
 \name{findBioGenes}
 \alias{findBioGenes}
-\title{Find highly variable genes.}
+\title{Finds highly variable genes.}
 \usage{
 findBioGenes(
   se.obj,
@@ -34,9 +34,6 @@ findBioGenes(
   min.sample.for.correlation = 10,
   min.sample.for.mad = 3,
   assess.se.obj = TRUE,
-  assess.variables = FALSE,
-  cat.cor.coef = c(0.9, 0.9),
-  cont.cor.coef = c(0.9, 0.9),
   remove.na = "none",
   save.se.obj = TRUE,
   output.name = NULL,
@@ -137,20 +134,6 @@ Deviation (MAD) calculation on each gene within homogeneous sample groups. The d
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj' function
 will be applied. The default is 'TRUE'.}
-
-\item{assess.variables}{Logical. Indicates whether to assess the correlation between biological and unwanted variation
-variables separately when creating homogeneous sample groups. The default is 'FALSE'. Refer to the function 'assessVariablesAssociation'
-for more details.}
-
-\item{cat.cor.coef}{Numeric vector. Specifies the cut-off correlation coefficient between pairs of categorical variables.
-The first value applies to correlations between 'uv.variables', and the second to correlations between 'bio.variables'.
-Correlation is computed using the ContCoef function from the DescTools R package. If the correlation exceeds the cut-off,
-only the variable with the highest number of factors will be retained. By default, both values are set to 0.9.}
-
-\item{cont.cor.coef}{Numeric vector. Specifies the cut-off correlation coefficient between pairs of continuous variables.
-The first value applies to correlations between 'uv.variables', and the second to correlations between 'bio.variables'.
-Correlation is computed using the ContCoef function from the DescTools R package. If the correlation exceeds the cut-off,
-only the variable with the highest variance will be retained. By default, both values are set to 0.9.}
 
 \item{remove.na}{Character. Specifies whether to remove NA or missing values from 'assays', 'sample.annotation', 'both', or 'none'.
 If 'assays' is selected, genes with missing values will be excluded. If 'sample.annotation' is selected, samples with missing

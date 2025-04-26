@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotSilhouette.R
 \name{plotSilhouette}
 \alias{plotSilhouette}
-\title{Compute the average Silhouette coefficients.}
+\title{Computes the average Silhouette coefficients.}
 \usage{
 plotSilhouette(
   se.obj,
@@ -18,32 +18,34 @@ plotSilhouette(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to generate barplot or scatter plots of the computed adjusted rand index. By default all
-the assays of the SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character string or vector of character strings specifying the name(s) of the dataset(s)
+in the SummarizedExperiment object to generate barplots or scatter plots of the computed Silhouette coefficients.
+By default, all assays in the SummarizedExperiment object will be selected.}
 
-\item{variables}{Symbol. Indicates one or two column names in the SummarizedExperiment object that contains categorical
-variables such as sample subtypes or batches.}
+\item{variables}{Character. A character or character vectors of the column names in the SummarizedExperiment object
+that the silhouette coefficient has been calculated by the 'computeSilhouette' function.}
 
-\item{silhouette.method}{Symbol. A symbol Indicates what computed ARI methods should be used for plotting. The "ari.method" must be
-specified based on the "computeARI" function. The default is "hclust.complete.euclidian", which is the default of the
-the "computeARI" function. We refer to the "computeARI" function for more detail}
+\item{silhouette.method}{Character. Indicates which computed Silhouette method should be used for plotting. The method
+must match one of those defined in the "computeSilhouette()" function. The default is "sil.euclidian", which is also
+the default of the 'computeSilhouette()' function. Refer to the 'computeSilhouette()' function for more details.}
 
-\item{plot.type}{Symbol.Indicates how to plot the adjusted rand index. The options are "single.plot" and "combined.plot".
-If a variable is provided, then the "plot.type" must be set to "single.plot", so, the function generates a barplot of the
-adjusted rand index. If two variables are provided and "plot.type" is set to "combined.plot", then the function generates
-a scatter plot of the adjusted rand index of each variable against each other.}
+\item{plot.type}{Character. Indicates how to plot the adjusted Silhouette coefficients.
+Options are "single.plot" and "combined.plot". If a single variable is provided, "plot.type" must be set to "single.plot",
+which generates a barplot of the Silhouette coefficients. If two variables are provided and "plot.type" is set to
+"combined.plot", the function generates a scatter plot of the Silhouette coefficients for each variable against each
+other. The default is set to 'single.plot'.}
 
-\item{plot.output}{Logical. If TRUE, the individual barplots or scatter plots will be printed while functions is running.}
+\item{plot.output}{Logical. If TRUE, the individual barplots or scatter plots will be printed during function execution.
+The default is set to 'TRUE'.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment  object
-or to output the result as list. By default it is set to TRUE.}
+\item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment object
+or to return the results as a list. The default is set to 'TRUE'.}
 
-\item{verbose}{Logical. If TRUE, displaying process messages is enabled.}
+\item{verbose}{Logical. If TRUE, process messages will be displayed.}
 }
 \value{
-A SummarizedExperiment object or a list that containing all the plots of the computed average Silhouette coefficients
-on the categorical variable.
+A SummarizedExperiment object or a list containing all the plots of the computed average Silhouette coefficients
+for the categorical variables.
 }
 \description{
 This functions generates barplots of average Silhouette coefficients for individual assays. If two variables are

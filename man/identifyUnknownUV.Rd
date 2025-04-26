@@ -2,7 +2,7 @@
 % Please edit documentation in R/indentifyUnknownUV.R
 \name{identifyUnknownUV}
 \alias{identifyUnknownUV}
-\title{Identifies potential unknown sources of unwanted variation in RNA-seq data.}
+\title{Identify potential unknown sources of unwanted variation in RNA-seq data.}
 \usage{
 identifyUnknownUV(
   se.obj,
@@ -42,69 +42,71 @@ identifyUnknownUV(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Symbol. A symbol for the selection of the name of the assay in the SummarizedExperiment object to be
-used to identify possible sources of unwanted variation.}
+\item{assay.name}{Character string. A character string for the selection of the name of the assay in the SummarizedExperiment
+object to be used to identify possible sources of unwanted variation.}
 
-\item{approach}{Symbol. A symbol indicating the approach to be employed for identifying unknown sources of unwanted
-variation. This should be one of 'rle', 'pca', or 'sample.scoring'.In the rle approach, a clustering method is applied
-to either medians or IQR or both of the rle data. In the absence of unwanted variation, no distinguishable clustering
-should occur. In the 'pca' approach, a principal component analysis is initially performed on either a set of negative
-control genes specified in 'ncg' or all genes. Subsequently, a clustering method is employed to cluster the first
-principal components and identify potential unknown sources of unwanted variation. In the 'sample.scoring' approach, all
-samples are initially scored against a set of signature genes related to unwanted variation specified in 'uv.gene.sets'.
+\item{approach}{Character string. A character string indicating the approach to be employed for identifying unknown
+sources of unwanted variation. This should be one of 'rle', 'pca', or 'sample.scoring'. In the rle approach, a clustering
+method is applies to either medians or IQR or both of the rle data. In the absence of unwanted variation, no distinguishable
+clustering should occur. In the 'pca' approach, a principal component analysis is initially performed on either a set
+of negative control genes specified in 'ncg' or all genes. Subsequently, a clustering method is employed to cluster the
+first principal components and identify potential unknown sources of unwanted variation. In the 'sample.scoring' approach,
+all samples are initially scored against a set of signature genes related to unwanted variation specified in 'uv.gene.sets'.
 Then, a clustering method is applied to the scores to identify potential unknown sources of unwanted variation.}
 
-\item{rle.comp}{A symbol. Specifies which properties, either 'median' or 'iqr' or 'both', of the RLE data should be used for
-clustering when the approach is set to 'RLE'. The default is 'median'.}
+\item{rle.comp}{Character string. Specifies which properties, either 'median' or 'iqr' or 'both', of the RLE data
+should be used for clustering when the approach is set to 'RLE'. The default is 'median'.}
 
-\item{regress.out.bio.variables}{Symbol. A symbol or a vector of symbols specifying the column names of biological
+\item{regress.out.bio.variables}{Character string or vector of character strings. Specifies the column names of biological
 variables in the sample annotation of the SummarizedExperiment object. These variables can be either categorical or
 continuous variables. The default is 'NULL'.}
 
 \item{regress.out.bio.gene.sets}{List. A list of biological gene signatures. Individual gene sets will be used to
-score samples and then each scores will be regressed out from the data before identifying sources of unwanted variation.
+score samples and then each score will be regressed out from the data before identifying sources of unwanted variation.
 The default is 'NULL'.}
 
-\item{uv.gene.sets}{List. A list of gene signatures related any possible unwanted variables. Individual gene sets will}
+\item{uv.gene.sets}{List. A list of gene signatures related to any possible unwanted variables. Individual gene sets will
+be used to score samples and then each score will be clustered to identify possible unknown batches. The default is NULL.}
 
 \item{ncg}{Vector. Specifies a set of negative control genes to identify sources of unwanted variation. The default
 is 'NULL'. If not 'NULL', the RLE or PCA and sample scoring will be conducted solely based on the negative control genes.}
 
-\item{clustering.methods}{Symbol. Specifies the clustering method to be utilized for identifying potential unknown batches.
-This should be one of the following: 'kmeans', 'cut', 'quantile', 'nbClust'. The default is 'nbClust'.}
+\item{clustering.methods}{Character string. Specifies the clustering method to be utilized for identifying potential
+unknown batches. This should be one of the following: 'kmeans', 'cut', 'quantile', 'nbClust'. The default is 'nbClust'.}
 
-\item{nbClust.diss}{dissimilarity matrix to be used. By default, diss=NULL, but if it is replaced by a dissimilarity
+\item{nbClust.diss}{Dissimilarity matrix to be used. By default, diss=NULL, but if it is replaced by a dissimilarity
 matrix, distance should be "NULL".}
 
-\item{nbClust.distance}{the distance measure to be used to compute the dissimilarity matrix. This must be one of:
-"euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski" or "NULL".
+\item{nbClust.distance}{Character string. The distance measure to be used to compute the dissimilarity matrix. This
+must be one of: "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski" or "NULL".
 By default, distance="euclidean". If the distance is "NULL", the dissimilarity matrix (diss) should be given by the
 user. If distance is not "NULL", the dissimilarity matrix should be "NULL".}
 
-\item{nbClust.min.nc}{minimal number of clusters, between 1 and (number of objects - 1)}
+\item{nbClust.min.nc}{Numeric. Minimal number of clusters, between 1 and (number of objects - 1).}
 
 \item{nbClust.max.nc}{Numeric. Indicates maximal number of clusters, between 2 and (number of objects - 1),
-greater or equal to min.nc. By default, max.nc = 15. Refer to the NbClsut function for more details.}
+greater or equal to min.nc. By default, max.nc = 15. Refer to the NbClust function for more details.}
 
-\item{nbClust.method}{Symbol. indicates the cluster method to be used.
+\item{nbClust.method}{Character string. Indicates the cluster method to be used.
 This should be one of: "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid",
-"kmeans". Refer to the NbClsut function for more details.}
+"kmeans". Refer to the NbClust function for more details.}
 
-\item{nbClust.index}{The index to be calculated. This should be one of : 'kl', 'ch', 'hartigan', 'ccc', 'scott',
-'marriot', 'trcovw', 'tracew', 'friedman', 'rubin', 'cindex', 'db', 'silhouette', 'duda', 'pseudot2', 'beale',
-'ratkowsky', 'ball', 'ptbiserial', 'gap', 'frey', 'mcclain', 'gamma', 'gplus', 'tau', 'dunn', 'hubert', 'sdindex',
-'dindex', 'sdbw', 'all' (all indices except GAP, Gamma, Gplus and Tau),'alllong' (all indices with Gap, Gamma, Gplus
+\item{nbClust.index}{Character string. The index to be calculated. This should be one of: 'kl', 'ch', 'hartigan',
+'ccc', 'scott', marriot', 'trcovw', 'tracew', 'friedman', 'rubin', 'cindex', 'db', 'silhouette', 'duda', 'pseudot2',
+'beale', ratkowsky', 'ball', 'ptbiserial', 'gap', 'frey', 'mcclain', 'gamma', 'gplus', 'tau', 'dunn', 'hubert', 'sdindex',
+'dindex', 'sdbw', 'all' (all indices except GAP, Gamma, Gplus, and Tau),'alllong' (all indices with Gap, Gamma, Gplus
 and Tau included).}
 
-\item{nbClust.alphaBeale}{significance value for Beale's index.}
+\item{nbClust.alphaBeale}{Numeric. Significance value for Beale's index.}
 
 \item{max.samples.per.batch}{Numeric. Indicates the maximum number of samples per cluster when the clustering.methods
 is nbClust. The default is 0.1 (10\%) of total samples in the SummarizedExperiment object.}
 
-\item{nb.clusters}{Numeric. Specifies the number of clusters to be identified when "clustering.methods" is set to 'kmeans',}
+\item{nb.clusters}{Numeric. Specifies the number of clusters to be identified when "clustering.methods" is set to
+'kmeans', cut', and 'quantile'. The default is set to 3.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data, by default it is set to 'TRUE'.
-The data must be in log transformation before computing RLE or PCA.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data; by default, it is set to 'TRUE'.
+The data must be in log-transformed form before computing RLE or PCA.}
 
 \item{pseudo.count}{Numeric. A value serving as a pseudo count to be added to all measurements in the assay(s) before
 applying log-transformation. This helps prevent -Inf values for measurements equal to 0. The default is 1.}
@@ -112,55 +114,57 @@ applying log-transformation. This helps prevent -Inf values for measurements equ
 \item{nb.pcs}{Numeric. A value determining the number of first principal components to be selected for clustering
 when the approach is set to 'PCA'. The default is 2.}
 
-\item{center}{Logical. Indicates whether to center the data or not before performing PCA. The default is 'TRUE'.}
+\item{center}{Logical. Indicates whether to center the data or not before performing PCA. The default is set to 'TRUE'.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before performing PCA. The default is 'FASLE'.}
+\item{scale}{Logical. Indicates whether to scale the data or not before performing PCA. The default is set to 'FALSE'.}
 
 \item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. We refer to the
 BiocParallelParam R package for more details. The default is bsparam().
 We refer to the 'runSVD' function from the BiocSingular R package for more details.}
 
-\item{remove.current.estimates}{Symbol. Specifies whether to remove the current estimates of the unknown batch in the
-SummarizedExperiment object or not. The default is set to 'TRUE'.}
+\item{remove.current.estimates}{Character string. Specifies whether to remove the current estimates of the unknown
+batch in the SummarizedExperiment object or not. The default is set to 'TRUE'.}
 
-\item{output.name}{Symbol. A symbol specifies the name of the output file. If is 'NULL', the functions creates a name.}
+\item{output.name}{Character string. A character string specifying the name of the output file. If it is 'NULL', the
+function creates a name.}
 
 \item{assess.se.obj}{Logical. Whether to assess the SummarizedExperiment object or not. If 'TRUE', the function
 'checkSeobj' will be applied. The default is 'TRUE'.}
 
-\item{remove.na}{A symbol. Indicates whether to remove NA or missing values from either the 'assays', sample.annotation',
-'both' or 'none'. If 'assays' is selected, the genes that contains NA or missing values will be
-excluded. If 'sample.annotation' is selected, the samples that contains NA or missing values for any 'bio.variables'
-and 'uv.variables' will be excluded. By default, it is set to both'.}
+\item{remove.na}{Character string. Indicates whether to remove NA or missing values from either the 'assays',
+'sample.annotation', both' or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
+excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables'
+and 'uv.variables' will be excluded. By default, it is set to 'both'.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment class.
-Th default is 'TRUE', the results will be save to the 'metadata$UV$Unknown'.}
+The default is 'TRUE', the results will be saved to the 'metadata$UV$Unknown'.}
 
 \item{plot.output}{Logical. When set to 'TRUE', the function generates a plot of the input data for clustering, with
-colors representing the identified groups. The default value is 'TRUE}
+colors representing the identified groups. The default value is set to 'TRUE'.}
 
 \item{order.batches}{Logical. When set to 'TRUE', the estimated batches will be ordered in the plot.}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }
 \description{
-This function identifies sources of unwanted variation in RNA-seq data using different robust statistical approaches.
+This function identifies unknown sources of unwanted variation in RNA-seq data using different robust statistical
+approaches.
 }
 \details{
 Identification of sources of unwanted variation is essential to creating PRPS data for RUV-III normalization. There
-could be instances where certain sources of unwanted variation remain unrecorded. We refer to these as ”unknown”
+could be instances where certain sources of unwanted variation remain unrecorded. We refer to these as "unknown"
 sources of unwanted variation.
-This function uses three different approaches: 'rle', 'pca' and 'sample.scoring' to find potential sources of unwanted
+This function uses three different approaches: 'rle', 'pca', and 'sample.scoring' to find potential sources of unwanted
 variation in RNA-seq data when none are known.
 \itemize{
 \item In the 'rle' approach, a clustering method specified by 'clustering.methods' will be applied on either the RLE medians
-or IQRs or both separately. In the absence of unwanted variation,there should be no clearly distinguishable clusters.
+or IQRs or both separately. In the absence of unwanted variation, there should be no clearly distinguishable clusters.
 \item In the 'pca' approach, first, a principal component analysis on either a set of negative control genes or all genes
 will be applied and then a clustering method will be used to cluster the first principal components to find unknown
 sources of unwanted variation.
-\item In the 'sample.scoring' approach, first, individual samples will be scored against a set of gene set(s) e.g. housekeeping
-gene, whose visible variation indicates the existence of unwanted variation s, then clustering method will be applied
-on the scoring to find potential unknown sources of unwanted variation.
+\item In the 'sample.scoring' approach, first, individual samples will be scored against a set of gene set(s) e.g.
+housekeeping gene, whose visible variation indicates the existence of unwanted variations, then a clustering method
+will be applied on the scoring to find potential unknown sources of unwanted variation.
 }
 }
 \references{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsByMnn.R
 \name{createPrPsByMnn}
 \alias{createPrPsByMnn}
-\title{Creates PRPS sets using k and mutual nearest neighbors in RNA-seq data.}
+\title{Creates PRPS sets using mutual nearest neighbors in RNA-seq data.}
 \usage{
 createPrPsByMnn(
   se.obj,
@@ -12,127 +12,138 @@ createPrPsByMnn(
   nb.clusters = 3,
   filter.prps.sets = TRUE,
   max.prps.sets = 3,
-  select.extereme.groups = FALSE,
+  select.extreme.groups = FALSE,
   other.uv.variables = NULL,
   other.uv.clustering.method = "kmeans",
   nb.other.uv.clusters = 2,
   min.sample.for.ps = 3,
-  min.mnn = 3,
   min.batches.to.cover = "all",
+  check.prps.connectedness = TRUE,
+  nb.mnn = 3,
   hvg = NULL,
   normalization = "CPM",
   apply.cosine.norm = FALSE,
   regress.out.variables = NULL,
-  check.prps.connectedness = TRUE,
   apply.log = TRUE,
   pseudo.count = 1,
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
   assess.se.obj = TRUE,
   remove.na = "both",
-  save.se.obj = TRUE,
   plot.output = TRUE,
   output.name = NULL,
   prps.group = NULL,
+  save.se.obj = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A character string indicating the name of the assay in the SummarizedExperiment object.
-This assay will be used to first find k nearest neighbors and then mutual nearest neighbors data. This data must be
-the one that will be used for the RUV-III normalization.}
+\item{assay.name}{Character. A character string indicating the name of the data(assay) in the SummarizedExperiment
+object. This data will be used to create PRPS data for RUV-III normalization. This data must be the one that will be
+used for the RUV-III normalization.}
 
 \item{main.uv.variable}{Character. Indicates the name of a column in the sample annotation of the SummarizedExperiment
-object. The 'main.uv.variable' can be either categorical or continuous. If 'main.uv.variable' is a continuous variable,
-this will be divided into 'nb.clusters' groups using the 'clustering.method'.}
+object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous variable, this will
+be divided into 'nb.clusters' groups using the 'clustering.method'.}
 
 \item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the
-'main.uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default
-is set to 'kmeans'.}
+'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set
+to 'kmeans'.}
 
-\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'main.uv.variable' is a
-continuous variable. The default is 3.}
+\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
+continuous variable. The default is set to 3.}
 
 \item{filter.prps.sets}{Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if
-they are higher than the 'max.prps.sets' value. The default is 'TRUE'. A high number of PRPS sets will just increase
+they are higher than the 'max.prps.sets' value. The default is set to 'TRUE'. A high number of PRPS sets will increase
 the computational time for the RUV-III normalization.}
 
 \item{max.prps.sets}{Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches.
 The default is set to 10.}
 
-\item{other.uv.variables}{Character. A character string or character vector representing the label of unwanted
-variable(s), such as library size, etc., within the sample annotation (colData) of the SummarizedExperiment object.
-This can comprise a vector containing either categorical, continuous, or a combination of both variables. These variables
-will be considered when generating PRPS sets for the "main.uv.variable". This can help avoid potential contamination
-from the "other.uv.variables" in the PRPS data of the "main.uv.variable". The default is set to 'NULL'.}
+\item{select.extreme.groups}{Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
+clusters, when the 'uv.variable' is continuous. Default is set to 'TRUE'. This will increase the variation between
+PR sets in order to better capture the unwanted variation.}
+
+\item{other.uv.variables}{Character. A character string or character vector representing the name(s) of the columns of
+unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
+continuous, or a combination. These variables will be considered when generating PRPS sets for the "main.uv.variable"
+to help avoid potential contamination. The default is set to 'NULL'}
 
 \item{other.uv.clustering.method}{Character. A character string indicating which clustering method should be used to
-group each continuous unwanted variable, if specified in the "other.uv.variables". The options include 'kmeans', 'cut',
-and 'quantile'. The default is 'kmeans'. Refer to the createHomogeneousUVGroups() function for more details.}
+group each continuous unwanted variable, if specified in "other.uv.variables". Options include 'kmeans', 'cut',
+and 'quantile'. The default is set to 'kmeans'. See createHomogeneousUVGroups() for more details.}
 
-\item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous unwanted
-variable. The default is set to 3.}
+\item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
+unwanted variable specified in the 'other.uv.variables'. The default is set to 3.}
 
-\item{min.sample.for.ps}{Numeric. Specifies the minimum number of samples required for the PRPS sets.}
+\item{min.sample.for.ps}{Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
+to 3.}
 
-\item{min.mnn}{Numeric. The maximum number of nearest neighbors to compute. The default is set to 3.}
+\item{min.batches.to.cover}{Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
+'all', indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.}
 
-\item{hvg}{Character vector. A vector of the names of the highly variable genes. These genes will be used to find the
-anchors across the batches. The default is NULL.}
+\item{check.prps.connectedness}{Logical. Indicates whether to assess the 'connectedness' between the PRPS sets across
+all batches. Default is set to 'TRUE', indicating if there is not connections between all PRPS sets across all batches,
+the function will give error.We refer to the checkPRPSconnectedness() function for more details.}
 
-\item{normalization}{Character. Indicates which normalization methods should be applied before finding the knn. The
-default is 'cpm'. If set to NULL, no normalization will be applied.}
+\item{nb.mnn}{Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
+default is set to 1.}
 
-\item{apply.cosine.norm}{Logical. Specifies whether to apply cosine normalization.}
+\item{hvg}{Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
+will be used to prepare the input data for knn and mnn analysis. The default is set to 'NULL', this means all genes
+will be used.}
 
-\item{regress.out.variables}{Character. Indicates the column names that contain biological variables in the
-SummarizedExperiment object. These variables will be regressed out from the data before finding genes that are highly
-affected by unwanted variation. The default is NULL, indicating that regression will not be applied.}
+\item{normalization}{Character. A character string that indicates which normalization method should be applied on the
+data before finding the knn. Options are: 'CPM','TMM', upper', median', full' and VST'. The default is set to 'cpm'.
+If set to NULL, no normalization will be applied. See the applyOtherNormalizations() function for more details.}
 
-\item{check.prps.connectedness}{Logical. Indicates whether to assess the connectedness between the PRPS sets.
-The default is set to TRUE. See the details for more information.}
+\item{apply.cosine.norm}{Logical. Indicates whether cosine normalization should be applied before finding MNN. Default
+is set to 'TRUE'.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is TRUE.
-Please note that any RNA-seq data (assays) must be in log scale before computing RLE.}
+\item{regress.out.variables}{Character. A character string or strings that indicate the column name(s) in the sample
+annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
+finding KNN and MNN. The default is set to NULL, indicating that regression will not be applied.}
 
-\item{pseudo.count}{Numeric. A value to be added as a pseudo count to all measurements of the assay(s) before applying
-log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
+The default is set to 'TRUE'.}
 
-\item{mnn.bpparam}{BiocParallelParam. A BiocParallelParam object specifying how parallelization should be performed.
-The default is SerialParam(). Refer to the 'findMutualNN' function from the BiocNeighbors R package for more details.}
+\item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
+assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
+to 1.}
 
-\item{mnn.nbparam}{BiocParallelParam. A BiocParallelParam object specifying how parallelization should be performed to
-find MNN. The default is KmknnParam(). Refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.}
+\item{mnn.bpparam}{Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
+The default is SerialParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
-function for more details.}
+\item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+The default is KmknnParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
 
-\item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays or not. The options are
-'assays' and 'none'. The default is "assays", so all the NA or missing values from the assay(s) will be removed before
-computing RLE. See the checkSeObj function for more details.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+to TRUE. See the checkSeObj() function for more details.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object
-or to output the result as a list. By default, it is set to TRUE.}
+\item{remove.na}{Character. To remove NA or missing values from the assay (data) or not. The options are 'assays' and
+'none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be removed before computing
+performing any down-stream analysis. See the checkSeObj() function for more details.}
 
-\item{plot.output}{Logical. Specifies whether to generate and output plots.}
+\item{plot.output}{Logical. If 'TRUE', the function plots the distribution of MNN across the batches and PRPS sets
+across the 'main.uv.variable'.}
 
-\item{output.name}{Character. A character string specifying the name of the output file. If set to 'NULL', the function
-will select a name based on "paste0(uv.variable, '|', 'anchor', '|', assay.name)".}
+\item{output.name}{Character. A character string specifying the name of the output file to be saved in the metadata
+of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on
+"paste0(uv.variable, '|' , assay.name)".}
 
-\item{prps.group}{Character. A character string specifying the name of the output file. If set to 'NULL', the function
-will select a name based on "paste0('prps_mnn_', uv.variable)".}
+\item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
+If set to 'NULL', the function will automatically assign a name using "paste0('prps|mnn|', uv.variable)".}
+
+\item{save.se.obj}{Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
+or to output the result as a list. By default, it is set to 'TRUE'.}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
-
-\item{select.extreme.groups}{Character. Specifies whether to select extreme groups for analysis.}
-
-\item{min.batch.to.cover}{Numeric. The maximum number of nearest neighbors to compute. The default is set to 3.}
 }
 \value{
-The SummarizedExperiment object that contains all the PRPS data, knn, mnn, and plot results in the metadata, or
-a list of the results.
+The SummarizedExperiment object containing PRPS data and plot results in the metadata, or a list of
+these results.
 }
 \description{
 This function uses the k and mutual nearest neighbors approaches to create PRPS in the RNA-seq data. This function

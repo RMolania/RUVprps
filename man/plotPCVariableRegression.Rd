@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotPCVariableRegression.R
 \name{plotPCVariableRegression}
 \alias{plotPCVariableRegression}
-\title{Generate line-dot plot of the PC variable regression analysis.}
+\title{Generates line-dot plot of the PC variable regression analysis.}
 \usage{
 plotPCVariableRegression(
   se.obj,
@@ -10,40 +10,41 @@ plotPCVariableRegression(
   variable,
   fast.pca = TRUE,
   nb.pcs = 10,
-  save.se.obj = TRUE,
   plot.output = TRUE,
+  save.se.obj = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to generate a vector correlation. The default is "all, which indicates all
-the assays of the SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character string or vector of character strings specifying the name(s) of the assay(s)
+in the SummarizedExperiment object to generate a vector correlation. The default is "all", which indicates that all
+assays in the SummarizedExperiment object will be selected.}
 
-\item{variable}{Symbol. A symbol indicating the name of the column in the sample annotation of the SummarizedExperiment object.
-The variable must be a continuous variable such as library size, tumor purity, ... .}
+\item{variable}{Character. A character string indicating the name of the column in the sample annotation
+(i.e., \code{colData}) of the SummarizedExperiment object. The variable must be a continuous variable,
+such as library size, tumor purity, etc.}
 
-\item{fast.pca}{Logical. Indicates whether to use the PCA calculated using a specific number of PCs instead of the
-full range to speed up the process, by default is set to 'TRUE'.}
+\item{fast.pca}{Logical. Indicates whether to use PCA calculated using a specific number of principal components
+to speed up the process. By default, this is set to TRUE.}
 
-\item{nb.pcs}{Numeric. A numeric value specifying the number of first PCs to be used to plot the r squared.
-The default is set to 10.}
+\item{nb.pcs}{Numeric. A numeric value specifying the number of leading principal components to use
+when plotting the R-squared values. The default is 10.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment class
-object 'se.obj' or to output the result. By default it is set to TRUE.}
+\item{plot.output}{Logical. If TRUE, the correlation statistics will be plotted. Default is TRUE.}
 
-\item{plot.output}{Logical. Indicates whether to plot the correlation statistics, by default it is set to TRUE.}
+\item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
+or to return the results directly. By default, this is set to TRUE.}
 
-\item{verbose}{Logical. If TRUE, displaying process messages is enabled.}
+\item{verbose}{Logical. If TRUE, process messages will be displayed.}
 }
 \value{
 A SummarizedExperiment object containing the line-dot plots for the continuous variable and if requested
 the associated plot.
 }
 \description{
-This function generate a dot-line plot between the first cumulative PCs and the regression R squared obtained
+This function generate a dot-line plot between the first n cumulative PCs and the regression R squared obtained
 from the regression analysis. An ideal normalization should results a low R squared with unwanted variation
 variables and high R squared with known biology.
 }

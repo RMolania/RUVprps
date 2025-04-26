@@ -10,17 +10,17 @@ createPrPsByAnchors(
   main.uv.variable,
   clustering.method = "kmeans",
   nb.clusters = 3,
-  filter.prps.sets = TRUE,
-  max.prps.sets = 3,
-  min.sample.for.ps = 3,
-  max.sample.for.ps = 10,
-  select.extereme.groups = FALSE,
   other.uv.variables = NULL,
   other.uv.clustering.method = "kmeans",
-  check.prps.connectedness = TRUE,
   nb.other.uv.clusters = 2,
-  hvg = NULL,
+  filter.prps.sets = TRUE,
+  max.prps.sets = 3,
   min.batches.to.cover = "all",
+  select.extreme.groups = FALSE,
+  min.sample.for.ps = 3,
+  max.sample.for.ps = 10,
+  check.prps.connectedness = TRUE,
+  hvg = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
   anchor.features = 2000,
@@ -37,28 +37,67 @@ createPrPsByAnchors(
   nn.method = "annoy",
   n.trees = 50,
   eps = 0,
-  assess.se.obj = TRUE,
   remove.na = "both",
   save.se.obj = TRUE,
   plot.output = TRUE,
   output.name = NULL,
   prps.group = NULL,
+  assess.se.obj = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A string indicating the assay name within the SummarizedExperiment object for the
-creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.}
+\item{assay.name}{Character. A character string indicating the assay name within the SummarizedExperiment object that
+should be used for the creation of PRPS data. The assay must be the one that will be used as data input for the
+RUV-III-PRPS normalization.}
 
-\item{clustering.method}{Character. A string indicating the choice of clustering method for grouping the 'uv.variable'
+\item{main.uv.variable}{Character. Indicates the name of a column in the sample annotation of the SummarizedExperiment
+object. PRPS data will be created for this variable. The 'main.uv.variable' can be either categorical or continuous.
+If 'main.uv.variable' is a continuous variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.}
+
+\item{clustering.method}{Character. A string indicating the choice of clustering method for grouping the 'main.uv.variable'
 if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.}
 
-\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
-continuous variable. The default is 3.}
+\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'main.uv.variable' is
+a continuous variable. The default is set to 3.}
 
-\item{max.prps.sets}{Numeric. The maximum number of PRPS sets across batches. The default is 10.}
+\item{other.uv.variables}{Character. A character string or character vector representing the name(s) of the columns of
+unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
+continuous, or a combination. These variables will be considered when generating PRPS sets for the "main.uv.variable"
+to help avoid potential contamination in PRPS data. The default is set to 'NULL'}
+
+\item{other.uv.clustering.method}{Character. A character string indicating which clustering method should be used to
+group each continuous unwanted variable, if specified in "other.uv.variables". Options include 'kmeans', 'cut',
+and 'quantile'. The default is set to 'kmeans'. See createHomogeneousUVGroups() for more details.}
+
+\item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
+unwanted variable specified in the 'other.uv.variables'. The default is set to 3.}
+
+\item{filter.prps.sets}{Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if
+they are higher than the 'max.prps.sets' value. A high number of PRPS sets will increase the computational time for
+the RUV-III normalization. The default is set to 'TRUE'.}
+
+\item{max.prps.sets}{Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches(
+subgrouos of the 'main.uv.variable'). The default is set to 10.}
+
+\item{min.batches.to.cover}{Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
+'all', indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.}
+
+\item{select.extreme.groups}{Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
+clusters, when the 'main.uv.variable' is a continuous variable. Default is set to 'TRUE'. This will increase the
+variation between PR sets in order to better capture the unwanted variation.}
+
+\item{min.sample.for.ps}{Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
+to 3. The minum value is 2.}
+
+\item{max.sample.for.ps}{Numeric. Maximun number of samples required for pseudo-replicate creation. The default is set
+to 3. The minum value is 10.}
+
+\item{check.prps.connectedness}{Logical. Indicates whether to assess the 'connectedness' between the PRPS sets across
+all batches. Default is set to 'TRUE', indicating if there is not connections between all PRPS sets across all batches,
+the function will give error.We refer to the checkPRPSconnectedness() function for more details.}
 
 \item{hvg}{Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
 anchor samples across different batches. The default value is set to 'NULL'.}
@@ -75,7 +114,7 @@ finding. The default is 2000. We refer to the FindIntegrationAnchors R function 
 the features you want to use for each object in the object.list.}
 
 \item{normalization}{Character. Indicate which normalization methods should be used before finding the anchors.
-The options are "LogNormalize" or "SCT". The default is "LogNormalize".}
+The options are "LogNormalize" or "SCT". The default is set "LogNormalize".}
 
 \item{sct.clip.range}{Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
 clipped to. The default is 'NULL'. We refer to the FindIntegrationAnchors R function for more details.}
@@ -105,9 +144,6 @@ the anchor filtering. The default is 30.}
 
 \item{eps}{Numeric. Error bound on the neighbor finding algorithm (from RANN/Annoy).}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
-function for more details.}
-
 \item{remove.na}{Character. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
 The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
 the checkSeObj function for more details.}
@@ -115,25 +151,19 @@ the checkSeObj function for more details.}
 \item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
 object or to output the result as a list. By default, it is set to TRUE.}
 
+\item{plot.output}{Logical. If 'TRUE', the function plots the distribution of MNN across the batches and PRPS sets
+across the 'main.uv.variable'.}
+
 \item{output.name}{Character. A string specifying the name of the output file. If it is 'NULL', the function will
 select a name based on "paste0(uv.variable, '|', 'anchor', '|', assay.name)".}
 
 \item{prps.group}{Character. A string specifying the name of the PRPS group. If it is 'NULL', the function will select
 a name based on "paste0('prps|anchor|', uv.variable)".}
 
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
+function for more details.}
+
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
-
-\item{uv.variable}{Character. A string specifying the name of columns in the sample annotation of the SummarizedExperiment
-object. This variable can be categorical or continuous. If a continuous variable is provided, it will be
-divided into groups using the clustering method.}
-
-\item{min.ps.samples}{Numeric. The minimum number of samples to be averaged to create a pseudo-sample. The default
-is 3. The minimum value is 2.}
-
-\item{max.ps.samples}{Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
-The default is 'inf'. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.}
-
-\item{plot.output.}{TTT}
 }
 \description{
 This functions employs the FindIntegrationAnchors function from the Seurat R package to create PRPS sets for the

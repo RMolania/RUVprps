@@ -8,6 +8,8 @@ findNcgsUnSupervised(
   se.obj,
   assay.name,
   uv.variables,
+  clustering.method = "kmeans",
+  nb.clusters = 3,
   nb.ncg = 0.1,
   hvg.method = "var",
   ncg.selection.method = "non.overlap",
@@ -18,11 +20,10 @@ findNcgsUnSupervised(
   grid.group = "uv",
   grid.direction = "decrease",
   grid.nb = 20,
-  clustering.method = "kmeans",
-  nb.clusters = 3,
   normalization = "CPM",
   regress.out.variables = NULL,
   min.sample.for.mad = 3,
+  min.sample.for.var = 15,
   min.sample.for.aov = 3,
   min.sample.for.correlation = 10,
   corr.method = "spearman",
@@ -30,81 +31,92 @@ findNcgsUnSupervised(
   rho = 0,
   anova.method = "aov",
   filter.ncgs = FALSE,
+  common.hk = "cancer",
+  hk.group = "micorarray.hk.genes",
   assess.ncg = TRUE,
   variables.to.assess.ncg = NULL,
   nb.pcs = 5,
-  scale = FALSE,
   center = TRUE,
+  scale = FALSE,
   apply.log = TRUE,
   pseudo.count = 1,
   assess.se.obj = TRUE,
   remove.na = "both",
-  save.se.obj = TRUE,
   output.name = NULL,
   ncg.group = NULL,
   plot.output = TRUE,
+  output.plot = "assessment",
   use.imf = FALSE,
   save.imf = FALSE,
   imf.name = NULL,
+  save.se.obj = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. The name of the assay in the SummarizedExperiment object to be used for RUV-III-PRPS
-normalization.}
+\item{assay.name}{Character. The name of the data (assay) in the SummarizedExperiment object to be used to find NCGS.
+This data must be the same as one that will be used for the RUV-III normalization.}
 
-\item{uv.variables}{Character. A character vector indicating the names of the columns in the SummarizedExperiment object
-that contain unwanted variables. If all unwanted variation is unknown, the 'identifyUnknownUV' function can estimate them.}
+\item{uv.variables}{Character. A character vector indicating the name(s) of the columns in the SummarizedExperiment object
+that contain unwanted variable(s). If all unwanted variation is unknown, the 'identifyUnknownUV' function can be used
+to estimate them first and the run the findNcgsUnSupervised() function.}
 
-\item{nb.ncg}{Numeric. Specifies the number of genes to be chosen as negative control genes (NCG) when the '
-ncg.selection.method' is set to 'auto'. This value corresponds to a fraction of the total genes in the SummarizedExperiment
-object. The default is 0.1.}
+\item{clustering.method}{Character. A character that specifies the clustering method to use for grouping continuous
+sources of unwanted variation. The options are 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.}
+
+\item{nb.clusters}{Numeric. The number of clusters for grouping continuous sources of unwanted variation. The default
+is set to 3.}
+
+\item{nb.ncg}{Numeric. Specifies the number of genes to be chosen as negative control genes (NCG) when the
+'ncg.selection.method' is set to 'auto'. This value corresponds to a fraction of the total genes in the SummarizedExperiment
+object. The default is set to 0.1.}
 
 \item{hvg.method}{Character. A character vector indicating how to select the highly variable genes. The option are
-'var' and 'mad'. The default it set to 'var'.}
+'var' and 'mad'. The 'var' option is based on modeling the variance of the log-expression profiles for each gene,
+decomposing it into technical and biological components based on a fitted mean-variance trend. The 'mad' option is
+based on the Median Absoulute Deviation to find highly variable genes. The default it set to 'var'.}
 
 \item{ncg.selection.method}{Character. Specifies the method used to select negative control genes (NCG). The available
-options are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default method is 'non.overlap'.}
+options are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default is set to 'non.overlap'. Refer
+to the details for more information on each approach.}
 
 \item{top.rank.bio.genes}{Numeric. Specifies the fraction of top-ranked genes that are highly affected by biological
-variation. These genes have the highest MAD values. The default is 0.5.}
+variation. The default is set to 0.5. Refer to the details for more information.}
 
 \item{top.rank.uv.genes}{Numeric. Specifies the fraction of top-ranked genes that are highly affected by unwanted
-variation variables. These genes have the highest F-statistics and correlation coefficients. The default is 0.5.}
+variation variables. The default is set to 0.5. Refer to the details for more information.}
 
-\item{bio.percentile}{Numeric. The percentile cut-off for selecting genes that are highly affected by biological variation.
-The default is 0.8.}
+\item{bio.percentile}{Numeric. The percentile cut-off for selecting genes that are highly affected by biological
+variation. This number must be specified, when the 'ncg.selection.method' is set to 'quantile'. The default is set to 0.8.}
 
 \item{uv.percentile}{Numeric. The percentile cut-off for selecting genes that are highly affected by unwanted variation.
-The default is 0.8.}
+This number must be specified, when the 'ncg.selection.method' is set to 'quantile'. The default is set to 0.8.}
 
-\item{grid.group}{Character. Specifies whether the grid search should focus on biological, unwanted, or both factors. The
-options are 'bio', 'uv', or 'both'.}
+\item{grid.group}{Character. Specifies whether the grid search should focus on biological, unwanted, or both factors.
+The options are 'bio', 'uv', or 'both'. Refer to the details for more information.}
 
 \item{grid.direction}{Character. Specifies whether the grid search should proceed in decreasing or increasing order.
 The options are 'increase' or 'decrease'.}
 
 \item{grid.nb}{Numeric. Specifies the number of genes to consider during the grid search when the 'ncg.selection.method'
-is set to 'auto'. The default is 20.}
-
-\item{clustering.method}{Character. Specifies the clustering method to use for grouping continuous sources of unwanted variation.
-The available options are 'kmeans', 'cut', and 'quantile'. The default is 'kmeans'.}
-
-\item{nb.clusters}{Numeric. The number of clusters for grouping continuous sources of unwanted variation. The default is 3.}
+is set to 'auto'. The default is set to 20.}
 
 \item{normalization}{Character. Specifies the normalization method used for library size adjustment before identifying
-genes that are highly affected by biological variation. The default is 'CPM'. Refer to the 'applyOtherNormalization'
-function for further details.}
+genes that are highly affected by biological variation. The options are:'CPM', 'TMM', 'VST', 'full', 'median' and 'upper'.
+The default is set to 'CPM'. Refer to the 'applyOtherNormalization' function for further details.}
 
 \item{regress.out.variables}{Character. Specifies which variables to regress out from the data prior to analysis.}
 
 \item{min.sample.for.mad}{Numeric. The minimum number of samples required to perform MAD analysis on each gene within
-homogeneous sample groups. The default is 3.}
+homogeneous sample groups. The default is set to 3.}
+
+\item{min.sample.for.var}{Numeric. The minimum number of samples required to perform mean-variance analysis for each
+gene within homogeneous sample groups. The default is set to 15.}
 
 \item{min.sample.for.aov}{Numeric. The minimum number of samples required for ANOVA analysis between categorical sources
-of variation with individual gene expression. The default is 3.}
+of variation with individual gene expression. The default is set to 3.}
 
 \item{min.sample.for.correlation}{Numeric. The minimum number of samples required for correlation analyses between
 continuous sources of unwanted variation and individual gene expression. The default is 10.}
@@ -112,39 +124,54 @@ continuous sources of unwanted variation and individual gene expression. The def
 \item{corr.method}{Character. The correlation method to use for the analysis. Options are 'pearson' or 'spearman'.
 The default is set to 'spearman'.}
 
-\item{a}{Numeric. The significance level used for the confidence intervals in the correlation analysis. The default is 0.05.}
+\item{a}{Numeric. The significance level used for the confidence intervals in the correlation analysis. The default is
+set to 0.05.}
 
 \item{rho}{Numeric. The hypothesized correlation value to be used in the hypothesis testing. The default is 0.}
 
-\item{anova.method}{Character. The ANOVA method to use. Options are 'aov' or 'welch'. The default is 'aov'. Refer to the function
-'computeGenesVariableAnova' for more details.}
+\item{anova.method}{Character. The ANOVA method to use. Options are 'aov' or 'welch'. The default is 'aov'. Refer to
+the function computeGenesVariableAnova' for more details.}
 
-\item{assess.ncg}{Logical. Specifies whether to assess the performance of the selected NCGs. This involves principal component
-analysis on the selected NCGs and exploration of R^2 or vector correlation between the first 'nb.pcs' principal components
-and the biological and unwanted variables.}
+\item{filter.ncgs}{Logical. Specifies to have an extra filtering steps based on the common or a pan-cancer specif set
+of publicly available human housekeeping genes. The default is set to 'FALSE'.}
 
-\item{variables.to.assess.ncg}{Character. The column names of the SummarizedExperiment object that contain variables to be
-assessed for their association with the selected NCGs. By default, all variables in 'uv.variables' will be assessed.}
+\item{common.hk}{Character. Specifies which gorup of common housekeeping genes should be used for filetng the NCGS.
+Options are 'cancer' and 'non.cancer'. The default is set to 'cancer'.}
 
-\item{nb.pcs}{Numeric. Specifies the number of principal components from the selected NCGs to be used for performance assessment.
-The default is 5.}
+\item{hk.group}{Character. If the 'common.hk' is set to 'non.cancer', a characer tha species a columng name in the
+gene annotation (rawData) that contcin a list of commone non cacncer housekeeping genes. The options are
+'bulk.rnaseq.hk.genes.v1', "bulk.rnaseq.hk.genes.v2', micorarray.hk.genes, 'nanostring.pan.cancer.hk.genes and
+'singscore.pan.cancer.hk.genes. These list of housekeeping genes can be added to SummarizedExperiment object using the
+'prepareSeObj()' function.The default is set to micorarray.hk.genes.}
 
-\item{scale}{Logical. Specifies whether to scale the data before applying SVD. The default is FALSE.}
+\item{assess.ncg}{Logical. Specifies whether to assess the performance of the selected NCGs. This involves principal
+component analysis on the selected NCGs and exploration of R^2 or vector correlation between the first 'nb.pcs'
+principal components and the biological and unwanted variables. The defualt is set to 'TRUE'.}
 
-\item{center}{Logical. Specifies whether to center the data before applying Singular Value Decomposition (SVD). The
-default is set to 'TRUE'.}
+\item{variables.to.assess.ncg}{Character. The column names of the SummarizedExperiment object that contain variables
+to be assessed for their association with the selected NCGs. If it is set to 'NULL', all variables specified in the
+'uv.variables' will be assessed. The default is set to 'NULL'.}
 
-\item{apply.log}{Logical. Specifies whether to apply a log-transformation to the data. The default is TRUE.}
+\item{nb.pcs}{Numeric. Specifies the number of principal components (calculated using only selected NCGs) to be used
+for NCGs performance assessment. The default is set to 10.}
 
-\item{pseudo.count}{Numeric. The pseudo count to be added to all measurements before log transformation.}
+\item{center}{Logical. Specifies whether to center the data before applying PCA using singular value decomposition (SVD).
+The default is set to 'TRUE'.}
 
-\item{assess.se.obj}{Logical. Specifies whether to assess the SummarizedExperiment object. The default is TRUE.}
+\item{scale}{Logical. Specifies whether to scale the data before applying PCA using singular value decomposition (SVD).
+The default is set to 'TRUE'.}
+
+\item{apply.log}{Logical. Specifies whether to apply a log-transformation to the data or not before applying any
+statistical analysis. The default is set to 'TRUE'.}
+
+\item{pseudo.count}{Numeric. The pseudo count to be added to all measurements before log transformation. The default is
+set to 1.}
+
+\item{assess.se.obj}{Logical. Specifies whether to assess the SummarizedExperiment object using the checkSeObj() function.
+The default is set to 'TRUE'. This applies the the checkSeObj() function.}
 
 \item{remove.na}{Character. Specifies whether to remove missing values (NA) from the 'assays', the 'sample.annotation',
 'both', or 'none'. The default is set to 'both'.}
-
-\item{save.se.obj}{Logical. Specifies whether to save the result in the metadata of the SummarizedExperiment object or
-output the result. The default is set to 'TRUE'.}
 
 \item{output.name}{Character. Specifies the name for the output in the metadata of the SummarizedExperiment object. The
 default is set to NULL, meaning the function will generate a name based on the specified argument.}
@@ -154,31 +181,39 @@ default is set to NULL, meaning the function will generate a name based on the s
 
 \item{plot.output}{Logical. If TRUE, a plot of the NCG assessment will be displayed while the function is running.}
 
+\item{output.plot}{Character. A character specifies which plot to print. The options are 'assessment', 'heatmap' and
+'both'. The default is set to 'assessment'.}
+
 \item{use.imf}{Logical. Specifies whether to use the intermediate file. The default is FALSE.}
 
 \item{save.imf}{Logical. Specifies whether to save the intermediate file. If TRUE, the function will save the results
 of the ANOVA. If users want to change parameters such as 'nb.ncg', 'ncg.selection.method', 'top.rank.bio.genes', or
 'top.rank.uv.genes', the analysis will not be recalculated.}
 
-\item{imf.name}{Character. Specifies the name for saving the intermediate file. If NULL, the function will generate a name.}
+\item{imf.name}{Character. Specifies the name for saving the intermediate file. If NULL, the function will generate a
+name. The function uses paste0(assay.name, '|un.supervised|', ncg.selection.method) to generate a name.}
+
+\item{save.se.obj}{Logical. Specifies whether to save the result in the metadata of the SummarizedExperiment object or
+output the result. The default is set to 'TRUE'.}
 
 \item{verbose}{Logical. If TRUE, process messages will be displayed.}
 }
 \value{
-A SummarizedExperiment object containing the selected negative control genes or a logical vector indicating
-the selected genes.
+A SummarizedExperiment object containing the selected negative control genes and assessment plots or a list of
+these results.
 }
 \description{
-This function identifies a set of genes as negative control genes in cases where no biological variations are known.
-The function uses gene-level correlation, ANOVA, and MAD analyses across and between sample groups to find a set
-of genes as negative control genes for the RUV-III-PRPS normalization.
+Identifies a set of genes to be used as negative control genes when no biological variation is known. This function
+applies gene-level correlation, ANOVA, mean-variance relationship and MAD analyses across and between  sample groups
+to select negative control genes for different purposes including RUV-III normalization.
 }
 \details{
-The function initially utilizes gene-level correlation and ANOVA to identify genes significantly influenced by continuous
-and categorical sources of variation, respectively. Subsequently, it conducts Median Absolute Deviation (MAD) analysis
-on each gene within homogeneous sample groups, considering unwanted variables, to pinpoint genes highly variable due
-to biological factors. Lastly, various methods are employed to consolidate the statistical findings, ultimately determining
-an appropriate set of genes as negative control genes for RUV-III-PRPS normalization.
+The function initially utilizes gene-level correlation and ANOVA to identify genes that are significantly influenced
+by continuous and categorical sources of variation, respectively. Subsequently, it conducts mean-variance relationship
+or Median Absolute Deviation (MAD) analysis on each gene within homogeneous sample groups, considering unwanted variables,
+to pinpoint genes highly variable due to biological factors. Lastly, various methods are employed to consolidate the
+statistical findings, ultimately determining an appropriate set of genes as negative control genes for different purposes
+including RUV-III normalization.
 }
 \author{
 Ramyar Molania

@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepareSeObj.R
 \name{prepareSeObj}
 \alias{prepareSeObj}
-\title{Prepares a SummarizedExperiment object.}
+\title{Prepares a SummarizedExperiment object from tabular data.}
 \usage{
 prepareSeObj(
   data = NULL,
@@ -28,15 +28,15 @@ prepareSeObj(
 )
 }
 \arguments{
-\item{data}{List. A list containing data sets (assay(s)) or expression data. For individual datasets, genes should be arranged
-in rows and samples in columns. If multiple datasets are provided, ensure that the row names of the assays are in
-the same order.}
+\item{data}{List or a SummarizedExperiment object. Either a list containing data sets (assays) or expression data. For
+individual datasets, genes should be arranged in rows and samples in columns. If multiple datasets are provided, ensure
+that the row names of the assays are in the same order or a SummarizedExperiment object.}
 
 \item{sample.annotation}{Data frame. Contains sample-specific information for the assays. The order of rows should
 match the column names of the assay(s).}
 
-\item{raw.count.assay.name}{Character. The name of the raw RNA-seq count data within the list of assays or expression data.
-Raw counts data is required if 'remove.lowly.expressed.genes' or 'calculate.library.size' is set to 'TRUE'.}
+\item{raw.count.assay.name}{Character. The name of the raw RNA-seq count data within the list of assays or expression
+data. Raw counts data is required if 'remove.lowly.expressed.genes' or 'calculate.library.size' is set to 'TRUE'.}
 
 \item{remove.lowly.expressed.genes}{Logical. If 'TRUE', lowly expressed genes will be identified and removed from
 the assay specified in the 'raw.count.assay.name' argument. The default is 'FALSE'.}
@@ -75,8 +75,8 @@ of the assay(s). Additional gene details and lists will be added to the annotati
 \item{add.gene.details}{Logical. If 'TRUE', preset or provided gene details in the 'gene.details' argument will be
 added to the gene annotation.}
 
-\item{gene.group}{Character. The name of a gene class from the row names of the assay(s). This must be one of the following:
-'entrezgene_id', 'hgnc_symbol', or 'ensembl_gene_id'.}
+\item{gene.group}{Character. The name of a gene class from the row names of the assay(s). This must be one of the
+following: entrezgene_id', 'hgnc_symbol', or 'ensembl_gene_id'.}
 
 \item{gene.details}{Character or character vector. Indicates the gene details to be included in the gene annotation.}
 
@@ -106,9 +106,9 @@ methods. The immune and stromal gene signature could be used to estimate tumor p
 The SummarizedExperiment object is a data structure used in the R for representing and manipulating high-dimensional
 experimental data. Here are some key features and components of the SummarizedExperiment object:
 Assays:
-The SummarizedExperiment allows for the incorporation of multiple assays (data). Each assay is a separate matrix of data
-associated with the same features and samples. Rows typically represent features (e.g., genes, transcripts), and columns
-represent samples or experimental conditions.
+The SummarizedExperiment allows for the incorporation of multiple assays (data). Each assay is a separate matrix of
+data associated with the same features and samples. Rows typically represent features (e.g., genes, transcripts), and
+columns represent samples or experimental conditions.
 Row and Column Metadata:
 The SummarizedExperiment object includes metadata associated with both rows and columns. Row metadata can contain
 information about the features, such as gene annotations or genomic coordinates. Column metadata may include sample

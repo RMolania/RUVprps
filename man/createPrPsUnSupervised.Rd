@@ -7,20 +7,24 @@
 createPrPsUnSupervised(
   se.obj,
   assay.name,
-  approach = "anchor",
   uv.variables,
+  approach = "mnn",
+  data.input = "expr",
   clustering.method = "kmeans",
   nb.clusters = 3,
+  other.uv.variables = NULL,
+  other.uv.clustering.method = "kmeans",
+  nb.other.uv.clusters = 3,
   hvg = NULL,
-  apply.other.uv = TRUE,
-  select.extereme.groups = FALSE,
+  select.extreme.groups = FALSE,
   min.batches.to.cover = "all",
   filter.prps.sets = TRUE,
   max.prps.sets = 3,
+  min.sample.for.ps = 3,
+  max.sample.for.ps = 10,
+  nb.mnn = 1,
+  nb.knn = 2,
   anchor.features = 2000,
-  anchor.scale = TRUE,
-  min.ps.samples = 3,
-  max.ps.samples = "inf",
   sct.clip.range = NULL,
   reduction = "cca",
   l2.norm = TRUE,
@@ -32,13 +36,10 @@ createPrPsUnSupervised(
   nn.method = "annoy",
   n.trees = 50,
   eps = 0,
-  data.input = "expr",
   nb.pcs = 2,
   center = TRUE,
   scale = FALSE,
   svd.bsparam = bsparam(),
-  min.mnn = 1,
-  k.nn = 2,
   normalization = "CPM",
   apply.cosine.norm = FALSE,
   regress.out.variables = NULL,
@@ -49,9 +50,10 @@ createPrPsUnSupervised(
   mnn.nbparam = KmknnParam(),
   assess.se.obj = TRUE,
   remove.na = "both",
-  save.se.obj = TRUE,
   output.name = NULL,
   prps.group = NULL,
+  plot.output = TRUE,
+  save.se.obj = TRUE,
   verbose = TRUE
 )
 }
@@ -61,11 +63,15 @@ createPrPsUnSupervised(
 \item{assay.name}{Symbol. A symbol indicating the assay name within the SummarizedExperiment object for the creation
 of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.}
 
-\item{approach}{Symbol. Indicates which method to be used. The options are 'anchor' and 'mnn'.}
-
 \item{uv.variables}{Symbol. A symbol or a vector of symbols specifying the name(s) of column(s) in the sample annotation
 of the SummarizedExperiment object. This variable can to be categorical or continuous variable. If a continuous variable
 is provide, this will be divided into groups using the clustering method.}
+
+\item{approach}{Symbol. Indicates which method to be used. The options are 'anchor' and 'mnn'.}
+
+\item{data.input}{Symbol. Indicates which data should be used an input for finding the k nearest neighbors data. Options
+include: 'expr' and 'pcs'. If 'pcs' is selected, the first PCs of the data will be used as input. If 'expr' is selected,
+the data will be selected as input.}
 
 \item{clustering.method}{Symbol.A symbol indicating the choice of clustering method for grouping the 'uv.variable'
 if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.}
@@ -73,24 +79,35 @@ if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quan
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
 continuous variable. The default is 3.}
 
+\item{other.uv.variables}{TTTT}
+
+\item{other.uv.clustering.method}{TTT}
+
+\item{nb.other.uv.clusters}{TTT}
+
 \item{hvg}{Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
 anchor samples across different batches. The default value is set to 'NULL'}
+
+\item{select.extreme.groups}{TTTT}
+
+\item{min.batches.to.cover}{TTTT}
 
 \item{filter.prps.sets}{TTTT}
 
 \item{max.prps.sets}{Numeric. The maximum number of PRPS sets across batches. The default in 10.}
 
-\item{anchor.features}{Numeric. A numeric value indicating the provided number of features to be used in anchor finding.
-The default is 2000. We refer to the FindIntegrationAnchors R function for more details.}
-
-\item{anchor.scale}{Logical. Whether or not to scale the features provided. Only set to FALSE if you have previously scaled
-the features you want to use for each object in the object.list.}
-
-\item{min.ps.samples}{Numeric. The minimum number of samples to be averaged to create a pseudo-sample. The default
+\item{min.sample.for.ps}{Numeric. The minimum number of samples to be averaged to create a pseudo-sample. The default
 is 3. The minimum value is 2.}
 
-\item{max.ps.samples}{Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
+\item{max.sample.for.ps}{Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
 The default is 'inf'. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.}
+
+\item{nb.mnn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
+
+\item{nb.knn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
+
+\item{anchor.features}{Numeric. A numeric value indicating the provided number of features to be used in anchor finding.
+The default is 2000. We refer to the FindIntegrationAnchors R function for more details.}
 
 \item{sct.clip.range}{Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
 clipped to. The default is 'NULL'. We refer to the FindIntegrationAnchors R function for more details.}
@@ -119,10 +136,6 @@ the anchor filtering.Th default is 30.}
 
 \item{eps}{Numeric. Error bound on the neighbor finding algorithm (from RANN/Annoy)}
 
-\item{data.input}{Symbol. Indicates which data should be used an input for finding the k nearest neighbors data. Options
-include: 'expr' and 'pcs'. If 'pcs' is selected, the first PCs of the data will be used as input. If 'expr' is selected,
-the data will be selected as input.}
-
 \item{nb.pcs}{Numeric. Indicates the number PCs should be used as data input for finding the k nearest neighbors. The
 'nb.pcs' must be set when the "data.input = PCs". The default is 2.}
 
@@ -136,8 +149,6 @@ mean square otherwise. The default is FALSE}
 \item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
 We refer to the 'runSVD' function from the BiocSingular R package.}
 
-\item{k.nn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
-
 \item{normalization}{Symbol. Indicates which normalization methods should be applied before finding the knn. The default
 is 'cpm'. If is set to NULL, no normalization will be applied.}
 
@@ -146,6 +157,8 @@ is 'cpm'. If is set to NULL, no normalization will be applied.}
 \item{regress.out.variables}{Symbols. Indicates the columns names that contain biological variables in the
 SummarizedExperiment object. These variables will be regressed out from the data before finding genes that are highly
 affected by unwanted variation variable. The default is NULL, indicates the regression will not be applied.}
+
+\item{check.prps.connectedness}{TTT}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is 'TRUE'.}
 
@@ -165,19 +178,16 @@ function for more details.}
 The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
 the checkSeObj function for more details.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
-object or to output the result as list. By default it is set to TRUE.}
-
 \item{output.name}{Symbol.}
 
 \item{prps.group}{Symbol.}
 
+\item{plot.output}{TTTT}
+
+\item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
+object or to output the result as list. By default it is set to TRUE.}
+
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
-
-\item{normalization.method}{Symbol. Indicate which normalization methods should be used before finding the anchors.
-The options are "LogNormalize" or "SCT". The default is "LogNormalize".}
-
-\item{mnn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
 }
 \description{
 This function uses the 'createUnSupervisedPRPSbyAnchors' or 'createUnSupervisedPRPSbyMNN' to create PRPS sets of all

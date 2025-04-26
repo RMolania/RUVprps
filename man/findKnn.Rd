@@ -8,6 +8,7 @@ findKnn(
   se.obj,
   assay.name,
   uv.variable,
+  nb.knn = 3,
   data.input = "expr",
   nb.pcs = 2,
   center = TRUE,
@@ -15,7 +16,6 @@ findKnn(
   svd.bsparam = bsparam(),
   clustering.method = "kmeans",
   nb.clusters = 3,
-  nb.knn = 3,
   hvg = NULL,
   normalization = "CPM",
   regress.out.variables = NULL,
@@ -39,22 +39,26 @@ to be used to find k nearest neighbors.}
 SummarizedExperiment object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous
 variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.}
 
-\item{data.input}{Character. A character string that indicates which data should be used as input for finding
+\item{nb.knn}{Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute for each
+sample. The default is set to 3.}
+
+\item{data.input}{Character. A character string that indicates which data type should be used as input for finding
 the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
 the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
 to 'expr'.}
 
-\item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
-nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.}
+\item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
+for finding the k nearest neighbors. The default is set to 2. The 'nb.pcs' must be set when "data.input = pcs".}
 
-\item{center}{Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
-subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
+\item{center}{Logical. Indicates whether to center the data or not before calculating PCs. If center is TRUE, then
+centering is done by subtracting the column means of the assay from their corresponding columns. The default is set
+to 'TRUE'.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
-is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-mean square otherwise. The default is set to 'FALSE'.}
+\item{scale}{Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to 'TRUE', then
+scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and
+the root mean square otherwise. The default is set to 'FALSE'.}
 
-\item{svd.bsparam}{Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed. The default
 is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.}
 
 \item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the
@@ -62,39 +66,39 @@ is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R p
 set to 'kmeans'.}
 
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
-continuous variable. The default is 3.}
+continuous variable. The default is set to 3.}
 
-\item{nb.knn}{Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute. The default
-is set to 3.}
-
-\item{hvg}{Vector. A vector of the names of the highly variable genes. These genes will be used to select the input
-data. The default is NULL.}
+\item{hvg}{Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
+will be used to prepare the input data for knn analysis. The default is set to 'NULL', this means all genes will be used.}
 
 \item{normalization}{Character. A character string that indicates which normalization method should be applied on the
-data before finding the knn. The default is 'cpm'. If set to NULL, no normalization will be applied.}
+data before finding the knn. Options are: 'CPM','TMM', upper', median', full' and VST'. The default is set to 'cpm'.
+If set to NULL, no normalization will be applied. See the applyOtherNormalizations() function for more details.}
 
 \item{regress.out.variables}{Character. A character string or strings that indicate the column name(s) in the sample
-annotation in the SummarizedExperiment. These variables will be regressed out from the data before
+annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
 finding KNN. The default is set to NULL, indicating that regression will not be applied.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
-The default is set to  TRUE'.}
+The default is set to 'TRUE'.}
 
 \item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
-assay before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.}
+assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
+to 1.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to TRUE. See the checkSeObj() function for more details.}
 
-\item{remove.na}{Character. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
-The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
-the checkSeObj function for more details.}
+\item{remove.na}{Character. To remove NA or missing values from the assay (data) or not. The options are 'assays' and
+'none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be removed before computing
+performing any down-stream analysis. See the checkSeObj() function for more details.}
 
-\item{output.name}{Character. A character string specifying the name of the output file. If set to 'NULL', the function
-will select a name based on "paste0(uv.variable, '|' , assay.name)".}
+\item{output.name}{Character. A character string specifying the name of the output file to be saved in the metadata
+of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on
+"paste0(uv.variable, '|' , assay.name)".}
 
-\item{prps.group}{Character. A character string specifying the name of the PRPS group. If set to 'NULL', the function
-will select a name based on "paste0('prps|mnn|', uv.variable)".}
+\item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
+If set to 'NULL', the function will automatically assign a name using "paste0('prps|mnn|', uv.variable)".}
 
 \item{save.se.obj}{Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
 or to output the result as a list. By default, it is set to 'TRUE'.}
@@ -102,9 +106,9 @@ or to output the result as a list. By default, it is set to 'TRUE'.}
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }
 \description{
-This function finds k nearest neighbors samples for individual samples in RNA-seq data. Further, the distance between
-individual neighbors are also calculated. The k nearest neighbors will be used to create pseudo-samples within individual
-batches.
+This function finds k nearest neighbors for individual samples within each groups of unwanted variation in RNA-seq
+data. Further, the distance between individual neighbors are also calculated. The k nearest neighbors will be used to
+create pseudo-samples within individual batches.
 }
 \author{
 Ramyar Molania

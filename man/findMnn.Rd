@@ -22,8 +22,8 @@ findMnn(
   hvg = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
-  bpparam = SerialParam(),
-  nbparam = KmknnParam(),
+  mnn.bpparam = SerialParam(),
+  mnn.nbparam = KmknnParam(),
   assess.se.obj = TRUE,
   remove.na = "both",
   plot.output = TRUE,
@@ -36,8 +36,8 @@ findMnn(
 \arguments{
 \item{se.obj}{A summarized experiment object.}
 
-\item{assay.name}{Character. A character string that indicates the name of the assay in the SummarizedExperiment
-object. This data should be the one that will be used as input for RUV-III normalization.}
+\item{assay.name}{Character. A character string that indicates the name of the assay(data) in the SummarizedExperiment
+object.}
 
 \item{uv.variable}{Character. A character string indicating the name of the column in the SummarizedExperiment object.
 The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous variable, this will be
@@ -51,27 +51,28 @@ default is set to 1.}
 set to 'kmeans'.}
 
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
-continuous variable. The default is 3.}
+continuous variable. The default is set to 3.}
 
-\item{data.input}{Character. A character string that indicates which data should be used as input for finding the k
+\item{data.input}{Character. A character string that indicates which data should be used as input for finding the mutual
 nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of the data will
 be used as input. If 'expr' is selected, the expression data will be used as input. The default is set to 'expr'.}
 
-\item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
-nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.}
+\item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
+for finding the mutual nearest neighbors. The default is set to 2. The 'nb.pcs' must be set when "data.input = pcs".}
 
-\item{center}{Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
-subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
+\item{center}{Logical. Indicates whether to scale the data or not before calculating PCs. If center is TRUE, then
+centering is done by subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
+\item{scale}{Logical. Indicates whether to scale the data or not before calculating PCs. If scale is TRUE, then scaling
 is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
 mean square otherwise. The default is set to 'FALSE'.}
 
-\item{svd.bsparam}{Character. A BiocParallelParam object specifying how parallelization should be performed. The default
-is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed to compute
+PCs. The default is set to bsparam(). We refer to the 'runSVD()' function from the BiocSingular R package for further
+details.}
 
 \item{normalization}{Character. A character string that indicates which normalization methods should be applied before
-finding the knn. The options are 'CPM', 'TMM', 'VST'. The default is 'CPM'. Refer to the 'applyOtherNormalization'
+finding the MNN. The options are 'CPM', 'TMM', 'VST'. The default is 'CPM'. Refer to the 'applyOtherNormalization'
 for more details.}
 
 \item{apply.cosine.norm}{Logical. Indicates whether to apply cosine normalization on the data or not. The default is
@@ -82,44 +83,43 @@ that contain biological variable(s) in the SummarizedExperiment object. These va
 data before finding genes that are highly affected by unwanted variation. The default is set to 'NULL', indicating
 the regression will not be applied.}
 
-\item{hvg}{Character vector. A character vector of the names of the highly variable genes. These genes will be used to
-find mutual nearest neighbors across the batches. The default is set to 'NULL'. The 'findBioGenes' function can be
-used to specify a set of genes.}
+\item{hvg}{Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
+will be used to prepare the input data for knn analysis. The default is set to 'NULL', this means all genes will be used.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is TRUE.
-Please note, any RNA-seq data (assays) must be in log scale before computing RLE.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.}
 
 \item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
-log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.}
+log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.}
 
-\item{bpparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-The default is SerialParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.}
+\item{mnn.bpparam}{Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
+The default is SerialParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
 
-\item{nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-The default is KmknnParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.}
+\item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
+The default is KmknnParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
-function for more details.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+to 'TRUE'. See the checkSeObj function for more details.}
 
-\item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays or not. The options are
-'assays' and 'none'. The default is "assays", so all the NA or missing values from the assay(s) will be removed before
-computing RLE. See the checkSeObj function for more details.}
+\item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays(data) or not. The options
+are assays' and 'none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be
+removed before any down-stream analysis See the 'checkSeObj()' function for more details.}
 
 \item{plot.output}{Logical. If 'TRUE', the function plots the distribution of MNN across the batches.}
 
-\item{output.name}{Character. A character string specifying the name of the output file. If 'NULL', the function will
-select a name based on "paste0(uv.variable, '||' , assay.name)".}
+\item{output.name}{Character. A character string specifying the name of the output file (MNN data) to be saved in the
+metadata of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on:
+'paste0(uv.variable, '||' , assay.name)'.}
 
-\item{prps.group}{Character. A character string specifying the name of the PRPS group. If 'NULL', the function will
-select a name based on "paste0('prps|mnn|', uv.variable)".}
+\item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
+If set to 'NULL', the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
-object or to output the result as a list. By default, it is set to TRUE.}
+\item{save.se.obj}{Logical. Indicates whether to save the MNN results in the metadata of the SummarizedExperiment object
+or to output the result as a list. By default, it is set to 'TRUE'.}
 
 \item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
 }
 \description{
-This function finds mutual nearest neighbors between all pairs of specified batches in RNA-seq data. The mutual nearest
+This function finds mutual nearest neighbors (MNN) between all pairs of specified batches in RNA-seq data. The mutual nearest
 neighbors will be used to find and create pseudo samples and eventually pseudo-replicates for RUV-III normalization.
 }
 \author{
