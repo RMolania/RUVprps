@@ -1,0 +1,30 @@
+#' @importFrom utils globalVariables
+utils::globalVariables(
+    c("group.a",
+      "group.b",
+      "pvalue",
+      ".annotation",
+      '.',
+      'selected',
+      'Freq',
+      'Var1',
+      'Var2',
+      'mnn.sets',
+      'aver.mnn.sets',
+      'group',
+      'var.obj',
+      'group.name',
+      'set.name',
+      'prps.set',
+      'new.g',
+      'catvar',
+      'use',
+      'n',
+      'uv.variable',
+      'everything',
+      'bio.variable',
+      'groups',
+      'uv.var',
+      'set'
+      )
+    )
