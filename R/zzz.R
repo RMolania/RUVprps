@@ -25,6 +25,7 @@ utils::globalVariables(
       'bio.variable',
       'groups',
       'uv.var',
-      'set'
+      'set',
+      'pvalue'
       )
     )
