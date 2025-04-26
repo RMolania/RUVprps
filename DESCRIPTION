@@ -35,7 +35,6 @@ Imports:
     Seurat,
     SeuratObject,
     gtools,
-    purrr,
     BiocParallel,
     scales,
     grDevices,
