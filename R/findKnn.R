@@ -3,9 +3,9 @@
 #' @author Ramyar Molania
 
 #' @description
-#' This function finds k nearest neighbors samples for individual samples in RNA-seq data. Further, the distance between
-#' individual neighbors are also calculated. The k nearest neighbors will be used to create pseudo-samples within individual
-#' batches.
+#' This function finds k nearest neighbors for individual samples within each groups of unwanted variation in RNA-seq
+#' data. Further, the distance between individual neighbors are also calculated. The k nearest neighbors will be used to
+#' create pseudo-samples within individual batches.
 
 #' @param se.obj A summarized experiment object.
 #' @param assay.name Character. A character string representing the name of the assay in the SummarizedExperiment object
@@ -13,46 +13,50 @@
 #' @param uv.variable Character. A character string that indicates the name of the column in the sample annotation of the
 #' SummarizedExperiment object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous
 #' variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.
-#' @param data.input Character. A character string that indicates which data should be used as input for finding
+#' @param nb.knn Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute for each
+#' sample. The default is set to 3.
+#' @param data.input Character. A character string that indicates which data type should be used as input for finding
 #' the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
 #' the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
 #' to 'expr'.
-#' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be used as data input for finding the k
-#' nearest neighbors. The 'nb.pcs' must be set when "data.input = pcs". The default is set to 2.
-#' @param center Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
-#' subtracting the column means of the assay from their corresponding columns. The default is TRUE.
-#' @param scale Logical. Indicates whether to scale the data or not before applying SVD. If scale is TRUE, then scaling
-#' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-#' mean square otherwise. The default is set to 'FALSE'.
-#' @param svd.bsparam Character. A BiocParallelParam object specifying how parallelization should be performed. The default
+#' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
+#' for finding the k nearest neighbors. The default is set to 2. The 'nb.pcs' must be set when "data.input = pcs".
+#' @param center Logical. Indicates whether to center the data or not before calculating PCs. If center is TRUE, then
+#' centering is done by subtracting the column means of the assay from their corresponding columns. The default is set
+#' to 'TRUE'.
+#' @param scale Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to 'TRUE', then
+#' scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and
+#' the root mean square otherwise. The default is set to 'FALSE'.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed. The default
 #' is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.
 #' @param clustering.method Character. A character string indicating the choice of clustering method for grouping the
 #' 'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
 #' set to 'kmeans'.
 #' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
-#' continuous variable. The default is 3.
-#' @param nb.knn Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute. The default
-#' is set to 3.
-#' @param hvg Vector. A vector of the names of the highly variable genes. These genes will be used to select the input
-#' data. The default is NULL.
+#' continuous variable. The default is set to 3.
+#' @param hvg Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
+#' will be used to prepare the input data for knn analysis. The default is set to 'NULL', this means all genes will be used.
 #' @param normalization Character. A character string that indicates which normalization method should be applied on the
-#' data before finding the knn. The default is 'cpm'. If set to NULL, no normalization will be applied.
+#' data before finding the knn. Options are: 'CPM','TMM', upper', median', full' and VST'. The default is set to 'cpm'.
+#' If set to NULL, no normalization will be applied. See the applyOtherNormalizations() function for more details.
 #' @param regress.out.variables Character. A character string or strings that indicate the column name(s) in the sample
-#' annotation in the SummarizedExperiment. These variables will be regressed out from the data before
+#' annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
 #' finding KNN. The default is set to NULL, indicating that regression will not be applied.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
-#' The default is set to  TRUE'.
+#' The default is set to 'TRUE'.
 #' @param pseudo.count Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
-#' assay before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.
+#' assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
+#' to 1.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to TRUE. See the checkSeObj() function for more details.
-#' @param remove.na Character. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
-#' The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
-#' the checkSeObj function for more details.
-#' @param output.name Character. A character string specifying the name of the output file. If set to 'NULL', the function
-#' will select a name based on "paste0(uv.variable, '|' , assay.name)".
-#' @param prps.group Character. A character string specifying the name of the PRPS group. If set to 'NULL', the function
-#' will select a name based on "paste0('prps|mnn|', uv.variable)".
+#' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are 'assays' and
+#''none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be removed before computing
+#' performing any down-stream analysis. See the checkSeObj() function for more details.
+#' @param output.name Character. A character string specifying the name of the output file to be saved in the metadata
+#' of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on
+#' "paste0(uv.variable, '|' , assay.name)".
+#' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
+#' If set to 'NULL', the function will automatically assign a name using "paste0('prps|mnn|', uv.variable)".
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. By default, it is set to 'TRUE'.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
@@ -67,6 +71,7 @@ findKnn <- function(
         se.obj,
         assay.name,
         uv.variable,
+        nb.knn = 3,
         data.input = 'expr',
         nb.pcs = 2,
         center = TRUE,
@@ -74,7 +79,6 @@ findKnn <- function(
         svd.bsparam = bsparam(),
         clustering.method = 'kmeans',
         nb.clusters = 3,
-        nb.knn = 3,
         hvg = NULL,
         normalization = 'CPM',
         regress.out.variables = NULL,
@@ -95,13 +99,21 @@ findKnn <- function(
         stop('The "assay.name" cannot be a list.')
     }
     if (length(assay.name) > 1) {
-        stop('The "assay.name" must be the name of signle assay in the SummarizedExperiment object.')
+        stop('The "assay.name" must be a name of signle assay(data) in the SummarizedExperiment object.')
     }
     if (is.null(uv.variable)) {
-        stop('The "uv.variable" variable cannot be empty.')
+        stop('The "uv.variable" variable cannot be empty or NULL.')
     }
     if (length(uv.variable) > 1) {
-        stop('The "uv.variable" must contain the name of signle variable in the SummarizedExperiment object.')
+        stop('The "uv.variable" must contain a name of signle variable in the SummarizedExperiment object.')
+    }
+    if (isFALSE(assess.se.obj)){
+        if (!uv.variable %in% colnames(colData(se.obj))) {
+            stop('The "uv.variable" cannot be found in the SummarizedExperiment object.')
+        }
+        if (sum(regress.out.variables %in% colnames(colData(se.obj)))!=length(regress.out.variables) ) {
+            stop('All or some of the "regress.out.variables" cannot be found in the SummarizedExperiment object.')
+        }
     }
     if (!data.input %in% c('expr', 'pcs')) {
         stop('The "data.input" must be one of the "expr" or "pcs".')
@@ -109,23 +121,74 @@ findKnn <- function(
     if (data.input == 'pcs' & is.null(nb.pcs)) {
         stop('The valuse of "nb.pcs" must be sepcified when the data.input = pcs.')
     }
-    if (nb.knn == 0) {
-        stop('The  nb.knn cannot be 0.')
+    if (!is.null(nb.pcs)){
+        if (!is.numeric(nb.pcs)){
+            stop('The "nb.pcs" must be a postive numeric value.')
+        }
+        if (nb.pcs <= 0 & nb.pcs != as.integer(nb.pcs)) {
+            stop('The "nb.pcs" must be a postive whole numeric value')
+        }
     }
-    if (!uv.variable %in% colnames(colData(se.obj))) {
-        stop('The "uv.variable" variable cannot be found in the SummarizedExperiment object.')
+    if (!is.numeric(nb.knn)){
+        stop('The "nb.knn" must be a postive numeric value.')
     }
-    if (!is.null(hvg)) {
-        if (sum(hvg %in% row.names(se.obj)) != length(hvg))
-            stop('All the hvg genes are not found in the SummarizedExperiment object.')
+    if (nb.knn <= 0 & nb.knn != as.integer(nb.knn)) {
+        stop('The "nb.knn" must be a postive whole numeric value')
     }
 
+    if (!is.null(hvg)){
+        if (is.logical(hvg)){
+            if (length(hvg) != nrow(se.obj)){
+                stop('The length of the "hvg" logical vector should the same as the number fo rows in the SummarizedExperiment object.')
+            }
+            if (sum(hvg) == 0){
+                stop('The "hvg" does not contain any selected genes. All are FALSE')
+            }
+        }
+        if (is.character(hvg)){
+            if (sum(hvg %in% row.names(se.obj)) != length(hvg))
+                stop('All or some of the "hvg" are not found in the SummarizedExperiment object.')
+        }
+        if (is.numeric(hvg)){
+            stop('The "hvg" must be either logical vector or feature ids.')
+        }
+    }
+    if(!is.logical(apply.log)){
+        stop('The "apply.log" must be logical.')
+    }
+    if (!is.null(pseudo.count)){
+        if (!is.numeric(pseudo.count)){
+            stop('The "pseudo.count" must be a numeric value.')
+        }
+        if (pseudo.count < 0){
+            stop('The "pseudo.count" must be a postive numeric value.')
+        }
+    }
+    if (!is.logical(assess.se.obj)){
+        stop('The "apply.log" must be logical.')
+    }
+    if (!is.logical(save.se.obj)){
+        stop('The "save.se.obj" must be logical.')
+    }
+    if (!is.null(output.name)){
+        if (!is.character(output.name)){
+            stop('The "output.name" must be a character.')
+        }
+    }
+    if (!is.null(prps.group)){
+        if (!is.character(prps.group)){
+            stop('The "prps.group" must be logical.')
+        }
+    }
+    if (!is.logical(verbose)){
+        stop('The "verbose" must be logical.')
+    }
     # Assessing the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
-            variables = uv.variable,
+            variables = c(uv.variable, regress.out.variables),
             remove.na = remove.na,
             verbose = verbose
         )
