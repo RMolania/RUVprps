@@ -206,9 +206,6 @@ findNcgByTwoWayAnova <- function(
         color = 'white',
         verbose = verbose
         )
-    #
-    utils::globalVariables("uv.rank.plot", package = 'RUVIIIPRPS')
-
     # Checking inputs ####
     if(!is.vector(assay.name) | length(assay.name) > 1 | is.logical(assay.name) | assay.name == 'all'){
         stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
