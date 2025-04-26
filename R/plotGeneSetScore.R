@@ -75,7 +75,7 @@ plotGeneSetScore <- function(
             facet_wrap(~datasets) +
             geom_smooth(formula = y ~ x, method = 'lm', colour = "darkgreen") +
             ggpubr::stat_cor(
-                aes(label = after_stat(r.label)),
+                aes(label = after_stat(.r.label)),
                 color = "navy") +
             theme(panel.background = element_blank(),
                   axis.line = element_line(colour = 'black', linewidth = 1),
