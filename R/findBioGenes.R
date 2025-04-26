@@ -1,4 +1,4 @@
-#' Find highly variable genes.
+#' Finds highly variable genes.
 
 #' @author Ramyar Molania
 
@@ -89,17 +89,6 @@
 #' Deviation (MAD) calculation on each gene within homogeneous sample groups. The default is 3.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj' function
 #' will be applied. The default is 'TRUE'.
-#' @param assess.variables Logical. Indicates whether to assess the correlation between biological and unwanted variation
-#' variables separately when creating homogeneous sample groups. The default is 'FALSE'. Refer to the function 'assessVariablesAssociation'
-#' for more details.
-#' @param cat.cor.coef Numeric vector. Specifies the cut-off correlation coefficient between pairs of categorical variables.
-#' The first value applies to correlations between 'uv.variables', and the second to correlations between 'bio.variables'.
-#' Correlation is computed using the ContCoef function from the DescTools R package. If the correlation exceeds the cut-off,
-#' only the variable with the highest number of factors will be retained. By default, both values are set to 0.9.
-#' @param cont.cor.coef Numeric vector. Specifies the cut-off correlation coefficient between pairs of continuous variables.
-#' The first value applies to correlations between 'uv.variables', and the second to correlations between 'bio.variables'.
-#' Correlation is computed using the ContCoef function from the DescTools R package. If the correlation exceeds the cut-off,
-#' only the variable with the highest variance will be retained. By default, both values are set to 0.9.
 #' @param remove.na Character. Specifies whether to remove NA or missing values from 'assays', 'sample.annotation', 'both', or 'none'.
 #' If 'assays' is selected, genes with missing values will be excluded. If 'sample.annotation' is selected, samples with missing
 #' values for any 'bio.variables' or 'uv.variables' will be excluded. The default is 'none'.
@@ -150,9 +139,6 @@ findBioGenes <- function(
         min.sample.for.correlation = 10,
         min.sample.for.mad = 3,
         assess.se.obj = TRUE,
-        assess.variables = FALSE,
-        cat.cor.coef = c(0.9, 0.9),
-        cont.cor.coef = c(0.9, 0.9),
         remove.na = 'none',
         save.se.obj = TRUE,
         output.name = NULL,
@@ -266,7 +252,6 @@ findBioGenes <- function(
                 nb.clusters = nb.uv.clusters,
                 clustering.method = uv.clustering.method,
                 assess.se.obj = FALSE,
-                assess.variables = assess.variables,
                 save.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = verbose)
@@ -355,7 +340,6 @@ findBioGenes <- function(
                 expr.data <- applyLog(
                     se.obj = se.obj,
                     assay.names = assay.name,
-                    apply.log = apply.log,
                     pseudo.count = pseudo.count,
                     assessment = ' two-way ANOVA'
                 )[[assay.name]]
@@ -444,7 +428,6 @@ findBioGenes <- function(
                 nb.clusters = nb.uv.clusters,
                 clustering.method = uv.clustering.method,
                 assess.se.obj = FALSE,
-                assess.variables = assess.variables,
                 save.se.obj = FALSE,
                 verbose = verbose
                 )
@@ -667,7 +650,6 @@ findBioGenes <- function(
                 expr.data <- applyLog(
                     se.obj = se.obj,
                     assay.names = assay.name,
-                    apply.log = apply.log,
                     pseudo.count = pseudo.count,
                     assessment = ' two-way ANOVA'
                 )[[assay.name]]
@@ -932,7 +914,6 @@ findBioGenes <- function(
                 expr.data <- applyLog(
                     se.obj = se.obj,
                     assay.names = assay.name,
-                    apply.log = apply.log,
                     pseudo.count = pseudo.count,
                     assessment = ' two-way ANOVA'
                 )[[assay.name]]
@@ -985,9 +966,6 @@ findBioGenes <- function(
                 uv.variables = uv.variables,
                 clustering.method =  uv.clustering.method,
                 nb.clusters = nb.uv.clusters,
-                assess.variables = assess.variables,
-                cat.cor.coef = cat.cor.coef,
-                cont.cor.coef = cont.cor.coef,
                 assess.se.obj = FALSE,
                 save.se.obj = FALSE,
                 verbose = verbose
