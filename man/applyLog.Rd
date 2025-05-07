@@ -2,35 +2,41 @@
 % Please edit documentation in R/applyLog.R
 \name{applyLog}
 \alias{applyLog}
-\title{Apply log2 on assay(s) + pseudo.count in SummarizedExperiment object.}
+\title{Applies log2 with a pseudo count on data sets in SummarizedExperiment object.}
 \usage{
 applyLog(
   se.obj,
   assay.names = "all",
   pseudo.count = 1,
-  assessment,
+  assess.se.obj = TRUE,
+  remove.na = "assays",
   verbose = TRUE
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object. Thses assays will be log2 + pseudo.count transformed. The default is set to "all, which
-indicates all the assays of the SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character or character vectos specifying the name(s) of the data (assays) in the
+\code{SummarizedExperiment} object to be selected. These assays will be log2-transformed with a pseudo count. The default
+is \code{all}, which indicates that all assays in the \code{SummarizedExperiment} object will be selected.}
 
-\item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
-log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.}
+\item{pseudo.count}{Numeric. A pseudo count value to be added to all measurements in the selected assay(s) before
+applying the log2 transformation, to avoid \code{-Inf} values for zero measurements. The default is 1.}
 
-\item{assessment}{Symbol. Indicates the downstream analyses impacted by not applying log transformation to the data.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
+set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{remove.na}{Character. A Character. that indicates whether to remove NA or missing values from the data sets or
+not. The options are \code{assays} or \code{none}. Refer to the \code{checkSeObj()} function for more details. The default is set to
+"assays".}
+
+\item{verbose}{Logical. If it is set to \code{TRUE}, displays messages describing the steps of the function.}
 }
 \value{
-logged data
+The function returns a log2 transformed of all specified data sets as a list object.
 }
 \description{
-Apply log2 on assay(s) + pseudo.count in SummarizedExperiment object.
+Applies log2 with a pseudo count on data sets in SummarizedExperiment object.
 }
 \author{
 Ramyar Molania
