@@ -2,24 +2,29 @@
 % Please edit documentation in R/addNCGs.R
 \name{addNCGs}
 \alias{addNCGs}
-\title{Add pre-selected set of negative control genes to SummarizedExperiment object.}
+\title{Adds pre-selected sets of NCGs to SummarizedExperiment object.}
 \usage{
-addNCGs(se.obj, ncg, save.se.obj = TRUE, output.name = NULL, verbose = TRUE)
+addNCGs(se.obj, ncg, subset.name = NULL, verbose = TRUE)
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
 \item{ncg}{A logical or vector of gene names of pre-selected genes as NCGs.}
 
-\item{save.se.obj}{Symbol. Indicates}
-
-\item{output.name}{Symbol. Indicates the name of the output in the meta data of the SummarizedExperiment object. The
-default is 'NULL'. This means the function will create a name based the specified argument.}
+\item{subset.name}{Character. Specifies the name of the NCG set in the metadata of the \code{SummarizedExperiment} object.
+The default is 'NULL', in which case the function will generate a name  based on the number of NCGs using:
+paste0(sum(ncg), '_genes').}
 
 \item{verbose}{Logical. If TRUE, displaying process messages is enabled.}
 }
 \description{
-This function adds a pre-selected set of negative control genes to SummarizedExperiment object.
+This function adds pre-selected sets of negative control genes (NCGs) to a SummarizedExperiment object.
+These genes can be used for various analyses, including identifying unknown sources of variation, assessing variation,
+performing RUV normalization, and evaluating normalization steps.
+}
+\details{
+A pre-selected set of negative control genes (NCGs) will be stored in the following location:
+se.obj->metadata->NCG->pre.selected->subset.name.
 }
 \author{
 Ramyar Molania
