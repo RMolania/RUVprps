@@ -2,7 +2,7 @@
 % Please edit documentation in R/applyOtherNormalizations.R
 \name{applyOtherNormalizations}
 \alias{applyOtherNormalizations}
-\title{Perform several normalization methods for RNA-seq data.}
+\title{Performs several normalization methods for RNA-seq data.}
 \usage{
 applyOtherNormalizations(
   se.obj,
@@ -10,55 +10,63 @@ applyOtherNormalizations(
   method = "CPM",
   apply.log = TRUE,
   pseudo.count = 1,
-  remove.na = "assays",
   assess.se.obj = TRUE,
+  remove.na = "assays",
+  new.assay.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{se.obj}{A summarized experiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.name}{Symbol. A symbol that indicates the name of the assay in the SummarizedExperiment object. The specified assay
-should be in raw count format.}
+\item{assay.name}{Character. A character that specifies the name of the data (assay) in the SummarizedExperiment object.
+The selected data should contain raw count data.}
 
-\item{method}{Symbol. Indicates the normalization method to apply on the 'assay.name'. Options are:
+\item{method}{Character. A character that indicates the normalization method to apply to the assay specified by \code{assay.name}.
+Options include:
 \itemize{
-\item 'CPM': Count Per Million from the edger R package.
-\item 'TMM': Trimmed Mean of M-values from the edger R package,
-\item 'upper':a scaling normalization that forces the median of each lane to be the same from the EDAseq R package.
-\item 'median': a scaling normalization that forces the upper quartile of each lane to be the same from the EDAseq R package.
-\item 'full': a non linear full quantile normalization from the EDAseq R package
-\item 'VST', variance stabilizing transformation from the DESeq2 R package.
-The default is set to 'CPM'.
+\item \code{'CPM'}: Counts Per Million, from the \strong{edgeR} package.
+\item \code{'TMM'}: Trimmed Mean of M-values, from the \strong{edgeR} package.
+\item \code{'upper'}: A scaling normalization that adjusts the upper quartile of each lane, from the \strong{EDASeq} package.
+\item \code{'median'}: A scaling normalization that adjusts the median of each lane, from the \strong{EDASeq} package.
+\item \code{'full'}: Full quantile normalization (nonlinear), from the \strong{EDASeq} package.
+\item \code{'VST'}: Variance Stabilizing Transformation, from the \strong{DESeq2} package.
+The default is \code{'CPM'}.
 }}
 
-\item{apply.log}{Logical. A symbole that indicates whether to apply a log-transformation to the data or not after the
-normalization is performed. The default is 'TRUE'.}
+\item{apply.log}{Logical. Indicates whether to apply a log transformation to the data after normalization.
+The default is set to \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements of the assay(s) after
-applying the normalization to avoid -Inf for measurements that are equal to 0. The default is set to 1.}
+\item{pseudo.count}{Numeric. A numeric value as pseudo count to be added to all measurements after normalization and
+before log transformation to avoid \code{-Inf} for zero values. The default is set to \code{1}.}
 
-\item{remove.na}{Symbol. A symbol that indicates whether to remove NA or missing values from the assay or not. Refer
-to the 'checkSeObj' function for more details. The defualt is set to assays.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not.
+The default is set to \code{TRUE}. We refer to the \code{checkSeObj()} function for more details.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment class object. The default it is set to
-TRUE.}
+\item{remove.na}{Character. A character that indicates whether to remove NA or missing values from the data sets or
+not. The options are \code{'assays'} or \code{'none'}. The default is set to \code{'assays'}. Refer to the \code{checkSeObj()} function
+for more details.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the normalized data as new assay(s) to the SummarizedExperiment
-object. The default it is set to 'TRUE'. If set to 'FALSE', the normalized data(s) will be outputted as a matrix.}
+\item{new.assay.name}{Character. Specifies the name of the newly normalized assay. If set to \code{NULL} (default),
+the function will automatically generate a name using the format: paste0(method, ' on ', assay.name).}
 
-\item{verbose}{Logical. Indicates whether to show or reduce the level of output or messages displayed
-during the execution of the functions, by default it is set to TRUE.}
+\item{save.se.obj}{Logical. Indicates whether to save the normalized data as new data (assay) within the
+\code{SummarizedExperiment} object. If set to \code{FALSE}, the normalized data will be returned as a matrix.
+The default is set to \code{TRUE}. Then, each normalized data will be added a new data (assay) to \code{SummarizedExperiment}
+object.}
+
+\item{verbose}{Logical. Indicates whether to display messages and output during function execution.
+The default is to \code{TRUE}.}
 }
 \value{
-A SummarizedExperiment object containing an assay normalized by the selected normalization method or just
-return a normalized gene expression matrix.
+A SummarizedExperiment object containing the newly normalized data, or a normalized expression matrix
+if \code{save.se.obj} is set to \code{FALSE}.
 }
 \description{
-This functions provides different normalization methods including CPM, TMM, upper-quartile, non linear full quantile
-normalization, median, and VST for RNA-seq
-data.
+This function provides several normalization methods for RNA-seq data, including CPM, TMM,  upper-quartile, median,
+full quantile (nonlinear), and VST. It utilizes the \strong{EDASeq}, \strong{DESeq2}, and \strong{edgeR} R packages for normalization.
+Note that the default parameters of these underlying functions are used.
 }
 \author{
 Ramyar Molania
