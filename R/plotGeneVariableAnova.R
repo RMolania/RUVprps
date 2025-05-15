@@ -3,27 +3,29 @@
 #' @author Ramyar Molania
 
 #' @description
-#' This functions plots the results of the ANOVA analysis computed by the 'computeGenesVariableANOVA' function.
+#' This functions plots the results of the ANOVA analysis computed by the `computeGenesVariableANOVA()` function.
 
-#' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character or vector. A character string or a vector of strings for selecting the name(s) of the
-#' assay(s) in the SummarizedExperiment object. By default, all assays in the SummarizedExperiment object will be selected,
-#' If the specifed ANOVA has already been computed for them using 'computeGenesVariableANOVA' function.
-#' The ANOVA results for each specified assay will be plotted.
-#' @param variable Character. Indicates the column name in the SummarizedExperiment object that contains a categorical
-#' variable such as sample types or batches. The association between individual gene expression and the specified levels
-#' must have already been computed by the 'computeGenesVariableANOVA' function.
-#' @param anova.method Logical. Specifies which ANOVA method results should be used for plotting.
-#' @param plot.ncol Numeric. A numeric value specifying the number of columns in the plot grid. The default is set to 4.
-#' @param plot.nrow Numeric. A numeric value specifying the number of rows in the plot grid. The default is set to 1.
-#' @param plot.output Logical. Indicates whether to display the boxplot(s) of the ANOVA results. By default, this
-#' is set to FALSE.
-#' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. By default, this is set to TRUE.
-#' @param verbose Logical. If TRUE, displays process messages during execution.
+#' @param se.obj A `SummarizedExperiment` object.
+#' @param assay.names Character or vector. A character string or a vector of strings specifying the name(s) of the
+#' assay(s) in the `SummarizedExperiment` object to include. By default, all assays will be selected—provided that
+#' ANOVA results have already been computed for them using the `computeGenesVariableANOVA()` function.
+#' The function will generate plots for the ANOVA results corresponding to each selected assay.
+#' @param variable Character. A string indicating the column name in the `SummarizedExperiment` object that contains
+#' a categorical variable (e.g., sample types or batch labels). The gene-level ANOVA with this variable must
+#' have been previously computed using the `computeGenesVariableANOVA()` function.
+#' @param anova.method Logical. Indicates which ANOVA method results should be used for plotting. The options are `aov` or
+#' `welch`. The default is set to `aov`.
+#' @param plot.ncol Numeric. The number of columns in the plot grid. When more than one assay is selected, the function
+#' arranges the plots in a grid accordingly. The default is set to 4.
+#' @param plot.nrow Numeric. The number of rows in the plot grid. When more than three assays are selected, the function
+#' arranges the plots in a grid accordingly. The default is set to 1.
+#' @param plot.output Logical. If `TRUE`, displays the boxplot(s) of the ANOVA results. The default is set to `FALSE`.
+#' @param save.se.obj Logical. If `TRUE`, saves the plots in the metadata of the `SummarizedExperiment` object. If `FALSE`,
+#' returns the plots as a list. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays messages during execution.
 
-#' @return Either a SummarizedExperiment object or a list containing the plots of ANOVA results for the specified
-#' categorical variable for each assay.
+#' @return Either a `SummarizedExperiment` object containing the plots in its metadata, or a list of boxplots showing
+#' ANOVA results for the specified categorical variable across the selected assays.
 
 #' @importFrom SummarizedExperiment assays assay
 #' @import ggplot2
@@ -64,7 +66,7 @@ plotGenesVariableAnova <- function(
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
-    # Obtain ANOVA F-statistics and p-values  ####
+    # Obtaining ANOVA F-statistics and p-values  ####
     printColoredMessage(
         message = paste0(
             '-- Obtaining the computed ANOVA F-statistics between genes and the "',
@@ -86,8 +88,8 @@ plotGenesVariableAnova <- function(
         required.function = 'computeGenesPartialCorrelation',
         message.to.print = 'ANOVA'
         )
-    # Generate different plots of F-statistic and p values of  ANOVA ####
-    ## generate boxplots of the ANOVA F-statistics fo each assay ####
+    # Generating different plots of F-statistic and p values of  ANOVA ####
+    ## generating boxplots of the ANOVA F-statistics fo each assay ####
     printColoredMessage(
         message = '-- Generating boxplots of the lo2 of the ANOVA F-statistics:',
         color = 'magenta',
@@ -123,7 +125,7 @@ plotGenesVariableAnova <- function(
         })
     names(all.aov.fvals.boxplots) <- levels(assay.names)
 
-    ## put all boxplots together ####
+    ## putting all boxplots together ####
     everything <- datasets <- NULL
     if (length(assay.names) > 1){
         printColoredMessage(
@@ -181,7 +183,7 @@ plotGenesVariableAnova <- function(
         if (isTRUE(plot.output)) suppressMessages(print(overall.aov.fvals.boxplots))
     }
 
-    # Generate p-value histograms of the ANOVA ####
+    # Generating p-value histograms of the ANOVA ####
     printColoredMessage(
         message = '-- Generating p-value histograms of the ANOVA F-statistics:',
         color = 'magenta',
@@ -200,8 +202,7 @@ plotGenesVariableAnova <- function(
         })
     ylim.pvalue <- ceiling(x = max(ylim.pvalue))
 
-    ## generate histograms ####
-    aov.fvals <- NULL
+    ## generating histograms ####
     all.aov.pvalues.histograms <- lapply(
         levels(assay.names),
         function(x){
