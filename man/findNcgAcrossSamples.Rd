@@ -2,15 +2,15 @@
 % Please edit documentation in R/findNcgAcrossSamples.R
 \name{findNcgAcrossSamples}
 \alias{findNcgAcrossSamples}
-\title{Finds a set of negative control genes using ANOVA and correlation across all samples.}
+\title{Finds NCGs using ANOVA and correlation across all samples.}
 \usage{
 findNcgAcrossSamples(
   se.obj,
   assay.name,
-  nb.ncg = 0.1,
   bio.variables,
   uv.variables,
   ncg.selection.method = "non.overlap",
+  nb.ncg = 0.1,
   top.rank.bio.genes = 0.2,
   top.rank.uv.genes = 0.2,
   bio.percentile = 0.2,
@@ -52,10 +52,6 @@ findNcgAcrossSamples(
 \item{assay.name}{Character string. Indicates the name of an assay in the SummarizedExperiment object. The selected assay should
 be the one that will be used for the RUV-III-PRPS normalization. We recommend using raw data without any transformation.}
 
-\item{nb.ncg}{Numeric. Specifies the number of genes to be chosen as negative control genes (NCG) when the
-\code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total genes
-in the SummarizedExperiment object. By default, this fraction is set to 0.1.}
-
 \item{bio.variables}{Character vector. Indicates the column name(s) that contain biological variable(s) in the SummarizedExperiment
 object. This cannot be set to \code{NULL}.}
 
@@ -65,6 +61,10 @@ object. This cannot be set to \code{NULL}.}
 \item{ncg.selection.method}{Character string. Indicates how to summarize different statistics and select a set of genes as negative
 control genes. The options are \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}. The default is set to
 \code{non.overlap}. For more information, refer to the details of the function.}
+
+\item{nb.ncg}{Numeric. Specifies the number of genes to be chosen as negative control genes (NCG) when the
+\code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total genes
+in the SummarizedExperiment object. By default, this fraction is set to 0.1.}
 
 \item{top.rank.bio.genes}{Numeric. Indicates the percentage of top-ranked genes that are highly affected by biological
 variation. This is required to be specified when the \code{ncg.selection.method} is either \code{auto} or \code{non.overlap}. The default
@@ -182,17 +182,18 @@ Either the SummarizedExperiment object containing a set of negative control gene
 logical vector of the selected negative control genes.
 }
 \description{
-This function employs gene level correlation and ANOVA analyses across all samples to identify a set of genes suitable
-as negative control genes for RUV-III-PRPS normalization.
+This function employs gene level correlation and ANOVA analyses across all samples to identify a set of suitable genes
+as negative control genes (NCGs) for RUV-III normalization.
 }
 \details{
 The function utilizes correlation analysis to identify genes highly affected by continuous sources of variation, while
 it uses ANOVA to identify genes affected by categorical sources of variation. The function selects genes as negative
 control genes (NCG) based on high correlation coefficients and F-statistics for unwanted sources of variation, and low
 correlation coefficients and F-statistics for biological sources of variation. Various approaches are employed for the
-final gene selection; please refer to the details for more information. The function uses 5 ways to summarize two
-gene-level F-statistics obtained for the biological and unwanted variation.The function uses either the values or the
-ranks of F-statistics for NCGs selection. The function ranks the negative of F-statistics values for unwanted variation.
+final gene selection.
+The function uses 5 ways to summarize two gene-level F-statistics obtained for the biological and unwanted variation.
+The function uses either the values or the ranks of F-statistics for NCGs selection. The function ranks the negative
+of F-statistics values for unwanted variation.
 The lower the ranks, the greater the impact of unwanted variation on genes. The function ranks the F-statistics for
 biological variation. The higher the ranks, the greater the impact of biological variation on genes. The options are
 \code{prod}, \code{sum}, \code{average}, \code{auto} or \code{non.overlap} and \code{quantile}.

@@ -38,7 +38,7 @@
 #' @importFrom knitr kable
 #' @export
 
-4 <- function(
+createHomogeneousBioGroups <- function(
         se.obj,
         bio.variables,
         clustering.method = 'kmeans',
