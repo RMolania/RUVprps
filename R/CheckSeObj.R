@@ -4,23 +4,25 @@
 
 #' @description
 #' This function assesses the structure of a SummarizedExperiment object and removes any missing values from both
-#' assay(s) and sample annotation. When multiple assays are provided, if they are missing in only one of the assays,
-#' the corresponding rows in other assays will be remove as well. Please note that, the current RUV-III method does
-#' not support missing values in the assay(s).
+#' data(assay) and sample annotation.
+
+#' @details
+#' When multiple assays are provided, if data are missing in only one of the datasets, the corresponding rows in the other
+#' datasets will also be removed. If the specified variables contain missing values, the corresponding samples will be removed
+#' from the data as well. Please note that the current RUV-III method does not support missing values in the data.
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character or character vector. The name(s) of the assay(s) in the
-#' SummarizedExperiment object, specified as a character string or a vector of character strings.
-#' The default is "all," indicating that all assays in the SummarizedExperiment object will
-#' be assessed.
-#' @param variables Character or character vector. The name(s) of the column(s) in the sample annotation of the
-#' SummarizedExperiment object, specified as a character string or a vector of character strings. By default, it is set
-#' to 'all', in which case all columns will be examined. We recommend specifying only those column(s) that are of interest
-#'  to your analysis.
-#' @param remove.na Character. A string that specifies whether to eliminate missing values from 'assays', 'sample.annotation',
-#' 'both', or 'none'. When 'assays' is chosen, genes containing missing values will be omitted. If 'sample.annotation'
-#' is selected, samples with NA or missing values for each 'variables' will be excluded. The default is set to 'both'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' @param assay.names Character or character vector. A character or character vector of the name(s) of the data(assay) in
+#' the SummarizedExperiment object. The default is set to `all`, indicating that all data in the SummarizedExperiment
+#' object will be assessed.
+#' @param variables Character. A character or character vectors of the name(s) of the column(s) in the sample annotation
+#' of the SummarizedExperiment object. The default it is set to `all`, in which case all columns will be examined. We
+#' recommend specifying only those column(s) that are of interest to your analysis.
+#' @param remove.na Character. A character string that specifies whether to eliminate missing values from `assays`,
+#' `sample.annotation`, `both`, or `none`. When `assays` is chosen, genes containing missing values will be omitted. If
+#' `sample.annotation` is selected, samples with NA or missing values for each `variables` will be excluded. The default
+#' is set to `both`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @return A SummarizedExperiment object.
 

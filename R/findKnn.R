@@ -1,4 +1,4 @@
-#' Find k-nearest neighbors in RNA-seq data.
+#' Finds k-nearest neighbors in RNA-seq data.
 
 #' @author Ramyar Molania
 
@@ -11,55 +11,55 @@
 #' @param assay.name Character. A character string representing the name of the assay in the SummarizedExperiment object
 #' to be used to find k nearest neighbors.
 #' @param uv.variable Character. A character string that indicates the name of the column in the sample annotation of the
-#' SummarizedExperiment object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous
+#' SummarizedExperiment object. The `uv.variable` can be either categorical or continuous. If `uv.variable` is a continuous
 #' variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.
 #' @param nb.knn Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute for each
 #' sample. The default is set to 3.
 #' @param data.input Character. A character string that indicates which data type should be used as input for finding
-#' the k nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of
-#' the data will be used as input. If 'expr' is selected, the expression data will be used as input. The default is set
-#' to 'expr'.
+#' the k nearest neighbors. Options include: `expr` and `pcs`. If `pcs` is selected, the first `nb.pcs` of PCs of
+#' the data will be used as input. If `expr` is selected, the expression data will be used as input. The default is set
+#' to `expr`.
 #' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
-#' for finding the k nearest neighbors. The default is set to 2. The 'nb.pcs' must be set when "data.input = pcs".
-#' @param center Logical. Indicates whether to center the data or not before calculating PCs. If center is TRUE, then
+#' for finding the k nearest neighbors. The default is set to 2. The `nb.pcs` must be set when `data.input = pcs`.
+#' @param center Logical. Indicates whether to center the data or not before calculating PCs. If center is `TRUE`, then
 #' centering is done by subtracting the column means of the assay from their corresponding columns. The default is set
-#' to 'TRUE'.
-#' @param scale Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to 'TRUE', then
-#' scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and
-#' the root mean square otherwise. The default is set to 'FALSE'.
+#' to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to `TRUE`, then
+#' scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is `TRUE`, and
+#' the root mean square otherwise. The default is set to `FALSE`.
 #' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed. The default
-#' is set to bsparam(). We refer to the 'runSVD' function from the BiocSingular R package for further details.
+#' is set to `bsparam()`. We refer to the `runSVD` function from the **BiocSingular** R package for further details.
 #' @param clustering.method Character. A character string indicating the choice of clustering method for grouping the
-#' 'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
-#' set to 'kmeans'.
-#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
+#' `uv.variable` if a continuous variable is provided. Options include `kmeans`, `cut`, and `quantile`. The default is
+#' set to `kmeans`.
+#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the `uv.variable` is a
 #' continuous variable. The default is set to 3.
 #' @param hvg Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
-#' will be used to prepare the input data for knn analysis. The default is set to 'NULL', this means all genes will be used.
+#' will be used to prepare the input data for knn analysis. The default is set to `NULL`, this means all genes will be used.
 #' @param normalization Character. A character string that indicates which normalization method should be applied on the
-#' data before finding the knn. Options are: 'CPM','TMM', upper', median', full' and VST'. The default is set to 'cpm'.
-#' If set to NULL, no normalization will be applied. See the applyOtherNormalizations() function for more details.
+#' data before finding the knn. Options are: `CPM`,`TMM`, `upper`, `median`, `full` and `VST`. The default is set to `CPM`.
+#' If set to `NULL`, no normalization will be applied. See the `applyOtherNormalizations()` function for more details.
 #' @param regress.out.variables Character. A character string or strings that indicate the column name(s) in the sample
 #' annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
-#' finding KNN. The default is set to NULL, indicating that regression will not be applied.
+#' finding KNN. The default is set to `NULL`, indicating that regression will not be applied.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
-#' The default is set to 'TRUE'.
+#' The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
-#' assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
+#' assay(data) before applying log transformation to avoid `-Inf`for measurements that are equal to 0. The default is set
 #' to 1.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-#' to TRUE. See the checkSeObj() function for more details.
-#' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are 'assays' and
-#''none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be removed before computing
-#' performing any down-stream analysis. See the checkSeObj() function for more details.
-#' @param output.name Character. A character string specifying the name of the output file to be saved in the metadata
-#' of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on
-#' "paste0(uv.variable, '|' , assay.name)".
+#' to `TRUE`. See the `checkSeObj()` function for more details.
+#' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are `assays` and
+#''none'. The default is set to `assays`, so all the NA or missing values from the data(assay) will be removed before computing
+#' performing any down-stream analysis. See the `checkSeObj()` function for more details.
 #' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-#' If set to 'NULL', the function will automatically assign a name using "paste0('prps|mnn|', uv.variable)".
+#' If it is set to `NULL`, the function will automatically assign a name using `paste0('prps|mnn|', uv.variable)`.
+#' @param output.name Character. A character string specifying the name of the output file to be saved in the metadata
+#' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
+#' "paste0(uv.variable, '|' , assay.name)".
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. By default, it is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' or to output the result as a list. By default, it is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom utils txtProgressBar
@@ -86,8 +86,8 @@ findKnn <- function(
         pseudo.count = 1,
         assess.se.obj = TRUE,
         remove.na = 'both',
-        output.name = NULL,
         prps.group = NULL,
+        output.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
         ){

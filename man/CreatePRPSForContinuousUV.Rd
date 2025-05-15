@@ -20,8 +20,8 @@ createPrPsForContinuousUV(
   assess.se.obj = TRUE,
   remove.na = "both",
   plot.prps.map = TRUE,
-  output.name = NULL,
   prps.group = NULL,
+  prps.sets.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -43,74 +43,74 @@ created for removing the impact of this variable from the data.}
 \item{other.uv.variables}{Character. A character string or character vector representing the label of unwanted variable(s),
 such as batch effects, etc., within the sample annotation (colData) of the SummarizedExperiment object. This can
 comprise a vector containing either categorical, continuous, or a combination of both variables. These variables will
-be considered when generating PRPS data for the "main.uv.variable". The default is set to 'NULL'. Refer to the function
+be considered when generating PRPS data for the \code{main.uv.variable}. The default is set to \code{NULL}. Refer to the function
 details for more information.}
 
 \item{min.sample.for.ps}{Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
 to be averaged to create one pseudo-sample (PS). The default is set to 3.}
 
 \item{bio.clustering.method}{Character. A character string indicating which clustering method should be used to group
-each continuous biological variable, if specified. The options include 'kmeans', 'cut', and 'quantile'. The default is
-'kmeans'. We refer to the createHomogeneousBioGroups() function for more details.}
+each continuous biological variable, if specified. The options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is
+\code{kmeans}. We refer to the createHomogeneousBioGroups() function for more details.}
 
 \item{nb.bio.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
 variable. The default is set to 2. Then individual continuous biological variables will be divided into 2 groups using
-the "bio.clustering.method".}
+the \code{bio.clustering.method}.}
 
 \item{other.uv.clustering.method}{Character. A character string specifying which clustering method should be used to
-group each continuous unwanted variable specified in the "other.uv.variables". The options include 'kmeans', 'cut',
-and 'quantile'. The default is 'kmeans'. We refer to the createHomogeneousUVGroups() function for more details.}
+group each continuous unwanted variable specified in the \code{other.uv.variables}. The options include \code{kmeans}, \code{cut},
+and \code{quantile}. The default is \code{kmeans}. We refer to the createHomogeneousUVGroups() function for more details.}
 
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
-unwanted variable specified in the "other.uv.variables". The default is set to 2.}
+unwanted variable specified in the \code{other.uv.variables}. The default is set to 2.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 The default is set to 1.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
-function will be applied inside the function. The default is set to 'TRUE'.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the checkSeObj
+function will be applied inside the function. The default is set to \code{TRUE}.}
 
-\item{remove.na}{Character. A character string indicating whether to remove NA or missing values from either the 'assays',
-the sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
-excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
-'uv.variables' will be excluded. The default is set to 'both'.}
+\item{remove.na}{Character. A character string indicating whether to remove NA or missing values from either the \code{assays},
+the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, the genes that contain NA or missing values will be
+excluded. If \code{sample.annotation} is selected, the samples that contain NA or missing values for any \code{bio.variables} and
+\code{uv.variables} will be excluded. The default is set to \code{both}.}
 
 \item{plot.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
-variation. The default is set to 'TRUE'.}
-
-\item{output.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
-specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name
-based on paste0('prps_', uv.variable).}
+variation. The default is set to \code{TRUE}.}
 
 \item{prps.group}{Character. A character string specifying a name for the PRPS data sets created for a specific group.
-The default is set to 'NULL'.}
+The default is set to \code{NULL}.}
+
+\item{prps.sets.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
+specified sources of unwanted variation. The default is set to \code{NULL}. If not specified, the function creates a name
+based on \code{paste0(prps_, uv.variable)}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-or to output the result as a list. The default is set to 'TRUE'.}
+or to output the result as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \value{
 Either a SummarizedExperiment object containing the PRPS data or just PRPS data.
 }
 \description{
-The function creates PRPS sets for a continuous source of unwanted variation defined in the 'main.uv.variable' argument.
-For example to correct for library size if defined in the 'uv.variables' argument, several group of pseudo-samples
+The function creates PRPS sets for a continuous source of unwanted variation defined in the \code{main.uv.variable} argument.
+For example to correct for library size if defined in the \code{uv.variables} argument, several group of pseudo-samples
 will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each
 batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
 }
 \details{
-Distinct group of PRPS are created for each source of unwanted variation defined in the 'main.uv.variable' argument
+Distinct group of PRPS are created for each source of unwanted variation defined in the \code{main.uv.variable} argument
 within an homogeneous group of samples. The grouping of samples are created based on each biological subtype defined
-using the 'bio.variables' using the 'bio.clustering.method' selected and it might be also be combined with
-'other.uv.variables' if requested. By default 'other.uv.variables' is set up to NULL, meaning that the homogeneous
-grouping of samples created is based solely on the biological subtype(s) defined in 'bio.variables'. If
-'other.uv.variables' is not set to NULL, the creation of homogeneous groups of samples is based on the biological subtype
-defined in 'bio.variables' combined with 'other.uv.variables' using the 'other.uv.clustering.method' selected. A
+using the \code{bio.variables} using the \code{bio.clustering.method} selected and it might be also be combined with
+\code{other.uv.variables} if requested. By default \code{other.uv.variables} is set up to NULL, meaning that the homogeneous
+grouping of samples created is based solely on the biological subtype(s) defined in \code{bio.variables}. If
+\code{other.uv.variables} is not set to NULL, the creation of homogeneous groups of samples is based on the biological subtype
+defined in \code{bio.variables} combined with \code{other.uv.variables} using the \code{other.uv.clustering.method} selected. A
 pseudo-sample will be created for each homogeneous group of samples by averaging all the samples within that group of
-samples. For example to correct for library size if defined in the 'main.uv.variable' argument, a pair of pseudo-samples
+samples. For example to correct for library size if defined in the \code{main.uv.variable} argument, a pair of pseudo-samples
 will be created for each homogeneous group of samples, each pair by averaging the top and the bottom-ranked samples by
 library size.Each pair of pseudo-samples belonging to the same group will be defined as pseudo-replicates which
 constitutes a PRPS set.

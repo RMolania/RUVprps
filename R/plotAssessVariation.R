@@ -1,38 +1,35 @@
-#' Plot the the variation of biological and unwanted variables.
-
-#' @param se.obj #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object. The default is set to 'all', so all the assays in the SummarizedExperiment object will
+#' Plot the results of the assess variation .
+#'
+#' @param se.obj A SummarizedExperiment object.
+#' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the
+#' SummarizedExperiment object. The default is set to `all`, so all the assays in the SummarizedExperiment object will
 #' be selected.
-#' @param variables Symbol. A symbol or vector of symbols indicating the name(s) of the column(s) in the SummarizedExperiment
+#' @param variables Character or character vector. Specifies the name(s) of the column(s) in the SummarizedExperiment
 #' object for which the specified metrics below have been calculated.
+#' @param fast.pca Logical. Indicates whether the fast SVD approach was used in the `computePCA` function. The default is set to `TRUE`.
+#' @param anova.method Character. Indicates which ANOVA method was used to compute the association between
+#' gene-level expression and a categorical variable. Options are: `aov` and `welch`. Default is `aov`.
+#' @param corr.method Character. Specifies which correlation method to use to compute correlation between
+#' gene-level expression and a continuous variable. Options are: `pearson`, `kendall`, or `spearman`. Default is `spearman`.
+#' @param pcorr.method Character. Indicates which correlation method to use to compute gene-gene partial
+#' correlation. Options are: `pearson`, `kendall`, or `spearman`. Default is `spearman`.
+#' @param sil.dist.measure Character. Indicates which distance measure to apply on the PCs to calculate silhouette scores.
+#' Options are: `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or `minkowski`. Default is `euclidean`.
+#' Refer to the function `computeSilhouette` for more details.
+#' @param ari.clustering.method Character. Indicates which clustering method to apply on the PCs to
+#' calculate ARI. Options are: `mclust` or `hclust`. Default is `hclust`. Refer to the `computeARI` function for more details.
+#' @param ari.hclust.method Character. Specifies the agglomeration method to use when `clustering.method`
+#' is set to `hclust` for computing ARI. Options are: `ward.D`, `ward.D2`, `single`, `complete`, `average` (UPGMA),
+#' `mcquitty` (WPGMA), `median` (WPGMC), or `centroid` (UPGMC). Default is `complete`. Refer to the `computeARI`
+#' function for more details.
+#' @param ari.hclust.dist.measure Character. Specifies the distance measure to use in the `dist` function when
+#' `clustering.method` is set to `hclust` for computing ARI. Options are: `euclidean`, `maximum`, `manhattan`,
+#' `canberra`, `binary`, or `minkowski`. Default is `euclidean`. Refer to the `computeARI` function for more details.
+#' @param output.file.name Character. The path and name of the output file where the assessment plots will be saved in PDF format.
+#' @param pdf.width Numeric. Specifies the width (in inches) of the output PDF file. Default is typically around 8.
+#' @param pdf.height Numeric. Specifies the height (in inches) of the output PDF file. Default is typically around 6.
+#' @param verbose Logical. If `TRUE`, displays messages describing different steps of the function.
 
-#' @param fast.pca Logical. Indicates whether to the fast SVD approach has been used in the 'computePCA' function or not.
-#' The default is set to 'TRUE'.
-#' @param anova.method Symbol. A symbol indicating which anova method has been used to compute association between
-#' gene-level expression and a categorical variable. The options are 'aov' and 'welch'. The default is set to 'aov'.
-#' @param corr.method Symbol. A symbol indicating which correlation method should be used to compute correlation between
-#' gene-level expression and a continuous variable. The options are 'pearson', 'kendall', or "spearman". The default is
-#' set to 'spearman'.
-#' @param pcorr.method Symbol. A symbol indicating which correlation method should be used to compute gene-gene partial
-#' correlation. The options are 'pearson', 'kendall', or "spearman". The default is set to 'spearman'.
-#' @param sil.dist.measure Symbol. A symbol indicating which ditsance measure to be applied on the PCs to calculate silhouette.
-#' The options are 'euclidean', maximum', manhattan', 'canberra', 'binary' or 'minkowski'. The default is set to 'euclidean'.
-#' Refer to the function 'computeSilhouette' for more details.
-#' @param ari.clustering.method Symbol. A symbol that indicates which clustering methods should be applied on the PCs to
-#' calculate the ARI. The options are 'mclust' or 'hclust' methods. The default is set to 'hclust'. Refer to the 'computeARI'
-#' for more details.
-#' @param ari.hclust.method Symbol. A symbol specifying the agglomeration method to be used when the 'clustering.method'
-#' is set to 'hclust' method for computing ARI. The options are: 'ward.D', 'ward.D2', 'single', 'complete', 'average' (= UPGMA),
-#' 'mcquitty' (= WPGMA), median' (= WPGMC) or centroid' (= UPGMC). The default is set to 'complete'. Refer to the 'computeARI'
-#' for more details.
-#' @param ari.hclust.dist.measure Symbol. A symbol indicating the distance measure to be used in the 'dist' function when
-#' the 'clustering.method' is set to 'hclust' method for computing ARI. The options are 'euclidean', 'maximum', 'manhattan',
-#' 'canberra', 'binary' or 'minkowski'. The default is set to 'euclidean'. Refer to the 'computeARI' for more details.
-#' @param output.file.name Path and name of the output file to save the assessments plots in a pdf format.
-#' @param pdf.width TTT
-#' @param pdf.height TTT
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 
 plotAssessVariation <- function(
         se.obj,
@@ -56,7 +53,7 @@ plotAssessVariation <- function(
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else assay.names <- factor(x = assay.names, levels = assay.names)
-    if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+    if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
     metrics.table <- se.obj@metadata$AssessmentMetrics$metrics.table
@@ -72,7 +69,7 @@ plotAssessVariation <- function(
         continuous.vars <- names(vars.class[vars.class %in% c('numeric', 'integer')])
     }
     ## select output file names ####
-    if(is.null(output.file.name)){
+    if (is.null(output.file.name)){
         output.file.name <- 'RUVIIIPRPS_AssessVariation'
     }
     pdf(paste0(output.file.name, '.pdf'),
@@ -86,8 +83,8 @@ plotAssessVariation <- function(
     print(se.obj@metadata$AssessmentMetrics$plot)
 
     ## general RLE plot ####
-    if('rlePlot' %in% metrics.table$PlotTypes) {
-        if(length(assay.names) > 1){
+    if ('rlePlot' %in% metrics.table$PlotTypes) {
+        if (length(assay.names) > 1){
             print(
                 se.obj@metadata$Plots$global.level$RLE$gene.median.center$general$un.colored
             )
@@ -99,8 +96,8 @@ plotAssessVariation <- function(
         text(.5, .7, paste0("Assess variation \n in the variable: \n ", i ), font = 2, cex = 2.5)
         metrics.table.var <- metrics.table[metrics.table$Variables == i, ]
         ### scatter plot between RLE medians and variable ####
-        if('rleMedians' %in% metrics.table.var$Factors){
-            if(length(assay.names) > 1){
+        if ('rleMedians' %in% metrics.table.var$Factors){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$RLE$corr.medians.variable[[i]]$scatter.plot
                 )
@@ -109,8 +106,8 @@ plotAssessVariation <- function(
             )
         }
         ## scatter plot between RLE iqrs and variable ####
-        if('rleIqr' %in% metrics.table.var$Factors ){
-            if(length(assay.names) > 1){
+        if ('rleIqr' %in% metrics.table.var$Factors ){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$RLE$corr.iqrs.variable[[i]]$scatter.plot
                 )
@@ -119,11 +116,11 @@ plotAssessVariation <- function(
             )
         }
         ## scatter plot between PCs and variable ####
-        if(isTRUE(fast.pca)){
+        if (isTRUE(fast.pca)){
             svd.method <- 'fast.svd'
         } else svd.method <- 'ordinary.svd'
-        if('PCA' %in% metrics.table.var$Metrics){
-            if(length(assay.names) > 1){
+        if ('PCA' %in% metrics.table.var$Metrics){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$PCA[[svd.method]][[i]]$scatter.plot
                 )
@@ -132,8 +129,8 @@ plotAssessVariation <- function(
             )
         }
         ## line-dot plot for linear regression ####
-        if('LRA' %in% metrics.table.var$Metrics){
-            if(length(assay.names) > 1){
+        if ('LRA' %in% metrics.table.var$Metrics){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$LRA[[svd.method]][[i]]$line.dotplot
                 )
@@ -142,8 +139,8 @@ plotAssessVariation <- function(
             )
         }
         ## boxplot of gene variable correlation coefficients ####
-        if('CorrelationboxPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
-            if(length(assay.names) > 1){
+        if ('CorrelationboxPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$Correlation[[corr.method]][[i]]$cor.coef.boxplot
                 )
@@ -152,8 +149,8 @@ plotAssessVariation <- function(
             )
         }
         ## histograms of gene variable correlation coefficients ####
-        if('CorrelationpvalHist' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
-            if(length(assay.names) > 1){
+        if ('CorrelationpvalHist' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$Correlation[[corr.method]][[i]]$cor.coef.boxplot
                 )
@@ -162,8 +159,8 @@ plotAssessVariation <- function(
             )
         }
         ## scatter plot of gene variable partial correlation coefficients ####
-        if('PartialCorrelationscatterPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
-            if(length(assay.names) > 1){
+        if ('PartialCorrelationscatterPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$PPcorr[[pcorr.method]][[i]]$scatter.plot
                 )
@@ -172,8 +169,8 @@ plotAssessVariation <- function(
             )
         }
         ## barplot of gene variable partial correlation coefficients ####
-        if('PartialCorrelationbarPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
-            if(length(assay.names) > 1){
+        if ('PartialCorrelationbarPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$PPcorr[[pcorr.method]][[i]]$barplot
                 )
@@ -182,8 +179,8 @@ plotAssessVariation <- function(
             )
         }
         ## histogram of gene variable partial correlation coefficients ####
-        if('PartialCorrelationhistogram' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
-            if(length(assay.names) > 1){
+        if ('PartialCorrelationhistogram' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$PPcorr[[pcorr.method]][[i]]$histogram
                 )
@@ -192,8 +189,8 @@ plotAssessVariation <- function(
             )
         }
         ## histogram of gene variable partial correlation coefficients ####
-        if('GeneSetScore' %in% paste0(metrics.table.var$Metrics)){
-            if(length(assay.names) > 1){
+        if ('GeneSetScore' %in% paste0(metrics.table.var$Metrics)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$GeneSetSocore$singscore[[i]]$general
                 )
@@ -207,8 +204,8 @@ plotAssessVariation <- function(
         text(.5, .7, paste0("Assess variation \n in the variable: \n ", i ), font = 2, cex = 2.5)
         metrics.table.var <- metrics.table[metrics.table$Variables == i, ]
         ### rle plots colored by the variable ####
-        if('coloredRLEplot' %in% metrics.table.var$PlotTypes){
-            if(length(assay.names) > 1){
+        if ('coloredRLEplot' %in% metrics.table.var$PlotTypes){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$RLE$gene.median.center[[i]]$colored
                 )
@@ -217,8 +214,8 @@ plotAssessVariation <- function(
             )
         }
         ## boxplot between RLE medians and variable ####
-        if('rleMedians' %in% metrics.table.var$Factors){
-            if(length(assay.names) > 1){
+        if ('rleMedians' %in% metrics.table.var$Factors){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$RLE$corr.medians.variable[[i]]$boxplot
                 )
@@ -227,8 +224,8 @@ plotAssessVariation <- function(
             )
         }
         ## boxplot between RLE iqrs and variable ####
-        if('rleIqr' %in% metrics.table.var$Factors){
-            if(length(assay.names) > 1){
+        if ('rleIqr' %in% metrics.table.var$Factors){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$RLE$corr.iqrs.variable[[i]]$boxplot
                 )
@@ -237,11 +234,11 @@ plotAssessVariation <- function(
             )
         }
         ## scatter plot of PCs colored by the variable ####
-        if(isTRUE(fast.pca)){
+        if (isTRUE(fast.pca)){
             svd.method <- 'fast.svd'
         } else svd.method <- 'ordinary.svd'
-        if('pcsscatterPlot' %in% paste0(metrics.table.var$Factors, metrics.table.var$PlotTypes)){
-            if(length(assay.names) > 1){
+        if ('pcsscatterPlot' %in% paste0(metrics.table.var$Factors, metrics.table.var$PlotTypes)){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$PCA[[svd.method]][[i]]$boxplot.plot
                 )
@@ -250,8 +247,8 @@ plotAssessVariation <- function(
             )
         }
         ## boxplot plot of PCs colored by the variable ####
-        if('pcsboxPlot' %in% paste0(metrics.table.var$Factors, metrics.table.var$PlotTypes) ){
-            if(length(assay.names) > 1){
+        if ('pcsboxPlot' %in% paste0(metrics.table.var$Factors, metrics.table.var$PlotTypes) ){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$PCA[[svd.method]][[i]]$scatter.plot
                 )
@@ -260,8 +257,8 @@ plotAssessVariation <- function(
             )
         }
         ## line-dot plot for vector correlation ####
-        if('VCA' %in% metrics.table.var$Metrics ){
-            if(length(assay.names) > 1){
+        if ('VCA' %in% metrics.table.var$Metrics ){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$VCA[[svd.method]][[i]]$line.dotplot
                 )
@@ -270,11 +267,11 @@ plotAssessVariation <- function(
             )
         }
         ## barplot of ari ####
-        if('ARIbarPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)) {
-            if(ari.clustering.method == 'mclust'){
+        if ('ARIbarPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)) {
+            if (ari.clustering.method == 'mclust'){
                 ari.method <- 'mclust'
             } else ari.method <- paste0('hclust.', ari.hclust.method, '.', ari.hclust.dist.measure)
-            if(length(assay.names) > 1){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$ARI[[ari.method]][[i]]$single.plot
                 )
@@ -283,9 +280,9 @@ plotAssessVariation <- function(
             )
         }
         ## barplot of silhouette ####
-        if('SilhouettebarPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
+        if ('SilhouettebarPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes)){
             silhouette.method <- paste0('sil.', sil.dist.measure)
-            if(length(assay.names) > 1){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$Silhouette[[silhouette.method]][[i]]$single.plot
                 )
@@ -294,8 +291,8 @@ plotAssessVariation <- function(
             )
         }
         ## boxplot of gene variable ANOVA F-stat ####
-        if('ANOVAboxPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes) ){
-            if(length(assay.names) > 1){
+        if ('ANOVAboxPlot' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes) ){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$ANOVA[[anova.method]][[i]]$boxplot
                 )
@@ -304,8 +301,8 @@ plotAssessVariation <- function(
             )
         }
         ## histograms of gene variable ANOVA p-values ####
-        if('ANOVApvalHist' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes) ){
-            if(length(assay.names) > 1){
+        if ('ANOVApvalHist' %in% paste0(metrics.table.var$Metrics, metrics.table.var$PlotTypes) ){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$ANOVA[[anova.method]][[i]]$histogram
                 )
@@ -314,8 +311,8 @@ plotAssessVariation <- function(
             )
         }
         ## histograms of differential gene expression p-values  ####
-        if('DGE' %in% metrics.table.var$Metrics ){
-            if(length(assay.names) > 1){
+        if ('DGE' %in% metrics.table.var$Metrics ){
+            if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$gene.level$DGE$Wilcoxon[[i]]$histogram
                 )

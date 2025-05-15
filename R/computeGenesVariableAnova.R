@@ -1,4 +1,4 @@
-#' Computes ANOVA between individual gene expression and a categorical variable.--Finalized
+#' Computes ANOVA between individual gene expression and a categorical variable
 
 #' @author Ramyar Molania
 
@@ -21,34 +21,33 @@
 #' @param variable Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
 #' object that contains a categorical variable, such as experimental batches, etc.
 #' @param method Character. A character string specifying the method to be used for the ANOVA analysis. The options are
-#' "aov" and "welch". The default is set to "aov". The function applies a fast implementation of one-way ANOVA using the
-#' row_oneway_equalvar() or the row_oneway_welch() functions from the matrixTests R package. The first function assumes
-#' equal variance between the groups while the second function applied the Welch correction for the groups with unequal
-#' variances.
+#' `aov` and `welch`. The default is set to `aov`. The function applies a fast implementation of one-way ANOVA using the
+#' `row_oneway_equalvar()` or the `row_oneway_welch()` functions from the **matrixTests** R package. The first function
+#' assumesequal variance between the groups while the second function applied the Welch correction for the groups with
+#' unequalå variances.
 #' @param plot.top.genes Logical. Indicates whether to plot the gene expression of the "nb.top.genes" genes, as visual
 #' examples, with the highest and lowest F-statistics across the specified variable. The default is set to 'FALSE'.
 #' @param nb.top.genes Numeric. A numeric value specifying the number of genes to plot from the top or bottom of the ANOVA
 #' F-statistics list. The default is set to 3.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
-#' default is set to 'TRUE'.
+#' default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 #' the log transformation. The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to 'TRUE'.
-#' This means the function will apply the 'checkSeObj' function.
-#' @param remove.na Character. A character string specifying whether to eliminate missing values from 'assays', 'sample.annotation',
-#' 'both', or 'none'. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' This means the function will apply the `checkSeObj()` function.
+#' @param remove.na Character. A character string specifying whether to eliminate missing values from `assays`, `sample.annotation`,
+#' `both`, or `none`. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
 #' samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.
-#' @param apply.round Logical. Indicates whether to round the values of F-statistics. The default is set to 'TRUE'.
+#' @param apply.round Logical. Indicates whether to round the values of F-statistics. The default is set to `TRUE`.
 #' @param save.se.obj Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
-#' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to 'TRUE'.
+#' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to `TRUE`.
 #' @param override.check Logical. When set to TRUE, the function checks whether ANOVA has already been computed for the
 #' current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is
-#' set to 'FALSE'.
-#' @param verbose Logical. If TRUE, displays the messages of different steps of the function.
+#' set to `FALSE`.
+#' @param verbose Logical. If `TRUE`, displays the messages of different steps of the function.
 
 #' @return Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
 #' variable or a list of these results.
-
 
 #' @importFrom matrixTests row_oneway_equalvar row_oneway_welch
 #' @importFrom SummarizedExperiment assays assay
@@ -101,7 +100,7 @@ computeGenesVariableAnova <- function(
     } else if (isFALSE(override.check)) compute.metric <- TRUE
 
     if (isTRUE(compute.metric)){
-        # Check the inputs ####
+        # Checking the function inputs ####
         if (is.null(assay.names)) {
             stop('The "assay.names" cannot be null.')
         }
@@ -171,7 +170,6 @@ computeGenesVariableAnova <- function(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 pseudo.count = pseudo.count,
-                assessment = 'computing "PCA"',
                 verbose = verbose
             )
         }
@@ -199,7 +197,7 @@ computeGenesVariableAnova <- function(
         all.aov <- lapply(
             levels(assay.names),
             function(x) {
-                # compute anova ####
+                # Computing anova ####
                 if (method == 'aov') {
                     printColoredMessage(
                         message = paste0(
@@ -228,7 +226,7 @@ computeGenesVariableAnova <- function(
                 }
                 row.names(anova.genes.var) <- row.names(se.obj)
 
-                # rounding the obtained anova statistic  to 2 digits ####
+                # Rounding the obtained anova statistic  to 2 digits ####
                 if (isTRUE(apply.round)) {
                     printColoredMessage(
                         message = '-- Rounding the obtained anova statistic to 2 digits',
@@ -241,7 +239,7 @@ computeGenesVariableAnova <- function(
                 }
                 pvalue <- NULL
                 anova.genes.var <- anova.genes.var[ , c('pvalue', 'statistic')]
-                # plot top genes ####
+                # Plotting top genes ####
                 if (isTRUE(plot.top.genes)) {
                     temp.anova <- anova.genes.var[order(anova.genes.var[, 'statistic'],decreasing = TRUE, na.last = TRUE) , ]
                     var <- NULL
@@ -279,7 +277,7 @@ computeGenesVariableAnova <- function(
             })
         names(all.aov) <- levels(assay.names)
 
-        # Save the results ####
+        # Saving the results ####
         printColoredMessage(
             message = '-- Saving the ANOVA results :',
             color = 'magenta',

@@ -1,24 +1,25 @@
-#' Create all possible assessment plots and metrics for the variables.
-
+#' Creates all possible assessment plots and metrics for the variables.
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
-#' This functions provides the names of all possible assessment plots and metrics for the given variable(s). The list
-#' will be used in the 'assessVariation' and 'assessNormalization' functions.
-
-#' @param se.obj A summarized experiment object.
-#' @param variables Symbol. A symbol and a vector of symbols indicating the columns names of variables in the samples
-#' annotation in the SummarizedExperiment object. The 'variables' can be categorical and continuous variables.
-#' @param plot.output Logical. Whether to print the plot of all possible assessment plots or not. The default is set to 'TRUE'.
-#' @param save.se.obj Logical. Whether to save the results into the SummarizedExperiment object. The default is TRUE.
+#' This function provides the names of all possible assessment plots and metrics for the given variable(s). The list
+#' can be used in the `assessVariation` and `assessNormalization` functions.
+#'
+#' @param se.obj A SummarizedExperiment object.
+#' @param variables Character string or vector. Specifies the column name(s) of variables in the sample annotation
+#' of the SummarizedExperiment object. The `variables` can be either categorical or continuous.
+#' @param plot.output Logical. Whether to display the plot of all possible assessment plots. Default is `TRUE`.
+#' @param save.se.obj Logical. Whether to save the results into the SummarizedExperiment object. Default is `TRUE`.
 #'
 #' @return A list of all possible assessment metrics for the variables.
-
+#'
 #' @importFrom igraph vertex_attr layout_as_tree graph_from_data_frame
 #' @importFrom ggpubr ggarrange annotate_figure text_grob
 #' @importFrom SummarizedExperiment colData
 #' @importFrom tibble tibble
 #' @export
+
 
 getAssessmentMetrics <- function(
         se.obj ,

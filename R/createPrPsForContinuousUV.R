@@ -3,21 +3,21 @@
 #' @author Ramyar Molania
 
 #' @description
-#' The function creates PRPS sets for a continuous source of unwanted variation defined in the 'main.uv.variable' argument.
-#' For example to correct for library size if defined in the 'uv.variables' argument, several group of pseudo-samples
+#' The function creates PRPS sets for a continuous source of unwanted variation defined in the `main.uv.variable` argument.
+#' For example to correct for library size if defined in the `uv.variables` argument, several group of pseudo-samples
 #' will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each
 #'  batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
 
 #' @details
-#' Distinct group of PRPS are created for each source of unwanted variation defined in the 'main.uv.variable' argument
+#' Distinct group of PRPS are created for each source of unwanted variation defined in the `main.uv.variable` argument
 #' within an homogeneous group of samples. The grouping of samples are created based on each biological subtype defined
-#' using the 'bio.variables' using the 'bio.clustering.method' selected and it might be also be combined with
-#' 'other.uv.variables' if requested. By default 'other.uv.variables' is set up to NULL, meaning that the homogeneous
-#' grouping of samples created is based solely on the biological subtype(s) defined in 'bio.variables'. If
-#' 'other.uv.variables' is not set to NULL, the creation of homogeneous groups of samples is based on the biological subtype
-#' defined in 'bio.variables' combined with 'other.uv.variables' using the 'other.uv.clustering.method' selected. A
+#' using the `bio.variables` using the `bio.clustering.method` selected and it might be also be combined with
+#' `other.uv.variables` if requested. By default `other.uv.variables` is set up to NULL, meaning that the homogeneous
+#' grouping of samples created is based solely on the biological subtype(s) defined in `bio.variables`. If
+#' `other.uv.variables` is not set to NULL, the creation of homogeneous groups of samples is based on the biological subtype
+#' defined in `bio.variables` combined with `other.uv.variables` using the `other.uv.clustering.method` selected. A
 #' pseudo-sample will be created for each homogeneous group of samples by averaging all the samples within that group of
-#' samples. For example to correct for library size if defined in the 'main.uv.variable' argument, a pair of pseudo-samples
+#' samples. For example to correct for library size if defined in the `main.uv.variable` argument, a pair of pseudo-samples
 #' will be created for each homogeneous group of samples, each pair by averaging the top and the bottom-ranked samples by
 #' library size.Each pair of pseudo-samples belonging to the same group will be defined as pseudo-replicates which
 #' constitutes a PRPS set.
@@ -34,40 +34,40 @@
 #' @param other.uv.variables Character. A character string or character vector representing the label of unwanted variable(s),
 #' such as batch effects, etc., within the sample annotation (colData) of the SummarizedExperiment object. This can
 #' comprise a vector containing either categorical, continuous, or a combination of both variables. These variables will
-#' be considered when generating PRPS data for the "main.uv.variable". The default is set to 'NULL'. Refer to the function
+#' be considered when generating PRPS data for the `main.uv.variable`. The default is set to `NULL`. Refer to the function
 #' details for more information.
 #' @param min.sample.for.ps Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
 #' to be averaged to create one pseudo-sample (PS). The default is set to 3.
 #' @param bio.clustering.method Character. A character string indicating which clustering method should be used to group
-#' each continuous biological variable, if specified. The options include 'kmeans', 'cut', and 'quantile'. The default is
-#' 'kmeans'. We refer to the createHomogeneousBioGroups() function for more details.
+#' each continuous biological variable, if specified. The options include `kmeans`, `cut`, and `quantile`. The default is
+#' `kmeans`. We refer to the createHomogeneousBioGroups() function for more details.
 #' @param nb.bio.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
 #' variable. The default is set to 2. Then individual continuous biological variables will be divided into 2 groups using
-#' the "bio.clustering.method".
+#' the `bio.clustering.method`.
 #' @param other.uv.clustering.method Character. A character string specifying which clustering method should be used to
-#' group each continuous unwanted variable specified in the "other.uv.variables". The options include 'kmeans', 'cut',
-#' and 'quantile'. The default is 'kmeans'. We refer to the createHomogeneousUVGroups() function for more details.
+#' group each continuous unwanted variable specified in the `other.uv.variables`. The options include `kmeans`, `cut`,
+#' and `quantile`. The default is `kmeans`. We refer to the createHomogeneousUVGroups() function for more details.
 #' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
-#' unwanted variable specified in the "other.uv.variables". The default is set to 2.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.
+#' unwanted variable specified in the `other.uv.variables`. The default is set to 2.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
-#' function will be applied inside the function. The default is set to 'TRUE'.
-#' @param remove.na Character. A character string indicating whether to remove NA or missing values from either the 'assays',
-#' the sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
-#' excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables' and
-#' 'uv.variables' will be excluded. The default is set to 'both'.
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the checkSeObj
+#' function will be applied inside the function. The default is set to `TRUE`.
+#' @param remove.na Character. A character string indicating whether to remove NA or missing values from either the `assays`,
+#' the `sample.annotation`, `both`, or `none`. If `assays` is selected, the genes that contain NA or missing values will be
+#' excluded. If `sample.annotation` is selected, the samples that contain NA or missing values for any `bio.variables` and
+#' `uv.variables` will be excluded. The default is set to `both`.
 #' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. The default is set to 'TRUE'.
+#' or to output the result as a list. The default is set to `TRUE`.
 #' @param plot.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
-#' variation. The default is set to 'TRUE'.
-#' @param output.name Character. A character string to specify the name of all PRPS sets that will be created for all
-#' specified sources of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a name
-#' based on paste0('prps_', uv.variable).
+#' variation. The default is set to `TRUE`.
 #' @param prps.group Character. A character string specifying a name for the PRPS data sets created for a specific group.
-#' The default is set to 'NULL'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' The default is set to `NULL`.
+#' @param prps.sets.name Character. A character string to specify the name of all PRPS sets that will be created for all
+#' specified sources of unwanted variation. The default is set to `NULL`. If not specified, the function creates a name
+#' based on `paste0(prps_, uv.variable)`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @return Either a SummarizedExperiment object containing the PRPS data or just PRPS data.
 
@@ -93,8 +93,8 @@ createPrPsForContinuousUV <- function(
         assess.se.obj = TRUE,
         remove.na = 'both',
         plot.prps.map = TRUE,
-        output.name = NULL,
         prps.group = NULL,
+        prps.sets.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -144,8 +144,8 @@ createPrPsForContinuousUV <- function(
     if (!is.logical(save.se.obj)){
         stop('The "save.se.obj" must be logical.')
     }
-    if (is.logical(output.name)){
-        stop('The "output.name" must be a character or NULL.')
+    if (is.logical(prps.sets.name)){
+        stop('The "prps.sets.name" must be a character or NULL.')
     }
     if (is.logical(prps.group)){
         stop('The "prps.group" must be a character or NULL.')
@@ -205,9 +205,9 @@ createPrPsForContinuousUV <- function(
         color = 'magenta',
         verbose = verbose
         )
-    ## creating PRPS with considering other uv variables ####
+    ## Creating PRPS with considering other uv variables ####
     if (!is.null(other.uv.variables)) {
-        ### creating homogeneous biological groups of samples ####
+        ### Creating homogeneous biological groups of samples ####
         printColoredMessage(
             message = '-- Creating all possible homogeneous bioloical populations:',
             color = 'magenta',
@@ -223,7 +223,7 @@ createPrPsForContinuousUV <- function(
             remove.na = 'none',
             verbose = verbose
         )
-        ## creating homogeneous groups of samples with respect to unwanted variation ####
+        ## Creating homogeneous groups of samples with respect to unwanted variation ####
         printColoredMessage(
             message = paste0(
                 '-- Creating all possible homogeneous sample groups with respect to the',
@@ -247,7 +247,7 @@ createPrPsForContinuousUV <- function(
             homo.uv.groups = homo.uv.groups,
             homo.bio.groups = homo.bio.groups
             )
-        ## putting all biological and unwanted groups together ####
+        ## Putting all biological and unwanted groups together ####
         printColoredMessage(
             message = '-- Creating all possible homogeneous samples groups with respect to both bioloical and unwanted variables:',
             color = 'magenta',
@@ -271,7 +271,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        ## checking the samples distribution ####
+        ## Checking the samples distribution ####
         bio.batch.groups <- findRepeatingPatterns(
             vec = annot.data$bio.batch,
             n.repeat = c(2 * min.sample.for.ps)
@@ -292,7 +292,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        ## creating PRPS sets ####
+        ## Creating PRPS sets ####
         printColoredMessage(
             message = '-- Creating a PRPS set with two pseudo samples for each individual homogeneous group:',
             color = 'magenta',
@@ -336,7 +336,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        ## plotting the PRPS map ####
+        ## Plotting the PRPS map ####
         if (isTRUE(plot.prps.map)){
             prps.sets.plot <- sapply(
                 selected.groups,
@@ -381,9 +381,9 @@ createPrPsForContinuousUV <- function(
             print(prps.map.plot)
         }
     }
-    ## creating PRPS without considering other uv variables ####
+    ## Creating PRPS without considering other uv variables ####
     if (is.null(other.uv.variables)){
-        ### creating homogeneous biological groups of samples ####
+        ### Creating homogeneous biological groups of samples ####
         printColoredMessage(
             message = '-- Creating all possible homogeneous bioloical populations:',
             color = 'magenta',
@@ -426,7 +426,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
             )
-        ## creating PRPS sets ####
+        ## Creating PRPS sets ####
         printColoredMessage(
             message = '-- Creating a PRPS set with two pseudo samples for each individual homogeneous biological groups:',
             color = 'magenta',
@@ -474,7 +474,7 @@ createPrPsForContinuousUV <- function(
             color = 'blue',
             verbose = verbose
         )
-        ## plotting the PRPS map ####
+        ## Plotting the PRPS map ####
         if(isTRUE(plot.prps.map)){
             prps.sets.plot <- sapply(
                 selected.groups,
@@ -528,9 +528,9 @@ createPrPsForContinuousUV <- function(
         }
     }
     # Saving the output ####
-    ## select output name ####
+    ## Selecting output name ####
     if (!is.null(other.uv.variables)) {
-        output.name <- paste0(
+        prps.sets.name <- paste0(
             main.uv.variable,
             '|',
             paste0(bio.variables, collapse = '&'),
@@ -539,14 +539,14 @@ createPrPsForContinuousUV <- function(
             '|',
             assay.name)
     } else if (is.null(other.uv.variables)) {
-        output.name <- paste0(
+        prps.sets.name <- paste0(
             main.uv.variable,
             '|',
             paste0(bio.variables, collapse = '&'),
             '|',
             assay.name)
     }
-    ## select prps group name ####
+    ## Selecting prps group name ####
     if (is.null(prps.group)) {
         prps.group <- paste0('prps|supervised|', main.uv.variable)
     }
@@ -568,10 +568,10 @@ createPrPsForContinuousUV <- function(
             se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']] <- list()
         }
         ## check
-        if (!output.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']])) {
-            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']][[output.name]] <- list()
+        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']])) {
+            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']][[prps.sets.name]] <- list()
         }
-        se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']][[output.name]] <- prps.sets
+        se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']][[prps.sets.name]] <- prps.sets
 
         ## plot
         if(isTRUE(plot.prps.map)){
@@ -579,10 +579,10 @@ createPrPsForContinuousUV <- function(
             if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]])) {
                 se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']] <- list()
             }
-            if (!output.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']])) {
-                se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']][[output.name]] <- list()
+            if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']])) {
+                se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']][[prps.sets.name]] <- list()
             }
-            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']][[output.name]] <- prps.map.plot
+            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']][[prps.sets.name]] <- prps.map.plot
         }
         printColoredMessage(
             message = paste0('The PRPS data and PRPS map plots are saved to the metadata of the SummarizedExperiment object.'),

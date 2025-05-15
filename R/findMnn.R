@@ -1,69 +1,73 @@
-#' Find mutual nearest neighbors in RNA-seq data.
+#' Finds mutual nearest neighbors in RNA-seq data.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function finds mutual nearest neighbors (MNN) between all pairs of specified batches in RNA-seq data. The mutual nearest
-#' neighbors will be used to find and create pseudo samples and eventually pseudo-replicates for RUV-III normalization.
+#' This function finds mutual nearest neighbors (MNN) between all pairs of specified batches in RNA-seq data. The mutual
+#' nearest neighbors will be used to find and create pseudo samples (Ps) and eventually pseudo-replicates (PS )for RUV-III
+#' with PRPS normalization. This function is used in the `createPRPSByKnnMnn()` function.
 
 #' @param se.obj A summarized experiment object.
-#' @param assay.name Character. A character string that indicates the name of the assay(data) in the SummarizedExperiment
+#' @param assay.name Character. A character string that indicates the name of the data(assay) in the SummarizedExperiment
 #' object.
 #' @param uv.variable Character. A character string indicating the name of the column in the SummarizedExperiment object.
-#' The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous variable, this will be
-#' divided into 'nb.clusters' groups using the 'clustering.method' method.
+#' The `uv.variable` can be either categorical or continuous. If `uv.variable` is a continuous variable, this will be
+#' divided into `nb.clusters` groups using the `clustering.method` method.
 #' @param nb.mnn Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
 #' default is set to 1.
 #' @param clustering.method Character. A character string that indicates the choice of clustering method for grouping the
-#' 'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
-#' set to 'kmeans'.
-#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
+#' `uv.variable`, if a continuous variable is provided. Options include `kmeans`, `cut`, and `quantile`. The default is
+#' set to `kmeans`.
+#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the `uv.variable` is a
 #' continuous variable. The default is set to 3.
 #' @param data.input Character. A character string that indicates which data should be used as input for finding the mutual
-#' nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of the data will
-#' be used as input. If 'expr' is selected, the expression data will be used as input. The default is set to 'expr'.
+#' nearest neighbors. Options include: `expr` and `pcs`. If `pcs` is selected, the first `nb.pcs` of PCs of the data will
+#' be computed and used as input. If `expr` is selected, the expression data will be used as input. The default is set
+#' to `expr`.
 #' @param nb.pcs Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
-#' for finding the mutual nearest neighbors. The default is set to 2. The 'nb.pcs' must be set when "data.input = pcs".
-#' @param center Logical. Indicates whether to scale the data or not before calculating PCs. If center is TRUE, then
-#' centering is done by subtracting the column means of the assay from their corresponding columns. The default is TRUE.
-#' @param scale Logical. Indicates whether to scale the data or not before calculating PCs. If scale is TRUE, then scaling
-#' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-#' mean square otherwise. The default is set to 'FALSE'.
+#' for finding the mutual nearest neighbors. The default is set to 2. The `nb.pcs` must be set when `data.input = pcs`.
+#' @param center Logical. Indicates whether to scale the data or not before calculating PCs. If center is set to `TRUE`,
+#' then centering is done by subtracting the column means of the assay from their corresponding columns. The default is
+#' se to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to `TRUE`,
+#' then scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is `TRUE`,
+#' and the root mean square otherwise. The default is set to `FALSE`.
 #' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed to compute
-#' PCs. The default is set to bsparam(). We refer to the 'runSVD()' function from the BiocSingular R package for further
-#' details.
+#' PCs. The default is set to bsparam(). We refer to the `runSVD()` function from the **BiocSingular** R package for
+#' further details.
 #' @param normalization Character. A character string that indicates which normalization methods should be applied before
-#' finding the MNN. The options are 'CPM', 'TMM', 'VST'. The default is 'CPM'. Refer to the 'applyOtherNormalization'
+#' finding the MNN. The options are `CPM`, `TMM`, `VST`. The default is set to `CPM`. Refer to the `applyOtherNormalization()`
 #' for more details.
 #' @param apply.cosine.norm Logical. Indicates whether to apply cosine normalization on the data or not. The default is
-#'  set to 'FALSE'.
+#'  set to `FALSE`.
 #' @param regress.out.variables Character. A character string or vector of character strings indicating the column name(s)
 #' that contain biological variable(s) in the SummarizedExperiment object. These variables will be regressed out from the
-#' data before finding genes that are highly affected by unwanted variation. The default is set to 'NULL', indicating
+#' data before finding genes that are highly affected by unwanted variation. The default is set to `NULL`, indicating
 #' the regression will not be applied.
 #' @param hvg Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
-#' will be used to prepare the input data for knn analysis. The default is set to 'NULL', this means all genes will be used.
+#' will be used to prepare the input data for knn analysis. The default is set to `NULL`, this means all genes will be used.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.
 #' @param pseudo.count Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
-#' log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.
+#' log transformation to avoid `-Inf` for measurements that are equal to 0. The default is set to 1.
 #' @param mnn.bpparam Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
-#' The default is SerialParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.
+#' The default is set to `SerialParam()`. We refer to the `findMutualNN()` function from the `BiocNeighbors` R package.
 #' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-#' The default is KmknnParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.
+#' The default is set to `KmknnParam()`. We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-#' to 'TRUE'. See the checkSeObj function for more details.
+#' to `TRUE`. See the `checkSeObj()` function for more details.
 #' @param remove.na Character. Specifies whether to remove NA or missing values from the assays(data) or not. The options
-#' are assays' and 'none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be
-#' removed before any down-stream analysis See the 'checkSeObj()' function for more details.
-#' @param plot.output Logical. If 'TRUE', the function plots the distribution of MNN across the batches.
+#' are `assays` and 'none'. The default is set to `assays`, so all the NA or missing values from the assay(s) will be
+#' removed before any down-stream analysis See the `checkSeObj()` function for more details.
+#' @param plot.output Logical. If `TRUE`, the function plots the distribution of MNN across the batches. The default is
+#' set to `TRUE`.
 #' @param output.name Character. A character string specifying the name of the output file (MNN data) to be saved in the
-#' metadata of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on:
-#' 'paste0(uv.variable, '||' , assay.name)'.
+#' metadata of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on:
+#' `paste0(uv.variable, '||' , assay.name)`.
 #' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-#' If set to 'NULL', the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.
+#' If set to `NULL`, the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.
 #' @param save.se.obj Logical. Indicates whether to save the MNN results in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. By default, it is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' or to output the result as a list. The default, it is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom BiocNeighbors findMutualNN KmknnParam
@@ -222,7 +226,7 @@ findMnn <- function(
         message = '- Assessing and grouping the unwanted variable:',
         color = 'magenta',
         verbose = verbose
-    )
+        )
     if (is.numeric(initial.variable)){
         se.obj[[uv.variable]] <- groupContinuousVariable(
             se.obj = se.obj,
@@ -534,7 +538,7 @@ findMnn <- function(
         max = ncol(pairs.batch),
         style = 3
         )
-    ## finding MNN between each pairs of batches ####
+    ## Finding MNN between each pairs of batches ####
     all.mnn <- lapply(
         1:ncol(pairs.batch),
         function(x) {
@@ -549,7 +553,7 @@ findMnn <- function(
                 color = 'blue',
                 verbose = verbose
                 )
-            # applying cosine normalization ####
+            # Applying cosine normalization ####
             if (isTRUE(apply.cosine.norm)){
                 printColoredMessage(
                     message = '-- Applying cosine normalization of the data.',
@@ -568,7 +572,7 @@ findMnn <- function(
                 data1 = all.data.input[[pairs.batch[1, x]]]
                 data2 = all.data.input[[pairs.batch[2, x]]]
             }
-            # applying mnn function ####
+            # Applying mnn function ####
             mnn.samples <- BiocNeighbors::findMutualNN(
                 data1 = data1,
                 data2 = data2,
@@ -577,11 +581,11 @@ findMnn <- function(
                 BPPARAM = mnn.bpparam,
                 nbparam = mnn.nbparam
                 )
-            # checking the results of the mnn function ####
+            # Checking the results of the mnn function ####
             if (is.null(mnn.samples)){
                 stop('- MNN cannot be found.')
             }
-            # putting all the results of the mnn together ####
+            # Putting all the results of the mnn together ####
             mnn.data <- data.frame(
                 group.a = rep(pairs.batch[1, x], length(mnn.samples$first)),
                 group.b = rep(pairs.batch[2, x], length(mnn.samples$second)),
@@ -590,7 +594,7 @@ findMnn <- function(
                 overal.index.1.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[1, x]]])[mnn.samples$first])),
                 overal.index.2.1 = as.numeric(gsub('sample_', '', row.names(all.data.input[[pairs.batch[2, x]]])[mnn.samples$second]))
                 )
-            # applying a sanity check ####
+            # Applying a sanity check ####
             if (!all.equal(mnn.data$overal.index.1, mnn.data$overal.index.1.1)){
                 stop('There something wrong with the MNN.')
             }

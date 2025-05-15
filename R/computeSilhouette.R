@@ -1,4 +1,4 @@
-#' Computes the average silhouette width using PCs. -- Finalized
+#' Computes the average silhouette width using PCs.
 
 #' @author Ramyar Molania
 
@@ -23,15 +23,15 @@
 #' @param variable Character. A character string indicating the column name that contains the categorical variable in the
 #' SummarizedExperiment object. The variable can represent a biological or unwanted variable.
 #' @param dist.measure Character. A character string indicating which distance measure to use for calculating the Silhouette
-#' coefficient. The options are 'euclidean', 'maximum', 'manhattan', 'canberra', 'binary', or 'minkowski'. The default is
-#' set to 'euclidean'. Refer to the 'dist' function from the 'stats' R package for more details.
+#' coefficient. The options are `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or `minkowski`. The default is
+#' set to `euclidean`. Refer to the `dist` function from the **stats** R package for more details.
 #' @param fast.pca Logical. Indicates whether to use the PCs calculated using fast PCA. The default is set to 'TRUE'.
 #' Fast PCA and ordinary PCA do not affect the Silhouette coefficient calculation.
 #' @param nb.pcs Numeric. A numeric value indicating the number of principal components (PCs) to use when calculating the
 #' distances between samples. The default is set to 3.
 #' @param save.se.obj Logical. Indicates whether to save the silhouette coefficient  results in the metadata of the
-#' SummarizedExperiment object or to output the result. The default is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' SummarizedExperiment object or to output the result. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @return Either the SummarizedExperiment object containing the computed Silhouette coefficient stored in the metadata
 #' or a list of Silhouette coefficients for all specified assay(s).

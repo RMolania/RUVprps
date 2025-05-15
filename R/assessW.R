@@ -1,28 +1,38 @@
-#' Assess the W matrix of RUV-III
+#' Assesses the W matrix of RUV-III.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This functions assesses the correlation between the W of RUV-III normalized data with known variables. Tt calculates
-#' the association of the columns of the W matrix with both specified biological and unwanted variables. The correlation
-#' values obtained for the biological variables will be subtracted from 1. Finally, the average of all these correlations
-#' is computed to determine the final correlation values. A higher correlation indicates better performance.
+#' This function assesses the association between the W matrix from RUV-III normalized data and known variables. It calculates
+#' the correlation between the columns of the W matrix and both the specified biological and unwanted variables.
 
-#' @param se.obj A summarized experiment object.
-#' @param variables Symbol. A symbol or symbols representing the label of variable(s), such as cancer subtypes, tumour
-#' purity, librar size ... within the SummarizedExperiment object. This can comprise a vector containing either categorical,
-#' continuous, or a combination of both variables.
-#' @param bio.variables Symbol. A symbol or symbols representing the label of biological variable(s), such as cancer
-#' subtypes, tumour purity, ... within the SummarizedExperiment object. This can comprise a vector containing either
-#' categorical, continuous, or a combination of both variables.
-#' @param uv.variables Symbol. A symbol or symbols representing the label of unwanted variable(s), such as cancer
-#' batch effects, library size, ... within the SummarizedExperiment object. This can comprise a vector containing either
-#' categorical, continuous, or a combination of both variables.
-#' @param compare.w Logical.  Specifies whether to compare different W matrices in their ability to capture unwanted
-#' variation and lack correlation with biological variables. See the function's details for more information.
-#' @param plot.output Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.
-#' @param save.se.obj Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.
-#' @param verbose Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.
+#' @details
+#' The function performs linear regression between each individual continuous variable specified by users and the columns
+#' of the W matrix in a cumulative manner, and then computes R^2 .For categorical variables, the function applies vector
+#' correlation between the variables and the columns of the W matrix. Ideally, the columns of the W matrix should show a
+#' strong correlation with unwanted variation and no or a weak correlation with biological variation. To compare the
+#' performance of different $k$ values, the correlations obtained for biological variables are subtracted from 1, and then
+#' the correlations for biological and unwanted variables are averaged separately. The final score for each set of $k$
+#' values is sum of the half of the average scores. A higher score indicates a better value for $k$. It is important to
+#' note that the assessment of W, should be used in combination with all other normalization assessments to select suitable
+#' RUV-III normalized data.
+
+#' @param se.obj A SummarizedExperiment object.
+#' @param variables Character. A character or character vector of variables within the SummarizedExperiment object. These
+#' can be categorical, continuous, or a combination of both. If oit is specified, a line-dot plots between correlations
+#' and the columns of W , in cumulative way, will be generated. If set to `NULL`, both `bio.variables` and `bio.variables`
+#' must be provided.
+#' @param bio.variables Character. A character or character vector of biological variables within the SummarizedExperiment
+#' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
+#' @param uv.variables Character. A character or character vector of unwanted variables within the SummarizedExperiment
+#' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
+#' @param compare.w Logical. If `TRUE` and both 'bio.variables' and 'uv.variables' are provided, the function generates
+#' performance scores for each W matrix of RUV-III normalized data. The default is set to `FALSE`.
+#' @param plot.output Logical. If `TRUE`, the function will show the output plots while is running. The default is set
+#' to `TRUE`.
+#' @param save.se.obj Logical. If `TRUE`, the plots will be saved to the metadata of the SummarizedExperiment object. The
+#' default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, the function will display progress messages. The default is sey to `TRUE`.
 
 #' @importFrom dplyr bind_rows summarise mutate group_by
 #' @importFrom fastDummies dummy_cols
@@ -40,27 +50,74 @@ assessW <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-
-    # Check inputs ####
-    if(isTRUE(compare.w)){
-        if(is.null(bio.variables)){
-            stop('To compare different k values, the "bio.variables" must be specified.')
+    # Checking the function inputs ####
+    if (!is.null(variables)){
+        if (!is.character(variables)){
+            stop('The "variables" must be a charachter or a vector of charachters.')
         }
-        if(is.null(uv.variables)){
-            stop('To compare different k values, the "uv.variables" must be specified.')
+        if (!is.null(bio.variables) | !is.null(uv.variables)){
+            stop('One of the "variables" or "bio.variables" and "uv.variables" must be specified.')
         }
-    }
-    if(isFALSE(compare.w)){
-        if(is.null(variables)){
-            stop('The "variables" cannot be "NULL".')
+        if (sum(variables %in% colnames(colData(se.obj))) != length(variables)){
+            stop('All or some of the "variables" cannot be found in the SummarizedExperiment object.')
         }
     }
-
-    #  Compare different W values ####
-    if(isTRUE(compare.w)){
+    if (!is.null(bio.variables)){
+        if (!is.null(variables)){
+            stop('One of the "variables" or "bio.variables" and "uv.variables" must be specified.')
+        }
+        if (is.null(uv.variables)){
+            stop('To generate a pefroamnce socre, both "bio.variables" and "uv.variables" must provided.')
+        }
+        if (!is.character(bio.variables)){
+            stop('The "bio.variables" must be a charachter or a vector of charachters.')
+        }
+        if (!is.character(uv.variables)){
+            stop('The "uv.variables" must be a charachter or a vector of charachters.')
+        }
+        if (sum(bio.variables %in% colnames(colData(se.obj))) != length(bio.variables)){
+            stop('All or some of the "bio.variables" cannot be found in the SummarizedExperiment object.')
+        }
+        if (sum(uv.variables %in% colnames(colData(se.obj))) != length(uv.variables)){
+            stop('All or some of the "uv.variables" cannot be found in the SummarizedExperiment object.')
+        }
+    }
+    if (!is.null(uv.variables)){
+        if (!is.null(variables)){
+            stop('One of the "variables" or "bio.variables" and "uv.variables" must be specified.')
+        }
+        if (is.null(bio.variables)){
+            stop('To generate a pefroamnce socre, both "bio.variables" and "uv.variables" must provided.')
+        }
+        if (!is.character(bio.variables)){
+            stop('The "bio.variables" must be a charachter or a vector of charachters.')
+        }
+        if (!is.character(uv.variables)){
+            stop('The "uv.variables" must be a charachter or a vector of charachters.')
+        }
+        if (sum(bio.variables %in% colnames(colData(se.obj))) != length(bio.variables)){
+            stop('All or some of the "bio.variables" cannot be found in the SummarizedExperiment object.')
+        }
+        if (sum(uv.variables %in% colnames(colData(se.obj))) != length(uv.variables)){
+            stop('All or some of the "uv.variables" cannot be found in the SummarizedExperiment object.')
+        }
+    }
+    if (isTRUE(compare.w)){
+        if(is.null(uv.variables) | is.null(bio.variables)){
+            stop('To compare the different W matrix, both the "bio.variables" and "uv.variables" must be provided.')
+        }
+    }
+    # Comparing W  ####
+    if (isTRUE(compare.w)){
         printColoredMessage(
-            message = '-- Compare different W values',
+            message = '-- Comparing the performance of different W values:',
             color = 'magenta',
+            verbose = verbose
+            )
+        ## Retrieving all the W matrix ####
+        printColoredMessage(
+            message = '- Retrieving all the W matrix of each RUV-III normalized data:',
+            color = 'blue',
             verbose = verbose
             )
         data.names <- names(se.obj@metadata$RUVIII$W)
@@ -79,7 +136,12 @@ assessW <- function(
             }))
         names(all.w) <- data.names
 
-        ## variables class
+        # Finding the class of variables ####
+        printColoredMessage(
+            message = '- Finding the class of variables:',
+            color = 'blue',
+            verbose = verbose
+            )
         all.vars <- c(bio.variables, uv.variables)
         class.all.vars <- sapply(
             all.vars,
@@ -88,44 +150,47 @@ assessW <- function(
         cat.vars <- names(class.all.vars[class.all.vars %in% c('factor', 'character')])
         cont.vars <- names(class.all.vars[class.all.vars %in% c('numeric', 'integer')])
 
-        ## linear regression class
-        cont.vars.r.squareds <- lapply(
-            names(all.w),
-               function(x) {
-                   w <- all.w[[x]]
-                   r.squareds <- sapply(
-                       cont.vars,
-                       function(y) {
-                           lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ w))
-                           lm.reg$r.squared
-                       })
-                   names(r.squareds) <- cont.vars
-                   r.squareds
-               })
-        names(cont.vars.r.squareds) <- names(all.w)
-        cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
-
-        ## vector correlation
-        cat.vars.vec.corr <- lapply(
-            names(all.w),
-            function(x) {
-                w <- all.w[[x]]
-                vec.corr <- sapply(
-                    cat.vars,
-                    function(y) {
-                        catvar.dummies <- fastDummies::dummy_cols(se.obj@colData[[y]])
-                        catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                        cca <- cancor(x = w, y = catvar.dummies)
-                        1 - prod(1 - cca$cor ^ 2)
+        # Performing linear regression analysis ####
+        if (length(cat.vars) > 1){
+            cont.vars.r.squareds <- lapply(
+                names(all.w),
+                function(x) {
+                    w <- all.w[[x]]
+                    r.squareds <- sapply(
+                        cont.vars,
+                        function(y) {
+                            lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ w))
+                            lm.reg$r.squared
                         })
-                names(vec.corr) <- cat.vars
-                vec.corr
-            })
-        names(cat.vars.vec.corr) <- names(all.w)
-        cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
+                    names(r.squareds) <- cont.vars
+                    r.squareds
+                })
+            names(cont.vars.r.squareds) <- names(all.w)
+            cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
+        } else cont.vars.r.squareds <- NULL
 
-        ### put all together
-        groups <- corr <- data <- assess <- variable <- NULL
+        # Performing vector correlation analysis ####
+        if (length(cont.vars) > 1){
+            cat.vars.vec.corr <- lapply(
+                names(all.w),
+                function(x) {
+                    w <- all.w[[x]]
+                    vec.corr <- sapply(
+                        cat.vars,
+                        function(y) {
+                            catvar.dummies <- fastDummies::dummy_cols(se.obj@colData[[y]])
+                            catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
+                            cca <- cancor(x = w, y = catvar.dummies)
+                            1 - prod(1 - cca$cor ^ 2)
+                        })
+                    names(vec.corr) <- cat.vars
+                    vec.corr
+                })
+            names(cat.vars.vec.corr) <- names(all.w)
+            cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
+        } else cat.vars.vec.corr <- NULL
+
+        ### Putting all together
         all <- bind_rows(cont.vars.r.squareds, cat.vars.vec.corr) %>%
             round(digits = 3)
         all.a <- mutate(.data = all, var = row.names(all)) %>%
@@ -169,16 +234,22 @@ assessW <- function(
                 axis.text.x = element_text(size = 12, angle = 25, hjust = 1),
                 axis.text.y = element_text(size = 12)
                 )
-        p.w <- ggarrange(p.w.1, p.w.2)
-        if(isTRUE(plot.output)) print(p.w)
+        p.w <- ggarrange(p.w.1, p.w.2 , ncol = 2)
+        if (isTRUE(plot.output)) print(p.w)
     }
-
-    #  Assess W ####
-    if(isFALSE(compare.w)){
+    #  Assessing W ####
+    if (isFALSE(compare.w)){
         printColoredMessage(
-            message = '-- Assess different W values',
+            message = '-- Assessing the performance of different W values:',
             color = 'magenta',
-            verbose = verbose)
+            verbose = verbose
+            )
+        ## Retrieving all the W matrix ####
+        printColoredMessage(
+            message = '- Retrieving all the W matrix of each RUV-III normalized data:',
+            color = 'blue',
+            verbose = verbose
+            )
         data.names <- gsub('\\.', '_', names(se.obj@metadata$RUVIII$W))
         data.names <- mixedorder(data.names)
         all.w <- lapply(
@@ -187,7 +258,7 @@ assessW <- function(
         )
         names(all.w) <- gsub('\\.', '_', names(se.obj@metadata$RUVIII$W))
 
-        ## variables class
+        # Finding the class of variables ####
         class.all.vars <- sapply(
             variables,
             function(x) class(colData(x = se.obj)[[x]])
@@ -195,43 +266,46 @@ assessW <- function(
         cat.vars <- names(class.all.vars[class.all.vars %in% c('factor', 'character')])
         cont.vars <- names(class.all.vars[class.all.vars %in% c('numeric', 'integer')])
 
-        ## linear regression class
-        cont.vars.r.squareds <- lapply(
-            names(all.w),
-            function(x) {
-                w <- all.w[[x]]
-                r.squareds <- sapply(
-                    cont.vars,
-                    function(y) {
-                        lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ w))
-                        lm.reg$r.squared
-                    })
-                names(r.squareds) <- cont.vars
-                r.squareds
-            })
-        names(cont.vars.r.squareds) <- names(all.w)
-        cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
+        # Peforming linear regression ####
+        if (length(cat.vars) > 1){
+            cont.vars.r.squareds <- lapply(
+                names(all.w),
+                function(x) {
+                    w <- all.w[[x]]
+                    r.squareds <- sapply(
+                        cont.vars,
+                        function(y) {
+                            lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ w))
+                            lm.reg$r.squared
+                        })
+                    names(r.squareds) <- cont.vars
+                    r.squareds
+                })
+            names(cont.vars.r.squareds) <- names(all.w)
+            cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
+        } else cont.vars.r.squareds <- NULL
 
-        ## vector correlation
-        cat.vars.vec.corr <- lapply(
-            names(all.w),
-            function(x) {
-                w <- all.w[[x]]
-                vec.corr <- sapply(
-                    cat.vars,
-                    function(y) {
-                        catvar.dummies <- fastDummies::dummy_cols(se.obj@colData[[y]])
-                        catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                        cca <- cancor(x = w, y = catvar.dummies)
-                        1 - prod(1 - cca$cor ^ 2)
-                    })
-                names(vec.corr) <- cat.vars
-                vec.corr
-            })
-        names(cat.vars.vec.corr) <- names(all.w)
-        cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
-
-        ### put all together
+        # Peforming vector correlation ####
+        if (length(cont.vars) > 1){
+            cat.vars.vec.corr <- lapply(
+                names(all.w),
+                function(x) {
+                    w <- all.w[[x]]
+                    vec.corr <- sapply(
+                        cat.vars,
+                        function(y) {
+                            catvar.dummies <- fastDummies::dummy_cols(se.obj@colData[[y]])
+                            catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
+                            cca <- cancor(x = w, y = catvar.dummies)
+                            1 - prod(1 - cca$cor ^ 2)
+                        })
+                    names(vec.corr) <- cat.vars
+                    vec.corr
+                })
+            names(cat.vars.vec.corr) <- names(all.w)
+            cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
+        } else cont.vars <- NULL
+        # Putting all together ####
         all.corrs <- bind_rows(cont.vars.r.squareds, cat.vars.vec.corr) %>%
             round(digits = 3)
         all.corrs <- mutate(variable = row.names(all.corrs))
@@ -255,14 +329,15 @@ assessW <- function(
                 axis.text.x = element_text(size = 12, angle = 25, hjust = 1),
                 axis.text.y = element_text(size = 12)
                 )
-        if(isTRUE(plot.output)) print(p.w)
+        if (isTRUE(plot.output)) print(p.w)
     }
-    # Save the results
+    # Saving the results ####
     printColoredMessage(
-        message = '-- Save the results:',
+        message = '-- Saving the results:',
         color = 'magenta',
-        verbose = verbose)
-    if(isTRUE(save.se.obj)){
+        verbose = verbose
+        )
+    if (isTRUE(save.se.obj)){
         if (length(se.obj@metadata) == 0) {
             se.obj@metadata[['RUVIII']] <- list()
         }
@@ -277,80 +352,8 @@ assessW <- function(
         se.obj@metadata[['RUVIII']][['CompareW']] <- p.w
         return(se.obj)
     }
-    if(isFALSE(save.se.obj)){
+    if (isFALSE(save.se.obj)){
         return(p.w = p.w)
     }
 }
-
-
-m <- matrix(rnorm(n = 3000), 50, 60)
-colnames(m) <- paste0('sample1', 1:60)
-colnames(m)[1:2] <- paste0('sampleD', 'sampleD')
-colnames(m)[10:11] <- paste0('sampleA', 'sampleA')
-colnames(m)[40:41] <- paste0('sampleC', 'sampleC')
-colnames(m)[20:21] <- paste0('sampleS', 'sampleS')
-colnames(m)[18:19] <- paste0('sampleP', 'sampleP')
-colnames(m)[30:31] <- paste0('sampleM', 'sampleM')
-
-M <- replicate.matrix(colnames(m))
-
-
-ff <- function (Y, M, ctl, k = NULL, eta = NULL, include.intercept = TRUE,
-          average = FALSE, fullalpha = NULL, return.info = FALSE, inputcheck = TRUE)
-{
-    if (is.data.frame(Y))
-        Y = data.matrix(Y)
-    m = nrow(Y)
-    n = ncol(Y)
-    M = replicate.matrix(M)
-    ctl = tological(ctl, n)
-    if (inputcheck) {
-        if (m > n)
-            warning("m is greater than n!  This is not a problem itself, but may indicate that you need to transpose your data matrix.  Please ensure that rows correspond to observations (e.g. microarrays) and columns correspond to features (e.g. genes).")
-        if (sum(is.na(Y)) > 0)
-            warning("Y contains missing values.  This is not supported.")
-        if (sum(Y == Inf, na.rm = TRUE) + sum(Y == -Inf, na.rm = TRUE) >
-            0)
-            warning("Y contains infinities.  This is not supported.")
-    }
-    Y = RUV1(Y, eta, ctl, include.intercept = include.intercept)
-    if (ncol(M) >= m)
-        newY = Y
-    else if (is.null(k)) {
-        ycyctinv = solve(Y[, ctl] %*% t(Y[, ctl]))
-        newY = (M %*% solve(t(M) %*% ycyctinv %*% M) %*% (t(M) %*%
-                                                              ycyctinv)) %*% Y
-        fullalpha = NULL
-    }
-    else if (k == 0) {
-        newY = Y
-        fullalpha = NULL
-    }
-    else {
-        if (is.null(fullalpha)) {
-            Y0 = residop(Y, M)
-            fullalpha = t(svd(Y0 %*% t(Y0))$u[, 1:min(m - ncol(M),
-                                                      sum(ctl)), drop = FALSE]) %*% Y
-        }
-        alpha = fullalpha[1:min(k, nrow(fullalpha)), , drop = FALSE]
-        ac = alpha[, ctl, drop = FALSE]
-        W = Y[, ctl] %*% t(ac) %*% solve(ac %*% t(ac))
-        newY = Y - W %*% alpha
-    }
-    if (average)
-        newY = ((1/apply(M, 2, sum)) * t(M)) %*% newY
-    if (!return.info)
-        return(newY)
-    else return(list(newY = newY, M = M, W = W, fullalpha = fullalpha))
-}
-library(ruv)
-
-tological <- function (ctl, n)
-{
-    ctl2 = rep(FALSE, n)
-    ctl2[ctl] = TRUE
-    return(ctl2)
-}
-
-
 

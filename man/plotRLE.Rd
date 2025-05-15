@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotRLE.R
 \name{plotRLE}
 \alias{plotRLE}
-\title{Generates boxplot of the relative log expression (RLE) distributions of RNA-seq data.}
+\title{Generates boxplot of the relative log expression (RLE) data of RNA-seq data.}
 \usage{
 plotRLE(
   se.obj,
@@ -30,10 +30,10 @@ all the assays of the SummarizedExperiment object will be selected.}
 
 \item{variable}{Character. Indicates the name of the column in the sample annotation of the SummarizedExperiment object.
 The interquartile ranges of the RLE boxplots will be colored based on the specified variable. The variable must be a
-categorical variable. The default is set to 'NULL'.}
+categorical variable. The default is set to \code{NULL}.}
 
 \item{variable.colors}{Character. A vector of colors for the interquartile ranges of the RLE boxplots if the 'variable'
-is specified. The default is set to 'NULL'. This means the function will select required colors.}
+is specified. The default is set to \code{NULL}. This means the function will select required colors.}
 
 \item{ylim.rle.plot}{Numeric. A vector of two values to specify the ylim of the RLE plot(s). If 'NULL', the function
 uses the minimum and maximum interquartile ranges of all the RLE data to specify the ylim. The default is 'NULL'. The
@@ -56,12 +56,12 @@ assays is more than 1, the function puts all the RLE boxplots in one grid. The d
 \item{plot.nrow}{Numeric. A numeric value indicating the number of rows in the plot grid. When the number of selected
 assays is more than 1, the function puts all the RLE boxplots in one grid. The default is set to 3.}
 
-\item{plot.output}{Logical. If 'TRUE', the individual RLE plot(s) will be printed while the function is running.}
+\item{plot.output}{Logical. If \code{TRUE}, the individual RLE plot(s) will be printed while the function is running.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the RLE plots in the metadata of the SummarizedExperiment object
-or to output the result as a list. By default, it is set to TRUE.}
+or to output the result as a list. The default, it is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \value{
 A SummarizedExperiment object that contains all the RLE plot(s) in the "metadata" or a list that contains all

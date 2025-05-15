@@ -1,40 +1,40 @@
-#' Plot gene-gene partial correlation.
+#' Plots gene-gene partial correlation results.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function computes all possible gene-gene pairwise ordinary and partial correlation of the assays in the
-#' SummarizedExperiment object.
+#' This function computes all possible gene-gene pairwise ordinary and partial correlation of the data sets in the
+#' SummarizedExperiment object. All genes or a subset of genes can specified.
 
 #' @details
 #' Partial correlation is used to estimate correlation between two variables while controlling for third
 #' variables.
 
-#' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character. A character string or a vector of character strings specifying the names of the assays
-#' in the SummarizedExperiment object for which the computed correlations are to be obtained. The default is set to "all,"
-#' indicating that all assays of the SummarizedExperiment object will be selected.
-#' @param variable Character. A character string indicating the column name in the SummarizedExperiment object that was used
-#' to compute partial correlation.
-#' @param method Character. A character string specifying the correlation method used for the "variable". The options
-#' are 'pearson' or 'spearman'. The default is set to 'spearman'.
-#' @param plot.type Character. A character string specifying how to plot the results of the partial pairwise gene correlation.
-#' The options are: 'scatter plot', 'bar plot', and 'histogram'. The default is set to 'bar plot'.
-#' @param filter.genes Logical. Indicates whether to filter genes before generating the plots. The default is set to 'TRUE'.
-#' @param corr.dif.cutoff Numeric. A numeric value to be used as a cutoff for filtering genes. The default is set to
-#' 0.4.
-#' @param plot.ncol Numeric. Specifies the number of columns in the plot grid. When more than one assay is selected,
-#' the function arranges all the RLE boxplots in one grid.
-#' @param plot.nrow Numeric. Specifies the number of rows in the plot grid. When more than three assays are selected, the function
-#' arranges all the RLE boxplots in one grid.
-#' @param plot.output Logical. Indicates whether to print the histogram of partial correlation coefficients. The default is
-#' set to 'FALSE'.
-#' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object or
-#' output the result as a list. By default, this is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', displays messages for different steps of the function.
-
-#' @return The SummarizedExperiment object containing the correlation plots or a list of correlation plots
-#' for individual assays.
+#' @param se.obj A `SummarizedExperiment` object.
+#' @param assay.names Character. A character string or a vector of character strings specifying the names of the data sets
+#' in the `SummarizedExperiment` object for which the computed correlations are to be obtained. The default is set to
+#' "all", indicating that all data sets in the object will be selected.
+#' @param variable Character. A character string indicating the column name in the `SummarizedExperiment` object
+#' used to compute partial correlation.
+#' @param method Character. A character string specifying the correlation method used for the variable. Options are
+#' `pearson` or `spearman`. The default is set to `spearman`.
+#' @param plot.type Character. A character string specifying the type of plot to generate for the partial pairwise gene
+#' correlation. Options are: "scatter plot", "bar plot", and "histogram". The default is set to "bar plot".
+#' @param filter.genes Logical. Indicates whether to filter genes before generating the plots. The default is set to `TRUE`.
+#' @param corr.dif.cutoff Numeric. A numeric cutoff value used to filter genes. Any gene pair with a difference between the
+#' ordinary and partial correlation less than absolute value of `corr.dif.cutoff` will be excluded. The default threshold
+#' is set to 0.4.
+#' @param plot.ncol Numeric. The number of columns in the plot grid. When more than one assay is selected, the function
+#' arranges the plots in a grid accordingly. The default is set to 2.
+#' @param plot.nrow Numeric. The number of rows in the plot grid. When more than three assays are selected, the function
+#' arranges the plots in a grid accordingly. The default is set to 3.
+#' @param plot.output Logical. If `TRUE`, displays the histogram or boxplot of partial and ordinary correlation coefficients.
+#' The default is set to `FALSE`.
+#' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the `SummarizedExperiment` object.
+#' If `FALSE`, outputs the result as a list. Tghe default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays messages for the different steps of the function.
+#'
+#' @return A `SummarizedExperiment` object containing the correlation plots, or a list of plots for individual assays.
 
 #' @importFrom ggpubr ggarrange annotate_figure text_grob
 #' @importFrom dplyr group_by summarise
@@ -42,7 +42,6 @@
 #' @importFrom ggjoy geom_joy
 #' @import ggplot2
 #' @export
-
 
 plotGenesPartialCorrelation <- function(
         se.obj,
@@ -61,28 +60,40 @@ plotGenesPartialCorrelation <- function(
     printColoredMessage(message = '------------The plotGenesPartialCorrelation function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs ####
-    if (is.null(assay.names)) {
-        stop('The "assay.names" cannot be empty.')
+    # Checking function inputs ####
+    if (is.null(assay.names) | is.logical(variable)) {
+        stop('The "assay.names" cannot be NULL or logical.')
     }
-    if (!is.null(variable)){
-        if (length(variable) > 1){
-            stop('The "variable" must contain only one variable.')
-        }
-        if (!class(colData(se.obj)[[variable]]) %in% c('numeric', 'integer')){
-            stop('The "variable" must be a continous variable.')
-        }
-        if (sum(is.na(se.obj@colData[[variable]])) > 0){
-            stop(paste0(
-                'The "',
-                variable,
-                '" variable contains NA. ',
-                'Run the checkSeObj function with "remove.na = both"',
-                ', then re-run the computeRLE function.'))
+    if (is.logical(variable) | is.null(variable)){
+        stop('The "variable" cannot be NULL or logical.')
+    }
+    if (length(variable) > 1){
+        stop('The "variable" must contain only one variable.')
+    }
+    if (!class(colData(se.obj)[[variable]]) %in% c('numeric', 'integer')){
+        stop('The "variable" must be a continous variable.')
+    }
+    if (!is.logical(filter.genes)){
+        stop('The "filter.genes" must be logical.')
+    }
+    if (isTRUE(filter.genes)){
+        if (corr.dif.cutoff < 0 | corr.dif.cutoff > 1){
+            stop('The "filter.genes" value must be postive value between 0 and 1.')
         }
     }
-
-    # Check the assays ####
+    if (plot.ncol < 1 | plot.nrow < 1){
+        stop('The "plot.ncol" and "plot.nrow"  must be postive value.')
+    }
+    if (!is.logical(plot.output)){
+        stop('The "plot.output" must be logical.')
+    }
+    if (!is.logical(save.se.obj)){
+        stop('The "save.se.obj" must be logical.')
+    }
+    if (!is.logical(verbose)){
+        stop('The "verbose" must be logical.')
+    }
+    # Checking the assays ####
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
@@ -90,12 +101,12 @@ plotGenesPartialCorrelation <- function(
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
-    # Obtain the correlations data ####
+    # Obtaining the correlations data ####
     printColoredMessage(
-        message = paste0('-- Obtaining the computed correlation data from the SummarizedExperiment object:'),
+        message = '-- Obtaining the computed correlation data from the SummarizedExperiment object:',
         color = 'magenta',
         verbose = verbose
-    )
+        )
     all.corr.data <- getMetricFromSeObj(
         se.obj = se.obj,
         slot = 'Metrics',
@@ -117,7 +128,7 @@ plotGenesPartialCorrelation <- function(
             function(x) {
                 corr.dif <- all.corr.data[[x]]$p.cor - all.corr.data[[x]]$pp.cor
                 select.genes <- abs(corr.dif) > corr.dif.cutoff
-                if(sum(select.genes) == 0){
+                if (sum(select.genes) == 0){
                     printColoredMessage(
                         message = paste0(
                             '- All gene-gene correlations are filtered for the "',
@@ -148,11 +159,11 @@ plotGenesPartialCorrelation <- function(
         assay.names <- droplevels(assay.names[assay.names %in% names(all.corr.data)])
     }
 
-    # Generate different plots of partial and ordinary correlations ####
-    ## generate histograms for each assay  ####
+    # Generating different plots of partial and ordinary correlations ####
+    ## generating histograms for each data ####
     if (plot.type == 'histogram'){
         printColoredMessage(
-            message = '-- Generate the histograms of the correlations :',
+            message = '-- Generating the histograms of the correlations :',
             color = 'magenta',
             verbose = verbose
         )
@@ -170,8 +181,10 @@ plotGenesPartialCorrelation <- function(
                     xlab('Correlation coefficients') +
                     ylab('') +
                     labs(caption = paste0(
-                        'Analysis: ', 'histograms of the partial and ordinary pair wise gene correlations\n',
-                        "Variable: ", variable)) +
+                        'Analysis: ',
+                        'histograms of the partial and ordinary pair wise gene correlations\n',
+                        "Variable: ",
+                        variable)) +
                     theme_minimal() +
                     theme(
                         panel.grid.major.y = element_line(color = "black", linewidth = 0.5),
@@ -183,11 +196,11 @@ plotGenesPartialCorrelation <- function(
                         axis.text.x = element_text(size = 14),
                         axis.text.y = element_text(size = 14, angle = 65),
                     )
-                if(isTRUE(plot.output) & length(levels(assay.names)) == 1) print(p.joy)
+                if (isTRUE(plot.output) & length(levels(assay.names)) == 1) print(p.joy)
                 return(p.joy)
             })
         names(all.corr.hist) <- levels(assay.names)
-        ### overall histograms of all assays ####
+        ### overall histograms of all data sets ####
         if (length(levels(assay.names)) > 1){
             for(i in levels(assay.names) ){
                 all.corr.hist[[i]]$labels$caption <- NULL
@@ -248,11 +261,11 @@ plotGenesPartialCorrelation <- function(
                 color = 'blue',
                 verbose = verbose
             )
-            if(isTRUE(plot.output)) print(overall.hist.plots)
+            if (isTRUE(plot.output)) print(overall.hist.plots)
         }
     }
 
-    ## generate scatter plots for each assay  ####
+    ## generating scatter plots for all data sets  ####
     if (plot.type == 'scatter.plot'){
         printColoredMessage(
             message = '-- Generating scatter plots of the correlations :',
@@ -288,12 +301,12 @@ plotGenesPartialCorrelation <- function(
                         axis.title.y = element_text(size = 12),
                         axis.text.x = element_text(size = 12),
                         axis.text.y = element_text(size = 12))
-                if(isTRUE(plot.output) & length(levels(assay.names)) == 1) print(p.hex)
+                if (isTRUE(plot.output) & length(levels(assay.names)) == 1) print(p.hex)
                 return(p.hex)
             })
         names(all.corr.scatter) <- levels(assay.names)
 
-        ### overall scatter plots of all assays ####
+        ### overall scatter plots of all data sets ####
         if (length(levels(assay.names)) > 1){
             for (i in levels(assay.names) ){
                 all.corr.scatter[[i]]$labels$caption <- NULL
@@ -355,10 +368,10 @@ plotGenesPartialCorrelation <- function(
                 color = 'blue',
                 verbose = verbose
             )
-            if(isTRUE(plot.output)) print(overall.scatter.plots)
+            if (isTRUE(plot.output)) print(overall.scatter.plots)
         }
     }
-    ## generate barplot for each assay ####
+    ## generating barplot for each data set ####
     if (plot.type == 'barplot'){
         printColoredMessage(
             message = '-- Generating the barplot of the correlations :',
@@ -388,12 +401,12 @@ plotGenesPartialCorrelation <- function(
                         plot.title = element_text(size = 16),
                         axis.text.x = element_text(size = 0),
                         axis.text.y = element_text(size = 12))
-                if(isTRUE(plot.output) & length(levels(assay.names)) == 1) print(p.barplot)
+                if (isTRUE(plot.output) & length(levels(assay.names)) == 1) print(p.barplot)
                 return(p.barplot)
             })
         names(all.corr.barplots) <- levels(assay.names)
 
-        ### generate barplot for all assays ####
+        ### generate barplot for all data sets ####
         datasets <- corr.dif.group <- dd <- NULL
         if (length(assay.names) > 1) {
             printColoredMessage(
@@ -460,8 +473,8 @@ plotGenesPartialCorrelation <- function(
         }
     }
 
-    # Save the plots ####
-    ## add results to the SummarizedExperiment object ####
+    # Saving the plots ####
+    ## adding results to the SummarizedExperiment object ####
     printColoredMessage(
         message = '-- Saving all the plots :',
         color = 'magenta',
@@ -513,7 +526,7 @@ plotGenesPartialCorrelation <- function(
             )
         }
         printColoredMessage(
-            message = paste0('- The plots of individual assay is saved to the metadata@metric in SummarizedExperiment object.'),
+            message = '- The plots of individual assay is saved to the metadata@metric in SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
         )
@@ -563,26 +576,28 @@ plotGenesPartialCorrelation <- function(
                 verbose = verbose
             )
         }
-        printColoredMessage(message = '------------The plotGenesPartialCorrelation function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The plotGenesPartialCorrelation function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj = se.obj)
     }
 
-    ## output the plots as alist ####
+    ## outputting the plots as alist ####
     if (isFALSE(save.se.obj)){
         printColoredMessage(
             message = paste0('- The plots of individual assay is outputed as list.'),
             color = 'blue',
             verbose = verbose
-        )
+            )
         printColoredMessage(
             message = '------------The plotGenesPartialCorrelation function finished.',
             color = 'white',
             verbose = verbose
             )
         if (plot.type == 'barplot'){
-            if(length(levels(assay.names)) > 1){
+            if (length(levels(assay.names)) > 1){
                 return(list(
                     all.corr.barplots = all.corr.barplots,
                     overall.barplots = overall.barplots)
@@ -590,7 +605,7 @@ plotGenesPartialCorrelation <- function(
             } else return(all.corr.barplots = all.corr.barplots)
         }
         if (plot.type == 'histogram'){
-            if(length(levels(assay.names)) > 1){
+            if (length(levels(assay.names)) > 1){
                 return(list(
                     all.corr.hist = all.corr.hist,
                     overall.hist.plots = overall.hist.plots)
@@ -598,7 +613,7 @@ plotGenesPartialCorrelation <- function(
             } else return(all.corr.hist = all.corr.hist)
         }
         if (plot.type == 'scatter.plot'){
-            if(length(levels(assay.names)) > 1){
+            if (length(levels(assay.names)) > 1){
                 return(list(
                     all.corr.scatter = all.corr.scatter,
                     overall.scatter.plots = overall.scatter.plots)

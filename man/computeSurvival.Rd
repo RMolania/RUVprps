@@ -2,7 +2,7 @@
 % Please edit documentation in R/compuetSurvival.R
 \name{computeSurvival}
 \alias{computeSurvival}
-\title{Computes variable and gene-level Kaplan-Meier survival analysis. Finalized}
+\title{Computes variable and gene-level survival analysis.}
 \usage{
 computeSurvival(
   se.obj,
@@ -25,14 +25,14 @@ computeSurvival(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character. A character or a vector of characters specifying the name(s) of the assay(s) in the
-SummarizedExperiment object for gene-level survival analysis. The default is set to "all", which indicates that all
+SummarizedExperiment object for gene-level survival analysis. The default is set to \code{all}, which indicates that all
 assays in the SummarizedExperiment object will be selected.}
 
 \item{genes}{Character. A character or a vector of gene names/IDs specifying the genes to be used for gene-level survival
-analysis. The default is set to 'all'.}
+analysis. The default is set to \code{all}.}
 
 \item{variable}{Character. A character specifying the column name of the SummarizedExperiment object that contains
-a categorical variable (e.g., tumor subtypes) for variable-level survival analysis. The default is set to 'NULL'.}
+a categorical variable (e.g., tumor subtypes) for variable-level survival analysis. The default is set to \code{NULL}.}
 
 \item{survival.time}{Character. A character specifying the column name of the SummarizedExperiment object that contains
 survival time.}
@@ -41,26 +41,26 @@ survival time.}
 the survival event (0 and 1).}
 
 \item{expr.stratify}{Numeric. A numeric value indicating how the gene expression of each gene should be stratified
-for gene-level survival analysis. Stratification is based on the quantiles of gene expression. The default is 2,
+for gene-level survival analysis. Stratification is based on the quantiles of gene expression. The default is set to 2,
 meaning the expression level of each specified gene will be divided into two groups based on the 50\% quantile (median).}
 
-\item{return.p.value}{Logical. Indicates whether to calculate p-values in the survival analysis. The default is 'TRUE'.}
+\item{return.p.value}{Logical. Indicates whether to calculate p-values in the survival analysis. The default is \code{TRUE}.}
 
-\item{return.survival.plot}{Logical. Indicates whether to generate survival plots. The default is set to 'FALSE'.}
+\item{return.survival.plot}{Logical. Indicates whether to generate survival plots. The default is set to \code{FALSE}.}
 
-\item{plot.output}{Logical. Indicates whether to plot variable-level survival analysis. The default is 'TRUE'.}
+\item{plot.output}{Logical. Indicates whether to plot variable-level survival analysis. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj'
-function will be applied. The default is 'TRUE'.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the \code{checkSeObj}
+function will be applied. The default is set to \code{TRUE}.}
 
-\item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are 'assays'
-, 'sample annotation' or 'none'. The default is set to 'assays', which removes all NA or missing values from the assays
-before performing the gene level analysis. See the 'checkSeObj' function for more details.}
+\item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are \code{assays}
+,\verb{sample annotation} or \code{none}. The default is set to \code{assays}, which removes all NA or missing values from the data
+(assay) before performing the gene level analysis. See the \code{checkSeObj} function for more details.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results of the survival analysis in the metadata of the
-SummarizedExperiment object or output the results as a list. The default is 'TRUE'.}
+SummarizedExperiment object or output the results as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', displays messages for each step of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages for each step of the function.}
 }
 \description{
 This function computes gene-level and variable-level survival analysis.

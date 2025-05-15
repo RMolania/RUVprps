@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotGenesPartialCorrelation.R
 \name{plotGenesPartialCorrelation}
 \alias{plotGenesPartialCorrelation}
-\title{Plot gene-gene partial correlation.}
+\title{Plots gene-gene partial correlation results.}
 \usage{
 plotGenesPartialCorrelation(
   se.obj,
@@ -20,47 +20,47 @@ plotGenesPartialCorrelation(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.names}{Character. A character string or a vector of character strings specifying the names of the assays
-in the SummarizedExperiment object for which the computed correlations are to be obtained. The default is set to "all,"
-indicating that all assays of the SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character string or a vector of character strings specifying the names of the data sets
+in the \code{SummarizedExperiment} object for which the computed correlations are to be obtained. The default is set to
+"all", indicating that all data sets in the object will be selected.}
 
-\item{variable}{Character. A character string indicating the column name in the SummarizedExperiment object that was used
-to compute partial correlation.}
+\item{variable}{Character. A character string indicating the column name in the \code{SummarizedExperiment} object
+used to compute partial correlation.}
 
-\item{method}{Character. A character string specifying the correlation method used for the "variable". The options
-are 'pearson' or 'spearman'. The default is set to 'spearman'.}
+\item{method}{Character. A character string specifying the correlation method used for the variable. Options are
+\code{pearson} or \code{spearman}. The default is set to \code{spearman}.}
 
-\item{plot.type}{Character. A character string specifying how to plot the results of the partial pairwise gene correlation.
-The options are: 'scatter plot', 'bar plot', and 'histogram'. The default is set to 'bar plot'.}
+\item{plot.type}{Character. A character string specifying the type of plot to generate for the partial pairwise gene
+correlation. Options are: "scatter plot", "bar plot", and "histogram". The default is set to "bar plot".}
 
-\item{filter.genes}{Logical. Indicates whether to filter genes before generating the plots. The default is set to 'TRUE'.}
+\item{filter.genes}{Logical. Indicates whether to filter genes before generating the plots. The default is set to \code{TRUE}.}
 
-\item{corr.dif.cutoff}{Numeric. A numeric value to be used as a cutoff for filtering genes. The default is set to
-0.4.}
+\item{corr.dif.cutoff}{Numeric. A numeric cutoff value used to filter genes. Any gene pair with a difference between the
+ordinary and partial correlation less than absolute value of \code{corr.dif.cutoff} will be excluded. The default threshold
+is set to 0.4.}
 
-\item{plot.ncol}{Numeric. Specifies the number of columns in the plot grid. When more than one assay is selected,
-the function arranges all the RLE boxplots in one grid.}
+\item{plot.ncol}{Numeric. The number of columns in the plot grid. When more than one assay is selected, the function
+arranges the plots in a grid accordingly. The default is set to 2.}
 
-\item{plot.nrow}{Numeric. Specifies the number of rows in the plot grid. When more than three assays are selected, the function
-arranges all the RLE boxplots in one grid.}
+\item{plot.nrow}{Numeric. The number of rows in the plot grid. When more than three assays are selected, the function
+arranges the plots in a grid accordingly. The default is set to 3.}
 
-\item{plot.output}{Logical. Indicates whether to print the histogram of partial correlation coefficients. The default is
-set to 'FALSE'.}
+\item{plot.output}{Logical. If \code{TRUE}, displays the histogram or boxplot of partial and ordinary correlation coefficients.
+The default is set to \code{FALSE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object or
-output the result as a list. By default, this is set to 'TRUE'.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the \code{SummarizedExperiment} object.
+If \code{FALSE}, outputs the result as a list. Tghe default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', displays messages for different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages for the different steps of the function.}
 }
 \value{
-The SummarizedExperiment object containing the correlation plots or a list of correlation plots
-for individual assays.
+A \code{SummarizedExperiment} object containing the correlation plots, or a list of plots for individual assays.
 }
 \description{
-This function computes all possible gene-gene pairwise ordinary and partial correlation of the assays in the
-SummarizedExperiment object.
+This function computes all possible gene-gene pairwise ordinary and partial correlation of the data sets in the
+SummarizedExperiment object. All genes or a subset of genes can specified.
 }
 \details{
 Partial correlation is used to estimate correlation between two variables while controlling for third

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotPCVariableRegression.R
 \name{plotPCVariableRegression}
 \alias{plotPCVariableRegression}
-\title{Generates line-dot plot of the PC variable regression analysis.}
+\title{Generates line-dot plot of the PCs-variable regression analysis.}
 \usage{
 plotPCVariableRegression(
   se.obj,
@@ -23,21 +23,21 @@ in the SummarizedExperiment object to generate a vector correlation. The default
 assays in the SummarizedExperiment object will be selected.}
 
 \item{variable}{Character. A character string indicating the name of the column in the sample annotation
-(i.e., \code{colData}) of the SummarizedExperiment object. The variable must be a continuous variable,
-such as library size, tumor purity, etc.}
+(i.e., \code{colData}) of the SummarizedExperiment object. The variable must be a continuous variable, such as library size,
+tumor purity, etc.}
 
 \item{fast.pca}{Logical. Indicates whether to use PCA calculated using a specific number of principal components
-to speed up the process. By default, this is set to TRUE.}
+to speed up the process. The default this is set to \code{TRUE}.}
 
-\item{nb.pcs}{Numeric. A numeric value specifying the number of leading principal components to use
-when plotting the R-squared values. The default is 10.}
+\item{nb.pcs}{Numeric. A numeric value specifying the number of leading principal components to use when plotting the
+R-squared values. The default is set to 10.}
 
-\item{plot.output}{Logical. If TRUE, the correlation statistics will be plotted. Default is TRUE.}
+\item{plot.output}{Logical. If \code{TRUE}, the correlation statistics will be plotted. Default is TRUE.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-or to return the results directly. By default, this is set to TRUE.}
+or to return the results directly. By default, this is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If TRUE, process messages will be displayed.}
+\item{verbose}{Logical. If \code{TRUE}, process messages will be displayed.}
 }
 \value{
 A SummarizedExperiment object containing the line-dot plots for the continuous variable and if requested

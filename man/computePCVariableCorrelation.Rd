@@ -21,20 +21,20 @@ computePCVariableCorrelation(
 in the SummarizedExperiment object for calculating the vector correlation. The default is set to "all", which indicates
 that all assays of the SummarizedExperiment object will be selected.}
 
-\item{variable}{Character. A character string indicating the name of the column in the sample annotation of the SummarizedExperiment
-object. The variable must be categorical variable such as batches or sample subtypes.}
+\item{variable}{Character. A character string indicating the name of the column in the sample annotation of the
+SummarizedExperiment object. The variable must be categorical variable such as batches or sample subtypes.}
 
-\item{fast.pca}{Logical. Indicates whether to use the fast PCA or PCA results computed by the 'computePCA' function.
-The default is set to 'TRUE'. If 'FALSE', the 'fast.pca' argument in the 'computePCA' function should be set to 'FALSE'.}
+\item{fast.pca}{Logical. Indicates whether to use the fast PCA or PCA results computed by the \code{computePCA()} function.
+The default is set to \code{TRUE}. If \code{FALSE}, the \code{fast.pca} argument in the \code{computePCA} function should be set to \code{FALSE}.}
 
 \item{nb.pcs}{Numeric. A numeric value indicating the number of the first principal components (PCs) to use for
 calculating the vector correlation. The default is set to 10. This number cannot exceed the number of PCs calculated
-by the 'computePCA' function.}
+by the \code{computePCA()} function.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results, correlation coefficients, in the metadata of the
-SummarizedExperiment object or to output the result as a list. By default, it is set to 'TRUE'.}
+SummarizedExperiment object or to output the result as a list. By default, it is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', displays the messages for the different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays the messages for the different steps of the function.}
 }
 \value{
 A SummarizedExperiment object or a list containing the vector correlation plots of individual assay(s) for

@@ -1,4 +1,4 @@
-#' Create all possible homogeneous groups with respect to unwanted variables.--Finalized
+#' Creates all possible homogeneous groups with respect to unwanted variables.
 
 #' @author Ramyar Molania
 
@@ -16,21 +16,21 @@
 #' variables in the sample annotation of the 'SummarizedExperiment  object. These 'uv.variables' can be either categorical
 #' or continuous variables.
 #' @param clustering.method Character. A character string specifying the clustering method to be applied for grouping each
-#' continuous biological variable. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans' clustering.
+#' continuous biological variable. Options include `kmeans`, `cut`, and `quantile`. The default is set to `kmeans` clustering.
 #' @param nb.clusters Numeric. A value indicating the number of groups for continuous sources of unwanted variation.
-#' The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
+#' The default is set to 3. This implies that each continuous variable will be split into 3 groups using the specified
 #' 'clustering.method'.
-#' @param assess.se.obj Logical. Whether to assess the 'SummarizedExperiment' object or not. If 'TRUE', the function
-#' 'checkSeObj' will be applied. The default is set to ' TRUE' .
+#' @param assess.se.obj Logical. Whether to assess the SummarizedExperiment object or not. If `TRUE`, the function
+#' `checkSeObj()` will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove missing values from the specified variables. The options are
-#' 'sample.annotation' or 'none'. The default is set to 'sample.annotation', meaning that missing values in the variables
+#' `sample.annotation` or `none`. The default is set to `sample.annotation`, meaning that missing values in the variables
 #' will be removed.
-#' @param save.se.obj Logical. Indicates whether to save the results to the metadata of the ' SummarizedExperiment'  object
-#' or not. If ' TRUE' , all the possible homogeneous groups will be saved into 'se.obj->metadata->HomogeneousGroups->
-#' BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to ' TRUE' .
-#' @param verbose Logical. If ' TRUE' , displays messages for different steps of the function.
+#' @param save.se.obj Logical. Indicates whether to save the results to the metadata of the SummarizedExperiment object
+#' or not. If `TRUE` , all the possible homogeneous groups will be saved into 'se.obj->metadata->HomogeneousGroups->
+#' BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE` , displays messages for different steps of the function.
 
-#' @return Either a ' SummarizedExperiment' object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
+#' @return Either a  SummarizedExperiment object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
 #' ->UnwantedVariables' or a vector of all possible homogeneous sample groups.
 
 #' @importFrom SummarizedExperiment assay colData

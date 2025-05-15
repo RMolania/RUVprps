@@ -6,8 +6,8 @@
 #' This function creates different PRPS sets when all sources of unwanted and biological variation are known.
 
 #' @details
-#' We will create distinct group of pseudo-replicates for each source of unwanted variation defined in the 'uv.variables'
-#' argument. For example to correct for batch effect if defined in the 'uv.variables' argument, several group of
+#' We will create distinct group of pseudo-replicates for each source of unwanted variation defined in the `uv.variables`
+#' argument. For example to correct for batch effect if defined in the `uv.variables` argument, several group of
 #' pseudo-samples will be created by averaging the samples of the same biological groups defined in 'bio.variables' in
 #' each batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set. For example
 #' to correct for library size if defined in the 'uv.variables' argument, several group of pseudo-samples will be created
@@ -34,39 +34,39 @@
 #' such as batch effects, library size, etc., within the SummarizedExperiment object. This can comprise a vector containing
 #' either categorical, continuous, or a combination of both variables.
 #' @param apply.other.uv.variables Logical. Determines whether to include other specified unwanted variables when generating
-#' PRPS sets for individual ones. The default is set to 'TRUE'.
+#' PRPS sets for individual ones. The default is set to `TRUE`.
 #' @param min.sample.for.ps Numeric. Indicates the minimum number of biologically homogeneous samples to be averaged
 #' to create one pseudo-sample. The default is set to 3.
 #' @param bio.clustering.method Character. A character string indicating the clustering method used to group each
-#' continuous biological variable. The options include 'kmeans', 'cut', and 'quantile'. The default is 'kmeans'. We refer
-#' to the createHomogeneousBioGroups() function for more details.
+#' continuous biological variable. The options include `kmeans`, `cut`, and `quantile`. The default is set to 'kmeans'.
+#' We refer to the `createHomogeneousBioGroups()` function for more details.
 #' @param nb.bio.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
 #' variable. The default is set to 3.
 #' @param other.uv.clustering.method Character. A character string indicating the clustering method used to group each
-#' continuous unwanted variable. The options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
-#' We refer to the createHomogeneousUVGroups() function for more details.
+#' continuous unwanted variable. The options include `kmeans`, `cut`, and `quantile`. The default is set to `kmeans`.
+#' We refer to the `createHomogeneousUVGroups()` function for more details.
 #' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
 #' unwanted variable. The default is set to 3.
 #' @param check.prps.connectedness Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
-#' The default is set to 'TRUE'. See the details for more information.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.
+#' The default is set to `TRUE`. See the details for more information.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
-#' function will be applied inside the function. The default is set to 'TRUE'.
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
+#' function will be applied inside the function. The default is set to `TRUE`.
 #' @param remove.na Character. A character string indicating whether to remove NA or missing values from either the 'assays',
-#' the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will
-#' be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables'
-#' and uv.variables' will be excluded. The default is set to 'both'.
-#' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. The default is set to 'TRUE'.
+#' the `sample.annotation`, `both`, or `none`. If `assays` is selected, the genes that contain NA or missing values will
+#' be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any `bio.variables`
+#' and `uv.variables` will be excluded. The default is set to `both`.
 #' @param plot.output Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-#' The default is 'TRUE'.
-#' @param output.name Character. A character string to specify the name of all PRPS sets that will be created for all
-#' specified source(s) of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a
-#' name based on paste0('prps_', uv.variable).
+#' The default is se to `TRUE`.
 #' @param prps.group Character. A character string specifying a name for the PRPS data sets created for a specific group.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' @param prps.sets.name Character. A character string to specify the name of all PRPS sets that will be created for all
+#' specified source(s) of unwanted variation. The default is set to `NULL`. If not specified, the function creates a
+#' name based on `paste0('prps_', uv.variable)`.
+#' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
+#' or to output the result as a list. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @return Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a
 #' list that contains all the results.
@@ -92,10 +92,10 @@ createPrPsSupervised <- function(
         pseudo.count = 1,
         assess.se.obj = TRUE,
         remove.na = 'both',
-        save.se.obj = TRUE,
         plot.output = TRUE,
-        output.name = NULL,
         prps.group = NULL,
+        prps.sets.name = NULL,
+        save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(
@@ -142,7 +142,7 @@ createPrPsSupervised <- function(
                         assess.se.obj = FALSE,
                         save.se.obj = save.se.obj,
                         remove.na = remove.na,
-                        output.name = output.name,
+                        prps.sets.name = prps.sets.name,
                         prps.group = prps.group,
                         verbose = verbose
                     )
@@ -171,7 +171,7 @@ createPrPsSupervised <- function(
                     assess.se.obj = FALSE,
                     save.se.obj = save.se.obj,
                     remove.na = remove.na,
-                    output.name = output.name,
+                    prps.sets.name = prps.sets.name,
                     prps.group = prps.group,
                     verbose = verbose
                 )
@@ -208,7 +208,7 @@ createPrPsSupervised <- function(
                         save.se.obj = save.se.obj,
                         pseudo.count = pseudo.count,
                         remove.na = remove.na,
-                        output.name = output.name,
+                        prps.sets.name = prps.sets.name,
                         prps.group = prps.group,
                         verbose = verbose
                     )
@@ -236,7 +236,7 @@ createPrPsSupervised <- function(
                     save.se.obj = save.se.obj,
                     pseudo.count = pseudo.count,
                     remove.na = remove.na,
-                    output.name = output.name,
+                    prps.sets.name = prps.sets.name,
                     prps.group = prps.group,
                     verbose = verbose
                 )

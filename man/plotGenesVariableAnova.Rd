@@ -17,37 +17,39 @@ plotGenesVariableAnova(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.names}{Character or vector. A character string or a vector of strings for selecting the name(s) of the
-assay(s) in the SummarizedExperiment object. By default, all assays in the SummarizedExperiment object will be selected,
-If the specifed ANOVA has already been computed for them using 'computeGenesVariableANOVA' function.
-The ANOVA results for each specified assay will be plotted.}
+\item{assay.names}{Character or vector. A character string or a vector of strings specifying the name(s) of the
+assay(s) in the \code{SummarizedExperiment} object to include. By default, all assays will be selected—provided that
+ANOVA results have already been computed for them using the \code{computeGenesVariableANOVA()} function.
+The function will generate plots for the ANOVA results corresponding to each selected assay.}
 
-\item{variable}{Character. Indicates the column name in the SummarizedExperiment object that contains a categorical
-variable such as sample types or batches. The association between individual gene expression and the specified levels
-must have already been computed by the 'computeGenesVariableANOVA' function.}
+\item{variable}{Character. A string indicating the column name in the \code{SummarizedExperiment} object that contains
+a categorical variable (e.g., sample types or batch labels). The gene-level ANOVA with this variable must
+have been previously computed using the \code{computeGenesVariableANOVA()} function.}
 
-\item{anova.method}{Logical. Specifies which ANOVA method results should be used for plotting.}
+\item{anova.method}{Logical. Indicates which ANOVA method results should be used for plotting. The options are \code{aov} or
+\code{welch}. The default is set to \code{aov}.}
 
-\item{plot.ncol}{Numeric. A numeric value specifying the number of columns in the plot grid. The default is set to 4.}
+\item{plot.ncol}{Numeric. The number of columns in the plot grid. When more than one assay is selected, the function
+arranges the plots in a grid accordingly. The default is set to 4.}
 
-\item{plot.nrow}{Numeric. A numeric value specifying the number of rows in the plot grid. The default is set to 1.}
+\item{plot.nrow}{Numeric. The number of rows in the plot grid. When more than three assays are selected, the function
+arranges the plots in a grid accordingly. The default is set to 1.}
 
-\item{plot.output}{Logical. Indicates whether to display the boxplot(s) of the ANOVA results. By default, this
-is set to FALSE.}
+\item{plot.output}{Logical. If \code{TRUE}, displays the boxplot(s) of the ANOVA results. The default is set to \code{FALSE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment object
-or to output the result as a list. By default, this is set to TRUE.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the plots in the metadata of the \code{SummarizedExperiment} object. If \code{FALSE},
+returns the plots as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If TRUE, displays process messages during execution.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages during execution.}
 }
 \value{
-Either a SummarizedExperiment object or a list containing the plots of ANOVA results for the specified
-categorical variable for each assay.
+Either a \code{SummarizedExperiment} object containing the plots in its metadata, or a list of boxplots showing
+ANOVA results for the specified categorical variable across the selected assays.
 }
 \description{
-This functions plots the results of the ANOVA analysis computed by the 'computeGenesVariableANOVA' function.
+This functions plots the results of the ANOVA analysis computed by the \code{computeGenesVariableANOVA()} function.
 }
 \author{
 Ramyar Molania

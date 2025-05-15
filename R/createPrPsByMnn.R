@@ -4,8 +4,8 @@
 
 #' @description
 #' This function uses the k and mutual nearest neighbors approaches to create PRPS in the RNA-seq data. This function
-#' can be used in situation that the biological variation are entirely unknown. The function applies the 'findKnn' function
-#' to find similar samples per batch and then average them to create pseudo-samples. Then, function uses the 'findMnn' to
+#' can be used in situation that the biological variation are entirely unknown. The function applies the `findKnn` function
+#' to find similar samples per batch and then average them to create pseudo-samples. Then, function uses the `findMnn` to
 #' match up pseudo samples across batches to create pseudo-replicates.
 
 #' @param se.obj A SummarizedExperiment object.
@@ -13,77 +13,78 @@
 #' object. This data will be used to create PRPS data for RUV-III normalization. This data must be the one that will be
 #' used for the RUV-III normalization.
 #' @param main.uv.variable Character. Indicates the name of a column in the sample annotation of the SummarizedExperiment
-#' object. The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous variable, this will
-#' be divided into 'nb.clusters' groups using the 'clustering.method'.
+#' object. The `uv.variable` can be either categorical or continuous. If `uv.variable` is a continuous variable, this will
+#' be divided into `nb.clusters` groups using the `clustering.method`.
 #' @param clustering.method Character. A character string indicating the choice of clustering method for grouping the
-#''uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set
-#' to 'kmeans'.
-#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
+#' `uv.variable` if a continuous variable is provided. Options include `kmeans`, `cut`, and `quantile`. The default is set
+#' to `kmeans`.
+#' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the `uv.variable` is a
 #' continuous variable. The default is set to 3.
-#' @param filter.prps.sets Logical. If 'TRUE', the number of PRPS sets across each pair of batches will be filtered if
-#' they are higher than the 'max.prps.sets' value. The default is set to 'TRUE'. A high number of PRPS sets will increase
+#' @param filter.prps.sets Logical. If `TRUE`, the number of PRPS sets across each pair of batches will be filtered if
+#' they are higher than the `max.prps.sets` value. The default is set to `TRUE`. A high number of PRPS sets will increase
 #' the computational time for the RUV-III normalization.
 #' @param max.prps.sets Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches.
 #' The default is set to 10.
 #' @param select.extreme.groups Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
-#' clusters, when the 'uv.variable' is continuous. Default is set to 'TRUE'. This will increase the variation between
+#' clusters, when the `uv.variable` is continuous. Default is set to `TRUE`. This will increase the variation between
 #' PR sets in order to better capture the unwanted variation.
 #' @param other.uv.variables Character. A character string or character vector representing the name(s) of the columns of
 #' unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
-#' continuous, or a combination. These variables will be considered when generating PRPS sets for the "main.uv.variable"
-#' to help avoid potential contamination. The default is set to 'NULL'
+#' continuous, or a combination. These variables will be considered when generating PRPS sets for the `main.uv.variable`
+#' to help avoid potential contamination. The default is set to `NULL`
 #' @param other.uv.clustering.method Character. A character string indicating which clustering method should be used to
-#' group each continuous unwanted variable, if specified in "other.uv.variables". Options include 'kmeans', 'cut',
-#' and 'quantile'. The default is set to 'kmeans'. See createHomogeneousUVGroups() for more details.
+#' group each continuous unwanted variable, if specified in `other.uv.variables`. Options include `kmeans`, `cut`,
+#' and `quantile`. The default is set to `kmeans`. See createHomogeneousUVGroups() for more details.
 #' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
-#' unwanted variable specified in the 'other.uv.variables'. The default is set to 3.
+#' unwanted variable specified in the `other.uv.variables`. The default is set to 3.
 #' @param min.sample.for.ps Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
 #' to 3.
 #' @param min.batches.to.cover Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
-#' 'all', indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.
-#' @param check.prps.connectedness Logical. Indicates whether to assess the 'connectedness' between the PRPS sets across
-#' all batches. Default is set to 'TRUE', indicating if there is not connections between all PRPS sets across all batches,
-#' the function will give error.We refer to the checkPRPSconnectedness() function for more details.
+#' `all`, indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.
+#' @param check.prps.connectedness Logical. Indicates whether to assess the `connectedness` between the PRPS sets across
+#' all batches. Default is set to `TRUE`, indicating if there is not connections between all PRPS sets across all batches,
+#' the function will give error. We refer to the checkPRPSconnectedness() function for more details.
 #' @param nb.mnn Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
 #' default is set to 1.
 #' @param hvg Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
-#' will be used to prepare the input data for knn and mnn analysis. The default is set to 'NULL', this means all genes
+#' will be used to prepare the input data for knn and mnn analysis. The default is set to `NULL`, this means all genes
 #' will be used.
 #' @param normalization Character. A character string that indicates which normalization method should be applied on the
-#' data before finding the knn. Options are: 'CPM','TMM', upper', median', full' and VST'. The default is set to 'cpm'.
-#' If set to NULL, no normalization will be applied. See the applyOtherNormalizations() function for more details.
+#' data before finding the knn. Options are: `CPM`, `TMM`, `upper`, `median`, `full`, and `VST`. The default is set to `cpm`.
+#' If set to `NULL`, no normalization will be applied. See the applyOtherNormalizations() function for more details.
 #' @param apply.cosine.norm Logical. Indicates whether cosine normalization should be applied before finding MNN. Default
-#' is set to 'TRUE'.
+#' is set to `TRUE`.
 #' @param regress.out.variables Character. A character string or strings that indicate the column name(s) in the sample
 #' annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
-#' finding KNN and MNN. The default is set to NULL, indicating that regression will not be applied.
+#' finding KNN and MNN. The default is set to `NULL`, indicating that regression will not be applied.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
-#' The default is set to 'TRUE'.
+#' The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 #' assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
 #' to 1.
 #' @param mnn.bpparam Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
-#' The default is SerialParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.
+#' The default is set to SerialParam(). We refer to the `findMutualNN()` function from the **BiocNeighbors** R package.
 #' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-#' The default is KmknnParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.
+#' The default is KmknnParam(). We refer to the `findMutualNN()` function from the `BiocNeighbors` R package.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-#' to TRUE. See the checkSeObj() function for more details.
-#' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are 'assays' and
-#''none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be removed before computing
+#' to `TRUE`. See the checkSeObj() function for more details.
+#' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are `assays` and
+#' `none`. The default is set to `assays`, so all the NA or missing values from the assay(s) will be removed before computing
 #' performing any down-stream analysis. See the checkSeObj() function for more details.
-#' @param plot.output Logical. If 'TRUE', the function plots the distribution of MNN across the batches and PRPS sets
-#' across the 'main.uv.variable'.
-#' @param output.name Character. A character string specifying the name of the output file to be saved in the metadata
-#' of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on
-#' "paste0(uv.variable, '|' , assay.name)".
+#' @param plot.output Logical. If `TRUE`, the function plots the distribution of MNN across the batches and PRPS sets
+#' across the `main.uv.variable`.
 #' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-#' If set to 'NULL', the function will automatically assign a name using "paste0('prps|mnn|', uv.variable)".
+#' If set to `NULL`, the function will automatically assign a name using `paste0('prps|mnn|', uv.variable)`.
+#' @param prps.sets.name Character. A character string specifying the name of the output file to be saved in the metadata
+#' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
+#' `paste0(uv.variable, '|', assay.name)`.
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. By default, it is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' or to output the result as a list. By default, it is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 #' @return The SummarizedExperiment object containing PRPS data and plot results in the metadata, or a list of
 #' these results.
+
 
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom BiocNeighbors findMutualNN
@@ -119,8 +120,8 @@ createPrPsByMnn <- function(
         assess.se.obj = TRUE,
         remove.na = 'both',
         plot.output = TRUE,
-        output.name = NULL,
         prps.group = NULL,
+        prps.sets.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -205,8 +206,8 @@ createPrPsByMnn <- function(
     if (!is.logical(save.se.obj)){
         stop('The "save.se.obj" must be logical (TRUE or FALSE).')
     }
-    if (is.logical(output.name)){
-        stop('The "output.name" must be a character or NULL.')
+    if (is.logical(prps.sets.name)){
+        stop('The "prps.sets.name" must be a character or NULL.')
     }
     if (is.logical(prps.group)){
         stop('The "prps.group" must be a character or NULL.')
@@ -1440,9 +1441,9 @@ createPrPsByMnn <- function(
     }
 
     # Saving the results ####
-    ## select output name ####
-    if (is.null(output.name))
-        output.name <- paste0(main.uv.variable, '|', 'mnn', '|', assay.name)
+    ## select prps.sets.name ####
+    if (is.null(prps.sets.name))
+        prps.sets.name <- paste0(main.uv.variable, '|', 'mnn', '|', assay.name)
     if (is.null(prps.group))
         prps.group <- paste0('prps|mnn|', main.uv.variable)
 
@@ -1470,19 +1471,19 @@ createPrPsByMnn <- function(
         if (!'prps.data' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]])) {
             se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']] <- list()
         }
-        if (!output.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']][[output.name]] <- list()
+        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']])) {
+            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']][[prps.sets.name]] <- list()
         }
-        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']][[output.name]] <- all.prps.expr.data
+        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.data']][[prps.sets.name]] <- all.prps.expr.data
 
         # plot
         if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]])) {
             se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']] <- list()
         }
-        if (!output.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']][[output.name]] <- list()
+        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']])) {
+            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']][[prps.sets.name]] <- list()
         }
-        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']][[output.name]] <- prps.map.plot
+        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['prps.map.plot']][[prps.sets.name]] <- prps.map.plot
 
         printColoredMessage(message = '------------The createPrPsByMnn function finished.',
                             color = 'white',

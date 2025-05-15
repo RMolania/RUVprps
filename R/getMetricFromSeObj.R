@@ -1,22 +1,20 @@
-#' Get a metric or plot from the "metadata" of SummarizedExperiment object.
-
+#' Get a metric or plot from the `metadata` of a SummarizedExperiment object.
+#'
 #' @author Ramyar Molania
-
+#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param slot Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or a vector of symbols specifying the name(s) of the assay(s) in the SummarizedExperiment
-#' object. The default is set to 'all'.
-#' @param assessment.type Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.
-#' @param assessment Symbol. A symbol indicating the name of the metric to be checked.
-#' @param method Symbol. A symbol indicating the method used to calculate the metric.
-#' @param variables Symbol. A symbol or a vector of symbols indicating the variables used to calculate the metric.
-#' @param file.name Symbol. A symbol indicating the file name to which the results of the metric are assigned.
-#' @param sub.file.name Symbol. A symbol indicating the sub-file name to which the results of the metric are assigned.
-#' @param required.function Symbol. A symbol indicating the name of function that is required to be applied before getting
-#' the results of that metric.
-#' @param message.to.print Symbol. A symbol to print.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
-
+#' @param slot Character string. Indicates the name of the slot in the `metadata` of the SummarizedExperiment object.
+#' @param assay.names Character string or vector. Specifies the name(s) of the assay(s) in the SummarizedExperiment
+#' object. Default is `all`.
+#' @param assessment.type Character string. Specifies the type of assessment. Options are `gene.level` or `global.level`.
+#' @param assessment Character string. Name of the metric to retrieve.
+#' @param method Character string. Method used to calculate the metric.
+#' @param variables Character string or vector. Specifies the variable(s) used to calculate the metric.
+#' @param file.name Character string. Name of the file to which the metric results were saved.
+#' @param sub.file.name Character string. Name of the sub-file (if applicable) to which the results were saved.
+#' @param required.function Character string. Name of the function that must have been run prior to retrieving this metric.
+#' @param message.to.print Character string. A message to print when retrieving the metric.
+#' @param verbose Logical. If `TRUE`, prints messages describing the function's progress.
 getMetricFromSeObj <- function(
         se.obj,
         slot = 'Metrics',

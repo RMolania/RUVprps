@@ -3,40 +3,41 @@
 #' @author Ramyar Molania
 
 #' @description
-#' This function performs differential gene expression analysis using Wilcoxon test between all possible pairs of a
-#' categorical variable in a SummarizedExperiment object.
+#' This function performs differential gene expression analysis using Limma and Wilcoxon test between all possible pairs
+#' of a categorical variable in a SummarizedExperiment object.
 
 #' @details
-#' DE analyses is performed using the Wilcoxon signed-rank test with log-transformed data e.g. raw counts, normalized data, ....
-#' To evaluate the effects of the different sources of unwanted variation on the data, DE analyses is performed across
-#' batches. In the absence of any batch effects, the histogram of the resulting unadjusted P values should be uniformly
-#' distributed
+#' DE analyses is performed using the Limma or Wilcoxon signed-rank test with log-transformed data e.g. raw counts,
+#' normalized data, .... To evaluate the effects of the different sources of unwanted variation on the data, DE analyses
+#' is performed across batches. In the absence of any batch effects, the histogram of the resulting un-adjusted P values
+#' should be uniformly distributed. Further, differential gene expression analysis can be performed across the levels of
+#' a biological factor of interest.
 
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings for the selection of the name(s) of
-#' the assay(s) in the SummarizedExperiment object to compute the differential gene expression analysis. By default, all
-#' the assays of the SummarizedExperiment object will be selected.
+#' the assay(s) in the SummarizedExperiment object to compute the differential gene expression analysis. By default, it
+#' is set to `all`, which means all the assays of the SummarizedExperiment object will be selected.
 #' @param variable Character. A character string indicating a column name in the SummarizedExperiment object that contains
-#' a categorical variable, such as batches. If the variable has more than two levels, the function performs differential
-#' gene expression (DGE) analysis between all possible pairwise groups.
+#' a categorical variable, such as batches. The variable must have at least two levels, then the function performs differential
+#' gene expression (DGE) analysis between all possible pair of the 'variable' group.
 #' @param method Character. A character string indicating which differential expression method should be used. Options are
-#' 'limma' and 'Wilcoxon'. The default is set to 'limma'.
+#' `limma` and `Wilcoxon`. The default is set to `limma`.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before computing differential gene
-#' expression. The default is set to 'TRUE'.
+#' expression. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before log
 #' transformation. The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The defult is se to 'TRUE'.
-#' Refer to the 'checkSeObj' for more detail.
-#' @param remove.na Character. Indicates whether to remove missing/NA values from either 'assays', 'sample.annotation',
-#' 'both', or 'none'. If 'assays' is selected, the genes that contain missing/NA values will be excluded. If 'sample.annotation'
-#' is selected, the samples that contain NA or missing values for the specified 'variable' will be excluded. By default,
-#' it is set to 'both'.
-#' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment
-#' object ('se.obj') or to output the result. By default, it is set to 'TRUE'.
-#' @param override.check Logical. When set to 'TRUE', the function verifies the current SummarizedExperiment object to
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' Refer to the `checkSeObj()` function for more detail.
+#' @param remove.na Character. A character that indicates whether to remove missing/NA values from either `assays`,
+#' `sample.annotation`,`both`, or `none`. If `assays` is selected, the genes that contain missing/NA values will be
+#' excluded. If `sample.annotation` is selected, the samples that contain NA or missing values for the specified 'variable'
+#' will be excluded. The default is set to `none`.
+#' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object or
+#' to output the result. The default is set to `TRUE`.
+#' @param override.check Logical. When set to `TRUE`, the function verifies the current SummarizedExperiment object to
 #' determine if the differential gene expression (DGE) analysis has already been computed for the current parameters. If
-#' it has, the metric will not be recalculated. The default is set to FALSE.
-#' @param verbose Logical. If TRUE, displays process messages during execution.
+#' it has, the metric will not be recalculated. The default is set to `FALSE`.
+#' @param verbose Logical. If `TRUE`, displays process messages during execution.
 
 #' @return Either a SummarizedExperiment object or a list containing all the statistics from the Limma or Wilcoxon test
 #' and, if requested.
@@ -64,7 +65,7 @@ computeDGE <- function(
                         color = 'white',
                         verbose = verbose)
 
-    # Check to override or not ####
+    # Checking to override or not ####
     if (!is.logical(override.check)){
         stop('The "override.check" must be logical(TRUE or FALSE)')
     }
@@ -88,7 +89,7 @@ computeDGE <- function(
     } else if (isFALSE(override.check)) compute.metric <- TRUE
 
     if (isTRUE(compute.metric)){
-        # Checking the inputs ####
+        # Checking the function inputs ####
         if (is.null(assay.names)) {
             stop('The "assay.names" cannot be empty.')
         }
@@ -101,27 +102,34 @@ computeDGE <- function(
         if (length(unique(se.obj[[variable]])) < 2) {
             stop('The "variable" must have at least two levels (factors).')
         }
+        if (is.character(method) | length(method) > 1){
+            stop('The method must be a character.')
+        }
+        if (!method %in% c('limma', 'wilcoxon')){
+            stop('The "method" must be one one of the "limma" or "wilcoxon".')
+        }
         if (!is.logical(apply.log)){
-            stop('The "apply.log" must be "FALSE" or "TRUE".')
+            stop('The "apply.log" must be logical.')
         }
         if (isTRUE(apply.log)){
-            if (pseudo.count < 0)
-                stop('The value of "pseudo.count" cannot be negative.')
+            if (pseudo.count < 0 | !is.numeric(pseudo.count))
+                stop('The "pseudo.count" must be a positive numeric value.')
         }
         if (!is.logical(assess.se.obj)){
-            stop('The "assess.se.obj" must be logical (TRUE or FALSE).')
+            stop('The "assess.se.obj" must be logical ("TRUE" or "FALSE").')
         }
         if (!is.logical(save.se.obj)){
-            stop('The "save.se.obj" must be logical (TRUE or FALSE).')
+            stop('The "save.se.obj" must be logical ("TRUE" or "FALSE").')
         }
         if (!is.logical(verbose)){
             stop('The "verbose" must be logical (TRUE or FALSE).')
         }
+
         # Checking the assays ####
         if (length(assay.names) == 1 && assay.names == 'all') {
             assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
         } else  assay.names <- factor(x = assay.names , levels = assay.names)
-        if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+        if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
         }
 
@@ -147,7 +155,6 @@ computeDGE <- function(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 pseudo.count = pseudo.count,
-                assessment = 'computing "PCA"',
                 verbose = verbose
             )
         }
@@ -162,7 +169,7 @@ computeDGE <- function(
                 function(x) assay(x = se.obj, i = x))
             names(all.assays) <- levels(assay.names)
         }
-        # Apply Wilcoxon test ####
+        # Applying Wilcoxon test ####
         if (method == 'wilcoxon'){
             printColoredMessage(
                 message = paste0(
@@ -213,6 +220,7 @@ computeDGE <- function(
                 })
             names(all.wilcoxon.tests) <- levels(assay.names)
         }
+        # Applying limma test ####
         if (method == 'limma'){
             printColoredMessage(
                 message = paste0(
@@ -237,7 +245,10 @@ computeDGE <- function(
                 levels(assay.names),
                 function(x){
                     printColoredMessage(
-                        message = paste0('- Applying limma test on the "', x, '" data:'),
+                        message = paste0(
+                            '- Applying limma test on the "',
+                            x,
+                            '" data:'),
                         color = 'orange',
                         verbose = verbose
                     )
@@ -258,10 +269,9 @@ computeDGE <- function(
             names(all.limma.tests) <- levels(assay.names)
         }
 
-
         # Saving the results ####
         printColoredMessage(
-            message = '-- Save the Wilcoxon test results:',
+            message = '-- Saving the DGE results:',
             color = 'magenta',
             verbose = verbose
             )
@@ -303,8 +313,8 @@ computeDGE <- function(
                     '- All the differential gene expression results for indiviaul assay(s) are saved to the .',
                     ' "se.obj@metadata$metric$AssayName$DGE" in the SummarizedExperiment object.'),
                 color = 'blue',
-                verbose = verbose)
-
+                verbose = verbose
+                )
             printColoredMessage(message = '------------The computeDGE function finished.',
                                 color = 'white',
                                 verbose = verbose)

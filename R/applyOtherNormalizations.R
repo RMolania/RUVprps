@@ -8,7 +8,7 @@
 #' Note that the default parameters of these underlying functions are used.
 
 
-#' @param se.obj A `SummarizedExperiment` object.
+#' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character that specifies the name of the data (assay) in the SummarizedExperiment object.
 #' The selected data should contain raw count data.
 #' @param method Character. A character that indicates the normalization method to apply to the assay specified by `assay.name`.

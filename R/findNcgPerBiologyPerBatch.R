@@ -99,8 +99,8 @@
 #' If not NULL, bio.groups' will be used to group samples into different homogeneous biological groups.
 #' @param grid.group A character string. Indicates whether the grid search should be performed on biological ('top.rank.bio.genes'),
 #' unwanted ('top.rank.uv.genes') or both factors. The options are 'bio', 'uv', or 'both'. The default is set to 'uv'.
-#' @param grid.direction A character string. Indicates the direction of the grid search. The options are 'increase' or 'decrease'.
-#' The default is set to 'decrease'.
+#' @param grid.direction A character string. Indicates the direction of the grid search. The options are `increase` or
+#' `decrease`. The default is set to `decrease`.
 #' @param bio.clustering.method A character string. Indicates which clustering method should be used to group continuous
 #' sources of biological variation if any are provided. The default is 'kmeans' clustering.
 #' @param nb.bio.clusters Numeric. Indicates the number of clusters for each continuous source of biological variation.
@@ -113,16 +113,16 @@
 #' @param nb.uv.clusters Numeric. Indicates the number of clusters for each continuous source of unwanted variation (UV).
 #' By default, it is set to 2.
 #' @param normalization A character string. Indicates which normalization method should be applied to the data before
-#' identifying genes that are affected by biological variation. The default is 'CPM'. Refer to the 'applyOtherNormalizations
+#' identifying genes that are affected by biological variation. The default is 'CPM'. Refer to the `applyOtherNormalizations()`
 #' function for more details.
 #' @param regress.out.bio.variables A character vector. Indicates the column names of biological variables in the
 #' SummarizedExperiment object. These variables will be regressed out from the data before identifying genes that are
-#' highly affected by unwanted variation. The default is NULL.
+#' highly affected by unwanted variation. The default is set to `NULL`.
 #' @param regress.out.uv.variables A character vector. Indicates the column names of unwanted variation variables in the
 #' SummarizedExperiment object. These variables will be regressed out from the data before identifying genes that are
-#' highly affected by biological variation. The default is NULL.
+#' highly affected by biological variation. The default is set to `NULL`.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing correlation and
-#' ANOVA. The default is TRUE.
+#' ANOVA. The default is set to `RUE`.
 #' @param pseudo.count Numeric. A value to be added as a pseudo-count to all measurements before log-transformation.
 #' @param min.sample.for.aov Numeric. Indicates the minimum number of samples to be present in each group before applying
 #' the ANOVA. The default is set to 3.
@@ -134,40 +134,40 @@
 #' is set to 0.05.
 #' @param rho Numeric. The hypothesized correlation value to be used in the hypothesis testing. The default is set to 0.
 #' @param anova.method A character string. Indicates which ANOVA method should be used to compute associations between
-#' gene-level expression and a categorical variable. The default is 'aov'.
+#' gene-level expression and a categorical variable. The default is set to `aov`.
 #' @param assess.ncg Logical. Indicates whether to assess the performance of selected NCGs. This analysis involves
 #' principal component analysis (PCA) on the selected NCGs, followed by exploring the R-squared or vector correlation between
 #' the first 'nb.pcs' principal components and biological and unwanted variation variables.
 #' @param variables.to.assess.ncg A character vector. Indicates the column names of the SummarizedExperiment object that
-#' contain variables whose association with the selected NCGs needs to be evaluated. The default is NULL, meaning all
+#' contain variables whose association with the selected NCGs needs to be evaluated. The default is set to `NULL`, meaning all
 #' variables in 'bio.variables' and 'uv.variables' will be assessed.
 #' @param nb.pcs Numeric. Indicates the number of the first principal components of selected NCGs to be used to assess
 #' the performance of NCGs.
 #' @param center Logical. Indicates whether to center the data before applying principal component analysis. The default
-#'  is set to 'TRUE'.
+#'  is set to `TRUE`.
 #' @param scale Logical. Indicates whether to scale the data before applying principal component analysis. The default is
-#' set to 'FALSE'.
+#' set to `FALSE`.
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to  'TRUE'.
-#' @param remove.na A character string. Indicates whether to remove NA or missing values from either the 'assays', 'sample.annotation',
-#' 'both', or 'none'. If 'assays' is selected, genes containing NA or missing values will be excluded. If 'sample.annotation'
-#' is selected, samples with NA or missing values for any `bio.variables` and `uv.variables` will be excluded. The default
-#' is set to  'both'.
+#' @param remove.na A character string. Indicates whether to remove NA or missing values from either the `assays`,
+#' `sample.annotation`,`both`, or `none`. If `assays` is selected, genes containing NA or missing values will be excluded.
+#' If 'sample.annotation' is selected, samples with NA or missing values for any `bio.variables` and `uv.variables` will
+#' be excluded. The default is set to  `both`.
 #' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
-#' ('se.obj') or to output the result.
-#' The default is TRUE.
-#' @param output.name A character string. The name for the output. If set to NULL, the function will automatically generate a name.
+#' ('se.obj') or to output the result. The default is set to `TRUE`.
+#' @param output.name A character string. The name for the output. If set to NULL, the function will automatically generate
+#' a name.
 #' @param ncg.group A character string. Indicates the name of the group of NCGs.
 #' @param plot.output Logical. If TRUE, a plot of the NCG selection process will be generated.
 #' @param save.imf Logical. Indicates whether to save the intermediate file in the SummarizedExperiment object. If set
 #' to TRUE, the results of the two-way ANOVA
 #' will be saved. If users wish to adjust parameters such as `nb.ncg`, `ncg.selection.method`, `top.rank.bio.genes`,
 #' and `top.rank.uv.genes`, the ANOVA
-#' will not be recalculated. This accelerates parameter tuning for NCG selection. The default is FALSE.
-#' @param imf.name A character string. The name to use when saving the intermediate file. If set to NULL, the function
-#' will automatically generate a name.
-#' The default is NULL.
-#' @param use.imf Logical. Indicates whether to use the intermediate file for subsequent steps. The default is FALSE.
-#' @param verbose Logical. If TRUE, process messages will be displayed.
+#' will not be recalculated. This accelerates parameter tuning for NCG selection. The default is se to `FALSE`.
+#' @param imf.name A character string. The name to use when saving the intermediate file. If set to `NULL`, the function
+#' will automatically generate a name. The default is set to `NULL`.
+#' @param use.imf Logical. Indicates whether to use the intermediate file for subsequent steps. The default is set to
+#' `FALSE`.
+#' @param verbose Logical. If `TRUE`, process messages will be displayed.
 #'
 #' @return Either the SummarizedExperiment object containing a set of negative control genes, or a logical vector of
 #' the selected negative control genes.

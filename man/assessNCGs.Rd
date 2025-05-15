@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessNCGs.R
 \name{assessNCGs}
 \alias{assessNCGs}
-\title{Assess the different sets of NCGs.}
+\title{Assesses and compares the performance of NCGs gene sets.}
 \usage{
 assessNCGs(
   se.obj,
@@ -25,67 +25,83 @@ assessNCGs(
 )
 }
 \arguments{
-\item{se.obj}{A summarized experiment object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Symbol. A symbol indicating the name of the assay in the SummarizedExperiment object. This assay
-should be the one that will be used as an input data for the RUV-III-PRPS normalization.}
+\item{assay.name}{Character. A character that specifies the name of the data in the SummarizedExperiment object. This
+data should one that will be used as the input data for RUV-III-PRPS normalization.}
 
-\item{variables}{Symbol. A symbol or a set of symbols indicating the names of the variables in the SummarizedExperiment
-object. These will be used to assess the performance of NCGS.}
+\item{variables}{Character. One or more variable names in the SummarizedExperiment object. These will be used to assess
+the performance of the NCGs. If this is set to NULL, both \code{bio.variables} and \code{uv.variables} must be specified.}
 
-\item{bio.variables}{Symbol. A symbol or symbols representing the label of biological variable(s), such as cancer
-subtypes, tumor purity, ... within the SummarizedExperiment object. This can comprise a vector containing either
-categorical, continuous, or a combination of both variables.}
+\item{bio.variables}{Character. One or more variable names representing biological variables (e.g., cancer subtypes,
+tumor purity) within the SummarizedExperiment object. This can be a vector of categorical, continuous, or mixed variable
+types. The default is set to \code{NULL}. This must be specified if the performance scores is need to be calculated.}
 
-\item{uv.variables}{Symbol. A symbol or symbols representing the label of unwanted variable(s), such as cancer
-batch effects, library size, ... within the SummarizedExperiment object. This can comprise a vector containing either
-categorical, continuous, or a combination of both variables.}
+\item{uv.variables}{Character. One or more variable names representing unwanted variables (e.g., batch effects,
+library size) within the SummarizedExperiment object. This can also be a vector of categorical, continuous, or mixed
+variable types. The default is set to \code{NULL}. This must be specified if the performance scores is need to be calculated.}
 
-\item{ncg.type}{Symbol. A symbol indicating the type of NCGs that are obtained either by supervised or un.supervised
-approaches. The options are 'supervised' or 'un.supervised'.}
+\item{ncg.type}{Character. A character that specifies the type of NCGs to be selected and assessed their performnce.
+Options are \code{'supervised'}, \code{'un.supervised'}, \code{pre.selected} and \code{all.genes}.}
 
-\item{ncg.group}{Symbol. A symbol specifying the name of a group of NCGs under the supervised or un.supervised slots
-in the SummarizedExperiment object.}
+\item{ncg.group}{Character. A character that specifies the name of the group of NCGs stored under the 'supervised' or
+'un.supervised' slots in the SummarizedExperiment object. Refer to supervised and unsupervised functions for finding
+NCGS for more details.}
 
-\item{ncg.set.names}{A symbol specifying th exact name of a NCG set under the 'ncg.group' name in the supervised or
-un.supervised slots in the SummarizedExperiment object. The default is set to 'all'. This will select all avaiable
-NCGs sets.}
+\item{ncg.set.names}{Character. Specifies the exact name of an NCG set under the given \code{ncg.group} in either the
+'supervised' or 'un.supervised' slot or in the \code{pre.selected} slot. The default is \code{'all'}, which selects all available
+NCG sets.}
 
-\item{nb.pcs}{Numeric. A numeric value indicating the number of PCs to be computed and used for the assessment analysis.
-The default is set to 5.}
+\item{nb.pcs}{Numeric. A numeric value that indicates the number of principal components (PCs) to compute and use for
+the assessment analysis. The default is set to \code{10}.}
 
-\item{center}{Logical. Indicates whether to scale the data or not prior to apply SVD. If center is 'TRUE', then
-centering is performed by subtracting the column means of the assay from their corresponding columns. The default is 'TRUE'.}
+\item{center}{Logical. Indicates whether to center the data prior to applying PCA suing SVD. If \code{TRUE},
+centering is done by subtracting the column means from the respective columns. The default is set to \code{TRUE}.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD.  If scale is 'TRUE', then scaling
-is done by dividing the (centered) columns of the assays by their standard deviations if center is 'TRUE', and the root
-mean square otherwise. The default is FALSE.}
+\item{scale}{Logical. Indicates whether to scale the data prior to applying PCA using SVD. If \code{TRUE}, the centered
+columns are divided by their standard deviations (if \code{center = TRUE}), or by the root mean square
+(if \code{center = FALSE}). The default is set to \code{FALSE}.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before computing the SVD. The
-default is 'TRUE'. The data must be in log scale before computing the SVD.}
+\item{apply.log}{Logical. Indicates whether to apply a log transformation to the data before computing the SVD. The
+default is set to \code{TRUE}. Data should be in log scale before applying SVD.}
 
-\item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements before applying log transformation.
-The default is 1. This argument cannot be NULL or negative.}
+\item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before applying the
+log transformation. The default is set to \code{1}.}
 
-\item{plot.output}{Logical. Indicates whether to plot the assessment plot or not while running the function. The default
-is set to 'TRUE'.}
+\item{plot.output}{Logical. Indicates whether to generate the assessment plot during function execution. The default
+is set to \code{TRUE}.}
 
-\item{output.name}{Symbol. A symbol indicating the name under which the assessment plot will be saved in the
-SummarizedExperiment object. If 'NULL', the function will select the name as follow:
-'paste0('comparsion_', paste0(names(ncgs), collapse = '&'))'}
+\item{output.name}{Character. Specifies the name under which the assessment plot will be saved in the
+SummarizedExperiment object. If \code{NULL}, a name will be generated using:
+\code{paste0('comparison_', paste0(names(ncgs), collapse = '&'))}.}
 
-\item{save.se.obj}{Logical. Indicates whether save the assessment plot to the SummarizedExperiment object or not. The
-default is set to 'TRUE'. The plot will be save to:}
+\item{save.se.obj}{Logical. Indicates whether to save the assessment plot metadata of the SummarizedExperiment object.
+The default is set to \code{TRUE}. The plot will be saved to:}
 
-\item{verbose}{Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.}
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is \code{TRUE}.}
+}
+\value{
+A SummarizedExperiment object containing the newly normalized data, or a normalized expression matrix
+if \code{save.se.obj} is set to \code{FALSE}.
 }
 \description{
-This function assesses the performance of various sets of negative control genes in terms of their ability to capture
-unwanted variation and their lack of association with biological variation. First, for each individual set of negative
-control genes (NCG), the function applies PCA to the specified data. Then, it calculates the association of the 'nb.pcs'
-principal components (PCs) with both specified biological and unwanted variables. The correlation values obtained for
-the biological variables will be subtracted from 1. Finally, the average of all these correlations is computed to
-determine the final correlation values. A higher correlation indicates better performance.
+This function globally assesses and comapre the performance of various sets of negative control genes (NCGs) based on
+their ability to capture unwanted variation while remaining unassociated with biological variation. This is essential
+to select a suitable set of NCGs for RUV-III normalization,
+}
+\details{
+For each NCG set, the function performs PCA on the specified data using only the genes in the set. It then evaluates
+the association of the top \code{nb.pcs} principal components with variables as defined by \code{variables}. Linear regression
+is used for continuous variables, and vector correlation is used for categorical variables. For each NCG
+set, $R^2$ values (from regression) and vector correlation coefficients are computed to quantify these associations.
+The $R^2$ and vector correlation values calculated for individual variables are plotted against the cumulative PCs.
+Ideally, a suitable set of NCGs should show high and low correlation values, respectively, for the unwanted and biological
+variables.\
+If both \code{bio.variables} and \code{ub.variables} are specifed, then the function generates a performance score between 0 and
+1 is for NCG each set, reflecting how effectively the NCGs capture unwanted variation while minimizing association
+with biological factors. To compute such scores, the correlations obtained for biological variables are subtracted
+from 1, and then the correlations for biological and unwanted variables are averaged, separately. The final score for
+each NCG set is calculated as the sum of half the average scores. A higher score indicates a better set of NCGs.
 }
 \author{
 Ramyar Molania

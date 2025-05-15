@@ -2,7 +2,7 @@
 % Please edit documentation in R/addMetricToSeObj.R
 \name{addMetricToSeObj}
 \alias{addMetricToSeObj}
-\title{Add results and plots of a metric to SummarizedExperiment object.}
+\title{Adds results and plots of a metric to SummarizedExperiment object.}
 \usage{
 addMetricToSeObj(
   se.obj,
@@ -19,25 +19,25 @@ addMetricToSeObj(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{slot}{Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.}
+\item{slot}{Character. The name of the slot in the \code{metadata} of the \code{SummarizedExperiment} object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols specifying the name(s) of the assay(s) in the SummarizedExperiment
-object. The default is set to 'all'.}
+\item{assay.names}{Character or character vector. The name(s) of the assay(s) in the \code{SummarizedExperiment} object.
+The default is set to 'all'.}
 
-\item{assessment.type}{Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.}
+\item{assessment.type}{Character. The type of assessment to perform. Options are 'gene.level' or 'global.level'.}
 
-\item{assessment}{Symbol. A symbol indicating the name of the metric to be checked.}
+\item{assessment}{Character. The name of the metric to be evaluated.}
 
-\item{method}{Symbol. A symbol indicating the method used to calculate the metric.}
+\item{method}{Character. The method used to calculate the metric.}
 
-\item{variables}{Symbol. A symbol or a vector of symbols indicating the variables used to calculate the metric.}
+\item{variables}{Character or character vector. The variable(s) used to calculate the metric.}
 
-\item{file.name}{Symbol. A symbol indicating the file name to which the results of the metric are assigned.}
+\item{file.name}{Character. The name of the file to which the metric results will be written.}
 
-\item{results.data}{Symbol. A symbol indicating the name of the results file for the metric.}
+\item{results.data}{Character. The name of the object or file containing the metric results.}
 }
 \description{
-Add results and plots of a metric to SummarizedExperiment object.
+Adds results and plots of a metric to SummarizedExperiment object.
 }
 \author{
 Ramyar Molania

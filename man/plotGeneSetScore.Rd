@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotGeneSetScore.R
 \name{plotGeneSetScore}
 \alias{plotGeneSetScore}
-\title{Plot gene set score of a gene set.}
+\title{Plots the score of the gene set enrichment analysis.}
 \usage{
 plotGeneSetScore(
   se.obj,
@@ -18,33 +18,28 @@ plotGeneSetScore(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol or a vector of symbols specifying the name(s) of the assay(s) in the SummarizedExperiment
-object to calculate sample-wise scores. The default is set to "all," indicating all assays in the SummarizedExperiment
+\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the SummarizedExperiment
+object to calculate sample-wise scores. The default is set to \code{all}, indicating all assays in the SummarizedExperiment
 object will be selected.}
 
-\item{reference.score}{Symbol.}
+\item{reference.score}{Character. The name of the reference score variable.}
 
-\item{gene.set.name}{Symbol. A symbol indicating the name to be used to save the score in the SummarizedExperiment object.
-if 'NULL', the function will select a name as follow :
-gene.set.name <- paste0('singscore|',length(c(upset.genes, downset.genes)),'genes')}
+\item{gene.set.name}{Character. A character string indicating the name to be used to save the score in the
+SummarizedExperiment object. If \code{NULL}, the function will select a name as follows:
+\code{gene.set.name <- paste0("singscore|", length(c(upset.genes, downset.genes)), "genes")}}
 
-\item{plot.output}{Logical. Whether to plot the gene set score or not. The default is set to 'TRUE'.}
+\item{plot.output}{Logical. Whether to plot the gene set score or not. The default is set to \code{TRUE}.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-to 'TRUE'. Refer to the 'checkSeObj' function for more details.}
+to \code{TRUE}. Refer to the \code{checkSeObj()} function for more details.}
 
-\item{save.se.obj}{Indicates whether to save the score results in the metadata of the SummarizedExperiment object
-or to output the result as list. The default is set to 'TRUE'.}
+\item{save.se.obj}{Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment
+object or to output the result as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-This function computes all possible gene-gene pairwise ordinary and partial correlation of the assays in the
-SummarizedExperiment object.
-}
-\details{
-Partial correlation is used to estimate correlation between two variables while controlling for third
-variables
+This function plots the score of the gene set enrichment analysis performed by the \code{computeGeneSetScore()} function.
 }
 \author{
 Ramyar Molania

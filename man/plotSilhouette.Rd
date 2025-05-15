@@ -18,30 +18,29 @@ plotSilhouette(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Character. A character string or vector of character strings specifying the name(s) of the dataset(s)
+\item{assay.names}{Character. A character string or vector of character strings specifying the name(s) of the data set(s)
 in the SummarizedExperiment object to generate barplots or scatter plots of the computed Silhouette coefficients.
 By default, all assays in the SummarizedExperiment object will be selected.}
 
 \item{variables}{Character. A character or character vectors of the column names in the SummarizedExperiment object
-that the silhouette coefficient has been calculated by the 'computeSilhouette' function.}
+that the silhouette coefficient has been calculated by the \code{computeSilhouette} function.}
 
 \item{silhouette.method}{Character. Indicates which computed Silhouette method should be used for plotting. The method
-must match one of those defined in the "computeSilhouette()" function. The default is "sil.euclidian", which is also
-the default of the 'computeSilhouette()' function. Refer to the 'computeSilhouette()' function for more details.}
+must match one of those defined in the \code{computeSilhouette()} function. The default is set to \code{sil.euclidian}, which is
+also the default of the \code{computeSilhouette()} function. Refer to the \code{computeSilhouette()} function for more details.}
 
-\item{plot.type}{Character. Indicates how to plot the adjusted Silhouette coefficients.
-Options are "single.plot" and "combined.plot". If a single variable is provided, "plot.type" must be set to "single.plot",
-which generates a barplot of the Silhouette coefficients. If two variables are provided and "plot.type" is set to
-"combined.plot", the function generates a scatter plot of the Silhouette coefficients for each variable against each
-other. The default is set to 'single.plot'.}
+\item{plot.type}{Character. Indicates how to plot the silhouette coefficients. Options are "single.plot" and \code{combined.plot}.
+If a single variable is provided, \code{plot.type} must be set to \code{single.plot}, which generates a barplot of the Silhouette
+coefficients. If two variables are provided and \code{plot.type} is set to \code{combined.plot}, the function generates a scatter
+plot of the Silhouette coefficients for each variable against each other. The default is set to \code{single.plot}.}
 
-\item{plot.output}{Logical. If TRUE, the individual barplots or scatter plots will be printed during function execution.
-The default is set to 'TRUE'.}
+\item{plot.output}{Logical. If \verb{TRUE,} the individual barplots or scatter plots will be printed during function execution.
+The default is set to \code{TRUE}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment object
-or to return the results as a list. The default is set to 'TRUE'.}
+or to return the results as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If TRUE, process messages will be displayed.}
+\item{verbose}{Logical. If \code{TRUE}, process messages will be displayed.}
 }
 \value{
 A SummarizedExperiment object or a list containing all the plots of the computed average Silhouette coefficients
@@ -49,7 +48,7 @@ for the categorical variables.
 }
 \description{
 This functions generates barplots of average Silhouette coefficients for individual assays. If two variables are
-provided, the function creates combined scatter plots of the average Silhouette coefficients of each variables for the
+provided, the function creates combined scatter plots of the average silhouette coefficients of each variables for the
 individual assays.
 }
 \references{

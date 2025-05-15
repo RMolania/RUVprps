@@ -2,17 +2,17 @@
 % Please edit documentation in R/computeGeneSetScore.R
 \name{computeGeneSetScore}
 \alias{computeGeneSetScore}
-\title{Compute sample wise score of a gene set.}
+\title{Computes sample level enrichment score of a gene set.}
 \usage{
 computeGeneSetScore(
   se.obj,
   assay.names = "all",
   upset.genes,
   downset.genes = NULL,
-  apply.log = TRUE,
-  pseudo.count = 1,
   normalization = NULL,
   regress.out.variables = NULL,
+  apply.log = TRUE,
+  pseudo.count = 1,
   assess.score = FALSE,
   variables.to.assess = NULL,
   corr.method = "spearman",
@@ -26,54 +26,57 @@ computeGeneSetScore(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol or a vector of symbols specifying the name(s) of the assay(s) in the SummarizedExperiment
-object to calculate sample-wise scores. The default is set to "all," indicating all assays in the SummarizedExperiment
-object will be selected.}
+\item{assay.names}{Character. A character or a vector of characters specifying the name(s) of the data set(s) in the
+SummarizedExperiment object for which to calculate sample-wise scores. The default is set to \code{all}, indicating that all
+assays in the SummarizedExperiment object will be selected.}
 
-\item{upset.genes}{Vector. A character vector of gene names/ids that are up-regulated in the a gen set.}
+\item{upset.genes}{Character vector. A vector of gene names/IDs that are up-regulated in the gene set.}
 
-\item{downset.genes}{Vector. A character vector of gene names/ids that are down-regulated in the a gen set.}
+\item{downset.genes}{Character vector. A vector of gene names/IDs that are down-regulated in the gene set. The default
+is set to \code{NULL}.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is 'TRUE'.}
+\item{normalization}{Character. A character string indicating the type of normalization to be used before computing
+the scores. The option are: \code{CPM}, \code{TMM}, \code{VST}, \code{full}, \code{upper} and \code{median}. The default is set to \code{NULL}.
+Refer to the \code{applyOtherNormalizations()} function for more details.}
 
-\item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
-log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.}
+\item{regress.out.variables}{Character. A characer or vector of characters indicating the name(s) of the column(s) in
+the SummarizedExperiment object to be regressed out from the data before computing the scores. The default is set
+to \code{NULL}.}
 
-\item{normalization}{Symbol. A symbol indicating the name of normalization to be used before computing the scores. The
-default is set to 'NULL'. Refer to the 'applyOtherNormalizations' function for more details.}
+\item{apply.log}{Logical. Indicates whether to apply a log transformation to the data. The default is set to \code{TRUE}.}
 
-\item{regress.out.variables}{Symbol or vector of symbols indicating the name(s) of the column(s) in the SummarizedExperiment
-object to be regressed out from the data before computing the scores. The default is set to 'NULL'.}
+\item{pseudo.count}{Numeric. A numeric value as pseudo-count to be added to all measurements of the data set(s) before
+applying log transformation to avoid \code{-Inf} for measurements equal to 0. The default is set to 1.}
 
-\item{assess.score}{Logical. If 'TRUE', the association between the computed scores and specified variables will be
-assessed. The default is set to 'NULL'. See the details for more information.}
+\item{assess.score}{Logical. If \code{TRUE}, the association between the computed scores and specified variables will be
+assessed. The default is set to \code{FALSE}. See the details for more information.}
 
-\item{variables.to.assess}{Symbol. A symbol or vector of symbols indicating the name(s) of the column(s) in the SummarizedExperiment
-object to be used for the assessment of the computed scores. It can comprise of continuous and categorical variables.
-The default is set to 'NULL'.}
+\item{variables.to.assess}{Character. A character string or vector of strings indicating the name(s) of the column(s)
+in the SummarizedExperiment object to be used for assessing the computed scores. These can be continuous or categorical
+variables. The default is set to \code{NULL}.}
 
-\item{corr.method}{Symbol. A symbol indicating which correlation method should be used for the correlation analysis of
-the computed scores with the specified continuous variable(s). The options are "pearson", "kendall", "spearman". The
-default is set to 'spearman'.}
+\item{corr.method}{Character. A character string indicating which correlation method should be used for the correlation
+analysis of the computed scores with the specified continuous variable(s). Options include \code{pearson}, \code{kendall} amd
+\code{spearman}. The default is set to \code{spearman}.}
 
-\item{gene.set.name}{Symbol. A symbol indicating the name to be used to save the score in the SummarizedExperiment object.
-if 'NULL', the function will select a name as follow :
-gene.set.name <- paste0('singscore|',length(c(upset.genes, downset.genes)),'genes')}
+\item{gene.set.name}{Character. A character string indicating the name to be used to save the score in the metadata of
+the SummarizedExperiment object. If \code{NULL}, the function will select a name as follows:
+gene.set.name <- paste0('singscore|', length(c(upset.genes, downset.genes)), 'genes')}
 
-\item{plot.output}{Logical. If 'TRUE', the assessment plot will be printed while running the function. The default is
-set to 'TRUE'.}
+\item{plot.output}{Logical. If \code{TRUE}, the assessment plot will be printed while running the function. The default is
+se to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-to 'TRUE'. Refer to the 'checkSeObj' function for more details.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is se to \code{TRUE}.
+Refer to the \code{checkSeObj()} function for more details.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment object
-or to output the result as list. The default is set to 'TRUE'.}
+\item{save.se.obj}{Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment
+object or to output the result as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, messages describing the steps of the function will be shown.}
 }
 \description{
-The function uses the singscore function from the R/Bioconductor singscore to calculate sample wise score of
-a gene set in for all the assay(s) in the SummarizedExperiment object. Refer to the details for more information.
+The function uses the \code{singscore} function from the R/Bioconductor \strong{singscore} package to calculate sample-wise
+scores of a gene set across all data(assay) in a SummarizedExperiment object.
 }
 \author{
 Ramyar Molania

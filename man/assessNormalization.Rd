@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessNormalization.R
 \name{assessNormalization}
 \alias{assessNormalization}
-\title{Assess the performance of normalization methods.}
+\title{Assesses the performance of normalization methods.}
 \usage{
 assessNormalization(
   se.obj,
@@ -36,88 +36,81 @@ assessNormalization(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object. The default is set to 'all', so all the assays in the SummarizedExperiment object will
-be selected.}
+\item{assay.names}{character or character vector. One or more names of assays to select from the SummarizedExperiment
+object.
+The default is 'all', which selects all assays in the object.}
 
-\item{bio.variables}{Symbols. A symbol or a vector of symbols indicating the column names that contain known biological
-variable(s) in the SummarizedExperiment object. These biological variables can be both categorical and continuous.}
+\item{bio.variables}{character or character vector. One or more column names indicating known biological variables
+(categorical or continuous) in the SummarizedExperiment object.}
 
-\item{uv.variables}{Symbols. A symbol or a vector of symbols indicating the column names that contain unwanted variable(s)
-in the SummarizedExperiment object. These unwanted variables can be both categorical and continuous.}
+\item{uv.variables}{character or character vector. One or more column names indicating unwanted variables
+(categorical or continuous) in the SummarizedExperiment object.}
 
-\item{assessments.to.exclude}{Symbol. A symbol or vector of symbols (Code) specifying which assessment metrics to exclude.
-These metrics can be acquired using the 'getAssessmentMetrics' function. Default is set to 'NULL'.}
+\item{assessments.to.exclude}{character or character vector. Names of assessment metrics to exclude, as returned by
+the \code{getAssessmentMetrics()} function. Default is NULL.}
 
-\item{fast.pca}{Logical. Indicates whether to obtain computed fast PCA or not. The default is set to 'TRUE'.}
+\item{fast.pca}{Logical. Whether to use fast PCA. Default is TRUE.}
 
-\item{sil.dist.measure}{Symbol. A symbol indicating which distant measurement has been used to compute silhouette analysis
-should be obtained. The options are: 'euclidean', 'maximum', 'manhattan', 'canberra', 'binary' or 'minkowski'.
-The default is set to 'euclidean'.}
+\item{sil.dist.measure}{character. Distance measure to use for silhouette analysis. Options: 'euclidean', 'maximum',
+'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.}
 
-\item{sli.nb.pcs}{Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-set to 3. This number cannot be larger than 'compute.nb.pcs'.}
+\item{sli.nb.pcs}{Numeric. Number of principal components to use for silhouette analysis. Default is 3. Must not exceed
+\code{compute.nb.pcs}.}
 
-\item{ari.clustering.method}{Symbol. A symbol indicating which clustering method has been used to compute ARI should
-be used. The options are 'mclust' or 'hclust' methods. The default is set to 'hclust'.}
+\item{ari.clustering.method}{character. Clustering method for ARI computation. Options: 'mclust' or 'hclust'. Default
+is 'hclust'.}
 
-\item{ari.hclust.method}{Symbol. A symbol indicating which hclust method has been used to compute ARI. The options are
-'ward.D', ward.D2', 'single', 'complete', 'average' (= UPGMA), 'mcquitty' (= WPGMA), 'median' (= WPGMC) or centroid'
-(= UPGMC). The default is set to 'complete'.}
+\item{ari.hclust.method}{character. Method used in \code{hclust} for ARI. Options: 'ward.D', 'ward.D2', 'single', 'complete',
+'average', 'mcquitty', 'median', or 'centroid'. Default is 'complete'.}
 
-\item{ari.hclust.dist.measure}{Symbol. A symbol indicating which distant measurement has been used to compute 'hclsut'
-for the ARI analysis. The options are euclidean', 'maximum', 'manhattan', 'canberra', 'binary' or 'minkowski'. The
-default is set to 'euclidean'.}
+\item{ari.hclust.dist.measure}{character. Distance measure for \code{hclust} in ARI analysis. Options:'euclidean', 'maximum',
+'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.}
 
-\item{ari.nb.pcs}{Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-set to 3. This number cannot be larger than 'compute.nb.pcs'.}
+\item{ari.nb.pcs}{Numeric. Number of principal components to use for ARI analysis. Default is 3. Must not exceed
+\code{compute.nb.pcs}.}
 
-\item{corr.method}{Symbol. A symbol indicates which correlation methods has been used to compute genes-variable correlation.
-Options are 'spearman' or 'pearson'. The default is 'spearman'.}
+\item{corr.method}{character. Correlation method for gene-variable correlation. Options: 'spearman' or 'pearson'.
+Default is 'spearman'.}
 
-\item{corr.cutoff}{Numeric. A numeric values that specifies the threshold for selecting genes that have an absolute
-correlation coefficient lower than this value with continuous variables. The default is set to 0.2.}
+\item{corr.cutoff}{Numeric. Threshold for selecting genes with an absolute correlation lower than this value with
+continuous variables. The default is set to 0.2.}
 
-\item{anova.method}{Symbol. A symbol indicating which ANOVA method has been used for compute genes-variable ANOVA. Options
-are 'aov' or 'weltch'. The default is set to 'aov'.}
+\item{anova.method}{character. ANOVA method for gene-variable comparison. Options: 'aov' or 'welch'. Default is 'aov'.}
 
-\item{fvalue.cutoff}{Numeric. Specifies the threshold for selecting genes that have a F-statistics lower than this value
-with categorical variables. The default value is set to 1.}
+\item{fvalue.cutoff}{Numeric. Threshold for selecting genes with an F-statistic lower than this value with categorical
+variables. Te default is set to 1.}
 
-\item{vca.nb.pcs}{Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-set to 3. This number cannot be larger than 'compute.nb.pcs'.}
+\item{vca.nb.pcs}{Numeric. Number of principal components to use for variance component analysis. Default is 3. Must
+not exceed \code{compute.nb.pcs}.}
 
-\item{lra.nb.pcs}{Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-set to 3. This number cannot be larger than 'compute.nb.pcs'.}
+\item{lra.nb.pcs}{Numeric. Number of principal components to use for latent representation analysis. Default is 3.
+Must not exceed \code{compute.nb.pcs}.}
 
-\item{pcorr.method}{A symbol indicating which correlation method has been used for compute genes-gene ordinary and
-partial correlations. Options are 'spearman' or 'pearson'. The default is set to 'spearman'.}
+\item{pcorr.method}{character. Correlation method for gene-gene ordinary and partial correlations. Options: 'spearman'
+or 'pearson'. The default is set to \code{spearman}.}
 
-\item{pcorr.cutoff}{Numeric. A threshold value used to select gene-gene correlations where the difference between
-ordinary and partial correlations is less than this value.}
+\item{pcorr.cutoff}{Numeric. Threshold for selecting gene-gene correlations where the difference between ordinary and
+partial correlations is less than this value.}
 
-\item{bio.weight}{Numeric. A numeric value to weight the final biological preservation scores. The default is set 0.6.
-Refer to the detail for more information.}
+\item{bio.weight}{Numeric. Weight for the biological preservation score. Default is 0.6. See details for more information.}
 
-\item{uv.weight}{Numeric. A numeric value to weight the final removal of unwanted variation scores. The default is set 0.4.
-Refer to the detail for more information.}
+\item{uv.weight}{Numeric. Weight for the removal of unwanted variation score. Default is 0.4. See details for more
+information.}
 
-\item{plot.output}{Logical. If 'TRUE', the final assessment plot will printed.}
+\item{plot.output}{Logical. If TRUE, displays the final assessment plot.}
 
-\item{save.se.obj}{Logical. Indicates whether to save all the results to the SummarizedExperiment. The default is set
-to 'TRUE'.}
+\item{save.se.obj}{Logical. If TRUE, saves the results in the SummarizedExperiment object. Default is TRUE.}
 
-\item{output.name}{Symbol. A symbol indicating the file name for the results in the SummarizedExperiment. If 'NULL',
-the function will create "paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays.')" as a file name.}
+\item{output.name}{character. File name for the results stored in the SummarizedExperiment. If NULL, the function creates
+a default name using \code{paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays.')}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If TRUE, displays messages during function execution.}
 }
 \value{
-A SummarizedExperiment object containing all the assessments matrix, plot and table or a list that contains all
-the results.
+A SummarizedExperiment object containing the assessment matrix, plot, and table, or a list containing all results.
 }
 \description{
-This function summarizes a range of global and gene level metrics obtained using the 'assessVariation' function for
+This function summarizes a range of global and gene level metrics obtained using the \code{assessVariation} function for
 individual biological and unwanted variables. The functions returns numerical assessments in a table to assess the
 performance of difference normalization. Refer to details for more information.
 }
@@ -150,8 +143,8 @@ It will output the following plots:
 }
 }
 \references{
-**Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
-2019.
+**Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids
+Research, 2019.
 **Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 Nature Biotechnology, 2023
 }

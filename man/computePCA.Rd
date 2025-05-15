@@ -2,7 +2,7 @@
 % Please edit documentation in R/computePCA.R
 \name{computePCA}
 \alias{computePCA}
-\title{Perform principal component analysis (PCA) using singular value decomposition (SVD).}
+\title{Performs principal component analysis (PCA)}
 \usage{
 computePCA(
   se.obj,
@@ -16,61 +16,62 @@ computePCA(
   svd.bsparam = bsparam(),
   assess.se.obj = TRUE,
   remove.na = "assays",
-  save.se.obj = TRUE,
   override.check = FALSE,
+  save.se.obj = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to compute PCA. The default is "all, which indicates all the assays of the
-SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character string or a vector of character strings for selecting the name(s) of the
+assay(s) in the SummarizedExperiment object to compute PCA. The default is set to "all", which indicates all the
+assays in the SummarizedExperiment object will be selected.}
 
 \item{fast.pca}{Logical. Indicates whether to calculate a specific number of left singular vectors instead of the
-full possible vectors to speed up the process. The default is 'TRUE'.}
+full set of vectors to speed up the process. The default is set to \code{TRUE}.}
 
-\item{nb.pcs}{Numeric. The number of first left singular vectors to be calculated for the fast PCA process. The
-default is 10.}
+\item{nb.pcs}{Numeric. The number of first left singular vectors to be calculated for the fast PCA process.
+The default is set to 10. If the \code{fast.pca = FALSE}, no need a value to for \code{nb.pcs}.}
 
-\item{center}{Logical. Indicates whether to scale the data or not. If center is 'TRUE', then centering is done by
-subtracting the column means of the assay from their corresponding columns. The default is 'TRUE'.}
+\item{center}{Logical. Indicates whether to center the data before applying SVD. If center is \code{TRUE}, centering is
+performed by subtracting the column means of the data from their corresponding columns. The default is set to \code{TRUE}.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
-is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-mean square otherwise. The default is FALSE.}
+\item{scale}{Logical. Indicates whether to scale the data before applying SVD. If scale is set to \code{TRUE}, scaling is
+done by dividing the (centered) columns of the assays by their standard deviations,  if center is \code{TRUE}, and the root
+mean square otherwise. The default is set to \code{FALSE}.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before computing the SVD. The
-default is 'TRUE'. The data must be in log scale before computing the SVD.}
+default is set to \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements before applying log transformation.
-The default is 1. This argument cannot be NULL or negative.}
+\item{pseudo.count}{Numeric. A value used as a pseudo-count to be added to all measurements before applying the log
+transformation. The default is set to 1.}
 
-\item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
-We refer to the 'runSVD' function from the BiocSingular R package for more details.}
+\item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is set
+to \code{bsparam()}. See the \code{runSVD()} function from the BiocSingular R package for more details.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment class object. The default is TRUE.
-We refer to the checkSeObj function for more details.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
+See the \code{checkSeObj()} function for more details.}
 
-\item{remove.na}{To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.}
+\item{remove.na}{Character. Specifies whether to remove NA or missing values from the data sets (assays). Options are
+'assays' and 'none'. The default is set to \code{assays}.}
+
+\item{override.check}{Logical. When set to \code{TRUE}, the function checks whether PCA has already been computed for the
+current parameters. If so, the PCA will not be recalculated. The default is set to \code{FALSE}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the SVD results in the metadata of the SummarizedExperiment object
-or to output the results as list. By default it is set to 'TRUE'.}
+or to output the results as a list. The default is set to \code{TRUE}. The results can be found:
+"se.obj->metadata->metric->AssayName->global.level->PCA$"}
 
-\item{override.check}{Logical. When set to 'TRUE', the function verifies the current SummarizedExperiment object to
-determine if the PCA has already been computed for the current parameters. If it has, the metric will not be recalculated.
-The default is set to FALSE.}
-
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages for the different steps of the function.}
 }
 \value{
-A SummarizedExperiment object or a list that containing the singular value decomposition results and the
-percentage variation of each PCs.
+A SummarizedExperiment object or a list containing the singular value decomposition results and the
+percentage variation of each principal component (PC).
 }
 \description{
-This function uses singular value decomposition to perform principal component on the assay(s) in a SummarizedExperiment
-object. The function provides fast singular value decomposition using the BiocSingular R package.
+This function uses singular value decomposition to perform principal component on the dataset(s) (assay(s) in a
+SummarizedExperiment object. The function provides fast singular value decomposition using the BiocSingular R package.
 }
 \details{
 The PCs (in this context also called singular vectors) of the sample × transcript array of log counts are the linear

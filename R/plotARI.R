@@ -1,39 +1,39 @@
-#' Generate barplot the adjusted rand index (ARI).
+#' Generates barplot or scatter plot the Adjusted Rand Index (ARI).
 
 #' @author Ramyar Molania
 
 #' @description
-#' This functions generates barplots of adjusted rand index for individual assays in the SummarizedExperiment object. If
-#' two variables are provided, the function creates scatter plots of the adjusted rand index of each variable for
-#' individual assays.
+#' This function generates barplots of the Adjusted Rand Index (ARI) for individual datasets in the `SummarizedExperiment`
+#' object. If two variables are provided, the function creates scatter plots comparing the ARIs of each variable across
+#' the assays. The `computeARI()` function must applied before using the `plotARI()` function.
 
 #' @references
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
 
-#' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or list of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object to generate barplot or scatter plots of the computed adjusted rand index. By default all
-#' the assays of the SummarizedExperiment object will be selected.
-#' @param variables Symbol. Indicates one or two column names in the SummarizedExperiment object that contains categorical
-#' variables such as sample subtypes or batches. If two column names are provided, the function plots the two adjusted
-#' rand index against each other for all the specified assays.
-#' @param ari.method Symbol. A symbol that indicates what computed ARI method should be used for plotting. The "ari.method"
-#' must be specified based on the "computeARI" function. The default is "hclust.complete.euclidian", which is the default
-#' of the the "computeARI" function. We refer to the "computeARI" function for more detail.
-#' @param plot.type Symbol. A symbol that specifies how to plot the adjusted rand index. The options are "single.plot" and
-#' "combined.plot". If a variable is provided in the "variables" argument, then the "plot.type" must be set to "single.plot",
-#' so, the function generates a barplot of the adjusted rand index. If two variables are provided and "plot.type" is set to
-#' "combined.plot", then the function generates a scatter plot of the adjusted rand index of each variable against each other.
-#' The default is set to 'single.plot'.
-#' @param plot.output Logical. If 'TRUE', the individual barplots or scatter plots will be printed while functions is running.
-#' The default is set to 'TRUE'.
-#' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment  object
-#' or to output the result as list. The default is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' @param se.obj A `SummarizedExperiment` object.
+#' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the `SummarizedExperiment`
+#' object to be used for generating barplots or scatter plots of the computed Adjusted Rand Index (ARI). By default,
+#' all assays in the `SummarizedExperiment` object will be selected.
+#' @param variables Character or character vector of length one or two. Indicates one or two column names in the
+#' `SummarizedExperiment` object that contain categorical variables, such as sample subtypes or batch labels. If two
+#' variables are provided, the function plots the ARIs against each other for all specified assays.
+#' @param ari.method Character. Specifies the ARI computation method to use for plotting. This must match one of the
+#' methods supported by the `computeARI` function. The default is `"hclust.complete.euclidean"`, which is also the default
+#'  in `computeARI`. See the `computeARI` function documentation for more details.
+#' @param plot.type Character. Specifies the plot type for the Adjusted Rand Index. Options are `"single.plot"` and
+#' `"combined.plot"`. If one variable is provided in `variables`, `plot.type` must be set to `"single.plot"` to generate
+#' a barplot. If two variables are provided and `plot.type` is set to `"combined.plot"`, the function generates a scatter
+#' plot comparing the ARIs. The default is `"single.plot"`.
+#' @param plot.output Logical. If `TRUE`, the individual barplots or scatter plots will be printed during function execution.
+#' Default is `TRUE`.
+#' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the `SummarizedExperiment` object
+#' or return them as a list. The default is `TRUE`.
+#' @param verbose Logical. If `TRUE`, messages for different steps of the function will be displayed.
 
-#' @return A SummarizedExperiment object or a list that containing all the plots of the computed ARI on the categorical
-#' variable.
+#' @return A `SummarizedExperiment` object or a list containing all the plots of the computed ARIs for the categorical
+#' variable(s).
+
 
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom ggrepel geom_text_repel
@@ -55,11 +55,11 @@ plotARI <- function(
                         color = 'white',
                         verbose = verbose)
     # Checking the inputs ####
-    if (is.null(assay.names)) {
-        stop('The "assay.names" cannot be empty')
+    if (is.null(assay.names) | is.logical(assay.names)) {
+        stop('The "assay.names" cannot be NUll or logical.')
     }
-    if (is.null(variables)) {
-        stop('The "variables" cannot be empty')
+    if (is.null(variables) | is.logical(variables)) {
+        stop('The "variables" cannot be NULL or logical.')
     }
     if (!plot.type %in% c('single.plot', 'combined.plot')) {
         stop('The "plot.type" must be one of the "single.plot" or "combined.plot".')
@@ -82,13 +82,14 @@ plotARI <- function(
     }
 
     # Plotting the ARI values ####
-    ## single plot ####
+    ## Single plot ####
     if (plot.type == 'single.plot') {
         ### obtain ari ####
         printColoredMessage(
-            message = paste0('-- Obtain computed ARI from the SummarizedExperiment object:'),
+            message = paste0('-- Obtaining computed ARI from the SummarizedExperiment object:'),
             color = 'magenta',
-            verbose = verbose)
+            verbose = verbose
+            )
         all.ari <- getMetricFromSeObj(
             se.obj = se.obj,
             slot = 'Metrics',
@@ -104,21 +105,26 @@ plotARI <- function(
             )
         ## plot for individual assay ####
         printColoredMessage(
-            message = paste0('--Generate barplot of the ARI for the individual assay (s):'),
+            message = paste0('--Generating barplot of the ARI values for the individual data set(s):'),
             color = 'magenta',
-            verbose = verbose)
+            verbose = verbose
+            )
         all.single.ari.plots <- lapply(
             levels(assay.names),
             function(x) {
                 printColoredMessage(
-                    message = paste0('- Create barplot of the ARI for the "', x, '" data.'),
+                    message = paste0(
+                        '- Creating barplot of the ARI for the "',
+                        x,
+                        '" data.'),
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 ari.plot <- ggplot() +
                     geom_col(aes(y = all.ari[[x]], x = 1)) +
                     ggtitle(variables) +
                     xlab(x) +
-                    ylab('Adjusted rand index ') +
+                    ylab('Adjusted rand index (ARI) ') +
                     theme(
                         panel.background = element_blank(),
                         axis.line = element_line(colour = 'black', linewidth = 1),
@@ -132,24 +138,26 @@ plotARI <- function(
             })
         names(all.single.ari.plots) <- levels(assay.names)
 
-        ## put all plots of individual assays ####
-        everything <- datasets <- ari <- NULL
+        ## putting all the plots of individual assays together ####
         if (length(assay.names) > 1) {
             printColoredMessage(
-                message = paste0('-- Put all the ARIs togather:'),
+                message = '-- Putting all the ARIs together:',
                 color = 'magenta',
-                verbose = verbose)
+                verbose = verbose
+                )
             overall.single.ari.plot <- as.data.frame(all.ari) %>%
                 tidyr::pivot_longer(
                     everything(),
                     names_to = 'datasets',
-                    values_to = 'ari')
+                    values_to = 'ari'
+                    )
             overall.single.ari.plot$datasets <- factor(
                 x =  overall.single.ari.plot$datasets,
-                levels = assay.names)
+                levels = assay.names
+                )
             overall.single.ari.plot <- ggplot(overall.single.ari.plot, aes(x = datasets, y = ari)) +
                 geom_col() +
-                ylab('Adjusted rand index ') +
+                ylab('Adjusted rand index (ARI)') +
                 xlab('Datasets') +
                 ggtitle(variables) +
                 theme(
@@ -166,31 +174,35 @@ plotARI <- function(
             overall.single.ari.plot <- annotate_figure(
                 p = overall.single.ari.plot,
                 top = text_grob(
-                    label = "Adjusted rand index",
+                    label = "Adjusted rand index (ARI)",
                     color = "orange",
                     face = "bold",
                     size = 18),
                 bottom = text_grob(
                     label = paste0(
-                        'Analysis: ', 'Adjusted rand index between the first PCs and the ', variables, ' variable.'),
+                        'Analysis: ',
+                        'Adjusted rand index between the first PCs and the ',
+                        variables,
+                        ' variable.'),
                     color = "black",
                     hjust = 1,
                     x = 1,
                     size = 10)
             )
             printColoredMessage(
-                message = '- The individual assay ARI barplot are combined into one.',
+                message = '- The individual ARI barplots from each dataset have been combined into a single plot.',
                 color = 'blue',
-                verbose = verbose)
+                verbose = verbose
+                )
             if (isTRUE(plot.output))
                 suppressMessages(print(overall.single.ari.plot))
         }
     }
 
-    ## combined plot ####
+    ## Combined plot ####
     if (plot.type == 'combined.plot') {
         printColoredMessage(
-            message = paste0('-- Obtain computed ARI for the from the SummarizedExperiment object:'),
+            message = '-- Obtain computed ARI for the from the SummarizedExperiment object:',
             color = 'magenta',
             verbose = verbose
         )
@@ -198,9 +210,13 @@ plotARI <- function(
             levels(assay.names),
             function(x) {
                 printColoredMessage(
-                    message = paste0('- Obtain ARI for the ', x, ' data.'),
+                    message = paste0(
+                        '- Obtaining ARI value for the ',
+                        x,
+                        ' data.'),
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 if (!ari.method %in% names(se.obj@metadata[['Metrics']][[x]][['global.level']][['ARI']])) {
                     stop(paste0('The ', ari.method ,'has not been computed yet for the ', variables, ' variable and the ', x, ' assay.'))
                 }
@@ -215,17 +231,21 @@ plotARI <- function(
                 return(ari)
             })
         names(all.ari) <- levels(assay.names)
-        ### individual plots ####
+        ### Individual plots ####
         printColoredMessage(
-            message = paste0('-- Plot combined ARI'),
+            message = paste0('-- Plotting combined ARI'),
             color = 'magenta',
-            verbose = verbose)
+            verbose = verbose
+            )
         datasets <- NULL
         all.combined.ari.plots <- lapply(
             levels(assay.names),
             function(x) {
                 printColoredMessage(
-                    message = paste0('-Plot ARI for the ', x, ' data.'),
+                    message = paste0(
+                        '- Plotting ARI for the ',
+                        x,
+                        ' data.'),
                     color = 'blue',
                     verbose = verbose
                 )
@@ -258,7 +278,7 @@ plotARI <- function(
         datasets <- NULL
         if (length(assay.names) > 1) {
             printColoredMessage(
-                message = paste0('-- Generate the combined ARI plot for all the assays(s):'),
+                message = paste0('-- Generating the combined ARI plot for all the data stes:'),
                 color = 'magenta',
                 verbose = verbose
             )
@@ -291,7 +311,10 @@ plotARI <- function(
                     size = 18),
                 bottom = text_grob(
                     label = paste0(
-                        'Analysis: ', 'Adjusted rand index between the first PCs and the ', variables, ' variable.'),
+                        'Analysis: ',
+                        'Adjusted rand index between the first PCs and the ',
+                        variables,
+                        ' variable.'),
                     color = "black",
                     hjust = 1,
                     x = 1,
@@ -300,10 +323,12 @@ plotARI <- function(
         }
     }
 
-    # Save the results ####
-    printColoredMessage(message = '-- Save the ARI barplots:',
-                        color = 'magenta',
-                        verbose = verbose)
+    # Saving the results ####
+    printColoredMessage(
+        message = '-- Saving the ARI barplots:',
+        color = 'magenta',
+        verbose = verbose
+        )
     ## add results to the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)) {
         printColoredMessage(
@@ -336,8 +361,9 @@ plotARI <- function(
             )
         }
         printColoredMessage(
-            message = paste0('- The ARI barplot of the individual assay(s) is saved to the ',
-                             ' "se.obj@metadata$metric$AssayName$ARI" in the SummarizedExperiment object. '),
+            message = paste0(
+                '- The ARI barplot of the individual assay(s) is saved to the ',
+                ' "se.obj@metadata$metric$AssayName$ARI" in the SummarizedExperiment object.'),
             color = 'blue',
             verbose = verbose)
 
@@ -366,8 +392,9 @@ plotARI <- function(
                 )
             }
             printColoredMessage(
-                message = paste0('- The combined ARI barplot all the assays is saved to the ',
-                                 ' "se.obj@metadata$plot$ARI" in the SummarizedExperiment object.'),
+                message = paste0(
+                    '- The combined ARI barplot all the assays is saved to the ',
+                    ' "se.obj@metadata$plot$ARI" in the SummarizedExperiment object.'),
                 color = 'blue',
                 verbose = verbose)
         }
@@ -381,7 +408,7 @@ plotARI <- function(
     ## return only the adjusted rand index results ####
     if (isFALSE(save.se.obj)) {
         printColoredMessage(
-            message = paste0('-All the ARI plots re saved as list.'),
+            message = paste0('- All the ARI plots re saved as list.'),
             color = 'blue',
             verbose = verbose)
         printColoredMessage(message = '------------The plotARI function finished.',

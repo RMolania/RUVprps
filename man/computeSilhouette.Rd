@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeSilhouette.R
 \name{computeSilhouette}
 \alias{computeSilhouette}
-\title{Computes the average silhouette width using PCs. -- Finalized}
+\title{Computes the average silhouette width using PCs.}
 \usage{
 computeSilhouette(
   se.obj,
@@ -26,8 +26,8 @@ indicates that all the assays of the SummarizedExperiment object will be selecte
 SummarizedExperiment object. The variable can represent a biological or unwanted variable.}
 
 \item{dist.measure}{Character. A character string indicating which distance measure to use for calculating the Silhouette
-coefficient. The options are 'euclidean', 'maximum', 'manhattan', 'canberra', 'binary', or 'minkowski'. The default is
-set to 'euclidean'. Refer to the 'dist' function from the 'stats' R package for more details.}
+coefficient. The options are \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or \code{minkowski}. The default is
+set to \code{euclidean}. Refer to the \code{dist} function from the \strong{stats} R package for more details.}
 
 \item{fast.pca}{Logical. Indicates whether to use the PCs calculated using fast PCA. The default is set to 'TRUE'.
 Fast PCA and ordinary PCA do not affect the Silhouette coefficient calculation.}
@@ -36,9 +36,9 @@ Fast PCA and ordinary PCA do not affect the Silhouette coefficient calculation.}
 distances between samples. The default is set to 3.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the silhouette coefficient  results in the metadata of the
-SummarizedExperiment object or to output the result. The default is set to 'TRUE'.}
+SummarizedExperiment object or to output the result. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \value{
 Either the SummarizedExperiment object containing the computed Silhouette coefficient stored in the metadata

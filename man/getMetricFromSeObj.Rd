@@ -2,7 +2,7 @@
 % Please edit documentation in R/getMetricFromSeObj.R
 \name{getMetricFromSeObj}
 \alias{getMetricFromSeObj}
-\title{Get a metric or plot from the "metadata" of SummarizedExperiment object.}
+\title{Get a metric or plot from the \code{metadata} of a SummarizedExperiment object.}
 \usage{
 getMetricFromSeObj(
   se.obj,
@@ -22,32 +22,31 @@ getMetricFromSeObj(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{slot}{Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.}
+\item{slot}{Character string. Indicates the name of the slot in the \code{metadata} of the SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols specifying the name(s) of the assay(s) in the SummarizedExperiment
-object. The default is set to 'all'.}
+\item{assay.names}{Character string or vector. Specifies the name(s) of the assay(s) in the SummarizedExperiment
+object. Default is \code{all}.}
 
-\item{assessment.type}{Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.}
+\item{assessment.type}{Character string. Specifies the type of assessment. Options are \code{gene.level} or \code{global.level}.}
 
-\item{assessment}{Symbol. A symbol indicating the name of the metric to be checked.}
+\item{assessment}{Character string. Name of the metric to retrieve.}
 
-\item{method}{Symbol. A symbol indicating the method used to calculate the metric.}
+\item{method}{Character string. Method used to calculate the metric.}
 
-\item{variables}{Symbol. A symbol or a vector of symbols indicating the variables used to calculate the metric.}
+\item{variables}{Character string or vector. Specifies the variable(s) used to calculate the metric.}
 
-\item{file.name}{Symbol. A symbol indicating the file name to which the results of the metric are assigned.}
+\item{file.name}{Character string. Name of the file to which the metric results were saved.}
 
-\item{sub.file.name}{Symbol. A symbol indicating the sub-file name to which the results of the metric are assigned.}
+\item{sub.file.name}{Character string. Name of the sub-file (if applicable) to which the results were saved.}
 
-\item{required.function}{Symbol. A symbol indicating the name of function that is required to be applied before getting
-the results of that metric.}
+\item{required.function}{Character string. Name of the function that must have been run prior to retrieving this metric.}
 
-\item{message.to.print}{Symbol. A symbol to print.}
+\item{message.to.print}{Character string. A message to print when retrieving the metric.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, prints messages describing the function's progress.}
 }
 \description{
-Get a metric or plot from the "metadata" of SummarizedExperiment object.
+Get a metric or plot from the \code{metadata} of a SummarizedExperiment object.
 }
 \author{
 Ramyar Molania

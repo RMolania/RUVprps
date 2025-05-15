@@ -1,34 +1,35 @@
-#' Plot the vector correlation.
-
+#' Generates line-dot plot of the PCs-variable vector correlation analysis.
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
-#' This function generate a dot-line plot between the first cumulative PCs and the correlation coefficient (R2) obtained
-#' from the vector correlation analysis. An ideal normalization should results a low correlation with unwanted variation
-#' variables and high correlation with known biology.
-
+#' This function generates a dot-line plot between the first cumulative PCs and the correlation coefficient (R2) obtained
+#' from the vector correlation analysis. An ideal normalization should result in a low correlation with unwanted variation
+#' variables and a high correlation with known biology.
+#'
 #' @references
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or vector of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object to generate a vector correlation. The default is "all, which indicates all
+#' @param assay.names Character. A character string or vector of character strings for the selection of the name(s) of the
+#' assay(s) in the SummarizedExperiment object to generate a vector correlation. The default is `all`, which indicates all
 #' the assays of the SummarizedExperiment object will be selected.
-#' @param variable Symbol. A symbol that indicates the name of the column in the sample annotation of the SummarizedExperiment
-#' object. The variable must be a categorical variable.
-#' @param fast.pca Logical. Indicates whether to use the fast PCA or PCA results computed by the computePCA function. The
-#' default is 'TRUE'.
+#' @param variable Character. A character string that indicates the name of the column in the sample annotation of the
+#' SummarizedExperiment object. The variable must be a categorical variable.
+#' @param fast.pca Logical. Indicates whether to use the fast PCA or PCA results computed by the `computePCA` function.
+#' The default is set to `TRUE`.
 #' @param nb.pcs Numeric. A numeric value indicating the number of first PCs to use to plot the vector correlation. The
 #' default is set to 10.
-#' @param plot.output Logical. If 'TRUE', the vector correlation line-dot plot of individual assay(s) will be printed
+#' @param plot.output Logical. If `TRUE`, the vector correlation line-dot plot of individual assay(s) will be printed
 #' while the function is running.
 #' @param save.se.obj Logical. Indicates whether to save the vector correlation plots to the meta data of the
-#' SummarizedExperiment object or to output the result as list. By default it is set to TRUE.
-#' @param verbose Logical. If 'TRUE', displaying process messages is enabled.
-
+#' SummarizedExperiment object or to output the result as a list. The default it is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, displaying process messages is enabled.
+#'
 #' @return A SummarizedExperiment object or a list that contains all the vector correlation plots for the individual
 #' assay(s).
+
 
 #' @importFrom grDevices colorRampPalette
 #' @importFrom tidyr pivot_longer

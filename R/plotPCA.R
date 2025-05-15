@@ -1,56 +1,54 @@
 #' Generates scatter and boxplot plot of principal components.
-
+#'
 #' @description
 #' This function generates scatter and boxplots of the first principal components (PCs) of the assay(s) in a
 #' SummarizedExperiment object. The function can generate pairwise scatter plots of the first principal components,
 #' colored by a categorical variable, or create boxplots of each PC across the variable. Boxplots of principal components
 #' are especially useful when the levels of a categorical variable are numerous, making visualization through colored
 #' scatter plots challenging. If a continuous variable is provided, the function creates scatter plots of each PC against
-#'  the variable.
-
+#' the variable.
+#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character or vector. A character string or a vector of strings specifying the name(s) of the assay(s)
-#' in the SummarizedExperiment object for computing principal components (PCs). By default, all assays in the SummarizedExperiment
-#' object will be selected.
+#' @param assay.names Character or character vector. A character string or a vector of strings specifying the name(s) of
+#' the assay(s) in the SummarizedExperiment object for computing principal components (PCs). By default, all assays in the
+#' SummarizedExperiment object will be selected.
 #' @param variable Character. The name of the column in the sample annotation of the SummarizedExperiment object that
 #' contains either a categorical or continuous variable. If a continuous variable is provided, the function creates scatter
 #' plots of each PC against the variable. If a categorical variable is provided, the function can generate pairwise scatter
-#' plots of the first principal components, colored by the categorical variable, or create boxplots of each PC across the variable.
-#' @param fast.pca Logical. Indicates whether to use the pre-computed fast PCA or not. The default is set to 'TRUE'. Refer
-#' to the computePCA' function for more details.
+#' plots of the first principal components, colored by the categorical variable, or create boxplots of each PC across the
+#' variable.
+#' @param fast.pca Logical. Indicates whether to use the pre-computed fast PCA or not. The default is set to `TRUE`. Refer
+#' to the `computePCA()` function for more details.
 #' @param nb.pcs Numeric. A numeric value specifying the number of principal components to be used for plotting. The
 #' default is set to 3. It’s important to note that the variation in the PCs for the selected subset will be based solely
-#'  on the chosen number of PCs.
-#' @param plot.type Character. Specifies which type of plot should be generated. Options are: 'scatter' and 'boxplot'.
-#' The default is set to 'scatter'. Note that the 'plot.type' cannot be set to 'scatter' if a categorical variable is provided.
+#' on the chosen number of PCs.
+#' @param plot.type Character. Specifies which type of plot should be generated. Options are: `scatter` and `boxplot`.
+#' The default is set to `scatter`. Note that `plot.type` cannot be set to `scatter` if a categorical variable is provided.
 #' @param variable.colors Character vector. Specifies the colors to be used in scatter plots of PCs when a categorical
-#' variable is provided. If 'NULL', the function will use the default color scheme.
+#' variable is provided. If `NULL`, the function will use the default color scheme.
 #' @param points.size Numeric. A numeric value specifying the size of the points in the scatter PCA plots. The default
 #' is set to 1.
 #' @param stroke.color Character. Specifies the color of the stroke around the points in the scatter PCA plots. The default
-#'  is set to 'gray'.
-#' @param stroke.size Numeric. A numeric value indicating the thickness of the stroke around the points in the scatter PCA plots.
-#' The default is set to 0.1.
+#' is set to `gray`.
+#' @param stroke.size Numeric. A numeric value indicating the thickness of the stroke around the points in the scatter PCA
+#' plots. The default is set to 0.1.
 #' @param points.alpha Numeric. A numeric value indicating the transparency of the points in the scatter PCA plots. The
 #' default is set to 0.5.
-#' @param densities.alpha Numeric. A numeric value indicating the transparency of the density plots in the scatter PCA plots.
-#' The default is set to 0.5.
+#' @param densities.alpha Numeric. A numeric value indicating the transparency of the density plots in the scatter PCA
+#' plots. The default is set to 0.5.
 #' @param legend.position Character. Specifies the position of the plot legend. This setting applies when a categorical
-#' variable is provided, and the 'plot.type' is set to 'scatter'. Options are: 'top', 'right', 'bottom', and 'left'. The
-#' default is set to "bottom".
+#' variable is provided and `plot.type` is set to `scatter`. Options are: `top`, `right`, `bottom`, and `left`. The
+#' default is set to `bottom`.
 #' @param plot.ncol Numeric. A numeric value indicating the number of columns in the plot grid. When more than one assay
-#'  is selected,
-#' the function arranges all the PCA plots in one grid.
+#' is selected, the function arranges all the PCA plots in one grid.
 #' @param plot.nrow Numeric. A numeric value indicating the number of rows in the plot grid. When more than three assays
-#'  are selected,
-#' the function arranges all the PCA plots in one grid.
-#' @param plot.output Logical. If 'TRUE', the individual PCA plot(s) will be displayed as the function runs.
+#' are selected, the function arranges all the PCA plots in one grid.
+#' @param plot.output Logical. If `TRUE`, the individual PCA plot(s) will be displayed as the function runs.
 #' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment object
-#' or to output the results as a list. By default, this is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', process messages will be displayed during execution.
-
+#' or to output the results as a list. By default, this is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, process messages will be displayed during execution.
+#'
 #' @return A SummarizedExperiment object containing the PCA plot(s) in its metadata, or a list containing the PCA plot(s).
-
 
 #' @importFrom ggpubr ggarrange theme_pubr stat_cor
 #' @importFrom patchwork plot_spacer plot_layout

@@ -222,7 +222,6 @@ findBioGenes <- function(
                 se.obj = se.obj,
                 assay.names = assay.name,
                 pseudo.count = pseudo.count,
-                assessment = ' two-way ANOVA'
                 )[[assay.name]]
             ## Create all possible homogeneous sample groups ####
             ### biological groups ####
@@ -341,7 +340,6 @@ findBioGenes <- function(
                     se.obj = se.obj,
                     assay.names = assay.name,
                     pseudo.count = pseudo.count,
-                    assessment = ' two-way ANOVA'
                 )[[assay.name]]
             }
             ### normalization ####
@@ -651,7 +649,6 @@ findBioGenes <- function(
                     se.obj = se.obj,
                     assay.names = assay.name,
                     pseudo.count = pseudo.count,
-                    assessment = ' two-way ANOVA'
                 )[[assay.name]]
             }
             ## normalization ####
@@ -915,7 +912,6 @@ findBioGenes <- function(
                     se.obj = se.obj,
                     assay.names = assay.name,
                     pseudo.count = pseudo.count,
-                    assessment = ' two-way ANOVA'
                 )[[assay.name]]
             }
             ## normalization ####

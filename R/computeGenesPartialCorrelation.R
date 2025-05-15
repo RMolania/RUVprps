@@ -1,4 +1,4 @@
-#' Compute gene-gene partial correlation analysis. -- finalized
+#' Computes gene-gene partial correlation analysis.
 
 #' @author Ramyar Molania
 
@@ -11,33 +11,37 @@
 #' variables.
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
-#' in the SummarizedExperiment object for calculating the correlations. The default is ste to "all", which indicates that
+#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the data set(s)
+#' in the SummarizedExperiment object for calculating the correlations. The default is set to `all`, which indicates that
 #' all assays of the SummarizedExperiment object will be selected.
-#' @param variable Character. A character string indicating the column name in the SummarizedExperiment object that contains a
-#' continuous variable, such as library size, tumor purity, etc.
-#' @param method Character. Specifies which correlation method should be used. The options are 'pearson', 'kendall', or
-#' 'spearman'. The default is set to 'spearman'.
+#' @param variable Character. A character string indicating the column name in the SummarizedExperiment object that
+#' contains a continuous variable, such as library size, tumor purity, etc.
+#' @param method Character. Specifies which correlation method should be used. The options are `pearson`, `kendall`, or
+#' `spearman`. The default is set to `spearman`.
 #' @param genes Character or Numeric. A vector containing genes on which the correlation analysis will be performed. The
-#' vector can be logical, numeric, or gene names (symbol). The default is to 'NULL', which means all genes will be selected.
-#' @param select.genes Logical. If 'TRUE', the function will compute the correlation between individual genes and the specified
-#' variable, then select a subset of genes based on the "corr.coff.cutoff" for downstream analysis. The default is set
-#' to 'TRUE'. This will speed up the computational time.
-#' @param reference.data Character. A character string specifying the name of the assay to be used for selecting genes
-#' based on the correlation analysis. The default is NULL, which means all specified assays will be used.
-#' @param corr.coff.cutoff Numeric. A numeric value used as a cutoff for selecting genes. The default is 0.7.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is TRUE.
-#' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements of the assay(s) before applying
-#' the log transformation to avoid -Inf for measurements that are equal to 0. The default is 1.
-#' @param apply.round Logical. Indicates whether to round the correlation coefficients. The default is TRUE.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. See the `checkSeObj` function for more details.
-#' @param remove.na Character. Specifies whether to remove NA or missing values from the assays. The options are 'assays' and 'none'.
-#' The default is "assays", meaning that all NA or missing values from the assays will be removed before computing RLE. See
-#' the `checkSeObj` function for more details.
-#' @param override.check Logical. When set to 'TRUE', the function verifies whether the PPcorr has already been computed for the current parameters
-#' on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is FALSE.
-#' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object or
-#' to output the result as a list. The default is TRUE.
+#' vector can be logical, numeric, or gene names (symbol). The default is to `NULL`, which means all genes will be selected.
+#' @param select.genes Logical. If `TRUE`, the function will compute the correlation between individual genes and the
+#' specified variable, then select a subset of genes based on the "corr.coff.cutoff" for downstream analysis. The default
+#' is set to `TRUE`. This will speed up the computational time.
+#' @param reference.data Character. A character string specifying the name of the data to be used for selecting genes
+#' based on the correlation analysis. The default is se to `NULL`, which means all specified assays will be used.
+#' @param corr.coff.cutoff Numeric. A numeric value used as a cutoff for selecting genes. The default is set to 0.7.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before computing the correlation.
+#' The default is se to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements of the data
+#' set(s) before applying the log transformation to avoid `-Inf` for measurements that are equal to 0. The default is set
+#' to 1.
+#' @param apply.round Logical. Indicates whether to round the correlation coefficients. The default is set to `TRUE`.
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. See the `checkSeObj()`
+#' function for more details.
+#' @param remove.na Character. Specifies whether to remove NA or missing values from the assays. The options are `assays`
+#' and `none`. The default is set to `assays`, meaning that all NA or missing values from the assays will be removed
+#' before computing RLE. See the `checkSeObj()` function for more details.
+#' @param override.check Logical. When set to TRUE, the function verifies whether the PPcorr has already been computed
+#' for the current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The
+#' default is set to  `FALSE`.
+#' @param save.se.obj Logical. Indicates whether to save the correlation results in the metadata of the SummarizedExperiment
+#' object or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If TRUE, displays the messages for different steps of the function.
 
 #' @return A SummarizedExperiment object containing the correlation coefficients or a list of the correlation coefficients
@@ -94,7 +98,7 @@ computeGenesPartialCorrelation <- function(
     } else if (isFALSE(override.check)) compute.metric <- TRUE
 
     if (isTRUE(compute.metric)){
-        # Check the inputs ####
+        # Checking the function inputs ####
         if (is.list(assay.names)) {
             stop('The "assay.names" cannot be a list.')
         }
@@ -169,7 +173,6 @@ computeGenesPartialCorrelation <- function(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 pseudo.count = pseudo.count,
-                assessment = 'computing "PCA"',
                 verbose = verbose
             )
         }
@@ -184,7 +187,7 @@ computeGenesPartialCorrelation <- function(
                 function(x) assay(x = se.obj, i = x))
             names(all.assays) <- levels(assay.names)
         }
-        # Select genes ####
+        # Selecting genes ####
         printColoredMessage(
             message ='-- Selecting genes based the current parameters:',
             color = 'magenta',
@@ -272,14 +275,14 @@ computeGenesPartialCorrelation <- function(
             selected.genes <- genes
         }
 
-        ## updating all assays ####
+        ## Updating all assays ####
         all.assays <- lapply(
             levels(assay.names),
             function(x) all.assays[[x]][ selected.genes, ])
         names(all.assays) <- levels(assay.names)
 
 
-        # Compute gene-gene correlation ####
+        # Computing gene-gene correlation ####
         printColoredMessage(
             message ='-- Computing all possible pairwise gene-gene correlations:',
             color = 'magenta',
@@ -340,7 +343,7 @@ computeGenesPartialCorrelation <- function(
             })
         names(gene.variable.correlation) <-  levels(assay.names)
 
-        # Compute gene-gene partial correlation ####
+        # Computing gene-gene partial correlation ####
         printColoredMessage(
             message = '-- Computing all possible partial pairwise gene-gene correlations:',
             color = 'magenta',
@@ -372,8 +375,8 @@ computeGenesPartialCorrelation <- function(
             })
         names(gene.gene.partial.correlation) <- levels(assay.names)
 
-        # Save the data ####
-        ## add results to the SummarizedExperiment object ####
+        # Saving the data ####
+        ## Adding the results to the SummarizedExperiment object ####
         printColoredMessage(
             message = '-- Saving all the correlation coefficients data:',
             color = 'magenta',
@@ -407,10 +410,10 @@ computeGenesPartialCorrelation <- function(
                                 verbose = verbose)
             return(se.obj = se.obj)
         }
-        ## output results as a list ####
+        ## Outputting the results as a list ####
         if(isFALSE(save.se.obj)){
             printColoredMessage(
-                message = paste0('- The correlations data is outputed as a list.'),
+                message = '- The correlations data is outputed as a list.',
                 color = 'blue',
                 verbose = verbose
             )

@@ -20,10 +20,10 @@ createPrPsSupervised(
   pseudo.count = 1,
   assess.se.obj = TRUE,
   remove.na = "both",
-  save.se.obj = TRUE,
   plot.output = TRUE,
-  output.name = NULL,
   prps.group = NULL,
+  prps.sets.name = NULL,
+  save.se.obj = TRUE,
   verbose = TRUE
 )
 }
@@ -42,11 +42,11 @@ such as batch effects, library size, etc., within the SummarizedExperiment objec
 either categorical, continuous, or a combination of both variables.}
 
 \item{apply.other.uv.variables}{Logical. Determines whether to include other specified unwanted variables when generating
-PRPS sets for individual ones. The default is set to 'TRUE'.}
+PRPS sets for individual ones. The default is set to \code{TRUE}.}
 
 \item{other.uv.clustering.method}{Character. A character string indicating the clustering method used to group each
-continuous unwanted variable. The options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
-We refer to the createHomogeneousUVGroups() function for more details.}
+continuous unwanted variable. The options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.
+We refer to the \code{createHomogeneousUVGroups()} function for more details.}
 
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
 unwanted variable. The default is set to 3.}
@@ -55,41 +55,41 @@ unwanted variable. The default is set to 3.}
 to create one pseudo-sample. The default is set to 3.}
 
 \item{bio.clustering.method}{Character. A character string indicating the clustering method used to group each
-continuous biological variable. The options include 'kmeans', 'cut', and 'quantile'. The default is 'kmeans'. We refer
-to the createHomogeneousBioGroups() function for more details.}
+continuous biological variable. The options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to 'kmeans'.
+We refer to the \code{createHomogeneousBioGroups()} function for more details.}
 
 \item{nb.bio.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous biological
 variable. The default is set to 3.}
 
 \item{check.prps.connectedness}{Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
-The default is set to 'TRUE'. See the details for more information.}
+The default is set to \code{TRUE}. See the details for more information.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 The default is set to 1.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the checkSeObj
-function will be applied inside the function. The default is set to 'TRUE'.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
+function will be applied inside the function. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. A character string indicating whether to remove NA or missing values from either the 'assays',
-the 'sample.annotation', 'both', or 'none'. If 'assays' is selected, the genes that contain NA or missing values will
-be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables'
-and uv.variables' will be excluded. The default is set to 'both'.}
-
-\item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
-or to output the result as a list. The default is set to 'TRUE'.}
+the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, the genes that contain NA or missing values will
+be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any \code{bio.variables}
+and \code{uv.variables} will be excluded. The default is set to \code{both}.}
 
 \item{plot.output}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-The default is 'TRUE'.}
-
-\item{output.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
-specified source(s) of unwanted variation. The default is set to 'NULL'. If not specified, the function creates a
-name based on paste0('prps_', uv.variable).}
+The default is se to \code{TRUE}.}
 
 \item{prps.group}{Character. A character string specifying a name for the PRPS data sets created for a specific group.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{prps.sets.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
+specified source(s) of unwanted variation. The default is set to \code{NULL}. If not specified, the function creates a
+name based on \code{paste0('prps_', uv.variable)}.}
+
+\item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
+or to output the result as a list. The default is set to \code{TRUE}.}
+
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \value{
 Either a SummarizedExperiment object that contains all the PRPS data and PRPS map plots in the metadata, or a
@@ -99,8 +99,8 @@ list that contains all the results.
 This function creates different PRPS sets when all sources of unwanted and biological variation are known.
 }
 \details{
-We will create distinct group of pseudo-replicates for each source of unwanted variation defined in the 'uv.variables'
-argument. For example to correct for batch effect if defined in the 'uv.variables' argument, several group of
+We will create distinct group of pseudo-replicates for each source of unwanted variation defined in the \code{uv.variables}
+argument. For example to correct for batch effect if defined in the \code{uv.variables} argument, several group of
 pseudo-samples will be created by averaging the samples of the same biological groups defined in 'bio.variables' in
 each batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set. For example
 to correct for library size if defined in the 'uv.variables' argument, several group of pseudo-samples will be created

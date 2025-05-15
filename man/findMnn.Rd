@@ -2,7 +2,7 @@
 % Please edit documentation in R/findMnn.R
 \name{findMnn}
 \alias{findMnn}
-\title{Find mutual nearest neighbors in RNA-seq data.}
+\title{Finds mutual nearest neighbors in RNA-seq data.}
 \usage{
 findMnn(
   se.obj,
@@ -36,91 +36,95 @@ findMnn(
 \arguments{
 \item{se.obj}{A summarized experiment object.}
 
-\item{assay.name}{Character. A character string that indicates the name of the assay(data) in the SummarizedExperiment
+\item{assay.name}{Character. A character string that indicates the name of the data(assay) in the SummarizedExperiment
 object.}
 
 \item{uv.variable}{Character. A character string indicating the name of the column in the SummarizedExperiment object.
-The 'uv.variable' can be either categorical or continuous. If 'uv.variable' is a continuous variable, this will be
-divided into 'nb.clusters' groups using the 'clustering.method' method.}
+The \code{uv.variable} can be either categorical or continuous. If \code{uv.variable} is a continuous variable, this will be
+divided into \code{nb.clusters} groups using the \code{clustering.method} method.}
 
 \item{nb.mnn}{Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
 default is set to 1.}
 
 \item{clustering.method}{Character. A character string that indicates the choice of clustering method for grouping the
-'uv.variable' if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is
-set to 'kmeans'.}
+\code{uv.variable}, if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is
+set to \code{kmeans}.}
 
-\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
+\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the \code{uv.variable} is a
 continuous variable. The default is set to 3.}
 
 \item{data.input}{Character. A character string that indicates which data should be used as input for finding the mutual
-nearest neighbors. Options include: 'expr' and 'pcs'. If 'pcs' is selected, the first 'nb.pcs' of PCs of the data will
-be used as input. If 'expr' is selected, the expression data will be used as input. The default is set to 'expr'.}
+nearest neighbors. Options include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first \code{nb.pcs} of PCs of the data will
+be computed and used as input. If \code{expr} is selected, the expression data will be used as input. The default is set
+to \code{expr}.}
 
 \item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
-for finding the mutual nearest neighbors. The default is set to 2. The 'nb.pcs' must be set when "data.input = pcs".}
+for finding the mutual nearest neighbors. The default is set to 2. The \code{nb.pcs} must be set when \code{data.input = pcs}.}
 
-\item{center}{Logical. Indicates whether to scale the data or not before calculating PCs. If center is TRUE, then
-centering is done by subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
+\item{center}{Logical. Indicates whether to scale the data or not before calculating PCs. If center is set to \code{TRUE},
+then centering is done by subtracting the column means of the assay from their corresponding columns. The default is
+se to \code{TRUE}.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before calculating PCs. If scale is TRUE, then scaling
-is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-mean square otherwise. The default is set to 'FALSE'.}
+\item{scale}{Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to \code{TRUE},
+then scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is \code{TRUE},
+and the root mean square otherwise. The default is set to \code{FALSE}.}
 
 \item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed to compute
-PCs. The default is set to bsparam(). We refer to the 'runSVD()' function from the BiocSingular R package for further
-details.}
+PCs. The default is set to bsparam(). We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package for
+further details.}
 
 \item{normalization}{Character. A character string that indicates which normalization methods should be applied before
-finding the MNN. The options are 'CPM', 'TMM', 'VST'. The default is 'CPM'. Refer to the 'applyOtherNormalization'
+finding the MNN. The options are \code{CPM}, \code{TMM}, \code{VST}. The default is set to \code{CPM}. Refer to the \code{applyOtherNormalization()}
 for more details.}
 
 \item{apply.cosine.norm}{Logical. Indicates whether to apply cosine normalization on the data or not. The default is
-set to 'FALSE'.}
+set to \code{FALSE}.}
 
 \item{regress.out.variables}{Character. A character string or vector of character strings indicating the column name(s)
 that contain biological variable(s) in the SummarizedExperiment object. These variables will be regressed out from the
-data before finding genes that are highly affected by unwanted variation. The default is set to 'NULL', indicating
+data before finding genes that are highly affected by unwanted variation. The default is set to \code{NULL}, indicating
 the regression will not be applied.}
 
 \item{hvg}{Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
-will be used to prepare the input data for knn analysis. The default is set to 'NULL', this means all genes will be used.}
+will be used to prepare the input data for knn analysis. The default is set to \code{NULL}, this means all genes will be used.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.}
 
 \item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
-log transformation to avoid -Inf for measurements that are equal to 0. The default is set to 1.}
+log transformation to avoid \code{-Inf} for measurements that are equal to 0. The default is set to 1.}
 
 \item{mnn.bpparam}{Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
-The default is SerialParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
+The default is set to \code{SerialParam()}. We refer to the \code{findMutualNN()} function from the \code{BiocNeighbors} R package.}
 
 \item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-The default is KmknnParam(). We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
+The default is set to \code{KmknnParam()}. We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-to 'TRUE'. See the checkSeObj function for more details.}
+to \code{TRUE}. See the \code{checkSeObj()} function for more details.}
 
 \item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays(data) or not. The options
-are assays' and 'none'. The default is set to "assays", so all the NA or missing values from the assay(s) will be
-removed before any down-stream analysis See the 'checkSeObj()' function for more details.}
+are \code{assays} and 'none'. The default is set to \code{assays}, so all the NA or missing values from the assay(s) will be
+removed before any down-stream analysis See the \code{checkSeObj()} function for more details.}
 
-\item{plot.output}{Logical. If 'TRUE', the function plots the distribution of MNN across the batches.}
+\item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches. The default is
+set to \code{TRUE}.}
 
 \item{output.name}{Character. A character string specifying the name of the output file (MNN data) to be saved in the
-metadata of the SummarizedExperiment object. If set to 'NULL', the function will select a name based on:
-'paste0(uv.variable, '||' , assay.name)'.}
+metadata of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on:
+\code{paste0(uv.variable, '||' , assay.name)}.}
 
 \item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-If set to 'NULL', the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.}
+If set to \code{NULL}, the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the MNN results in the metadata of the SummarizedExperiment object
-or to output the result as a list. By default, it is set to 'TRUE'.}
+or to output the result as a list. The default, it is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-This function finds mutual nearest neighbors (MNN) between all pairs of specified batches in RNA-seq data. The mutual nearest
-neighbors will be used to find and create pseudo samples and eventually pseudo-replicates for RUV-III normalization.
+This function finds mutual nearest neighbors (MNN) between all pairs of specified batches in RNA-seq data. The mutual
+nearest neighbors will be used to find and create pseudo samples (Ps) and eventually pseudo-replicates (PS )for RUV-III
+with PRPS normalization. This function is used in the \code{createPRPSByKnnMnn()} function.
 }
 \author{
 Ramyar Molania

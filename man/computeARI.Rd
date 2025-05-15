@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeARI.R
 \name{computeARI}
 \alias{computeARI}
-\title{Compute adjusted rand index (ARI).}
+\title{Computes Adjusted Rand Index (ARI).}
 \usage{
 computeARI(
   se.obj,
@@ -20,41 +20,42 @@ computeARI(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to compute ARI. The default is set to 'all', so all the assays of the SummarizedExperiment
+\item{assay.names}{character or character vector. A character or a vector of characters of name(s) of the data(assay)
+in the SummarizedExperiment object to use for ARI computation. The default is set to \code{all}, meaning all assays in the
 object will be selected.}
 
-\item{variable}{Symbol. Indicates the column name that contain categorical variable in the SummarizedExperiment object.
-The variable can be biological or unwanted variable.}
+\item{variable}{character. The name of the column containing the categorical variable in the SummarizedExperiment object.
+This variable can represent either a biological or an unwanted factor.}
 
-\item{clustering.method}{Symbol. A symbol that indicates which clustering methods should be applied on the PCs to
-calculate the ARI. The options are 'mclust' or 'hclust' methods. The default is set to 'hclust'.}
+\item{clustering.method}{character. A character that indicates which clustering method to be applied on the principal
+components to calculate the ARI. Options are \code{mclust} or \code{hclust}. The default is se to the \code{hclust} method.}
 
-\item{hclust.method}{Symbol. Indicate the agglomeration method to be used when the  'clustering.method' is 'hclust'
-method. The options are: 'ward.D', 'ward.D2', 'single', 'complete', 'average' (= UPGMA), 'mcquitty' (= WPGMA),
-'median' (= WPGMC) or centroid' (= UPGMC). Refer to the 'hclust' function from the stats R package for more details.}
+\item{hclust.method}{Character. Agglomeration method to use when \code{clustering.method} is set to \code{hclust}. Options include:
+\code{ward.D}, \code{ward.D2}, \code{single}, \code{complete}, \code{average} (= UPGMA), \code{mcquitty} (= WPGMA), \code{median} (= WPGMC), or \code{centroid}
+(= UPGMC). See the \code{hclust} function in the \strong{stats} package for more details.}
 
-\item{hclust.dist.measure}{Symbol. Indicates the distance measure to be used in the 'dist' function. The options are
-'euclidean', 'maximum', 'manhattan', 'canberra', 'binary' or 'minkowski'. Refer to the 'dist' function from the stats
-R package for more details.}
+\item{hclust.dist.measure}{Character. A character specifying which distance measure to be used in the \code{dist} function
+when applying hierarchical clustering. Options are: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or
+\code{minkowski}. See the \code{dist} function in the \strong{stats} package for more details.}
 
-\item{fast.pca}{Logical. Indicates whether to use the PC calculated using fast PCA or not. The default is set to 'TRUE'.
-The fast PCA and ordinary PCA do not affect the silhouette coefficient calculation. Refer to detail for more information.}
+\item{fast.pca}{Logical. Indicates whether to use principal components computed via fast PCA by the \code{comptePCA} function
+The default is set to \code{TRUE}. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
+See details for more information.}
 
-\item{nb.pcs}{Numeric. The number of first PCs to be used to calculated the distances between samples. The default is
-set to 3.}
+\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The efault
+is to 3.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment class
-object 'se.obj' or to output the result. By default it is set to TRUE.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
+returns the result as list. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages for each step of the function.}
 }
 \value{
-A SummarizedExperiment object or a list that containing the computed ARI on the categorical variable.
+A SummarizedExperiment object or a list containing the computed ARI for specified categorical variable.
 }
 \description{
-This functions computes the adjusted rand index for given a categorical variable using the first PCs of the assay(s)
-in a SummarizedExperiment object.
+This functions computes the adjusted rand index(ARI) for given a categorical variable using the first PCs of the specified
+data(assay) in a SummarizedExperiment object.
 }
 \details{
 The ARI is the corrected-for-chance version of the Rand index. The ARI measures the percentage of matches between

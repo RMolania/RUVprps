@@ -2,7 +2,7 @@
 % Please edit documentation in R/groupContinuousVariable.R
 \name{groupContinuousVariable}
 \alias{groupContinuousVariable}
-\title{Group a continuous variable.}
+\title{Groups a continuous variable.}
 \usage{
 groupContinuousVariable(
   se.obj,
@@ -21,20 +21,20 @@ groupContinuousVariable(
 variable.}
 
 \item{nb.clusters}{Numeric. A numeric value indicating the number of groups for continuous sources of unwanted variation.
-The default is 3. This implies that each continuous source will be split into 3 groups using the specified
-'clustering.method' method.}
+The default is set to 3. This implies that each continuous source will be split into 3 groups using the specified
+\code{clustering.method} method.}
 
 \item{clustering.method}{Symbol. A symbol specifying the clustering method to be applied for grouping each continuous
-source of unwanted variables. Options include 'kmeans', 'cut', and 'quantile'. The default is 'kmeans' clustering.}
+source of unwanted variables. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is se to \code{kmeans} clustering.}
 
 \item{perfix}{Symbol. A symbol to add to each groups.}
 
-\item{plot.output}{Logical. If is 'TRUE', the function plots the variable values colored by the groups.}
+\item{plot.output}{Logical. If it is set to \code{TRUE}, the function plots the variable values colored by the groups.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-Group a continuous variable.
+Groups a continuous variable.
 }
 \author{
 Ramyar Molania

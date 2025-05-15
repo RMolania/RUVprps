@@ -20,24 +20,25 @@ plotGenesVariableCorrelation(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character or vector. A character string or vector of strings for selecting the name(s) of the assay(s)
-in the SummarizedExperiment for which gene-level correlation with the speciferd  for computing the correlation. By default, all assays in the SummarizedExperiment object will be selected.}
+in the SummarizedExperiment for which gene-level correlation with the specified for computing the correlation. By
+default, all assays in the SummarizedExperiment object will be selected.}
 
 \item{variable}{Character. The name of the column in the sample annotation of the SummarizedExperiment object that contains a
 continuous variable such as library size, tumor purity, etc.}
 
 \item{correlation.method}{Character. Specifies which computed correlation coefficient should be used for plotting. The
-default is 'gene.spearman.corr'. Refer to the 'computeGenesVariableCorrelation' function for more details.}
+default is  set to \code{gene.spearman.corr}. Refer to the 'computeGenesVariableCorrelation' function for more details.}
 
 \item{plot.ncol}{Numeric. A numeric value specifying the number of columns in the plot grid. The default is set to 4.}
 
 \item{plot.nrow}{Numeric. A numeric value specifying the number of rows in the plot grid. The default is set to 1.}
 
-\item{plot.output}{Logical. Indicates whether to display the plot. By default, it is set to FALSE.}
+\item{plot.output}{Logical. Indicates whether to display the plot. By default, it is set to \code{FALSE}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
-or to output the result. By default, this is set to TRUE.}
+or to output the result. By default, this is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If TRUE, process messages will be displayed during the function's execution.}
+\item{verbose}{Logical. If \code{TRUE}, process messages will be displayed during the function's execution.}
 }
 \value{
 A SummarizedExperiment object or a list that containing the boxplots of the Spearman or Pearson correlations
@@ -45,7 +46,8 @@ coefficients for individual assays.
 }
 \description{
 This function generates boxplots of computed Spearman or Pearson correlation coefficients of individual assays in a
-SummarizedExperiment object. The correlation coefficients must be computed by the 'computeGeneVariableCorrelation' function.
+SummarizedExperiment object. The correlation coefficients must be computed by the \code{computeGeneVariableCorrelation()}
+function.
 }
 \author{
 Ramyar Molania

@@ -50,7 +50,7 @@ createPrPsUnSupervised(
   mnn.nbparam = KmknnParam(),
   assess.se.obj = TRUE,
   remove.na = "both",
-  output.name = NULL,
+  prps.sets.name = NULL,
   prps.group = NULL,
   plot.output = TRUE,
   save.se.obj = TRUE,
@@ -60,23 +60,23 @@ createPrPsUnSupervised(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Symbol. A symbol indicating the assay name within the SummarizedExperiment object for the creation
-of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.}
+\item{assay.name}{Character. A character string indicating the assay name within the SummarizedExperiment object for
+the creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.}
 
-\item{uv.variables}{Symbol. A symbol or a vector of symbols specifying the name(s) of column(s) in the sample annotation
-of the SummarizedExperiment object. This variable can to be categorical or continuous variable. If a continuous variable
-is provide, this will be divided into groups using the clustering method.}
+\item{uv.variables}{Character. A character string or vector of strings specifying the name(s) of column(s) in the sample annotation
+of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous variable
+is provided, this will be divided into groups using the clustering method.}
 
-\item{approach}{Symbol. Indicates which method to be used. The options are 'anchor' and 'mnn'.}
+\item{approach}{Character. Indicates which method to be used. The options are \code{anchor} and \code{mnn}.}
 
-\item{data.input}{Symbol. Indicates which data should be used an input for finding the k nearest neighbors data. Options
-include: 'expr' and 'pcs'. If 'pcs' is selected, the first PCs of the data will be used as input. If 'expr' is selected,
+\item{data.input}{Character. Indicates which data should be used as input for finding the k nearest neighbors. Options
+include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first PCs of the data will be used as input. If \code{expr} is selected,
 the data will be selected as input.}
 
-\item{clustering.method}{Symbol.A symbol indicating the choice of clustering method for grouping the 'uv.variable'
-if a continuous variable is provided. Options include 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.}
+\item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the \code{uv.variable}
+if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.}
 
-\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the 'uv.variable' is a
+\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the \code{uv.variable} is a
 continuous variable. The default is 3.}
 
 \item{other.uv.variables}{TTTT}
@@ -86,7 +86,7 @@ continuous variable. The default is 3.}
 \item{nb.other.uv.clusters}{TTT}
 
 \item{hvg}{Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
-anchor samples across different batches. The default value is set to 'NULL'}
+anchor samples across different batches. The default value is set to \code{NULL}}
 
 \item{select.extreme.groups}{TTTT}
 
@@ -94,103 +94,91 @@ anchor samples across different batches. The default value is set to 'NULL'}
 
 \item{filter.prps.sets}{TTTT}
 
-\item{max.prps.sets}{Numeric. The maximum number of PRPS sets across batches. The default in 10.}
+\item{max.prps.sets}{Numeric. The maximum number of PRPS sets across batches. The default is 10.}
 
 \item{min.sample.for.ps}{Numeric. The minimum number of samples to be averaged to create a pseudo-sample. The default
 is 3. The minimum value is 2.}
 
 \item{max.sample.for.ps}{Numeric value indicating the maximum number of samples to be averaged for creating a pseudo-sample.
-The default is 'inf'. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.}
+The default is \code{inf}. Please note that averaging a high number of samples may lead to inaccurate PRPS estimates.}
 
-\item{nb.mnn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
+\item{nb.mnn}{Numeric. The maximum number of mutual nearest neighbors to compute. The default is 3.}
 
-\item{nb.knn}{Numeric.The maximum number of nearest neighbors to compute. The default is set 3.}
+\item{nb.knn}{Numeric. The maximum number of nearest neighbors to compute. The default is 3.}
 
-\item{anchor.features}{Numeric. A numeric value indicating the provided number of features to be used in anchor finding.
-The default is 2000. We refer to the FindIntegrationAnchors R function for more details.}
+\item{anchor.features}{Numeric. A numeric value indicating the number of features to be used in anchor finding.
+The default is 2000. We refer to the \code{FindIntegrationAnchors} R function for more details.}
 
-\item{sct.clip.range}{Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
-clipped to. The default is 'NULL'. We refer to the FindIntegrationAnchors R function for more details.}
+\item{sct.clip.range}{Numeric. A numeric vector of length two specifying the min and max values the Pearson residual will be
+clipped to. The default is \code{NULL}. See \code{FindIntegrationAnchors} for more.}
 
-\item{reduction}{Symbol. Indicates which dimensional reduction to perform when finding anchors. The options are "cca":
-canonical correlation analysis, "rpca": reciprocal PCA and "rlsi": Reciprocal LSI. The default is "cca".}
+\item{reduction}{Character. Indicates which dimensional reduction to perform when finding anchors. Options are \code{cca},
+\code{rpca}, and \code{rlsi}. The default is \code{cca}.}
 
-\item{l2.norm}{Logical. Indicates whether to perform L2 normalization on the CCA samples embeddings after dimensional
-reduction or not. The default is 'TRUE'.}
+\item{l2.norm}{Logical. Indicates whether to perform L2 normalization on the CCA sample embeddings after dimensional
+reduction. Default is \code{TRUE}.}
 
-\item{dims}{Numeric. Indicates which dimensions to use from the CCA to specify the neighbor search space. Th default
-is 10.}
+\item{dims}{Numeric. Indicates which dimensions to use from CCA to define the neighbor search space. Default is 10.}
 
-\item{k.anchor}{Numeric. How many neighbors (k) to use when picking anchors. Th default is 3.}
+\item{k.anchor}{Numeric. Number of neighbors (k) used to select anchors. Default is 3.}
 
-\item{k.filter}{Numeric. How many neighbors (k) to use when filtering anchors. Th default is 200.}
+\item{k.filter}{Numeric. Number of neighbors (k) used for anchor filtering. Default is 200.}
 
-\item{k.score}{Numeric. How many neighbors (k) to use when scoring anchors. Th default is 30.}
+\item{k.score}{Numeric. Number of neighbors (k) used when scoring anchors. Default is 30.}
 
-\item{max.features}{Numeric. The maximum number of features to use when specifying the neighborhood search space in
-the anchor filtering.Th default is 30.}
+\item{max.features}{Numeric. Maximum number of features used for neighborhood search space in anchor filtering. Default is 30.}
 
-\item{nn.method}{Symbol.Method for nearest neighbor finding. Options include: "rann", "annoy". The defauly is "annoy".}
+\item{nn.method}{Character. Method for nearest neighbor finding. Options: \code{rann}, \code{annoy}. Default is \code{annoy}.}
 
-\item{n.trees}{Numeric. More trees gives higher precision when using annoy approximate nearest neighbor search}
+\item{n.trees}{Numeric. Number of trees for \code{annoy} search (more trees = higher precision).}
 
-\item{eps}{Numeric. Error bound on the neighbor finding algorithm (from RANN/Annoy)}
+\item{eps}{Numeric. Error bound on the neighbor finding algorithm (from RANN or Annoy).}
 
-\item{nb.pcs}{Numeric. Indicates the number PCs should be used as data input for finding the k nearest neighbors. The
-'nb.pcs' must be set when the "data.input = PCs". The default is 2.}
+\item{nb.pcs}{Numeric. Number of principal components to use as input for nearest neighbor search. Must be set if
+\code{data.input = pcs}. Default is 2.}
 
-\item{center}{Logical. Indicates whether to scale the data or not. If center is TRUE, then centering is done by
-subtracting the column means of the assay from their corresponding columns. The default is TRUE.}
+\item{center}{Logical. Whether to center the data (subtract column means). Default is \code{TRUE}.}
 
-\item{scale}{Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
-is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-mean square otherwise. The default is FALSE}
+\item{scale}{Logical. Whether to scale the data before applying SVD. Default is \code{FALSE}.}
 
-\item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
-We refer to the 'runSVD' function from the BiocSingular R package.}
+\item{svd.bsparam}{A \code{BiocParallelParam} object defining parallelization for SVD. Default: \code{bsparam()}. See \code{runSVD}
+from the BiocSingular package.}
 
-\item{normalization}{Symbol. Indicates which normalization methods should be applied before finding the knn. The default
-is 'cpm'. If is set to NULL, no normalization will be applied.}
+\item{normalization}{Character. Normalization method before computing nearest neighbors. Default: \code{cpm}. If \code{NULL},
+no normalization is applied.}
 
 \item{apply.cosine.norm}{TTTT}
 
-\item{regress.out.variables}{Symbols. Indicates the columns names that contain biological variables in the
-SummarizedExperiment object. These variables will be regressed out from the data before finding genes that are highly
-affected by unwanted variation variable. The default is NULL, indicates the regression will not be applied.}
+\item{regress.out.variables}{Character. Column names containing biological variables to regress out before estimating
+unwanted variation. Default: \code{NULL}.}
 
 \item{check.prps.connectedness}{TTT}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is 'TRUE'.}
+\item{apply.log}{Logical. Whether to apply a log transformation. Default is \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay before applying
-log transformation to avoid -Inf for raw counts that are equal to 0. The default is 1.}
+\item{pseudo.count}{Numeric. Value added to counts before log transform to avoid \code{-Inf}. Default is 1.}
 
-\item{mnn.bpparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-. The default is SerialParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.}
+\item{mnn.bpparam}{Character. A \code{BiocParallelParam} object for parallel MNN search. Default: \code{SerialParam()}. See \code{findMutualNN}.}
 
-\item{mnn.nbparam}{Symbol. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-. The default is KmknnParam(). We refer to the 'findMutualNN' function from the 'BiocNeighbors' R package.}
+\item{mnn.nbparam}{Character. A \code{BiocParallelParam} object for nearest neighbor search. Default: \code{KmknnParam()}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the checkSeObj
-function for more details.}
+\item{assess.se.obj}{Logical. Whether to assess the SummarizedExperiment object using \code{checkSeObj}.}
 
-\item{remove.na}{Symbol. To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
-The default is "assays", so all the NA or missing values from the assay(s) will be removed before computing RLE. See
-the checkSeObj function for more details.}
+\item{remove.na}{Character. Indicates whether to remove \code{NA} values. Options: \code{assays}, \code{none}. Default is \code{assays}.}
 
-\item{output.name}{Symbol.}
-
-\item{prps.group}{Symbol.}
+\item{prps.group}{Character.}
 
 \item{plot.output}{TTTT}
 
-\item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
-object or to output the result as list. By default it is set to TRUE.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves results in \code{metadata} of the SummarizedExperiment object. Otherwise,
+returns results as a list. Default is \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, prints messages throughout function execution.}
+
+\item{output.name}{Character.}
 }
 \description{
-This function uses the 'createUnSupervisedPRPSbyAnchors' or 'createUnSupervisedPRPSbyMNN' to create PRPS sets of all
+This function uses the \code{createUnSupervisedPRPSbyAnchors} or \code{createUnSupervisedPRPSbyMNN} to create PRPS sets of all
 the unwanted variables in situations when the biological variation are unknown.
 }
 \author{

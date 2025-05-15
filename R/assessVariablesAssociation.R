@@ -3,7 +3,7 @@
 #' @author Ramyar Molania
 
 #' @description
-#' The function assesses the association between all selected biological and unwanted variation variables separately.
+#' The function assesses the association between all selected biological and unwanted variation variables, separately.
 #' If two categorical variables are highly correlated, the function keeps one that has the highest number of factors.
 #' For two highly correlated continuous variables, the one with higher variance will be kept. This assessment could be
 #' useful for creating PRPS and finding NGCs. If two variables exhibit high correlation, utilizing one of them is
@@ -24,28 +24,27 @@
 
 #' @param se.obj A SummarizedExperiment object.
 #' @param bio.variables Character or character vector. Specifies the column names of biological variables in
-#' the sample annotation of the SummarizedExperiment object. These 'bio.variables' can be either categorical or continuous
+#' the sample annotation of the SummarizedExperiment object. These `bio.variables` can be either categorical or continuous
 #' variables.
 #' @param uv.variables Character or character vector. Specifies the column names of unwanted variables in
-#' the sample annotation of the SummarizedExperiment object. These 'uv.variables' can be either categorical or continuous
+#' the sample annotation of the SummarizedExperiment object. These `uv.variables` can be either categorical or continuous
 #' variables.
 #' @param cat.cor.coef Numeric vector. A vector of two numerical values indicating the cut-off for the correlation coefficient
 #' between each pair of categorical variables. The first value applies to each pair of 'uv.variables' and the second value
-#' applies to each pair of 'bio.variables'. The correlation is computed using the 'ContCoef' function from the DescTools
+#' applies to each pair of `bio.variables`. The correlation is computed using the `ContCoef()`function from the **DescTools**
 #' R package. If the correlation of a pair of variables exceeds the cut-off, the variable with the highest number of factors
 #' will be kept, and the other will be excluded from the remaining analysis. By default, both values are set to 0.9.
 #' @param cont.cor.coef Numeric vector. A vector of two numerical values indicating the cut-off for the Spearman correlation
-#' coefficient between each pair of continuous variables. The first value applies to each pair of 'uv.variables' and the
-#' second value applies to each pair of 'bio.variables'. If the correlation of a pair of variables exceeds the cut-off,
+#' coefficient between each pair of continuous variables. The first value applies to each pair of `uv.variables` and the
+#' second value applies to each pair of `bio.variables`. If the correlation of a pair of variables exceeds the cut-off,
 #' the variable with the highest variance will be kept, and the other will be excluded from the remaining analysis. By
 #' default, both values are set to 0.9.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the function
-#' 'checkSeObj' will be applied.
-#' @param remove.na Character. Indicates whether to remove missing values from the 'bio.variables' and 'uv.variables'. The
-#' options are 'sample.annotation' or 'none'. The default is 'sample.annotation', meaning the missing values from the
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the function
+#' `checkSeObj()` will be applied.
+#' @param remove.na Character. Indicates whether to remove missing values from the `bio.variables` and `uv.variables`. The
+#' options are 'sample.annotation' or `none`. The default is `sample.annotation`, meaning the missing values from the
 #' variables will be removed before calculating the associations.
-#' @param verbose Logical. If 'TRUE', shows messages for different steps of the function.
-
+#' @param verbose Logical. If `TRUE`, shows messages for different steps of the function.
 
 #' @return A list that contains the SummarizedExperiment object and the selected biological and unwanted variables.
 
@@ -68,30 +67,48 @@ assessVariablesAssociation <- function(
     printColoredMessage(message = '------------The assessVariablesCorrelation function starts:',
                         color = 'white',
                         verbose = verbose)
-    # check inputs ####
+    # Checking the function inputs ####
     if (is.null(bio.variables) & is.null(uv.variables)) {
         stop('Both "bio.variables" and "uv.variables" cannot be empty.')
     }
-    if (max(cat.cor.coef) > 1 | min(cat.cor.coef) < 0 ) {
-        stop('The "cat.cor.coef" must contin postive values between 0 and 1')
-    } else if (length(intersect(bio.variables, uv.variables)) != 0) {
+    if (!is.character(bio.variables) | !is.character(uv.variables)){
+        stop('Both "bio.variables" and "uv.variables" must be a character or a vector of characters.')
+    }
+    if (length(intersect(bio.variables, uv.variables)) != 0) {
         if (length(intersect(bio.variables, uv.variables)) == 1) {
             a <- 'a common variable'
         } else a <- 'common variables'
         stop(paste0(
-                'The "bio.variables" and "uv.variables" have ',
-                paste0(intersect(bio.variables, uv.variables), collapse = ' &'),
-                a,
-                '. Each variable is either biological and defined in the "bio.variables" ',
-                'or unwanted variation and defined in the "uv.variables".'))
-    } else if (max(cont.cor.coef) > 1 | min(cat.cor.coef) < 0 ) {
-        stop('The "cont.cor.coef" must contin postive values between 0 and 1')
-    } else if (length(cont.cor.coef) == 1 | length(cat.cor.coef) == 1) {
-        stop('Please provide two correlation coefficients in "cat.cor.coef" and "cont.cor.coef".')
+            'The "bio.variables" and "uv.variables" have ',
+            'have variable(s) in common. Each variable is either biological and defined in the "bio.variables" ',
+            'or unwanted variation and defined in the "uv.variables".')
+        )
+    }
+    if (!is.numeric(cat.cor.coef) | !is.numeric(cont.cor.coef)){
+        stop('Both "cat.cor.coef" and "cont.cor.coef" must be numeric.')
+    }
+    if (max(cat.cor.coef) > 1 | min(cat.cor.coef) < 0 ) {
+        stop('The "cat.cor.coef" must be a postive values between 0 and 1')
     }
 
-    # assess the SummarizedExperiment object ####
-    if (assess.se.obj) {
+    if (max(cont.cor.coef) > 1 | min(cat.cor.coef) < 0 ) {
+        stop('The "cont.cor.coef" must be postive values between 0 and 1')
+    }
+    if (length(cont.cor.coef) == 1 | length(cat.cor.coef) == 1 | length(cont.cor.coef) > 2 | length(cat.cor.coef) > 2) {
+        stop('Each of the "cat.cor.coef" and "cont.cor.coef" must have two postive values.')
+    }
+    if (!remove.na %in% c('sample.annotation', 'none')){
+        stop( 'The "remove.na" must be one of the "sample.annotation" or "none".')
+    }
+    if (!is.logical(assess.se.obj)){
+        stop('The "assess.se.obj" must be logical.')
+    }
+    if (!is.logical(verbose)){
+        stop('The "verbose" must be logical.')
+    }
+
+    # Assessing the SummarizedExperiment object ####
+    if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = NULL,
@@ -99,7 +116,7 @@ assessVariablesAssociation <- function(
             remove.na = remove.na,
             verbose = verbose)
     }
-    # unwanted variables ####
+    # Unwanted variables ####
     printColoredMessage(message = '-- Assessing the unwanted variation variables:',
                         color = 'magenta',
                         verbose = verbose)
@@ -323,7 +340,7 @@ assessVariablesAssociation <- function(
             color = 'blue',
             verbose = verbose)
 
-    # biological variables ####
+    # Biological variables ####
     printColoredMessage(message = '--Assess the biological variables:',
                         color = 'magenta',
                         verbose = verbose)
@@ -361,9 +378,11 @@ assessVariablesAssociation <- function(
                 verbose = verbose)
         }
         ## variation in biological variables ####
-        printColoredMessage(message = '-- Checking the levels and variance of categorical and continuous biological variables, respectively:',
-                            color = 'magenta',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '-- Checking the levels and variance of categorical and continuous biological variables, respectively:',
+            color = 'magenta',
+            verbose = verbose
+            )
         check.bio.vars <- lapply(
             bio.variables,
             function(x) {
@@ -412,9 +431,11 @@ assessVariablesAssociation <- function(
             })
         # assess correlation between categorical sources of biological variables ####
         if (length(categorical.bio) > 1) {
-            printColoredMessage(message = '--Assess the correlation between categoricals variables:',
-                                color = 'magenta',
-                                verbose = verbose)
+            printColoredMessage(
+                message = '--Assessing the correlation between categoricals variables:',
+                color = 'magenta',
+                verbose = verbose
+                )
             all.pairs <- utils::combn(x = categorical.bio , m = 2)
             remove.cat.bio.variable <- lapply(
                 1:ncol(all.pairs),
@@ -477,9 +498,11 @@ assessVariablesAssociation <- function(
 
         # assess the correlation between continuous sources of biological variation ####
         if (length(continuous.bio) > 1) {
-            printColoredMessage(message = '-- Assessing the correlation between continuous variables:',
-                                color = 'magenta',
-                                verbose = verbose)
+            printColoredMessage(
+                message = '-- Assessing the correlation between continuous variables:',
+                color = 'magenta',
+                verbose = verbose
+                )
             all.pairs <- utils::combn(x = continuous.bio , m = 2)
             remove.cont.bio.variable <- lapply(
                 1:ncol(all.pairs),

@@ -7,7 +7,7 @@
 addNCGs(se.obj, ncg, subset.name = NULL, verbose = TRUE)
 }
 \arguments{
-\item{se.obj}{A \code{SummarizedExperiment} object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
 \item{ncg}{A logical or vector of gene names of pre-selected genes as NCGs.}
 

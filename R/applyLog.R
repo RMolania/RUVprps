@@ -2,7 +2,7 @@
 
 #' @author Ramyar Molania
 
-#' @param se.obj A `SummarizedExperiment` object.
+#' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character or character vectos specifying the name(s) of the data (assays) in the
 #' `SummarizedExperiment` object to be selected. These assays will be log2-transformed with a pseudo count. The default
 #' is `all`, which indicates that all assays in the `SummarizedExperiment` object will be selected.
@@ -11,8 +11,8 @@
 #' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
 #'  set to `TRUE`.
 #' @param remove.na Character. A Character. that indicates whether to remove NA or missing values from the data sets or
-#' not. The options are `assays` or `none`. Refer to the `checkSeObj()` function for more details. The default is set to
-#' "assays".
+#' not. The options are `assays` or `none`. The default is set to `assays`.  Refer to the `checkSeObj()` function for more
+#' details.
 #' @param verbose Logical. If it is set to `TRUE`, displays messages describing the steps of the function.
 
 #' @return The function returns a log2 transformed of all specified data sets as a list object.
@@ -53,7 +53,7 @@ applyLog <- function(
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
-            assay.names = assay.name,
+            assay.names = assay.names,
             variables = NULL,
             remove.na = remove.na,
             verbose = verbose

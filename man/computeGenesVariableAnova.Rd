@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeGenesVariableAnova.R
 \name{computeGenesVariableAnova}
 \alias{computeGenesVariableAnova}
-\title{Computes ANOVA between individual gene expression and a categorical variable.--Finalized}
+\title{Computes ANOVA between individual gene expression and a categorical variable}
 \usage{
 computeGenesVariableAnova(
   se.obj,
@@ -32,13 +32,13 @@ SummarizedExperiment object will be selected.}
 object that contains a categorical variable, such as experimental batches, etc.}
 
 \item{method}{Character. A character string specifying the method to be used for the ANOVA analysis. The options are
-"aov" and "welch". The default is set to "aov". The function applies a fast implementation of one-way ANOVA using the
-row_oneway_equalvar() or the row_oneway_welch() functions from the matrixTests R package. The first function assumes
-equal variance between the groups while the second function applied the Welch correction for the groups with unequal
-variances.}
+\code{aov} and \code{welch}. The default is set to \code{aov}. The function applies a fast implementation of one-way ANOVA using the
+\code{row_oneway_equalvar()} or the \code{row_oneway_welch()} functions from the \strong{matrixTests} R package. The first function
+assumesequal variance between the groups while the second function applied the Welch correction for the groups with
+unequalå variances.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
-default is set to 'TRUE'.}
+default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 the log transformation. The default is set to 1.}
@@ -49,23 +49,23 @@ examples, with the highest and lowest F-statistics across the specified variable
 \item{nb.top.genes}{Numeric. A numeric value specifying the number of genes to plot from the top or bottom of the ANOVA
 F-statistics list. The default is set to 3.}
 
-\item{apply.round}{Logical. Indicates whether to round the values of F-statistics. The default is set to 'TRUE'.}
+\item{apply.round}{Logical. Indicates whether to round the values of F-statistics. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to 'TRUE'.
-This means the function will apply the 'checkSeObj' function.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
+This means the function will apply the \code{checkSeObj()} function.}
 
-\item{remove.na}{Character. A character string specifying whether to eliminate missing values from 'assays', 'sample.annotation',
-'both', or 'none'. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
+\item{remove.na}{Character. A character string specifying whether to eliminate missing values from \code{assays}, \code{sample.annotation},
+\code{both}, or \code{none}. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
 samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
-of the SummarizedExperiment object or to output these results as a list or vector. The default is set to 'TRUE'.}
+of the SummarizedExperiment object or to output these results as a list or vector. The default is set to \code{TRUE}.}
 
 \item{override.check}{Logical. When set to TRUE, the function checks whether ANOVA has already been computed for the
 current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is
-set to 'FALSE'.}
+set to \code{FALSE}.}
 
-\item{verbose}{Logical. If TRUE, displays the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays the messages of different steps of the function.}
 }
 \value{
 Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous

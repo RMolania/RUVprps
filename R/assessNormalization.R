@@ -1,9 +1,9 @@
-#' Assess the performance of normalization methods.
+#' Assesses the performance of normalization methods.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function summarizes a range of global and gene level metrics obtained using the 'assessVariation' function for
+#' This function summarizes a range of global and gene level metrics obtained using the `assessVariation` function for
 #' individual biological and unwanted variables. The functions returns numerical assessments in a table to assess the
 #' performance of difference normalization. Refer to details for more information.
 
@@ -32,67 +32,60 @@
 #' - It will also output the RLE plot distribution.
 
 #' @references
-#' **Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
-#' 2019.
+#' **Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids
+#' Research, 2019.
 #' **Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
 
-
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object. The default is set to 'all', so all the assays in the SummarizedExperiment object will
-#' be selected.
-#' @param bio.variables Symbols. A symbol or a vector of symbols indicating the column names that contain known biological
-#' variable(s) in the SummarizedExperiment object. These biological variables can be both categorical and continuous.
-#' @param uv.variables Symbols. A symbol or a vector of symbols indicating the column names that contain unwanted variable(s)
-#' in the SummarizedExperiment object. These unwanted variables can be both categorical and continuous.
-#' @param assessments.to.exclude Symbol. A symbol or vector of symbols (Code) specifying which assessment metrics to exclude.
-#' These metrics can be acquired using the 'getAssessmentMetrics' function. Default is set to 'NULL'.
-#' @param fast.pca Logical. Indicates whether to obtain computed fast PCA or not. The default is set to 'TRUE'.
-#' @param sil.dist.measure Symbol. A symbol indicating which distant measurement has been used to compute silhouette analysis
-#' should be obtained. The options are: 'euclidean', 'maximum', 'manhattan', 'canberra', 'binary' or 'minkowski'.
-#' The default is set to 'euclidean'.
-#' @param ari.clustering.method Symbol. A symbol indicating which clustering method has been used to compute ARI should
-#' be used. The options are 'mclust' or 'hclust' methods. The default is set to 'hclust'.
-#' @param ari.hclust.method Symbol. A symbol indicating which hclust method has been used to compute ARI. The options are
-#' 'ward.D', ward.D2', 'single', 'complete', 'average' (= UPGMA), 'mcquitty' (= WPGMA), 'median' (= WPGMC) or centroid'
-#' (= UPGMC). The default is set to 'complete'.
-#' @param ari.hclust.dist.measure Symbol. A symbol indicating which distant measurement has been used to compute 'hclsut'
-#' for the ARI analysis. The options are euclidean', 'maximum', 'manhattan', 'canberra', 'binary' or 'minkowski'. The
-#' default is set to 'euclidean'.
-#' @param corr.method Symbol. A symbol indicates which correlation methods has been used to compute genes-variable correlation.
-#' Options are 'spearman' or 'pearson'. The default is 'spearman'.
-#' @param corr.cutoff Numeric. A numeric values that specifies the threshold for selecting genes that have an absolute
-#' correlation coefficient lower than this value with continuous variables. The default is set to 0.2.
-#' @param anova.method Symbol. A symbol indicating which ANOVA method has been used for compute genes-variable ANOVA. Options
-#' are 'aov' or 'weltch'. The default is set to 'aov'.
-#' @param fvalue.cutoff Numeric. Specifies the threshold for selecting genes that have a F-statistics lower than this value
-#' with categorical variables. The default value is set to 1.
-#' @param pcorr.method A symbol indicating which correlation method has been used for compute genes-gene ordinary and
-#' partial correlations. Options are 'spearman' or 'pearson'. The default is set to 'spearman'.
-#' @param pcorr.cutoff Numeric. A threshold value used to select gene-gene correlations where the difference between
-#' ordinary and partial correlations is less than this value.
-#' @param bio.weight Numeric. A numeric value to weight the final biological preservation scores. The default is set 0.6.
-#' Refer to the detail for more information.
-#' @param uv.weight Numeric. A numeric value to weight the final removal of unwanted variation scores. The default is set 0.4.
-#' Refer to the detail for more information.
-#' @param plot.output Logical. If 'TRUE', the final assessment plot will printed.
-#' @param save.se.obj Logical. Indicates whether to save all the results to the SummarizedExperiment. The default is set
-#' to 'TRUE'.
-#' @param output.name Symbol. A symbol indicating the file name for the results in the SummarizedExperiment. If 'NULL',
-#' the function will create "paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays.')" as a file name.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
-#' @param sli.nb.pcs Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-#' set to 3. This number cannot be larger than 'compute.nb.pcs'.
-#' @param ari.nb.pcs Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-#' set to 3. This number cannot be larger than 'compute.nb.pcs'.
-#' @param vca.nb.pcs Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-#' set to 3. This number cannot be larger than 'compute.nb.pcs'.
-#' @param lra.nb.pcs Numeric. A numeric value indicating the number of PCs to be used to compute the ARI. The default is
-#' set to 3. This number cannot be larger than 'compute.nb.pcs'.
+#' @param assay.names character or character vector. One or more names of assays to select from the SummarizedExperiment
+#' object.
+#' The default is 'all', which selects all assays in the object.
+#' @param bio.variables character or character vector. One or more column names indicating known biological variables
+#' (categorical or continuous) in the SummarizedExperiment object.
+#' @param uv.variables character or character vector. One or more column names indicating unwanted variables
+#' (categorical or continuous) in the SummarizedExperiment object.
+#' @param assessments.to.exclude character or character vector. Names of assessment metrics to exclude, as returned by
+#' the `getAssessmentMetrics()` function. Default is NULL.
+#' @param fast.pca Logical. Whether to use fast PCA. Default is TRUE.
+#' @param sil.dist.measure character. Distance measure to use for silhouette analysis. Options: 'euclidean', 'maximum',
+#' 'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.
+#' @param ari.clustering.method character. Clustering method for ARI computation. Options: 'mclust' or 'hclust'. Default
+#' is 'hclust'.
+#' @param ari.hclust.method character. Method used in `hclust` for ARI. Options: 'ward.D', 'ward.D2', 'single', 'complete',
+#' 'average', 'mcquitty', 'median', or 'centroid'. Default is 'complete'.
+#' @param ari.hclust.dist.measure character. Distance measure for `hclust` in ARI analysis. Options:'euclidean', 'maximum',
+#' 'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.
+#' @param corr.method character. Correlation method for gene-variable correlation. Options: 'spearman' or 'pearson'.
+#' Default is 'spearman'.
+#' @param corr.cutoff Numeric. Threshold for selecting genes with an absolute correlation lower than this value with
+#' continuous variables. The default is set to 0.2.
+#' @param anova.method character. ANOVA method for gene-variable comparison. Options: 'aov' or 'welch'. Default is 'aov'.
+#' @param fvalue.cutoff Numeric. Threshold for selecting genes with an F-statistic lower than this value with categorical
+#' variables. Te default is set to 1.
+#' @param pcorr.method character. Correlation method for gene-gene ordinary and partial correlations. Options: 'spearman'
+#' or 'pearson'. The default is set to `spearman`.
+#' @param pcorr.cutoff Numeric. Threshold for selecting gene-gene correlations where the difference between ordinary and
+#' partial correlations is less than this value.
+#' @param bio.weight Numeric. Weight for the biological preservation score. Default is 0.6. See details for more information.
+#' @param uv.weight Numeric. Weight for the removal of unwanted variation score. Default is 0.4. See details for more
+#' information.
+#' @param plot.output Logical. If TRUE, displays the final assessment plot.
+#' @param save.se.obj Logical. If TRUE, saves the results in the SummarizedExperiment object. Default is TRUE.
+#' @param output.name character. File name for the results stored in the SummarizedExperiment. If NULL, the function creates
+#' a default name using `paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays.')`.
+#' @param verbose Logical. If TRUE, displays messages during function execution.
+#' @param sli.nb.pcs Numeric. Number of principal components to use for silhouette analysis. Default is 3. Must not exceed
+#' `compute.nb.pcs`.
+#' @param ari.nb.pcs Numeric. Number of principal components to use for ARI analysis. Default is 3. Must not exceed
+#' `compute.nb.pcs`.
+#' @param vca.nb.pcs Numeric. Number of principal components to use for variance component analysis. Default is 3. Must
+#' not exceed `compute.nb.pcs`.
+#' @param lra.nb.pcs Numeric. Number of principal components to use for latent representation analysis. Default is 3.
+#' Must not exceed `compute.nb.pcs`.
 
-#' @return A SummarizedExperiment object containing all the assessments matrix, plot and table or a list that contains all
-#' the results.
+#' @return A SummarizedExperiment object containing the assessment matrix, plot, and table, or a list containing all results.
+
 
 #' @importFrom ggh4x strip_nested elem_list_text elem_list_rect facet_nested
 #' @importFrom dplyr summarise_at case_match row_number
@@ -138,7 +131,7 @@ assessNormalization <- function(
     printColoredMessage(message = '------------The assessNormalization function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check the inputs of function ####
+    # Checking the inputs of function ####
     if (length(assay.names) == 1 && assay.names != 'all') {
         if (!assay.names %in% names(assays(se.obj)))
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
@@ -147,11 +140,11 @@ assessNormalization <- function(
         if (length(setdiff(assay.names, names(assays(se.obj)))) > 0)
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
-    if(is.null(bio.variables) | is.null(uv.variables)){
+    if (is.null(bio.variables) | is.null(uv.variables)){
         stop('To performe "overall.performance" both "uv.variables" and "bio.variables" must be provided.')
     }
 
-    # Check the assays ####
+    # Checking the assays ####
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else assay.names <- factor(x = assay.names, levels = assay.names)
@@ -220,7 +213,7 @@ assessNormalization <- function(
         check.out <- lapply(
             levels(assay.names),
             function(x){
-                if(is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med)){
+                if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med)){
                     stop(paste0('The RLE medians for the ', x , ' data cannot be found in the SummarizedExperiment object. ',
                                 'Please run either the "compuetRLE" or "assessVariation" functions, and  ',
                                 'make sure to compute RLE medians.'))
@@ -258,7 +251,7 @@ assessNormalization <- function(
     } else general.rle.med.scores <- NULL
 
     ### rle iqr ####
-    if('General_rleIqr' %in% paste(metrics.table$Variables, metrics.table$Assessments, sep = '_')){
+    if ('General_rleIqr' %in% paste(metrics.table$Variables, metrics.table$Assessments, sep = '_')){
         printColoredMessage(
             message = '- Summarize the RLE IQR of the general RLE plots:',
             color = 'orange',
@@ -273,7 +266,7 @@ assessNormalization <- function(
         check.out <- lapply(
             levels(assay.names),
             function(x){
-                if(is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr))
+                if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr))
                     stop(paste0('The RLE IQRs for the ', x, ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run either the "compuetRLE" or "assessVariation" functions, and ',
                                 'make sure to compute RLE IQR.'))
@@ -307,7 +300,7 @@ assessNormalization <- function(
 
     ## RLE and variable association scores ####
     ### correlation between rle medians and variable #####
-    if('rleMedians_scatterPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
+    if ('rleMedians_scatterPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
             message = '- Summarize the association between the rle medians and the continuous variable(s):',
             color = 'orange',
@@ -322,7 +315,7 @@ assessNormalization <- function(
         check.out <- lapply(
             levels(assay.names),
             function(x){
-                if(is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med))
+                if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med))
                     stop(paste0('The RLE medians for the ', x ,  ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run either the "compuetRLE" or "assessVariation" functions and ',
                                 'make sure to compute RLE medians.'))
@@ -359,7 +352,7 @@ assessNormalization <- function(
         } else rle.med.var.corr.scores <- NULL
 
     ### rle iqr and variable correlation #####
-    if('rleIqr_scatterPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
+    if ('rleIqr_scatterPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
             message = '- Summarize the association between the rle IQR and the continuous variable(s):',
             color = 'orange',
@@ -374,7 +367,7 @@ assessNormalization <- function(
         check.out <- lapply(
             levels(assay.names),
             function(x){
-                if(is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr)){
+                if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr)){
                     stop(paste0('The RLE IQRs for the ', x, ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run the "compuetRLE" or "assessVariation" functions and ',
                                 'make sure to compute the RLE IQRs.'))
@@ -411,7 +404,7 @@ assessNormalization <- function(
     } else rle.iqr.var.corr.scores <- NULL
 
     ### rle medians and variable association #####
-    if('rleMedians_boxPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
+    if ('rleMedians_boxPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
             message = '- Summarize the association between the rle medians and the categorical variables:',
             color = 'orange',
@@ -426,7 +419,7 @@ assessNormalization <- function(
         check.out <- lapply(
             levels(assay.names),
             function(x){
-                if(is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med)){
+                if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med)){
                     stop(paste0('The RLE mediasns for the ', x , ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run the "compuetRLE" or "assessVariation" functions and ',
                                 'make sure to compute the RLE medians.'))
@@ -464,7 +457,7 @@ assessNormalization <- function(
     } else rle.med.var.association.scores <- NULL
 
     ### rle iqr and variable association #####
-    if('rleIqr_boxPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
+    if ('rleIqr_boxPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
             message = '- Summarize the association between the rle IQRs and variable(s):',
             color = 'orange',
@@ -479,7 +472,7 @@ assessNormalization <- function(
         check.out <- lapply(
             levels(assay.names),
             function(x){
-                if(is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr)){
+                if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr)){
                     stop(paste0('The RLE IQRs for the ', x, ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run the "compuetRLE" or "assessVariation" functions.'))
                 }
@@ -516,7 +509,7 @@ assessNormalization <- function(
     } else rle.iqr.var.association.scores <- NULL
 
     ## Vector correlation scores ####
-    if('VCA' %in% metrics.table$Metrics){
+    if ('VCA' %in% metrics.table$Metrics){
         printColoredMessage(
             message = '- Summarize the vector correlations for each categorical variable(s):',
             color = 'orange',
@@ -529,7 +522,7 @@ assessNormalization <- function(
             verbose = verbose
         )
         selected.vars <- metrics.table$Variables[metrics.table$Metrics == 'VCA']
-        if(isTRUE(fast.pca)){
+        if (isTRUE(fast.pca)){
             svd.method <- 'fast.svd'
         } else svd.method <- 'ordinary.svd'
         check.out <- lapply(
@@ -538,7 +531,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$global.level$VCA[[svd.method]][[x]]$vector.correlations)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$global.level$VCA[[svd.method]][[x]]$vector.correlations)){
                             stop(paste0('The vector correlation for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computePCVariableCorrelation" or "assessVariation" functions.'))
@@ -575,7 +568,7 @@ assessNormalization <- function(
     } else pc.vec.corr.scores <- NULL
 
     ## Linear regression scores ####
-    if('LRA' %in% metrics.table$Metrics){
+    if ('LRA' %in% metrics.table$Metrics){
         printColoredMessage(
             message = '- Summarize the R.squared form the linear regression analysis for each continous variable(s):',
             color = 'orange',
@@ -588,7 +581,7 @@ assessNormalization <- function(
             verbose = verbose
         )
         selected.vars <- metrics.table$Variables[metrics.table$Metrics == 'LRA']
-        if(isTRUE(fast.pca)){
+        if (isTRUE(fast.pca)){
             svd.method <- 'fast.svd'
         } else svd.method <- 'ordinary.svd'
         check.out <- lapply(
@@ -597,7 +590,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$global.level$LRA[[svd.method]][[x]]$r.squared)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$global.level$LRA[[svd.method]][[x]]$r.squared)){
                             stop(paste0('The vector correlation for the ',
                                         x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
@@ -632,7 +625,7 @@ assessNormalization <- function(
     } else pc.lin.reg.scores <- NULL
 
     ## Silhouette scores ####
-    if('silhouetteCoeff_barPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
+    if ('silhouetteCoeff_barPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
             message = '- Summarize the silhouette coefficients analysis for each categorical variable(s):',
             color = 'orange',
@@ -653,7 +646,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$global.level$Silhouette[[silhouette.method]][[x]]$silhouette.coeff)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$global.level$Silhouette[[silhouette.method]][[x]]$silhouette.coeff)){
                             stop(paste0('The Silhouette for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeSilhouette" or "assessVariation" functions.'))
@@ -687,7 +680,7 @@ assessNormalization <- function(
     } else sil.scores <- NULL
 
     ## ARI scores ####
-    if('ariCoeff_barPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
+    if ('ariCoeff_barPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
             message = '- Summarize the adjusted rand index for each categorical variable(s):',
             color = 'orange',
@@ -701,7 +694,7 @@ assessNormalization <- function(
         )
         selected.vars <- paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_') == 'ariCoeff_barPlot'
         selected.vars <- metrics.table$Variables[selected.vars]
-        if(ari.clustering.method == 'mclust'){
+        if (ari.clustering.method == 'mclust'){
             ari.method <- 'mclust'
         } else ari.method <- paste0('hclust.', ari.hclust.method, '.', ari.hclust.dist.measure)
         check.out <- lapply(
@@ -710,7 +703,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$global.level$ARI[[ari.method]][[x]]$ari)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$global.level$ARI[[ari.method]][[x]]$ari)){
                             stop(paste0('The adjusted rand index for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeARI" or "assessVariation" functions.'))
@@ -745,7 +738,7 @@ assessNormalization <- function(
 
     ## Gene variable correlations scores ####
     ### number of genes with a correlation cutoff ####
-    if('Correlation_corrCoeff' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('Correlation_corrCoeff' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the correlation coefficients of gene-variable correlation analysis for each continuous:',
             color = 'orange',
@@ -765,7 +758,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues)){
                             stop(paste0('The correlation for the ',
                                         x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
@@ -801,7 +794,7 @@ assessNormalization <- function(
         } else gene.var.corr.coef.scores <- NULL
 
     ### p-value distributions  ####
-    if('Correlation_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('Correlation_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the p-value distribution of gene-variable correlation analysis for each continuous variable(s):',
             color = 'orange',
@@ -821,7 +814,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues)){
                             stop(paste0('The correlation for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableCorrelation" or "assessVariation" functions.'))
@@ -859,7 +852,7 @@ assessNormalization <- function(
     } else gene.var.corr.pvalue.scores <- NULL
 
     ### null p-value ####
-    if('Correlation_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('Correlation_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the Null p-values of the gene-variable correlation analysis for continuous variable(s):',
             color = 'orange',
@@ -879,7 +872,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues)){
                             stop(paste0('The correlation for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableCorrelation" or "assessVariation" functions.'))
@@ -915,7 +908,7 @@ assessNormalization <- function(
 
     ## Gene variable anova scores ####
     ### number of genes with a f-stat cutoff ####
-    if('ANOVA_fStat' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('ANOVA_fStat' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the F-statistics of gene-variable ANOVA analysis for each categorical variable(s):',
             color = 'orange',
@@ -935,7 +928,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA[[anova.method]][[x]]$fstatistics.pvalues)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA[[anova.method]][[x]]$fstatistics.pvalues)){
                             stop(paste0('The ANOVA for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableAnova" or "assessVariation" functions.'))
@@ -970,7 +963,7 @@ assessNormalization <- function(
     } else gene.var.anova.fstat.scores <- NULL
 
     ### p-value distributions  ####
-    if('ANOVA_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('ANOVA_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the p-value distribution of gene-variable ANOVA analysis for each categorical variable(s):',
             color = 'orange',
@@ -990,7 +983,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA[[anova.method]][[x]]$fstatistics.pvalues)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA[[anova.method]][[x]]$fstatistics.pvalues)){
                             stop(paste0('The ANOVA for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableAnova" or "assessVariation" functions.'))
@@ -1026,7 +1019,7 @@ assessNormalization <- function(
     } else gene.var.anova.pvalue.scores <- NULL
 
     ### null p-value ####
-    if('ANOVA_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('ANOVA_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the null p-values of gene-variable ANOVA analysis for each categorical variable(s):',
             color = 'orange',
@@ -1046,7 +1039,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA$aov[[x]]$fstatistics.pvalues)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA$aov[[x]]$fstatistics.pvalues)){
                             stop(paste0('The ANOVA for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableAnova" or "assessVariation" functions.'))
@@ -1101,7 +1094,7 @@ assessNormalization <- function(
 
     ## Partial correlation scores ####
     ### number of genes ####
-    if('PartialCorrelation' %in% paste(metrics.table$Metrics) ){
+    if ('PartialCorrelation' %in% paste(metrics.table$Metrics) ){
         printColoredMessage(
             message = '- Summarize the correlation differences in gene-gene partial correlation analysis for each continuous variable(s):',
             color = 'orange',
@@ -1120,7 +1113,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$PPcorr[[pcorr.method]][[x]]$correlations)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$PPcorr[[pcorr.method]][[x]]$correlations)){
                             stop(paste0('The gene-gene partial correlation for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesPartialCorrelation" or "assessVariation" functions.'))
@@ -1157,7 +1150,7 @@ assessNormalization <- function(
 
     ## DGE scores ####
     ### p-value distributions  ####
-    if('DGE_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('DGE_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the p-value distribution of differentail gene expressin analysis for each categorical variable(s):',
             color = 'orange',
@@ -1177,7 +1170,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values)){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values)){
                             stop(paste0('The differentail gene expressin for the ', x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "compuetDGE" or "assessVariation" functions.'))
@@ -1217,7 +1210,7 @@ assessNormalization <- function(
     } else dge.pvalue.scores <- NULL
 
     ### q-value ####
-    if('DGE_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
+    if ('DGE_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
             message = '- Summarize the null p-values of differentail gene expression analysis for each categorical variable(s):',
             color = 'orange',
@@ -1237,7 +1230,7 @@ assessNormalization <- function(
                 lapply(
                     levels(assay.names),
                     function(y){
-                        if(is.null(se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values))
+                        if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values))
                             stop(paste0('The DGE for the ',  x, ' variable of the ' , y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "compuetDGE" or "assessVariation" functions.'))
@@ -1317,16 +1310,16 @@ assessNormalization <- function(
         verbose = verbose
         )
     all.measurements$group <- NULL
-    if(is.null(bio.variables)){
+    if (is.null(bio.variables)){
         all.measurements$group <- 'Removal of unwanted variation'
     } else if (is.null(uv.variables)){
         all.measurements$group <- 'Preservation of biological variation'
-    } else if(!is.null(bio.variables) & !is.null(uv.variables)){
+    } else if (!is.null(bio.variables) & !is.null(uv.variables)){
         all.measurements$group[all.measurements$variable %in% bio.variables] <- 'Preservation of biological variation'
         all.measurements$group[all.measurements$variable %in% uv.variables] <- 'Removal of unwanted variation'
         all.measurements$group[all.measurements$variable %in% 'RLE'] <- 'Removal of unwanted variation'
     }
-    if(sum(is.na(all.measurements$group)) > 0){
+    if (sum(is.na(all.measurements$group)) > 0){
         stop('Please check the variable names.')
     }
 
@@ -1345,7 +1338,7 @@ assessNormalization <- function(
         uv.categorical.vars <- names(vars.class[vars.class %in% c('character', 'factor')])
         uv.continuous.vars <- names(vars.class[vars.class %in% c('numeric', 'integer')])
         #### continuous variables ####
-        if(!is.null(uv.continuous.vars)){
+        if (!is.null(uv.continuous.vars)){
             for(i in uv.continuous.vars){
                 # LRA
                 index <- all.measurements$variable == i & all.measurements$test == 'LRA'
@@ -1359,7 +1352,7 @@ assessNormalization <- function(
             }
         }
         ### categorical variables ####
-        if(!is.null(uv.categorical.vars)){
+        if (!is.null(uv.categorical.vars)){
             for(i in uv.categorical.vars){
                 # Silhouette
                 index <- all.measurements$variable == i & all.measurements$test == 'Silhouette'
@@ -1381,7 +1374,7 @@ assessNormalization <- function(
         bio.categorical.vars <- names(vars.class[vars.class %in% c('character', 'factor')])
         bio.continuous.vars <- names(vars.class[vars.class %in% c('numeric', 'integer')])
         #### continuous variables ####
-        if(!is.null(bio.continuous.vars)){
+        if (!is.null(bio.continuous.vars)){
             for(i in bio.continuous.vars){
                 # correlation p-values
                 index <- all.measurements$variable == i & all.measurements$test == 'Gene-level correlation (null p-value)'
@@ -1392,7 +1385,7 @@ assessNormalization <- function(
             }
         }
         ### categorical variables ####
-        if(!is.null(bio.categorical.vars)){
+        if (!is.null(bio.categorical.vars)){
             for(i in bio.categorical.vars){
                 # ANOVA null p-values
                 index <- all.measurements$variable == i & all.measurements$test == 'Gene-level ANOVA (null p-value)'
@@ -1434,7 +1427,7 @@ assessNormalization <- function(
     final.overall.scores <- lapply(
         assay.names,
         function(x){
-            if(is.null(bio.variables)){
+            if (is.null(bio.variables)){
                 bio.uv.overall.scores$measurements
             } else if (is.null(uv.variables)){
                 bio.uv.overall.scores$measurements
@@ -1542,14 +1535,14 @@ assessNormalization <- function(
               axis.ticks.y = element_blank()) +
         geom_stripes(odd = "#22222222", even = "#66666666") +
         guides(color = guide_legend(override.aes = list(size = 5), ncol = 3), size = guide_legend(ncol = 3))
-    if(isTRUE(plot.output)) print(assessment.plot)
+    if (isTRUE(plot.output)) print(assessment.plot)
 
     # Save results ####
     ### add results to the SummarizedExperiment object ####
-    if(is.null(output.name))
+    if (is.null(output.name))
         output.name <- paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays')
 
-    if(isTRUE(save.se.obj)){
+    if (isTRUE(save.se.obj)){
         printColoredMessage(
             message = '-- Save the selected bio genes to the metadata of the SummarizedExperiment object.',
             color = 'magenta',
@@ -1588,7 +1581,7 @@ assessNormalization <- function(
         return(se.obj)
     }
     ### export results as list ####
-    if(isFALSE(save.se.obj)){
+    if (isFALSE(save.se.obj)){
         printColoredMessage(
             message = '- The assessment table and plot are outputed as list.',
             color = 'blue',

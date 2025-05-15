@@ -4,119 +4,86 @@
 #'
 #' @description
 #' Identifies a set of genes to be used as negative control genes when no biological variation is known. This function
-#' applies gene-level correlation, ANOVA, mean-variance relationship and MAD analyses across and between  sample groups
-#' to select negative control genes for different purposes including RUV-III normalization.
+#' applies gene-level correlation, ANOVA, mean-variance relationship, and MAD analyses across and between sample groups
+#' to select negative control genes for different purposes, including `RUV-III` normalization.
 #'
 #' @details
-#' The function initially utilizes gene-level correlation and ANOVA to identify genes that are significantly influenced
-#' by continuous and categorical sources of variation, respectively. Subsequently, it conducts mean-variance relationship
+#' The function initially uses gene-level correlation and ANOVA to identify genes significantly influenced
+#' by continuous and categorical sources of variation, respectively. Then, it performs a mean-variance relationship
 #' or Median Absolute Deviation (MAD) analysis on each gene within homogeneous sample groups, considering unwanted variables,
-#' to pinpoint genes highly variable due to biological factors. Lastly, various methods are employed to consolidate the
-#' statistical findings, ultimately determining an appropriate set of genes as negative control genes for different purposes
-#' including RUV-III normalization.
+#' to detect genes that are highly variable due to biological factors. Finally, various methods are applied to consolidate
+#' the statistical findings and determine an appropriate set of genes as negative control genes for different purposes,
+#' including `RUV-III` normalization.
 #'
+#' @param se.obj A `SummarizedExperiment` object.
+#' @param assay.name Character. The name of the assay in the `SummarizedExperiment` object to be used to find NCGs.
+#' This must be the same data used for `RUV-III` normalization.
+#' @param uv.variables Character. A character vector indicating the name(s) of the columns in the `SummarizedExperiment` object
+#' that contain unwanted variable(s). If all unwanted variation is unknown, use the `identifyUnknownUV()` function
+#' to estimate them first, then run `findNcgsUnSupervised()`.
+#' @param clustering.method Character. The clustering method used to group continuous unwanted variation. Options are
+#' `kmeans`, `cut`, and `quantile`. The default is set to `kmeans`.
+#' @param nb.clusters Numeric. Number of clusters for grouping continuous unwanted variation. The default is set to `3`.
+#' @param nb.ncg Numeric. Number of genes to select as negative control genes when `ncg.selection.method` is `auto`.
+#' This value represents a fraction of total genes. The default is set to `0.1`.
+#' @param hvg.method Character. Method to select highly variable genes. Options: `var`, `mad`. `var` models gene variance
+#' based on a mean-variance trend. `mad` uses the Median Absolute Deviation. The default is set to `var`.
+#' @param ncg.selection.method Character. Method for selecting negative control genes. Options: `prod`, `sum`, `average`,
+#' `non.overlap`, `quantile`, `auto`. The default is set to `non.overlap`.
+#' @param top.rank.bio.genes Numeric. Fraction of top-ranked genes highly affected by biological variation. The default
+#' is set to `0.5`.
+#' @param top.rank.uv.genes Numeric. Fraction of top-ranked genes highly affected by unwanted variation. The default is
+#' set to `0.5`.
+#' @param bio.percentile Numeric. Percentile threshold for selecting biologically variable genes (used with `quantile`
+#' method). The default is set to `0.8`.
+#' @param uv.percentile Numeric. Percentile threshold for selecting unwanted-variable genes (used with `quantile`
+#' method). The default is set to `0.8`.
+#' @param grid.group Character. Scope of grid search: `bio`, `uv`, or `both`.
+#' @param grid.direction Character. Direction of grid search: `increase` or `decrease`.
+#' @param grid.nb Numeric. Number of genes to test in grid search when `ncg.selection.method` is `auto`. The default is
+#' set to `20`.
+#' @param normalization Character. Method for library size normalization before analysis. Options: `CPM`, `TMM`, `VST`,
+#' `full`, `median`, `upper`. The default is set to `CPM`.
+#' @param regress.out.variables Character. Variable(s) to regress out before analysis.
+#' @param min.sample.for.mad Numeric. Minimum number of samples per group for MAD analysis. The default is set to `3`.
+#' @param min.sample.for.var Numeric. Minimum number of samples per group for variance analysis. The default is set to `15`.
+#' @param min.sample.for.aov Numeric. Minimum number of samples for ANOVA. The default is set to `3`.
+#' @param min.sample.for.correlation Numeric. Minimum number of samples for correlation analysis. The default is set to `10`.
+#' @param corr.method Character. Correlation method: `pearson` or `spearman`. The default is set to `spearman`.
+#' @param a Numeric. Significance level (alpha) for correlation confidence intervals. The default is set to `0.05`.
+#' @param rho Numeric. Hypothesized correlation value for testing. The default is set to `0`.
+#' @param anova.method Character. ANOVA method: `aov` or `welch`. The default is set to `aov`.
+#' @param filter.ncgs Logical. Whether to filter selected NCGs based on public human housekeeping gene sets. The default
+#' is set to `FALSE`.
+#' @param common.hk Character. Specifies group of housekeeping genes to use: `cancer` or `non.cancer`. The default is set
+#' to `cancer`.
+#' @param hk.group Character. Column name in the gene annotation containing non-cancer housekeeping genes. Options include:
+#' `bulk.rnaseq.hk.genes.v1`, `bulk.rnaseq.hk.genes.v2`, `micorarray.hk.genes`, `nanostring.pan.cancer.hk.genes`,
+#' `singscore.pan.cancer.hk.genes`. The default is set to `micorarray.hk.genes`.
+#' @param assess.ncg Logical. Whether to assess the performance of selected NCGs using PCA and R² or vector correlations.
+#' The default is set to `TRUE`.
+#' @param variables.to.assess.ncg Character. Variables to assess with the NCGs. The default is set to `NULL` (all in `uv.variables`).
+#' @param nb.pcs Numeric. Number of principal components to use for NCG assessment. The default is set to `10`.
+#' @param center Logical. Whether to center data before PCA. The default is set to `TRUE`.
+#' @param scale Logical. Whether to scale data before PCA. The default is set to `TRUE`.
+#' @param apply.log Logical. Whether to log-transform the data before analysis. The default is set to `TRUE`.
+#' @param pseudo.count Numeric. Pseudo count to add before log transformation. The default is set to `1`.
+#' @param assess.se.obj Logical. Whether to validate the `SummarizedExperiment` object with `checkSeObj()`. The The default
+#' is set to `TRUE`.
+#' @param remove.na Character. Whether to remove missing values from `assays`, `sample.annotation`, `both`, or `none`.
+#' The The default is set to `both`.
+#' @param output.name Character. Output name for metadata entry. If `NULL`, a name is auto-generated.
+#' @param ncg.group Character. Group label for selected NCGs. If `NULL`, the label `ncg|unsupervised` is used.
+#' @param plot.output Logical. Whether to plot NCG assessment during execution. The default is set to `TRUE`.
+#' @param output.plot Character. Plot type to display: `assessment`, `heatmap`, or `both`. The default is set to `assessment`.
+#' @param use.imf Logical. Whether to use intermediate file. The default is set to `FALSE`.
+#' @param save.imf Logical. Whether to save the intermediate file for reuse. The default is set to `FALSE`.
+#' @param imf.name Character. Name for intermediate file. If `NULL`, generated as `paste0(assay.name, '|un.supervised|', ncg.selection.method)`.
+#' @param save.se.obj Logical. Whether to save results in `metadata` of the `SummarizedExperiment` object. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, function will print progress messages.
 #'
-#' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character. The name of the data (assay) in the SummarizedExperiment object to be used to find NCGS.
-#' This data must be the same as one that will be used for the RUV-III normalization.
-#' @param uv.variables Character. A character vector indicating the name(s) of the columns in the SummarizedExperiment object
-#' that contain unwanted variable(s). If all unwanted variation is unknown, the 'identifyUnknownUV' function can be used
-#' to estimate them first and the run the findNcgsUnSupervised() function.
-#' @param clustering.method Character. A character that specifies the clustering method to use for grouping continuous
-#' sources of unwanted variation. The options are 'kmeans', 'cut', and 'quantile'. The default is set to 'kmeans'.
-#' @param nb.clusters Numeric. The number of clusters for grouping continuous sources of unwanted variation. The default
-#' is set to 3.
-#' @param nb.ncg Numeric. Specifies the number of genes to be chosen as negative control genes (NCG) when the
-#' 'ncg.selection.method' is set to 'auto'. This value corresponds to a fraction of the total genes in the SummarizedExperiment
-#'  object. The default is set to 0.1.
-#' @param hvg.method Character. A character vector indicating how to select the highly variable genes. The option are
-#' 'var' and 'mad'. The 'var' option is based on modeling the variance of the log-expression profiles for each gene,
-#' decomposing it into technical and biological components based on a fitted mean-variance trend. The 'mad' option is
-#' based on the Median Absoulute Deviation to find highly variable genes. The default it set to 'var'.
-#' @param ncg.selection.method Character. Specifies the method used to select negative control genes (NCG). The available
-#' options are 'prod', 'sum', 'average', 'non.overlap', 'quantile', and 'auto'. The default is set to 'non.overlap'. Refer
-#' to the details for more information on each approach.
-#' @param top.rank.bio.genes Numeric. Specifies the fraction of top-ranked genes that are highly affected by biological
-#' variation. The default is set to 0.5. Refer to the details for more information.
-#' @param top.rank.uv.genes Numeric. Specifies the fraction of top-ranked genes that are highly affected by unwanted
-#' variation variables. The default is set to 0.5. Refer to the details for more information.
-#' @param bio.percentile Numeric. The percentile cut-off for selecting genes that are highly affected by biological
-#' variation. This number must be specified, when the 'ncg.selection.method' is set to 'quantile'. The default is set to 0.8.
-#' @param uv.percentile Numeric. The percentile cut-off for selecting genes that are highly affected by unwanted variation.
-#' This number must be specified, when the 'ncg.selection.method' is set to 'quantile'. The default is set to 0.8.
-#' @param grid.group Character. Specifies whether the grid search should focus on biological, unwanted, or both factors.
-#' The options are 'bio', 'uv', or 'both'. Refer to the details for more information.
-#' @param grid.direction Character. Specifies whether the grid search should proceed in decreasing or increasing order.
-#' The options are 'increase' or 'decrease'.
-#' @param grid.nb Numeric. Specifies the number of genes to consider during the grid search when the 'ncg.selection.method'
-#' is set to 'auto'. The default is set to 20.
-#' @param normalization Character. Specifies the normalization method used for library size adjustment before identifying
-#' genes that are highly affected by biological variation. The options are:'CPM', 'TMM', 'VST', 'full', 'median' and 'upper'.
-#' The default is set to 'CPM'. Refer to the 'applyOtherNormalization' function for further details.
-#' @param regress.out.variables Character. Specifies which variables to regress out from the data prior to analysis.
-#' @param min.sample.for.mad Numeric. The minimum number of samples required to perform MAD analysis on each gene within
-#' homogeneous sample groups. The default is set to 3.
-#' @param min.sample.for.var Numeric. The minimum number of samples required to perform mean-variance analysis for each
-#' gene within homogeneous sample groups. The default is set to 15.
-#' @param min.sample.for.aov Numeric. The minimum number of samples required for ANOVA analysis between categorical sources
-#' of variation with individual gene expression. The default is set to 3.
-#' @param min.sample.for.correlation Numeric. The minimum number of samples required for correlation analyses between
-#' continuous sources of unwanted variation and individual gene expression. The default is 10.
-#' @param corr.method Character. The correlation method to use for the analysis. Options are 'pearson' or 'spearman'.
-#' The default is set to 'spearman'.
-#' @param a Numeric. The significance level used for the confidence intervals in the correlation analysis. The default is
-#' set to 0.05.
-#' @param rho Numeric. The hypothesized correlation value to be used in the hypothesis testing. The default is 0.
-#' @param anova.method Character. The ANOVA method to use. Options are 'aov' or 'welch'. The default is 'aov'. Refer to
-#' the function computeGenesVariableAnova' for more details.
-#' @param filter.ncgs Logical. Specifies to have an extra filtering steps based on the common or a pan-cancer specif set
-#' of publicly available human housekeeping genes. The default is set to 'FALSE'.
-#' @param common.hk Character. Specifies which gorup of common housekeeping genes should be used for filetng the NCGS.
-#' Options are 'cancer' and 'non.cancer'. The default is set to 'cancer'.
-#' @param hk.group Character. If the 'common.hk' is set to 'non.cancer', a characer tha species a columng name in the
-#' gene annotation (rawData) that contcin a list of commone non cacncer housekeeping genes. The options are
-#' 'bulk.rnaseq.hk.genes.v1', "bulk.rnaseq.hk.genes.v2', micorarray.hk.genes, 'nanostring.pan.cancer.hk.genes and
-#' 'singscore.pan.cancer.hk.genes. These list of housekeeping genes can be added to SummarizedExperiment object using the
-#' 'prepareSeObj()' function.The default is set to micorarray.hk.genes.
-#' @param assess.ncg Logical. Specifies whether to assess the performance of the selected NCGs. This involves principal
-#' component analysis on the selected NCGs and exploration of R^2 or vector correlation between the first 'nb.pcs'
-#' principal components and the biological and unwanted variables. The defualt is set to 'TRUE'.
-#' @param variables.to.assess.ncg Character. The column names of the SummarizedExperiment object that contain variables
-#' to be assessed for their association with the selected NCGs. If it is set to 'NULL', all variables specified in the
-#' 'uv.variables' will be assessed. The default is set to 'NULL'.
-#' @param nb.pcs Numeric. Specifies the number of principal components (calculated using only selected NCGs) to be used
-#' for NCGs performance assessment. The default is set to 10.
-#' @param center Logical. Specifies whether to center the data before applying PCA using singular value decomposition (SVD).
-#' The default is set to 'TRUE'.
-#' @param scale Logical. Specifies whether to scale the data before applying PCA using singular value decomposition (SVD).
-#' The default is set to 'TRUE'.
-#' @param apply.log Logical. Specifies whether to apply a log-transformation to the data or not before applying any
-#' statistical analysis. The default is set to 'TRUE'.
-#' @param pseudo.count Numeric. The pseudo count to be added to all measurements before log transformation. The default is
-#' set to 1.
-#' @param assess.se.obj Logical. Specifies whether to assess the SummarizedExperiment object using the checkSeObj() function.
-#' The default is set to 'TRUE'. This applies the the checkSeObj() function.
-#' @param remove.na Character. Specifies whether to remove missing values (NA) from the 'assays', the 'sample.annotation',
-#' 'both', or 'none'. The default is set to 'both'.
-#' @param output.name Character. Specifies the name for the output in the metadata of the SummarizedExperiment object. The
-#' default is set to NULL, meaning the function will generate a name based on the specified argument.
-#' @param ncg.group Character. Specifies the name of the group of NCGs. If NULL, the function will generate a name using
-#' "ncg|unsupervised".
-#' @param plot.output Logical. If TRUE, a plot of the NCG assessment will be displayed while the function is running.
-#' @param output.plot Character. A character specifies which plot to print. The options are 'assessment', 'heatmap' and
-#' 'both'. The default is set to 'assessment'.
-#' @param use.imf Logical. Specifies whether to use the intermediate file. The default is FALSE.
-#' @param save.imf Logical. Specifies whether to save the intermediate file. If TRUE, the function will save the results
-#' of the ANOVA. If users want to change parameters such as 'nb.ncg', 'ncg.selection.method', 'top.rank.bio.genes', or
-#' 'top.rank.uv.genes', the analysis will not be recalculated.
-#' @param imf.name Character. Specifies the name for saving the intermediate file. If NULL, the function will generate a
-#' name. The function uses paste0(assay.name, '|un.supervised|', ncg.selection.method) to generate a name.
-#' @param save.se.obj Logical. Specifies whether to save the result in the metadata of the SummarizedExperiment object or
-#' output the result. The default is set to 'TRUE'.
-#' @param verbose Logical. If TRUE, process messages will be displayed.
-#'
-#' @return A SummarizedExperiment object containing the selected negative control genes and assessment plots or a list of
-#' these results.
+#' @return A `SummarizedExperiment` object containing the selected negative control genes and optional assessment plots,
+#' or a list of the results.
 
 #' @importFrom matrixTests row_oneway_equalvar row_oneway_welch
 #' @importFrom ComplexHeatmap Heatmap rowAnnotation

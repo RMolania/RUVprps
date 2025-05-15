@@ -30,5 +30,16 @@ utils::globalVariables(
       'samples.nb',
       'Groups',
       'p.vals',
-      'everything')
+      'uv.rank.plot',
+      'datasets',
+      'ari',
+      'pcs',
+      'aov.fvals',
+      'corr',
+      'data',
+      'assess',
+      'variable',
+      'geneset',
+      'mad'
+      )
     )

@@ -12,7 +12,7 @@
 #' se.obj->metadata->NCG->pre.selected->subset.name.
 
 
-#' @param se.obj A `SummarizedExperiment` object.
+#' @param se.obj A SummarizedExperiment object.
 #' @param ncg A logical or vector of gene names of pre-selected genes as NCGs.
 #' @param subset.name Character. Specifies the name of the NCG set in the metadata of the `SummarizedExperiment` object.
 #' The default is 'NULL', in which case the function will generate a name  based on the number of NCGs using:
@@ -102,32 +102,34 @@ addNCGs <- function(
     if (is.null(subset.name)){
         subset.name <- paste0(sum(ncg), '_genes')
     }
-    if (save.se.obj == TRUE){
-        printColoredMessage(
-            message = '-- Saving the provided NCG to the metadata of the SummarizedExperiment object.',
-            color = 'magenta',
-            verbose = verbose)
-        ## Check if metadata NCG already exists
-        if (length(se.obj@metadata$NCG) == 0 ) {
-            se.obj@metadata[['NCG']] <- list()
-        }
-        if (!'pre.selected' %in% names(se.obj@metadata[['NCG']])){
-            se.obj@metadata[['NCG']][['pre.selected']] <- list()
-        }
-        if (!output.name %in% names(se.obj@metadata[['NCG']][['pre.selected']])){
-            se.obj@metadata[['NCG']][['pre.selected']][[output.name]] <- list()
-        }
-        se.obj@metadata[['NCG']][['pre.selected']][[output.name]] <- ncg
-        printColoredMessage(
-            message = 'The NCGs are saved to metadata of the SummarizedExperiment object.',
-            color = 'blue',
-            verbose = verbose
-            )
-        printColoredMessage(
-            message = '------------The addNCGs finished',
-            color = 'white',
-            verbose = verbose
+    printColoredMessage(
+        message = '-- Saving the provided NCGs to the metadata of the SummarizedExperiment object.',
+        color = 'magenta',
+        verbose = verbose
         )
-        return(se.obj)
+    ## Check if metadata NCG already exists
+    if (length(se.obj@metadata$NCG) == 0 ) {
+        se.obj@metadata[['NCG']] <- list()
     }
+    if (!'pre.selected' %in% names(se.obj@metadata[['NCG']])){
+        se.obj@metadata[['NCG']][['pre.selected']] <- list()
+    }
+    if (!'gene.set' %in% names(se.obj@metadata[['NCG']][['pre.selected']])){
+        se.obj@metadata[['NCG']][['pre.selected']][['gene.set']] <- list()
+    }
+    if (!subset.name %in% names(se.obj@metadata[['NCG']][['pre.selected']][['gene.set']])){
+        se.obj@metadata[['NCG']][['pre.selected']][['gene.set']][[subset.name]] <- list()
+    }
+    se.obj@metadata[['NCG']][['pre.selected']][['gene.set']][[subset.name]] <- ncg
+    printColoredMessage(
+        message = 'The NCGs are saved to metadata of the SummarizedExperiment object.',
+        color = 'blue',
+        verbose = verbose
+    )
+    printColoredMessage(
+        message = '------------The addNCGs finished',
+        color = 'white',
+        verbose = verbose
+    )
+    return(se.obj)
 }

@@ -1,4 +1,4 @@
-#' Group a continuous variable.
+#' Groups a continuous variable.
 
 #' @author Ramyar Molania
 
@@ -6,13 +6,13 @@
 #' @param variable Symbol. A symbol specifying the column in the SummarizedExperiment object. This should be a continuous
 #' variable.
 #' @param nb.clusters Numeric. A numeric value indicating the number of groups for continuous sources of unwanted variation.
-#' The default is 3. This implies that each continuous source will be split into 3 groups using the specified
-#' 'clustering.method' method.
+#' The default is set to 3. This implies that each continuous source will be split into 3 groups using the specified
+#' `clustering.method` method.
 #' @param clustering.method Symbol. A symbol specifying the clustering method to be applied for grouping each continuous
-#' source of unwanted variables. Options include 'kmeans', 'cut', and 'quantile'. The default is 'kmeans' clustering.
+#' source of unwanted variables. Options include `kmeans`, `cut`, and `quantile`. The default is se to `kmeans` clustering.
 #' @param perfix Symbol. A symbol to add to each groups.
-#' @param plot.output Logical. If is 'TRUE', the function plots the variable values colored by the groups.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' @param plot.output Logical. If it is set to `TRUE`, the function plots the variable values colored by the groups.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 
 groupContinuousVariable <- function(
         se.obj,

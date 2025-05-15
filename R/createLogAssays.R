@@ -12,7 +12,7 @@
 #' @param new.name Character. A symbol to append to the name(s) of the assay(s) for the log-transformed data. The default is 'log.'.
 #' @param apply.round Logical. If 'TRUE', the measurements in the individual assays will be rounded to two decimal places.
 #' The default is 'TRUE'.
-#' @param verbose Logical. If 'TRUE', the function will display messages about the different steps being executed.
+#' @param verbose Logical. If `TRUE`, the function will display messages about the different steps being executed.
 
 #' @importFrom SummarizedExperiment assays assay colData
 

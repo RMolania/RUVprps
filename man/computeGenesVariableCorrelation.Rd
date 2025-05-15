@@ -33,45 +33,46 @@ assays in the SummarizedExperiment object will be selected.}
 \item{variable}{Character. A character string indicating a column name in the SummarizedExperiment object that contains
 a continuous variable, such as library size, tumor purity, etc.}
 
-\item{method}{Character. Specifies which correlation method should be used. The options are 'pearson', 'kendall', or
-"spearman". The default is set to 'spearman'.}
+\item{method}{Character. Specifies which correlation method should be used. The options are \code{pearson}, \code{kendall}, or
+\code{spearman}. The default is set to \code{spearman}.}
 
 \item{a}{Numeric. The significance level used for the confidence intervals in the correlation. The default is 0.05.
-Refer to the 'correls' function from the Rfast R package for more details.}
+Refer to the \code{correls()} function from the \strong{Rfast} R package for more details.}
 
 \item{rho}{Numeric. The hypothesized correlation value to be used in hypothesis testing. The default is 0.
-Refer to the 'correls' function from the Rfast R package for more details.}
+Refer to the \code{correls()} function from the \strong{Rfast} R package for more details.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before computing the correlation.
-By default, the log transformation is applied.}
+The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value to be added as a pseudo count to all measurements before log transformation.
 The default is set to 1.}
 
 \item{plot.top.genes}{Logical. Indicates whether to plot the gene expression for the top or bottom genes based on
-correlation values. The default is set to 'FALSE'.}
+correlation values. The default is set to \code{FALSE}.}
 
-\item{nb.top.genes}{Numeric. Defines the number of genes with the highest or lowest correlation to the variable to plot.
-The default is 3.}
+\item{nb.top.genes}{Numeric. A numeric value that defines the number of genes with the highest or lowest correlation
+to the variable to plot. The default is set to 3.}
 
-\item{apply.round}{Logical. Indicates whether to round the correlation coefficients. The default is TRUE.}
+\item{apply.round}{Logical. Indicates whether to round the correlation coefficients values. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object.
-Refer to the 'checkSeObj' function for more details. The default is TRUE.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. Refer to the \code{checkSeObj()}
+function for more details. The default is set to \code{TRUE}.}
 
-\item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays and variable.}
+\item{remove.na}{Character. A character that specifies whether to remove NA or missing values from the data sets (assays).
+Options are \code{assays}, \code{sample.annotation}, \code{none} and \code{both}. The default is set to \code{assays}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the current SummarizedExperiment
-object or to output the result. By default, it is set to TRUE.}
+object or to output the result.The default is set to \code{TRUE}.}
 
-\item{override.check}{Logical. When set to 'TRUE', the function verifies the current SummarizedExperiment object to
+\item{override.check}{Logical. When set to \code{TRUE}, the function verifies the current SummarizedExperiment object to
 determine if the correlation has already been computed with the current parameters. If so, the metric will not be recalculated.
-The default is FALSE.}
+The default is set to \code{FALSE}.}
 
-\item{verbose}{Logical. If 'TRUE', displays the messages for different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays the messages for different steps of the function.}
 }
 \value{
-Either a SummarizedExperiment object or a list containing the correlation coefficients for compuated for individual
+Either a SummarizedExperiment object or a list containing the correlation coefficients for computed for individual
 genes.
 }
 \description{

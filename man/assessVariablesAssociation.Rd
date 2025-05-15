@@ -19,39 +19,39 @@ assessVariablesAssociation(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{bio.variables}{Character or character vector. Specifies the column names of biological variables in
-the sample annotation of the SummarizedExperiment object. These 'bio.variables' can be either categorical or continuous
+the sample annotation of the SummarizedExperiment object. These \code{bio.variables} can be either categorical or continuous
 variables.}
 
 \item{uv.variables}{Character or character vector. Specifies the column names of unwanted variables in
-the sample annotation of the SummarizedExperiment object. These 'uv.variables' can be either categorical or continuous
+the sample annotation of the SummarizedExperiment object. These \code{uv.variables} can be either categorical or continuous
 variables.}
 
 \item{cat.cor.coef}{Numeric vector. A vector of two numerical values indicating the cut-off for the correlation coefficient
 between each pair of categorical variables. The first value applies to each pair of 'uv.variables' and the second value
-applies to each pair of 'bio.variables'. The correlation is computed using the 'ContCoef' function from the DescTools
+applies to each pair of \code{bio.variables}. The correlation is computed using the \code{ContCoef()}function from the \strong{DescTools}
 R package. If the correlation of a pair of variables exceeds the cut-off, the variable with the highest number of factors
 will be kept, and the other will be excluded from the remaining analysis. By default, both values are set to 0.9.}
 
 \item{cont.cor.coef}{Numeric vector. A vector of two numerical values indicating the cut-off for the Spearman correlation
-coefficient between each pair of continuous variables. The first value applies to each pair of 'uv.variables' and the
-second value applies to each pair of 'bio.variables'. If the correlation of a pair of variables exceeds the cut-off,
+coefficient between each pair of continuous variables. The first value applies to each pair of \code{uv.variables} and the
+second value applies to each pair of \code{bio.variables}. If the correlation of a pair of variables exceeds the cut-off,
 the variable with the highest variance will be kept, and the other will be excluded from the remaining analysis. By
 default, both values are set to 0.9.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the function
-'checkSeObj' will be applied.}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the function
+\code{checkSeObj()} will be applied.}
 
-\item{remove.na}{Character. Indicates whether to remove missing values from the 'bio.variables' and 'uv.variables'. The
-options are 'sample.annotation' or 'none'. The default is 'sample.annotation', meaning the missing values from the
+\item{remove.na}{Character. Indicates whether to remove missing values from the \code{bio.variables} and \code{uv.variables}. The
+options are 'sample.annotation' or \code{none}. The default is \code{sample.annotation}, meaning the missing values from the
 variables will be removed before calculating the associations.}
 
-\item{verbose}{Logical. If 'TRUE', shows messages for different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows messages for different steps of the function.}
 }
 \value{
 A list that contains the SummarizedExperiment object and the selected biological and unwanted variables.
 }
 \description{
-The function assesses the association between all selected biological and unwanted variation variables separately.
+The function assesses the association between all selected biological and unwanted variation variables, separately.
 If two categorical variables are highly correlated, the function keeps one that has the highest number of factors.
 For two highly correlated continuous variables, the one with higher variance will be kept. This assessment could be
 useful for creating PRPS and finding NGCs. If two variables exhibit high correlation, utilizing one of them is

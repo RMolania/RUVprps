@@ -31,7 +31,7 @@ be selected.}
 \item{apply.round}{Logical. If 'TRUE', the measurements in the individual assays will be rounded to two decimal places.
 The default is 'TRUE'.}
 
-\item{verbose}{Logical. If 'TRUE', the function will display messages about the different steps being executed.}
+\item{verbose}{Logical. If \code{TRUE}, the function will display messages about the different steps being executed.}
 }
 \description{
 Apply log-transformation to the assay(s) of a SummarizedExperiment object.

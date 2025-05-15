@@ -1,17 +1,18 @@
-#' Add results and plots of a metric to SummarizedExperiment object.
+#' Adds results and plots of a metric to SummarizedExperiment object.
 
 #' @author Ramyar Molania
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param slot Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or a vector of symbols specifying the name(s) of the assay(s) in the SummarizedExperiment
-#' object. The default is set to 'all'.
-#' @param assessment.type Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.
-#' @param assessment Symbol. A symbol indicating the name of the metric to be checked.
-#' @param method Symbol. A symbol indicating the method used to calculate the metric.
-#' @param variables Symbol. A symbol or a vector of symbols indicating the variables used to calculate the metric.
-#' @param file.name Symbol. A symbol indicating the file name to which the results of the metric are assigned.
-#' @param results.data Symbol. A symbol indicating the name of the results file for the metric.
+#' @param slot Character. The name of the slot in the `metadata` of the `SummarizedExperiment` object.
+#' @param assay.names Character or character vector. The name(s) of the assay(s) in the `SummarizedExperiment` object.
+#' The default is set to 'all'.
+#' @param assessment.type Character. The type of assessment to perform. Options are 'gene.level' or 'global.level'.
+#' @param assessment Character. The name of the metric to be evaluated.
+#' @param method Character. The method used to calculate the metric.
+#' @param variables Character or character vector. The variable(s) used to calculate the metric.
+#' @param file.name Character. The name of the file to which the metric results will be written.
+#' @param results.data Character. The name of the object or file containing the metric results.
+
 
 addMetricToSeObj <- function(
         se.obj,

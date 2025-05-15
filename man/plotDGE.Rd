@@ -19,40 +19,40 @@ plotDGE(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to compute DGE. The default is set to 'all' indicating all the the assays of the
+\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the
+SummarizedExperiment object to compute DGE. The default is set to \code{all}, indicating all assays of the
 SummarizedExperiment object will be selected.}
 
-\item{variable}{Symbol. Specifies the column name in the SummarizedExperiment object containing a categorical variable
-, such as sample types or batches}
+\item{variable}{Character. Specifies the column name in the SummarizedExperiment object containing a categorical variable,
+such as sample types or batches.}
 
-\item{method}{Symbol. A symbol that indicates which DE method should be used.}
+\item{method}{Character. Specifies the differential expression method to be used.}
 
 \item{plot.ncol}{Numeric. A numeric value indicating the number of columns in the plot grid. This setting applies when
-more than one data is provided. The default is set to 1.}
+more than one data set is provided. The default is set to 1.}
 
 \item{plot.nrow}{Numeric. A numeric value indicating the number of rows in the plot grid. This setting applies when
-more than one data is provided. The default is set to 1.}
+more than one data set is provided. The default is set to 1.}
 
-\item{plot.output}{Logical. Indicates whether to plot the p-values histograms when the functions is running, by default
-it is set to 'FALSE'.}
+\item{plot.output}{Logical. Indicates whether to plot the p-values histograms while the function is running. The default
+is set to \code{FALSE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment class
-object 'se.obj' or to output the result. By default it is set to TRUE.}
+\item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
+(\code{se.obj}) or to output the result. By default, it is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, messages for different steps of the function will be displayed.}
 }
 \value{
-A SummarizedExperiment object or a list that containing the computed ARI on the categorical variable.
+A SummarizedExperiment object or a list containing the computed AR
 }
 \description{
 This function plots the p-values histograms of the DGE analysis.
 }
 \details{
-DE analyses is performed using the Wilcoxon signed-rank test with log-transformed data e.g. raw counts, normalized data, ....
-To evaluate the effects of the different sources of unwanted variation on the data, DE analyses is performed across
-batches. In the absence of any batch effects, the histogram of the resulting un-adjusted P values should be uniformly
-distributed
+Differential expression (DE) analysis is performed using the Wilcoxon signed-rank test with log-transformed data
+(e.g., raw counts, normalized data, etc.). To evaluate the effects of different sources of unwanted variation,
+DE analysis is performed across batches. In the absence of batch effects, the histogram of the resulting unadjusted
+p-values should be uniformly distributed.
 }
 \author{
 Ramyar Molania

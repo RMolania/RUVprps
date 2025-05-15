@@ -42,10 +42,12 @@
 #' * Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
 
-
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character string indicating the name of the assay in the SummarizedExperiment
 #' object. The selected assay should be the one that has been used for PRPS and NCGs selection.
+#' @param control.assay.type Character. A character the specifies the type of control samples to be used in RUV-III
+#' normalization. The option are: `prps`, `tr` and `both`. Any specifies control samples must be created before using the
+#' function. The default is set to `prps`. If it is set to `both`, both prps and technical replicate must be provided.
 #' @param prps.type Character string. A character string denoting which groups of the generated PRPS should be utilized
 #' for normalization. The options include 'supervised,' 'unsupervised,' or 'both.' When 'supervised' is chosen, the function
 #' employs the PRPS set(s) generated through supervised functions. Opting for 'unsupervised' utilizes the PRPS set(s)
@@ -101,7 +103,6 @@
 #' @return Either the SummarizedExperiment object containing the RUV-III normalized gene expression data as new assay(s)
 #' or a list of the RUV-III normalized gene expression data set(s).
 
-
 #' @importFrom SummarizedExperiment SummarizedExperiment assay colData
 #' @importFrom ruv replicate.matrix RUV1
 #' @importFrom BiocSingular bsparam
@@ -111,6 +112,7 @@
 RUVIIIprps <- function(
         se.obj,
         assay.name,
+        control.assay.type = 'prps',
         prps.type = 'supervised',
         prps.group,
         prps.set.names = NULL,
@@ -134,36 +136,55 @@ RUVIIIprps <- function(
     printColoredMessage(message = '------------The RUVIIIprps function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs ####
+    # Checking the function inputs ####
     if (!is.vector(assay.name) | length(assay.name) > 1 | is.logical(assay.name) | assay.name == 'all'){
         stop('The "assay.name" must be the name of an assay in the SummarizedExperiment object.')
     }
     if (!assay.name %in% names(assays(se.obj))){
         stop('The "assay.name" cannot be found in the SummarizedExperiment object.')
     }
-    if (!prps.type %in% c('supervised', 'un.supervised', 'both', 'none')){
-        stop('The "prps.type" must be of the "supervised", "un.supervised", "both" or "none".')
+    if (length(control.assay.type) > 1 | is.logical(control.assay.type) | is.null(control.assay.type)){
+        stop('The "control.assay.type" must be one of the "prps", "tr" or "both".')
     }
-    if (prps.type != 'none'){
-        if (length(se.obj@metadata) == 0 | !'PRPS' %in% names(se.obj@metadata)){
-            stop('Any PRPS data cannot be found in the SummarizedExperiment object.')
+    if (!control.assay.type %in% c('prps', 'tr', 'both')){
+        stop('The "control.assay.type" must be of one the "prps", "tr" or "both".')
+    }
+    if (control.assay.type == 'prps'){
+        if (length(unique(colnames(se.obj))) != ncol(se.obj))
+            stop('The samples names of the SummarizedExperiment object are not all unique.')
+    }
+    if (control.assay.type %in% c('prps', 'both')){
+        if (is.logical(prps.type) | is.null(prps.type)){
+            stop('The "prps.type" must be one of the "supervised", "un.supervised" or "both".')
         }
-        if (is.null(prps.type) | is.logical(prps.type)){
-            stop('The "prps.type" cannot be NULL or logical.')
+        if (length(prps.type) > 1){
+            stop('The "prps.type" must be one of the "supervised", "un.supervised" or "both".')
+        }
+        if (!prps.type %in% c('supervised', 'un.supervised', 'both')){
+            stop('The "prps.type" must be one of the "supervised", "un.supervised" or "both".')
+        }
+        if (length(se.obj@metadata) == 0 | !'PRPS' %in% names(se.obj@metadata)){
+            stop(paste0(
+                'Any type of PRPS data cannot be found in the SummarizedExperiment object.',
+                'Please make usre that you have created PRPS data and saved them in the SummarizedExperiment object.')
+            )
         }
         if (prps.type == 'supervised'){
             if (!'supervised' %in% names(se.obj@metadata$PRPS)){
                 stop('The "supervised" object does not exist in the PRPS slot of the metada of the SummarizedExperiment object.')
             }
             if (length(se.obj@metadata$PRPS$supervised) == 0){
-                stop('The "supervised" object in the PRPS slot of the metada of the SummarizedExperiment object does not have any data.')
+                stop('The "supervised" object in the PRPS slot of the metadata of the SummarizedExperiment object does not contain any data.')
+            }
+            if (is.logical(prps.group) | is.null(prps.group)){
+                stop('The "prps.group" cannot be logical.')
             }
             if (sum(prps.group %in% names(se.obj@metadata$PRPS$supervised)) != length(prps.group)){
-                stop('The "prps.group" cannot be found in the "supervised" part of th PRPS slot in the the metada.')
+                stop('All or some of the "prps.group" cannot be found in the "supervised" part of th PRPS slot in the the metada of the SummarizedExperiment object.')
             }
             if (!is.null(prps.set.names)){
-                if (sum(prps.set.names %in% names(se.obj@metadata$PRPS$un.supervised[[prps.group]]$prps.data)) != length(prps.set.names)){
-                    stop('All or some of the "prps.set.names" cannot be found in the "supervised" part of th PRPS slot in the the metada.')
+                if (sum(prps.set.names %in% names(se.obj@metadata$PRPS$supervised[[prps.group]]$prps.data)) != length(prps.set.names)){
+                    stop('All or some of the "prps.set.names" cannot be found in the "supervised" part of th PRPS slot in the the metada of the SummarizedExperiment object.')
                 }
             }
         }
@@ -172,14 +193,14 @@ RUVIIIprps <- function(
                 stop('The "un.supervised" object does not exist in the PRPS slot of the metada of the SummarizedExperiment object.')
             }
             if (length(se.obj@metadata$PRPS$un.supervised) == 0){
-                stop('The "un.supervised" object in the PRPS slot of the metada of the SummarizedExperiment object does not have any data.')
+                stop('The "un.supervised" object in the PRPS slot of the metadata of the SummarizedExperiment object does not contain any data.')
             }
             if (sum(prps.group %in% names(se.obj@metadata$PRPS$un.supervised)) != length(prps.group) ){
-                stop('The "prps.group" cannot be found in the "un.supervised" part of th PRPS slot in the the metada.')
+                stop('All or some of the "prps.group" cannot be found in the "un.supervised" part of th PRPS slot in the the metada of the SummarizedExperiment object.')
             }
             if (!is.null(prps.set.names)){
                 if (sum(prps.set.names %in% names(se.obj@metadata$PRPS$un.supervised[[prps.group]]$prps.data) ) != length(prps.set.names) ){
-                    stop('All or some of the "prps.set.names" cannot be found in the "un.supervised" part of th PRPS slot in the the metada.')
+                    stop('All or some of the "prps.set.names" cannot be found in the "un.supervised" part of th PRPS slot in the the metada of the SummarizedExperiment object.')
                 }
             }
         }
@@ -188,17 +209,17 @@ RUVIIIprps <- function(
                 stop('The "supervised" object does not exist in the PRPS slot of the metada of the SummarizedExperiment object.')
             }
             if (length(se.obj@metadata$PRPS$supervised) == 0){
-                stop('The "supervised" object in the PRPS slot of the metada of the SummarizedExperiment object does not have any data.')
+                stop('The "supervised" object in the PRPS slot of the metada of the SummarizedExperiment object does not contain any data.')
             }
             if (!'un.supervised' %in% names(se.obj@metadata$PRPS)){
                 stop('The "un.supervised" object does not exist in the PRPS slot of the metada of the SummarizedExperiment object.')
             }
             if (length(se.obj@metadata$PRPS$un.supervised) == 0){
-                stop('The "un.supervised" object in the PRPS slot of the metada of the SummarizedExperiment object does not have any data.')
+                stop('The "un.supervised" object in the PRPS slot of the metada of the SummarizedExperiment object does not contain any data.')
             }
             all.prps.group <- c(names(se.obj@metadata$PRPS$supervised), names(se.obj@metadata$PRPS$un.supervised))
             if (sum(prps.group %in% all.prps.group) != length(prps.group)){
-                stop('The "prps.group" cannot be found in either "supervised" or "un.supervised" parts of th PRPS slot in the the metada.')
+                stop('All or some of the "prps.group" cannot be found in the "supervised" and "un.supervised" parts of th PRPS slot in the the metada of the SummarizedExperiment object.')
             }
             if (!is.null(prps.set.names)){
                 supervised.prps.group <- all.prps.group[all.prps.group %in% names(se.obj@metadata$PRPS$supervised)]
@@ -211,10 +232,11 @@ RUVIIIprps <- function(
                     stop('All or some of the "prps.set.names" cannot be found in the "supervised" or "un.supervised" parts of th PRPS slot in the the metada.')
                 }
             }
-            }
+        }
     }
-    if (!ncg.type %in% c('supervised', 'un.supervised', 'pre.selected', 'all.genes')){
-        stop('The "ncg.type" must be of the "supervised", "un.supervised", "pre.selected" or "all.genes".')
+
+    if (!ncg.type %in% c('supervised', 'un.supervised', 'both' , 'pre.selected', 'all.genes')){
+        stop('The "ncg.type" must be one of the "supervised", "un.supervised", "both", "pre.selected" or "all.genes".')
     }
     if (ncg.type != 'all.genes'){
         if (!'NCG' %in% names(se.obj@metadata)){
@@ -225,7 +247,7 @@ RUVIIIprps <- function(
                 stop('The supervised "NCG" object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
             }
             if (!ncg.group %in% names(se.obj@metadata$NCG$supervised)) {
-                stop('The ncg.group object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
+                stop('The "ncg.group" object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
             }
             if (!is.null(ncg.set.names)){
                 if (sum(ncg.set.names %in% names(se.obj@metadata$NCG$supervised[[ncg.group]]$ncg.set)) != length(ncg.set.names)){
@@ -235,10 +257,10 @@ RUVIIIprps <- function(
         }
         if (ncg.type == 'un.supervised'){
             if (!'un.supervised' %in% names(se.obj@metadata$NCG)){
-                stop('The un.supervised "NCG" object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
+                stop('The "un.supervised" object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
             }
             if (!ncg.group %in% names(se.obj@metadata$NCG$un.supervised)){
-                stop('The ncg.group object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
+                stop('The "ncg.group" object does not exist in the NCG slot of the metada of the SummarizedExperiment object.')
             }
             if (!is.null(ncg.set.names)){
                 if (sum(ncg.set.names %in% names(se.obj@metadata$NCG$un.supervised[[ncg.group]])) != length(ncg.set.names)){
@@ -248,7 +270,7 @@ RUVIIIprps <- function(
         }
         if (ncg.type == 'pre.selected'){
             if (!'pre.selected' %in% names(se.obj@metadata$NCG)){
-                stop('"pre.selected" NCG data canot be found in the metadata of the SummarizedExperiment object.')
+                stop('The "pre.selected" NCG data canot be found in the metadata of the SummarizedExperiment object.')
             }
             if (sum(ncg.group %in% names(se.obj@metadata$NCG$pre.selected)) != length(ncg.group)){
                 stop('All or some of "ncg.group" cannot be found in the SummarizedExperiment object.')
@@ -271,7 +293,7 @@ RUVIIIprps <- function(
         stop('The "data.to.log" must be one of the "assay", "prps" or "both".')
     }
 
-    # Assess the SummarizedExperiment object ####
+    # Assessing the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -281,39 +303,21 @@ RUVIIIprps <- function(
             verbose = verbose)
     }
 
-    # Obtain control samples ####
-    ## technical replicates ####
-    if (!is.null(technical.replicates)){
+    # Obtaining control samples ####
+    printColoredMessage(
+        message = '-- Obtaining and checking control samples data:',
+        color = 'magenta',
+        verbose = verbose
+    )
+    ## PRPS data ####
+    if (control.assay.type %in% c('both', 'prps')){
+        ### obtaining PRPS data ####
         printColoredMessage(
-            message = '-- Obtain technical replicates data:',
-            color = 'magenta',
-            verbose = verbose
-            )
-        rep.samples <- findRepeatingPatterns(
-            vec = technical.replicates,
-            n.repeat = 2
-            )
-        if (length(rep.samples) == 0){
-            stop('All the sample names of the "technical.replicates" are unique. Individual technical replicate sets must have the same names.')
-        } else {
-            printColoredMessage(
-                message = paste0(
-                    'There is(are) ', length(unique(rep.samples)), ' sets of technical replicates in the data.'),
-                color = 'blue',
-                verbose = verbose
-                )
-        }
-        colnames(se.obj) <- technical.replicates
-    }
-    ## prps ####
-    if (prps.type != 'none'){
-        ### obtain PRPS data ####
-        printColoredMessage(
-            message = '-- Obtain the PRPS data in the SummarizedExperiment object:',
-            color = 'magenta',
+            message = '-- Obtaining the PRPS data from the SummarizedExperiment object:',
+            color = 'blue',
             verbose = verbose
         )
-        ### supervised ####
+        #### supervised ####
         if (prps.type == 'supervised'){
             printColoredMessage(
                 message = paste0(
@@ -343,7 +347,7 @@ RUVIIIprps <- function(
                 names(prps.data) <- prps.set.names
             }
         }
-        ### un supervised ####
+        #### un supervised ####
         if (prps.type == 'un.supervised'){
             printColoredMessage(
                 message = paste0(
@@ -373,7 +377,7 @@ RUVIIIprps <- function(
                 names(prps.data) <- prps.set.names
             }
         }
-        ### both ####
+        #### both ####
         if (prps.type == 'both'){
             if (is.null(prps.group)){
                 prps.data <- c(
@@ -400,9 +404,9 @@ RUVIIIprps <- function(
                 verbose = verbose
                 )
         }
-        ### check dimension and gene names in the prps data ####
+        ### checking dimension and gene names in the prps data ####
         printColoredMessage(
-            message = '- Check row names and number of pseudo samples in the PRPS data:',
+            message = '- Checking the row names and number of pseudo samples in the PRPS data:',
             color = 'orange',
             verbose = verbose
             )
@@ -430,9 +434,9 @@ RUVIIIprps <- function(
             color = 'blue',
             verbose = verbose
         )
-        ### merge all the PRPS data ####
+        ## merging all the PRPS data ####
         printColoredMessage(
-            message = '- Merge all the PPRS data:',
+            message = '- Merging all the PPRS data:',
             color = 'orange',
             verbose = verbose
         )
@@ -443,25 +447,59 @@ RUVIIIprps <- function(
             verbose = verbose
         )
         printColoredMessage(
-            message = paste0('* ', ncol(prps.data), ' pseudo-samples'),
+            message = paste0(
+                '- ',
+                ncol(prps.data),
+                ' pseudo-samples'),
             color = 'blue',
             verbose = verbose
         )
         printColoredMessage(
-            message = paste0('* ', length(findRepeatingPatterns(vec = colnames(prps.data), n.repeat = 2)), ' PRPS sets.'),
+            message = paste0(
+                '- ',
+                length(findRepeatingPatterns(vec = colnames(prps.data), n.repeat = 2)),
+                ' PRPS sets.'),
             color = 'blue',
             verbose = verbose
         )
     } else prps.data <- NULL
 
-    # Control genes ####
-    if (isTRUE(ncg.type != 'all.genes')){
-        ## obtain NCG ####
+    ## Technical replicates ####
+    if (control.assay.type %in% c('both', 'tr')){
         printColoredMessage(
-            message = '-- Obtain the selected NCGs in the SummarizedExperiment object',
-            color = 'magenta',
+            message = '-- Assessing technical replicates lables:',
+            color = 'blue',
             verbose = verbose
         )
+        rep.samples <- findRepeatingPatterns(
+            vec = technical.replicates,
+            n.repeat = 2
+        )
+        if (length(rep.samples) == 0){
+            stop(paste0('All the lables/sample ids provided by  "technical.replicates" are unique.',
+                        'Each set of technical replicates must have the same name within the set and be',
+                        'uniquely named compared to other samples.')
+            )
+        } else {
+            printColoredMessage(
+                message = paste0(
+                    '- There is(are) ',
+                    length(unique(rep.samples)),
+                    ' sets of technical replicates in the data.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+        initial.colnames <- colnames(se.obj)
+        colnames(se.obj) <- technical.replicates
+    }
+    # Obtaining control genes ####
+    printColoredMessage(
+        message = '-- Obtaining the selected NCGs in the SummarizedExperiment object',
+        color = 'magenta',
+        verbose = verbose
+        )
+    if (isTRUE(ncg.type != 'all.genes')){
         ## supervised ####
         if (ncg.type == 'supervised'){
             if (is.null(ncg.set.names)){
@@ -497,7 +535,7 @@ RUVIIIprps <- function(
             }
         }
 
-        ## un supervised ####
+        # un supervised ####
         if (ncg.type == 'un.supervised'){
             if (is.null(ncg.set.names)){
                 printColoredMessage(
@@ -530,7 +568,7 @@ RUVIIIprps <- function(
                 names(ncg) <- ncg.set.names
             }
         }
-        ## pre selected ####
+        # pre selected ####
         if (ncg.type == 'pre.selected'){
             if (is.null(ncg.group)){
                 ncg <- se.obj@metadata$NCG$pre.selected
@@ -557,9 +595,9 @@ RUVIIIprps <- function(
         verbose = verbose
     )
 
-    # Check max k for each normalization ####
+    # Checking max k for each normalization ####
     printColoredMessage(
-        message = '-- Check max k for each normalization:',
+        message = '-- Checking the maximum possible k for each normalization:',
         color = 'magenta',
         verbose = verbose
         )
@@ -570,14 +608,14 @@ RUVIIIprps <- function(
     max.k.values <- min(length(control.assay), sum(ncg))
     printColoredMessage(
         message = paste0(
-            '- The maximum k for the curret control assays and NCGs is ',
+            '- The maximum k for the curret control samples and NCGs is ',
             max.k.values,
             '.'),
         color = 'blue',
         verbose = verbose
         )
 
-    # Find possible runs of RUV-III ####
+    # Finding possible number of runs of RUV-III ####
     printColoredMessage(
         message = '-- Possible runs of RUV-III based on the current parameters:',
         color = 'magenta',
@@ -597,7 +635,10 @@ RUVIIIprps <- function(
                 verbose = verbose
                 )
             printColoredMessage(
-                message = paste0('- The RUV-III will be performed with k = ', max.k.values, '.'),
+                message = paste0(
+                    '- The RUV-III will be performed with k = ',
+                    max.k.values,
+                    '.'),
                 color = 'blue',
                 verbose = verbose
                 )
@@ -638,7 +679,7 @@ RUVIIIprps <- function(
         color = 'blue',
         verbose = verbose)
 
-    # Apply data transformation ####
+    # Applying data transformation ####
     if (isTRUE(apply.log)){
         if (is.null(pseudo.count)) pseudo.count = 0
         printColoredMessage(
@@ -653,7 +694,7 @@ RUVIIIprps <- function(
         )
         if (data.to.log == 'both') {
             printColoredMessage(
-                message = paste('Apply log2 + ', pseudo.count, ' (pseudo.count) on both assay and prps data.'),
+                message = paste('Applying log2 + ', pseudo.count, ' (pseudo.count) on both assay and prps data.'),
                 color = 'blue',
                 verbose = verbose
             )
@@ -661,14 +702,20 @@ RUVIIIprps <- function(
             prps.data <- log2(prps.data + pseudo.count)
         } else if (data.to.log == 'assay') {
             printColoredMessage(
-                message = paste0('Apply log2 + ', pseudo.count, ' (pseudo.count) on only assay.'),
+                message = paste0(
+                    'Applying log2 + ',
+                    pseudo.count,
+                    ' (pseudo.count) on only assay.'),
                 color = 'blue',
                 verbose = verbose
             )
             Y <- log2(assay(se.obj, assay.name) + pseudo.count)
         } else if (data.to.log == 'prps') {
             printColoredMessage(
-                message = paste('Apply log2 + ', pseudo.count, ' (pseudo.count) on only assay.'),
+                message = paste(
+                    'Applying log2 + ',
+                    pseudo.count,
+                    ' (pseudo.count) on only control samples.'),
                 color = 'blue',
                 verbose = verbose
             )
@@ -685,31 +732,33 @@ RUVIIIprps <- function(
 
     # RUVIII normalization ####
     printColoredMessage(
-        message = '-- Apply the RUV-III method:',
+        message = '-- Applying the RUV-III method:',
         color = 'magenta',
         verbose = verbose
         )
     ## k > 1 ####
     if (length(k) > 1) {
         printColoredMessage(
-            message = '- The length of k is more than 1. Then,  alpha will be calculated for the maximum value of k.',
+            message = paste0(
+                '- The length of k is more than 1.',
+                ' Then, full alpha will be calculated for the maximum value of k.'),
             color = 'blue',
             verbose = verbose
         )
         printColoredMessage(
-            message = '- Appky RUV-III for the maximum value of k.',
+            message = '- Applying RUV-III for the maximum value of k.',
             color = 'orange',
             verbose = verbose
             )
-        ### check ncg ####
+        ### checking ncg ####
         ncg.set <- ncg
         ncg.logi <- rep(FALSE, nrow(se.obj))
         ncg.logi[ncg.set] <- TRUE
         ncg.set <- ncg.logi
-        ## check prps data ####
+        ## checking prps data ####
         prps.data <- prps.data
         k.vals <- k
-        ## merge Y and PRPS ####
+        ## merging data and control samples ####
         Y <- t(cbind(Y, prps.data))
         if (is.data.frame(Y))
             Y <- data.matrix(Y)
@@ -718,9 +767,9 @@ RUVIIIprps <- function(
         } else if (sum(Y == Inf, na.rm = TRUE) + sum(Y == -Inf, na.rm = TRUE) > 0) {
             stop("The assay or PRPS data contains infinity values. This is not supported.")
         }
-        ##  apply RUV1 on Y ####
+        ##  applying RUV1 on Y ####
         printColoredMessage(
-            message = '* apply RUV1 on the both assay and prps data:',
+            message = '- Applying RUV1 on the both assay and control samples:',
             color = 'blue',
             verbose = verbose
             )
@@ -730,50 +779,55 @@ RUVIIIprps <- function(
             ctl = ncg.set,
             include.intercept = include.intercept
             )
-        ## data standardization ####
+        ## standardizing the both ####
         printColoredMessage(
-            message = '* standardize the data.',
+            message = '- Standardizing the both data and control samples.',
             color = 'blue',
             verbose = verbose
             )
         Y.stand <- scale(Y, center = TRUE, scale = FALSE)
 
-        ## create M matrix ####
+        ## creating M matrix ####
         printColoredMessage(
-            message = '* create M martix.',
+            message = '- Creating the M martix (replication patterns).',
             color = 'blue',
             verbose = verbose
             )
         M <- replicate.matrix(row.names(Y))
         printColoredMessage(
-            message = paste0('** The M martix has ', nrow( M), ' rows and ', ncol(M), ' columns'),
+            message = paste0(
+                '- The M martix has ',
+                nrow( M),
+                ' rows and ',
+                ncol(M),
+                ' columns'),
             color = 'blue',
             verbose = verbose
             )
 
-        ## sanity check on the M matrix ####
+        ## applying a sanity check on M matrix ####
         printColoredMessage(
-            message = '* sanity check on the M matrix.',
+            message = '- Applying a sanity check on the M matrix.',
             color = 'blue',
             verbose = verbose
             )
         sum(rowSums(M) != 1)
         sum(colSums(M) == 1)
         if (nrow(M) == ncol(M)){
-            stop('The columns and rows of the M matrix are the same, this is an issue.')
+            stop('The numer of the columns and rows of the M matrix are the same, this is an issue.')
         }
 
-        ## obtain residuals from the control assays ####
+        ## obtaining residuals from the control assays ####
         printColoredMessage(
-            message = '* obtain residuals from the control assays.',
+            message = '- Obtaining residuals from the control samples data.',
             color = 'blue',
             verbose = verbose
             )
         # Y0 <- fastResidop2(Y, M)
         Y0 <- optimized_function(Y, M)
-        ## apply svd on the residuals and the obtain alpha ####
+        ## applying svd on the residuals and the obtain alpha ####
         printColoredMessage(
-            message = '* apply svd on the residuals to obtain alpha.',
+            message = '- Applying SVD on the residuals to obtain full alpha.',
             color = 'blue',
             verbose = verbose
             )
@@ -787,26 +841,26 @@ RUVIIIprps <- function(
             )$u
         alpha <- t(left.sing.value[, 1:max(k.vals), drop = FALSE]) %*% Y
         ac <- alpha[, ncg.set, drop = FALSE]
-        ## obtain W ####
+        ## obtaining W ####
         printColoredMessage(
-            message = '* obtain W.',
+            message = '- Obtaining the W (estimated unwanted variation factors).',
             color = 'blue',
             verbose = verbose
             )
         W <- Y.stand[, ncg.set] %*% t(ac) %*% solve(ac %*% t(ac))
-        ## obtain normalized data for the maximum value of k ####
+        ## obtaining normalized data for the maximum value of k ####
         printColoredMessage(
-            message = '* obtain the normalized data for the maximum value of k:',
+            message = '- Obtaining the normalized data for the maximum value of k:',
             color = 'blue',
             verbose = verbose
             )
         newY.max <- Y - W %*% alpha
         newY.max <- t(newY.max[1:ncol(se.obj) ,])
         newY.max <- list(newY = newY.max, W = W[1:ncol(se.obj) , , drop = FALSE])
-        ## obtain normalized data for other values of k ####
+        ## obtaining normalized data for other values of k ####
         other.k <- k.vals[!k.vals %in% max(k.vals)]
         printColoredMessage(
-            message = '* obtain the normalized data for the values of k:',
+            message = '- Obtaining the normalized data for other values of k:',
             color = 'blue',
             verbose = verbose
             )
@@ -828,15 +882,15 @@ RUVIIIprps <- function(
     }
     ## k == 1 ####
     if (length(k) == 1) {
-        ### check ncg ####
+        ### checking ncg ####
         ncg.set <- ncg
         ncg.logi <- rep(FALSE, nrow(se.obj))
         ncg.logi[ncg.set] <- TRUE
         ncg.set <- ncg.logi
-        ## check prps data ####
+        ## checking control samples data ####
         prps.data <- prps.data
         k.vals <- k
-        ## merge Y and prps data ####
+        ## merging data and control samples ####
         Y <- t(cbind(Y, prps.data))
         if (is.data.frame(Y))
             Y <- data.matrix(Y)
@@ -845,9 +899,9 @@ RUVIIIprps <- function(
         } else if (sum(Y == Inf, na.rm = TRUE) + sum(Y == -Inf, na.rm = TRUE) > 0) {
             stop("The assay or PRPS data contains infinity values. This is not supported.")
         }
-        ## apply RUV1 ####
+        ## applying RUV1 ####
         printColoredMessage(
-            message = '- Apply RUV1 on the both assay and prps data:',
+            message = '- Applying RUV1 on both assay and control samples:',
             color = 'blue',
             verbose = verbose
             )
@@ -857,38 +911,38 @@ RUVIIIprps <- function(
             ctl = ncg.set,
             include.intercept = include.intercept
         )
-        ## data standardization ####
+        ## standardizing data ####
         printColoredMessage(
-            message = '- Standardize the data:',
+            message = '- Standardizing the both data and control samples:',
             color = 'blue',
             verbose = verbose
             )
         Y.stand <- scale(Y, center = TRUE, scale = FALSE)
-        ## create M matrix ####
+        ## creating M matrix ####
         printColoredMessage(
-            message = '- Create M matrix:',
+            message = '- Creating the M matrix (replication patterns):',
             color = 'blue',
             verbose = verbose
             )
         M <- replicate.matrix(row.names(Y))
-        ## Sanity check on the M matrix ####
+        ## applying a sanity check on the M matrix ####
         printColoredMessage(
-            message = '- Sanity check on the M matrix:',
+            message = '- Applying a sanity check on the M matrix:',
             color = 'blue',
             verbose = verbose
             )
         sum(rowSums(M) != 1)
         sum(colSums(M) == 1)
-        ## obtain residuals from the PRPS sets ####
+        ## obtaining residuals from the PRPS sets ####
         printColoredMessage(
-            message = '- Obtain residuals from the PRPS sets:',
+            message = '- Obtaining residuals from the control samples:',
             color = 'blue',
             verbose = verbose
             )
         Y0 <- fastResidop2(Y, M)
-        ## apply svd on the residuals and the obtain alpha ####
+        ## applying svd on the residuals and the obtain alpha ####
         printColoredMessage(
-            message = '- Apply svd on the residuals to Obtain alpha:',
+            message = '- Applying svd on the residuals to obtain full alpha:',
             color = 'blue',
             verbose = verbose
             )
@@ -901,16 +955,16 @@ RUVIIIprps <- function(
         )$u
         alpha <- t(left.sing.value[, 1:k.vals, drop = FALSE]) %*% Y
         ac <- alpha[, ncg.set, drop = FALSE]
-        ## obtain W ####
+        ## obtaining  W ####
         printColoredMessage(
-            message = '- calculate W :',
+            message = '- Obtaining the estimated unwanted factors,  W :',
             color = 'blue',
             verbose = verbose
             )
         W <- Y.stand[, ncg.set] %*% t(ac) %*% solve(ac %*% t(ac))
-        ## obtain normalized data ####
+        ## obtaining normalized data ####
         printColoredMessage(
-            message = '- obtain normalized data:',
+            message = '- Obtaining RUV-III normalized data:',
             color = 'blue',
             verbose = verbose
         )
@@ -920,9 +974,9 @@ RUVIIIprps <- function(
         if (is.null(output.name))  output.name <- paste0('RUVIIIPRPS_K_', k.vals)
     }
 
-    # Save data sets ####
+    # Saving data sets and W ####
     printColoredMessage(
-        message = '-- Save all the RUV-III normalized data and W matrix:',
+        message = '-- Saving all the RUV-III normalized data and W matrix:',
         color = 'magenta',
         verbose = verbose)
 

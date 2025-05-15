@@ -7,6 +7,7 @@
 RUVIIIprps(
   se.obj,
   assay.name,
+  control.assay.type = "prps",
   prps.type = "supervised",
   prps.group,
   prps.set.names = NULL,
@@ -33,6 +34,10 @@ RUVIIIprps(
 
 \item{assay.name}{Character. A character string indicating the name of the assay in the SummarizedExperiment
 object. The selected assay should be the one that has been used for PRPS and NCGs selection.}
+
+\item{control.assay.type}{Character. A character the specifies the type of control samples to be used in RUV-III
+normalization. The option are: \code{prps}, \code{tr} and \code{both}. Any specifies control samples must be created before using the
+function. The default is set to \code{prps}. If it is set to \code{both}, both prps and technical replicate must be provided.}
 
 \item{prps.type}{Character string. A character string denoting which groups of the generated PRPS should be utilized
 for normalization. The options include 'supervised,' 'unsupervised,' or 'both.' When 'supervised' is chosen, the function

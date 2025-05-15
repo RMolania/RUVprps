@@ -1,10 +1,10 @@
-#' Perform principal component analysis (PCA) using singular value decomposition (SVD).
+#' Performs principal component analysis (PCA)
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function uses singular value decomposition to perform principal component on the assay(s) in a SummarizedExperiment
-#' object. The function provides fast singular value decomposition using the BiocSingular R package.
+#' This function uses singular value decomposition to perform principal component on the dataset(s) (assay(s) in a
+#' SummarizedExperiment object. The function provides fast singular value decomposition using the BiocSingular R package.
 
 #' @details
 #' The PCs (in this context also called singular vectors) of the sample × transcript array of log counts are the linear
@@ -13,36 +13,37 @@
 #' each sample.
 
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-#' SummarizedExperiment object to compute PCA. The default is "all, which indicates all the assays of the
-#' SummarizedExperiment object will be selected.
+#' @param assay.names Character. A character string or a vector of character strings for selecting the name(s) of the
+#' assay(s) in the SummarizedExperiment object to compute PCA. The default is set to "all", which indicates all the
+#' assays in the SummarizedExperiment object will be selected.
 #' @param fast.pca Logical. Indicates whether to calculate a specific number of left singular vectors instead of the
-#' full possible vectors to speed up the process. The default is 'TRUE'.
-#' @param nb.pcs Numeric. The number of first left singular vectors to be calculated for the fast PCA process. The
-#' default is 10.
-#' @param center Logical. Indicates whether to scale the data or not. If center is 'TRUE', then centering is done by
-#' subtracting the column means of the assay from their corresponding columns. The default is 'TRUE'.
-#' @param scale Logical. Indicates whether to scale the data or not before applying SVD.  If scale is TRUE, then scaling
-#' is done by dividing the (centered) columns of the assays by their standard deviations if center is TRUE, and the root
-#' mean square otherwise. The default is FALSE.
+#' full set of vectors to speed up the process. The default is set to `TRUE`.
+#' @param nb.pcs Numeric. The number of first left singular vectors to be calculated for the fast PCA process.
+#' The default is set to 10. If the `fast.pca = FALSE`, no need a value to for `nb.pcs`.
+#' @param center Logical. Indicates whether to center the data before applying SVD. If center is `TRUE`, centering is
+#' performed by subtracting the column means of the data from their corresponding columns. The default is set to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data before applying SVD. If scale is set to `TRUE`, scaling is
+#' done by dividing the (centered) columns of the assays by their standard deviations,  if center is `TRUE`, and the root
+#' mean square otherwise. The default is set to `FALSE`.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before computing the SVD. The
-#' default is 'TRUE'. The data must be in log scale before computing the SVD.
-#' @param pseudo.count Numeric. A value as a pseudo count to be added to all measurements before applying log transformation.
-#' The default is 1. This argument cannot be NULL or negative.
-#' @param svd.bsparam A BiocParallelParam object specifying how parallelization should be performed. The default is bsparam().
-#' We refer to the 'runSVD' function from the BiocSingular R package for more details.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment class object. The default is TRUE.
-#' We refer to the checkSeObj function for more details.
+#' default is set to `TRUE`.
+#' @param pseudo.count Numeric. A value used as a pseudo-count to be added to all measurements before applying the log
+#' transformation. The default is set to 1.
+#' @param svd.bsparam A BiocParallelParam object specifying how parallelization should be performed. The default is set
+#' to `bsparam()`. See the `runSVD()` function from the BiocSingular R package for more details.
+#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' See the `checkSeObj()` function for more details.
+#' @param remove.na Character. Specifies whether to remove NA or missing values from the data sets (assays). Options are
+#' 'assays' and 'none'. The default is set to `assays`.
+#' @param override.check Logical. When set to `TRUE`, the function checks whether PCA has already been computed for the
+#' current parameters. If so, the PCA will not be recalculated. The default is set to `FALSE`.
 #' @param save.se.obj Logical. Indicates whether to save the SVD results in the metadata of the SummarizedExperiment object
-#' or to output the results as list. By default it is set to 'TRUE'.
-#' @param remove.na To remove NA or missing values from the assays or not. The options are 'assays' and 'none'.
-#' @param override.check Logical. When set to 'TRUE', the function verifies the current SummarizedExperiment object to
-#' determine if the PCA has already been computed for the current parameters. If it has, the metric will not be recalculated.
-#' The default is set to FALSE.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' or to output the results as a list. The default is set to `TRUE`. The results can be found:
+#' "se.obj->metadata->metric->AssayName->global.level->PCA$"
+#' @param verbose Logical. If `TRUE`, displays messages for the different steps of the function.
 
-#' @return A SummarizedExperiment object or a list that containing the singular value decomposition results and the
-#' percentage variation of each PCs.
+#' @return A SummarizedExperiment object or a list containing the singular value decomposition results and the
+#' percentage variation of each principal component (PC).
 
 #' @importFrom SummarizedExperiment assay
 #' @importFrom BiocSingular runSVD bsparam
@@ -61,8 +62,8 @@ computePCA <- function(
         svd.bsparam = bsparam(),
         assess.se.obj = TRUE,
         remove.na = 'assays',
-        save.se.obj = TRUE,
         override.check = FALSE,
+        save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(message = '------------The computePCA function starts:',
@@ -94,14 +95,35 @@ computePCA <- function(
     } else if (isFALSE(override.check)) compute.metric <- TRUE
 
     if (isTRUE(compute.metric)){
-        # Check the inputs ####
-        if (is.null(assay.names)) {
-            stop('The "assay.names" cannot be empty.')
+        # Checking the function inputs ####
+        if (is.null(assay.names) | is.logical(assay.names)) {
+            stop('The "assay.names" cannot be empty or lgical.')
         }
-        if (isTRUE(fast.pca) & is.null(nb.pcs)) {
-            stop('To perform fast PCA, the number of PCs (left singular vectors) must be specified.')
-        } else if (isTRUE(fast.pca) & nb.pcs == 0) {
-            stop('To perform fast PCA, the number of PCs (left singular vectors) must be specified.')
+        if (!is.logical(fast.pca)){
+            stop('The "fast.pca" must be logical.')
+        }
+        if (isTRUE(fast.pca)) {
+            if (is.null(nb.pcs)){
+                stop('To perform fast PCA, the "nb.pcs" must be specified.')
+            }
+            if (nb.pcs < 0 & nb.pcs == 0) {
+                stop('To perform fast PCA, the "nb.pcs" must be a postive numeric value.')
+            }
+        }
+        if (!is.logical(center)){
+            stop('The "center" must be logical.')
+        }
+        if (!is.logical(scale)){
+            stop('The "scale" must be logical.')
+        }
+        if (isTRUE(scale)) {
+            printColoredMessage(
+                message = 'Note: highly recommend not to scale the data before computing the PCA.',
+                color = 'red',
+                verbose = verbose)
+        }
+        if (!is.logical(apply.log)){
+            stop('The "apply.log" must be logical.')
         }
         if (isTRUE(apply.log)){
             if (pseudo.count < 0){
@@ -111,24 +133,30 @@ computePCA <- function(
                 stop('A value for the "pseudo.count" must be specified.')
             }
         }
+        if (!is.logical(assess.se.obj)){
+            stop('The "assess.se.obj" must be logical.')
+        }
         if (!remove.na %in% c('assays','none')){
             stop('The "remove.na" must be on of the "assays" or "none"')
         }
-        if (isTRUE(scale)) {
-            printColoredMessage(
-                message = 'Note: highly recommend not to scale the data before computing the PCA.',
-                color = 'red',
-                verbose = verbose)
+        if (!is.logical(override.check)){
+            stop('The "override.check" must be logical.')
+        }
+        if (!is.logical(save.se.obj)){
+            stop('The "save.se.obj" must be logical.')
+        }
+        if (!is.logical(verbose)){
+            stop('The "verbose" must be logical.')
         }
 
-        # Check the assays ####
+        # Checking the assays ####
         if (length(assay.names) == 1 && assay.names == 'all') {
             assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
         } else  assay.names <- factor(x = assay.names , levels = assay.names)
         if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
         }
-        # Assess the SummarizedExperiment object ####
+        # Assessing the SummarizedExperiment object ####
         if (isTRUE(assess.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
@@ -148,7 +176,6 @@ computePCA <- function(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 pseudo.count = pseudo.count,
-                assessment = 'computing "PCA"',
                 verbose = verbose
             )
         }
@@ -166,7 +193,7 @@ computePCA <- function(
 
         # Compute SVD ####
         printColoredMessage(
-            message = '-- Perform singular value decomposition (SVD):',
+            message = '-- Computing PCA usibg singular value decomposition (SVD):',
             color = 'magenta',
             verbose = verbose
         )
@@ -174,25 +201,30 @@ computePCA <- function(
         if (isTRUE(fast.pca)) {
             printColoredMessage(
                 message = paste0(
-                    '- Perform "fast" singular value decomposition with scale = ',
-                    scale, ' and center = ', center, '.'),
+                    '- Computing "fast" singular value decomposition (SVD) with scale = ',
+                    scale,
+                    ' and center = ',
+                    center, '.'),
                 color = 'orange',
-                verbose = verbose)
+                verbose = verbose
+                )
             if (is.null(svd.bsparam))
                 svd.bsparam <- bsparam()
             all.sv.decomposition <- lapply(
                 levels(assay.names),
                 function(x) {
                     printColoredMessage(
-                        message = paste0('* perform fast SVD on the "', x , '" data.'),
+                        message = paste0('- Performing fast SVD on the "', x , '" data.'),
                         color = 'blue',
-                        verbose = verbose)
+                        verbose = verbose
+                        )
                     sv.dec <- BiocSingular::runSVD(
                         x = t(all.assays[[x]]),
                         k = nb.pcs,
                         BSPARAM = svd.bsparam,
                         center = center,
-                        scale = scale)
+                        scale = scale
+                        )
                     rownames(sv.dec$u) <- colnames(se.obj)
                     rownames(sv.dec$v) <- row.names(se.obj)
                     percentage <- sv.dec$d ^ 2 / sum(sv.dec$d ^ 2) * 100
@@ -213,8 +245,11 @@ computePCA <- function(
         if (isFALSE(fast.pca)) {
             printColoredMessage(
                 message = paste0(
-                    '- Perform "ordinary" singular value decomposition with scale = ',
-                    scale, ' and center = ', center, '.'),
+                    '- Performing singular value decomposition (SVD) with scale = ',
+                    scale,
+                    ' and center = ',
+                    center,
+                    '.'),
                 color = 'orange',
                 verbose = verbose
             )
@@ -222,9 +257,13 @@ computePCA <- function(
                 levels(assay.names),
                 function(x) {
                     printColoredMessage(
-                        message = paste0('* Perform singular value decomposition on the "', x , '" data.'),
+                        message = paste0(
+                            '- Performing SVD on the "',
+                            x ,
+                            '" data.'),
                         color = 'blue',
-                        verbose = verbose)
+                        verbose = verbose
+                        )
                     sv.dec <- svd(scale(
                         x = t(all.assays[[x]]),
                         center = center,
@@ -243,13 +282,14 @@ computePCA <- function(
 
         # Save all the results ####
         printColoredMessage(
-            message = '-- Save the SVD results:',
+            message = '-- Saving the SVD results:',
             color = 'magenta',
-            verbose = verbose)
+            verbose = verbose
+            )
         ## add the results to the SummarizedExperiment object ####
         if (isTRUE(save.se.obj)) {
             printColoredMessage(
-                message = '- Save all the SVD results to the "metadata" of the SummarizedExperiment object.',
+                message = '- Saving all the SVD results to the "metadata" of the SummarizedExperiment object.',
                 color = 'blue',
                 verbose = verbose
             )
@@ -268,11 +308,14 @@ computePCA <- function(
                 results.data = all.sv.decomposition
             )
             printColoredMessage(
-                message = paste0('- The SVD results of individual assay (s) are saved to the',
-                                 ' "se.obj@metadata$metric$AssayName$global.level$PCA$', method, '$data" in the SummarizedExperiment object.'),
+                message = paste0(
+                    '- The SVD results of individual assay (s) are saved to the',
+                    ' "se.obj@metadata$metric$AssayName$global.level$PCA$',
+                    method,
+                    '$data" in the SummarizedExperiment object.'),
                 color = 'blue',
-                verbose = verbose)
-
+                verbose = verbose
+                )
             printColoredMessage(message = '------------The computePCA function finished.',
                                 color = 'white',
                                 verbose = verbose)

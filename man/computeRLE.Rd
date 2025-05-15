@@ -21,36 +21,36 @@ computeRLE(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
-in the SummarizedExperiment object to calculate RLE data, medians, and interquartile ranges. The default is set to "all",
+in the SummarizedExperiment object to calculate RLE data, medians, and interquartile ranges. The default is set to \code{all},
 which indicates that all assays in the SummarizedExperiment object will be selected.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to 'TRUE'.
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to \code{TRUE}.
 Please note that any RNA-seq data (assays) must be in log scale before computing RLE.}
 
 \item{pseudo.count}{Numeric. A value to be added as a pseudo count to all measurements of the assay(s) before applying
-log transformation. This avoids -Inf for measurements equal to 0. The default is set to 1.}
+log transformation. This avoids \code{-Inf} for measurements equal to 0. The default is set to 1.}
 
 \item{outputs.to.return}{Character. Specifies the type of RLE computations to be performed and the data to be returned.
-Options include "all", "rle", "rle.med", "rle.iqr", and "rle.med.iqr". Selecting "all" returns RLE data along with
+Options include \code{all}, \code{rle}, \code{rle.med}, \code{rle.iqr}, and \code{rle.med.iqr}. Selecting \code{all} returns RLE data along with
 medians and interquartile ranges. Choosing "rle" returns only the RLE data for each assay. "rle.med" returns only the
-RLE  medians. "rle.iqr" returns only the interquartile ranges of the RLE data. "rle.med.iqr" returns both the
-RLE medians and interquartile ranges. The default is set to  'all'.}
+RLE  medians. \code{rle.iqr} returns only the interquartile ranges of the RLE data. \code{rle.med.iqr} returns both the
+RLE medians and interquartile ranges. The default is set to  \code{all}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj'
-function will be applied. The default is set to 'TRUE'}
+\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
+function will be applied. The default is set to \code{TRUE}.}
 
-\item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are 'assays' or
-'none'. The default is "assays", meaning all NA or missing values in the assays will be removed before computing RLE.
-Refer to the 'checkSeObj' function for more details.}
+\item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are \code{assays} or
+\code{none}. The default is \code{assays}, meaning all NA or missing values in the assays will be removed before computing RLE.
+Refer to the \code{checkSeObj()} function for more details.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment object,
-or output the result as a list. The default is set to 'TRUE'.}
+or output the result as a list. The default is set to \code{TRUE}.}
 
-\item{override.check}{Logical. When set to 'TRUE', the function verifies if the RLE has already been computed for the
+\item{override.check}{Logical. When set to \code{TRUE}, the function verifies if the RLE has already been computed for the
 current parameters in the SummarizedExperiment object. If already computed, the metric will not be recalculated. The
-default is set to 'FALSE'.}
+default is set to \code{FALSE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows messages for each step of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows messages for each step of the function.}
 }
 \value{
 Either a SummarizedExperiment object that contain the RLE results or a list containing the RLE data for each

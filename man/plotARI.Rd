@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotARI.R
 \name{plotARI}
 \alias{plotARI}
-\title{Generate barplot the adjusted rand index (ARI).}
+\title{Generates barplot or scatter plot the Adjusted Rand Index (ARI).}
 \usage{
 plotARI(
   se.obj,
@@ -16,42 +16,41 @@ plotARI(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.names}{Symbol. A symbol or list of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object to generate barplot or scatter plots of the computed adjusted rand index. By default all
-the assays of the SummarizedExperiment object will be selected.}
+\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the \code{SummarizedExperiment}
+object to be used for generating barplots or scatter plots of the computed Adjusted Rand Index (ARI). By default,
+all assays in the \code{SummarizedExperiment} object will be selected.}
 
-\item{variables}{Symbol. Indicates one or two column names in the SummarizedExperiment object that contains categorical
-variables such as sample subtypes or batches. If two column names are provided, the function plots the two adjusted
-rand index against each other for all the specified assays.}
+\item{variables}{Character or character vector of length one or two. Indicates one or two column names in the
+\code{SummarizedExperiment} object that contain categorical variables, such as sample subtypes or batch labels. If two
+variables are provided, the function plots the ARIs against each other for all specified assays.}
 
-\item{ari.method}{Symbol. A symbol that indicates what computed ARI method should be used for plotting. The "ari.method"
-must be specified based on the "computeARI" function. The default is "hclust.complete.euclidian", which is the default
-of the the "computeARI" function. We refer to the "computeARI" function for more detail.}
+\item{ari.method}{Character. Specifies the ARI computation method to use for plotting. This must match one of the
+methods supported by the \code{computeARI} function. The default is \code{"hclust.complete.euclidean"}, which is also the default
+in \code{computeARI}. See the \code{computeARI} function documentation for more details.}
 
-\item{plot.type}{Symbol. A symbol that specifies how to plot the adjusted rand index. The options are "single.plot" and
-"combined.plot". If a variable is provided in the "variables" argument, then the "plot.type" must be set to "single.plot",
-so, the function generates a barplot of the adjusted rand index. If two variables are provided and "plot.type" is set to
-"combined.plot", then the function generates a scatter plot of the adjusted rand index of each variable against each other.
-The default is set to 'single.plot'.}
+\item{plot.type}{Character. Specifies the plot type for the Adjusted Rand Index. Options are \code{"single.plot"} and
+\code{"combined.plot"}. If one variable is provided in \code{variables}, \code{plot.type} must be set to \code{"single.plot"} to generate
+a barplot. If two variables are provided and \code{plot.type} is set to \code{"combined.plot"}, the function generates a scatter
+plot comparing the ARIs. The default is \code{"single.plot"}.}
 
-\item{plot.output}{Logical. If 'TRUE', the individual barplots or scatter plots will be printed while functions is running.
-The default is set to 'TRUE'.}
+\item{plot.output}{Logical. If \code{TRUE}, the individual barplots or scatter plots will be printed during function execution.
+Default is \code{TRUE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the SummarizedExperiment  object
-or to output the result as list. The default is set to 'TRUE'.}
+\item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the \code{SummarizedExperiment} object
+or return them as a list. The default is \code{TRUE}.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, messages for different steps of the function will be displayed.}
 }
 \value{
-A SummarizedExperiment object or a list that containing all the plots of the computed ARI on the categorical
-variable.
+A \code{SummarizedExperiment} object or a list containing all the plots of the computed ARIs for the categorical
+variable(s).
 }
 \description{
-This functions generates barplots of adjusted rand index for individual assays in the SummarizedExperiment object. If
-two variables are provided, the function creates scatter plots of the adjusted rand index of each variable for
-individual assays.
+This function generates barplots of the Adjusted Rand Index (ARI) for individual datasets in the \code{SummarizedExperiment}
+object. If two variables are provided, the function creates scatter plots comparing the ARIs of each variable across
+the assays. The \code{computeARI()} function must applied before using the \code{plotARI()} function.
 }
 \references{
 Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,

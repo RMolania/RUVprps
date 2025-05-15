@@ -2,12 +2,12 @@
 % Please edit documentation in R/checkPRPSconnectedness.R
 \name{checkPRPSconnectedness}
 \alias{checkPRPSconnectedness}
-\title{Assess the connectedness across PRPS sets.}
+\title{Assesses the disconnectedness across PRPS sets.}
 \usage{
 checkPRPSconnectedness(data.input, min.samples, batch.name, verbose = TRUE)
 }
 \arguments{
-\item{data.input}{TTTTT}
+\item{data.input}{A matrix. A}
 
 \item{min.samples}{TTTTTT}
 

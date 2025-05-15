@@ -4,22 +4,23 @@
 
 #' @description
 #' This function generates boxplots of computed Spearman or Pearson correlation coefficients of individual assays in a
-#' SummarizedExperiment object. The correlation coefficients must be computed by the 'computeGeneVariableCorrelation' function.
+#' SummarizedExperiment object. The correlation coefficients must be computed by the `computeGeneVariableCorrelation()`
+#' function.
 
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character or vector. A character string or vector of strings for selecting the name(s) of the assay(s)
-#' in the SummarizedExperiment for which gene-level correlation with the speciferd  for computing the correlation. By default, all assays in the SummarizedExperiment object will be selected.
+#' in the SummarizedExperiment for which gene-level correlation with the specified for computing the correlation. By
+#' default, all assays in the SummarizedExperiment object will be selected.
 #' @param variable Character. The name of the column in the sample annotation of the SummarizedExperiment object that contains a
 #' continuous variable such as library size, tumor purity, etc.
 #' @param correlation.method Character. Specifies which computed correlation coefficient should be used for plotting. The
-#' default is 'gene.spearman.corr'. Refer to the 'computeGenesVariableCorrelation' function for more details.
+#' default is  set to `gene.spearman.corr`. Refer to the 'computeGenesVariableCorrelation' function for more details.
 #' @param plot.ncol Numeric. A numeric value specifying the number of columns in the plot grid. The default is set to 4.
 #' @param plot.nrow Numeric. A numeric value specifying the number of rows in the plot grid. The default is set to 1.
-#' @param plot.output Logical. Indicates whether to display the plot. By default, it is set to FALSE.
+#' @param plot.output Logical. Indicates whether to display the plot. By default, it is set to `FALSE`.
 #' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
-#' or to output the result. By default, this is set to TRUE.
-#' @param verbose Logical. If TRUE, process messages will be displayed during the function's execution.
-
+#' or to output the result. By default, this is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, process messages will be displayed during the function's execution.
 
 #' @return A SummarizedExperiment object or a list that containing the boxplots of the Spearman or Pearson correlations
 #' coefficients for individual assays.
@@ -45,7 +46,7 @@ plotGenesVariableCorrelation <- function(
                         color = 'white',
                         verbose = verbose)
 
-    # Check the inputs ####
+    # Checking the function inputs ####
     if (is.null(assay.names)) {
         stop('Please provide at least an assay name.')
     }
@@ -71,15 +72,15 @@ plotGenesVariableCorrelation <- function(
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
-    # Obtain correlations coefficients ####
+    # Obtaining the correlations coefficients ####
     printColoredMessage(
         message = paste0(
             '-- Obtaining the computed correlation coefficient between genes and the "',
             variable,
             '" variable from the SummarizedExperiment object:'),
         color = 'magenta',
-        verbose = verbose)
-
+        verbose = verbose
+        )
     all.corr.coeff.pvalues <- getMetricFromSeObj(
         se.obj = se.obj,
         slot = 'Metrics',
@@ -94,7 +95,7 @@ plotGenesVariableCorrelation <- function(
         message.to.print = 'correlations and pvalues'
         )
 
-    # Generate boxplots of the correlation coefficients ####
+    # Generating boxplots of the correlation coefficients ####
     printColoredMessage(
         message = '-- Generating boxplots of the correlation coefficients:',
         color = 'magenta',
@@ -132,7 +133,7 @@ plotGenesVariableCorrelation <- function(
         })
     names(all.corr.coeff.plots) <- levels(assay.names)
 
-    ## put all boxplots  together ####
+    ## Putting all boxplots together ####
     everything <- datasets <- corr.coff <- NULL
     if (length(assay.names) > 1){
         printColoredMessage(
@@ -191,13 +192,13 @@ plotGenesVariableCorrelation <- function(
         if (isTRUE(plot.output)) suppressMessages(print(overall.corr.coeff.plot))
     }
 
-    # Generate p-value histograms of the correlation coefficients ####
+    # Generating p-value histograms of the correlation coefficients ####
     printColoredMessage(
         message = '-- Generating p-value histograms of the correlations:',
         color = 'magenta',
         verbose = verbose
     )
-    ## specified ylim ####
+    ## Specified ylim ####
     breaks <- seq(from = 0, to = 1, by = .1)
     ylim.pvalue <- sapply(
         levels(assay.names),
@@ -209,7 +210,7 @@ plotGenesVariableCorrelation <- function(
             frequency <- table(binned)[1]
         })
     ylim.pvalue <- ceiling(x = max(ylim.pvalue))
-    ## generate histograms ####
+    ## Generating histograms ####
     all.pvalue.hist.plots <- lapply(
         levels(assay.names),
         function(x){
@@ -241,7 +242,7 @@ plotGenesVariableCorrelation <- function(
         })
     names(all.pvalue.hist.plots) <- levels(assay.names)
 
-    ## put all histograms together ####
+    ## Putting all histograms together ####
     everything <- datasets <- corr.coff <- NULL
     if (length(assay.names) > 1){
         printColoredMessage(
@@ -303,11 +304,12 @@ plotGenesVariableCorrelation <- function(
         if(isTRUE(plot.output)) suppressMessages(print(overall.pvalue.hist.plot))
     }
 
-    # Save the results ####
+    # Saving the results ####
     printColoredMessage(
-        message = '-- Save the all the boxplots of the correlation coefficients:',
+        message = '-- Saving the all the boxplots of the correlation coefficients:',
         color = 'magenta',
-        verbose = verbose)
+        verbose = verbose
+        )
     ## add results to the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)) {
         ### save plot per assay ####

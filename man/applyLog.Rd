@@ -14,7 +14,7 @@ applyLog(
 )
 }
 \arguments{
-\item{se.obj}{A \code{SummarizedExperiment} object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character. A character or character vectos specifying the name(s) of the data (assays) in the
 \code{SummarizedExperiment} object to be selected. These assays will be log2-transformed with a pseudo count. The default
@@ -27,8 +27,8 @@ applying the log2 transformation, to avoid \code{-Inf} values for zero measureme
 set to \code{TRUE}.}
 
 \item{remove.na}{Character. A Character. that indicates whether to remove NA or missing values from the data sets or
-not. The options are \code{assays} or \code{none}. Refer to the \code{checkSeObj()} function for more details. The default is set to
-"assays".}
+not. The options are \code{assays} or \code{none}. The default is set to \code{assays}.  Refer to the \code{checkSeObj()} function for more
+details.}
 
 \item{verbose}{Logical. If it is set to \code{TRUE}, displays messages describing the steps of the function.}
 }

@@ -18,7 +18,7 @@ applyOtherNormalizations(
 )
 }
 \arguments{
-\item{se.obj}{A \code{SummarizedExperiment} object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.name}{Character. A character that specifies the name of the data (assay) in the SummarizedExperiment object.
 The selected data should contain raw count data.}

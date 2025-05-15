@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessW.R
 \name{assessW}
 \alias{assessW}
-\title{Assess the W matrix of RUV-III}
+\title{Assesses the W matrix of RUV-III.}
 \usage{
 assessW(
   se.obj,
@@ -16,34 +16,44 @@ assessW(
 )
 }
 \arguments{
-\item{se.obj}{A summarized experiment object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
-\item{variables}{Symbol. A symbol or symbols representing the label of variable(s), such as cancer subtypes, tumour
-purity, librar size ... within the SummarizedExperiment object. This can comprise a vector containing either categorical,
-continuous, or a combination of both variables.}
+\item{variables}{Character. A character or character vector of variables within the SummarizedExperiment object. These
+can be categorical, continuous, or a combination of both. If oit is specified, a line-dot plots between correlations
+and the columns of W , in cumulative way, will be generated. If set to \code{NULL}, both \code{bio.variables} and \code{bio.variables}
+must be provided.}
 
-\item{bio.variables}{Symbol. A symbol or symbols representing the label of biological variable(s), such as cancer
-subtypes, tumour purity, ... within the SummarizedExperiment object. This can comprise a vector containing either
-categorical, continuous, or a combination of both variables.}
+\item{bio.variables}{Character. A character or character vector of biological variables within the SummarizedExperiment
+object. These can be categorical, continuous, or a combination of both. The defeat is set to \code{NULL}.}
 
-\item{uv.variables}{Symbol. A symbol or symbols representing the label of unwanted variable(s), such as cancer
-batch effects, library size, ... within the SummarizedExperiment object. This can comprise a vector containing either
-categorical, continuous, or a combination of both variables.}
+\item{uv.variables}{Character. A character or character vector of unwanted variables within the SummarizedExperiment
+object. These can be categorical, continuous, or a combination of both. The defeat is set to \code{NULL}.}
 
-\item{compare.w}{Logical.  Specifies whether to compare different W matrices in their ability to capture unwanted
-variation and lack correlation with biological variables. See the function's details for more information.}
+\item{compare.w}{Logical. If \code{TRUE} and both 'bio.variables' and 'uv.variables' are provided, the function generates
+performance scores for each W matrix of RUV-III normalized data. The default is set to \code{FALSE}.}
 
-\item{plot.output}{Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.}
+\item{plot.output}{Logical. If \code{TRUE}, the function will show the output plots while is running. The default is set
+to \code{TRUE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.}
+\item{save.se.obj}{Logical. If \code{TRUE}, the plots will be saved to the metadata of the SummarizedExperiment object. The
+default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. Indicates whether to plot the output or not. The default is set to 'TRUE'.}
+\item{verbose}{Logical. If \code{TRUE}, the function will display progress messages. The default is sey to \code{TRUE}.}
 }
 \description{
-This functions assesses the correlation between the W of RUV-III normalized data with known variables. Tt calculates
-the association of the columns of the W matrix with both specified biological and unwanted variables. The correlation
-values obtained for the biological variables will be subtracted from 1. Finally, the average of all these correlations
-is computed to determine the final correlation values. A higher correlation indicates better performance.
+This function assesses the association between the W matrix from RUV-III normalized data and known variables. It calculates
+the correlation between the columns of the W matrix and both the specified biological and unwanted variables.
+}
+\details{
+The function performs linear regression between each individual continuous variable specified by users and the columns
+of the W matrix in a cumulative manner, and then computes R^2 .For categorical variables, the function applies vector
+correlation between the variables and the columns of the W matrix. Ideally, the columns of the W matrix should show a
+strong correlation with unwanted variation and no or a weak correlation with biological variation. To compare the
+performance of different $k$ values, the correlations obtained for biological variables are subtracted from 1, and then
+the correlations for biological and unwanted variables are averaged separately. The final score for each set of $k$
+values is sum of the half of the average scores. A higher score indicates a better value for $k$. It is important to
+note that the assessment of W, should be used in combination with all other normalization assessments to select suitable
+RUV-III normalized data.
 }
 \author{
 Ramyar Molania

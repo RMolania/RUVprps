@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotAssessVariation.R
 \name{plotAssessVariation}
 \alias{plotAssessVariation}
-\title{Plot the the variation of biological and unwanted variables.}
+\title{Plot the results of the assess variation .}
 \usage{
 plotAssessVariation(
   se.obj,
@@ -23,53 +23,50 @@ plotAssessVariation(
 )
 }
 \arguments{
-\item{se.obj}{#' @param se.obj A SummarizedExperiment object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Symbol. A symbol or a vector of symbols for the selection of the name(s) of the assay(s) in the
-SummarizedExperiment object. The default is set to 'all', so all the assays in the SummarizedExperiment object will
+\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the
+SummarizedExperiment object. The default is set to \code{all}, so all the assays in the SummarizedExperiment object will
 be selected.}
 
-\item{variables}{Symbol. A symbol or vector of symbols indicating the name(s) of the column(s) in the SummarizedExperiment
+\item{variables}{Character or character vector. Specifies the name(s) of the column(s) in the SummarizedExperiment
 object for which the specified metrics below have been calculated.}
 
-\item{fast.pca}{Logical. Indicates whether to the fast SVD approach has been used in the 'computePCA' function or not.
-The default is set to 'TRUE'.}
+\item{fast.pca}{Logical. Indicates whether the fast SVD approach was used in the \code{computePCA} function. The default is set to \code{TRUE}.}
 
-\item{anova.method}{Symbol. A symbol indicating which anova method has been used to compute association between
-gene-level expression and a categorical variable. The options are 'aov' and 'welch'. The default is set to 'aov'.}
+\item{anova.method}{Character. Indicates which ANOVA method was used to compute the association between
+gene-level expression and a categorical variable. Options are: \code{aov} and \code{welch}. Default is \code{aov}.}
 
-\item{corr.method}{Symbol. A symbol indicating which correlation method should be used to compute correlation between
-gene-level expression and a continuous variable. The options are 'pearson', 'kendall', or "spearman". The default is
-set to 'spearman'.}
+\item{corr.method}{Character. Specifies which correlation method to use to compute correlation between
+gene-level expression and a continuous variable. Options are: \code{pearson}, \code{kendall}, or \code{spearman}. Default is \code{spearman}.}
 
-\item{pcorr.method}{Symbol. A symbol indicating which correlation method should be used to compute gene-gene partial
-correlation. The options are 'pearson', 'kendall', or "spearman". The default is set to 'spearman'.}
+\item{pcorr.method}{Character. Indicates which correlation method to use to compute gene-gene partial
+correlation. Options are: \code{pearson}, \code{kendall}, or \code{spearman}. Default is \code{spearman}.}
 
-\item{sil.dist.measure}{Symbol. A symbol indicating which ditsance measure to be applied on the PCs to calculate silhouette.
-The options are 'euclidean', maximum', manhattan', 'canberra', 'binary' or 'minkowski'. The default is set to 'euclidean'.
-Refer to the function 'computeSilhouette' for more details.}
+\item{sil.dist.measure}{Character. Indicates which distance measure to apply on the PCs to calculate silhouette scores.
+Options are: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or \code{minkowski}. Default is \code{euclidean}.
+Refer to the function \code{computeSilhouette} for more details.}
 
-\item{ari.clustering.method}{Symbol. A symbol that indicates which clustering methods should be applied on the PCs to
-calculate the ARI. The options are 'mclust' or 'hclust' methods. The default is set to 'hclust'. Refer to the 'computeARI'
-for more details.}
+\item{ari.clustering.method}{Character. Indicates which clustering method to apply on the PCs to
+calculate ARI. Options are: \code{mclust} or \code{hclust}. Default is \code{hclust}. Refer to the \code{computeARI} function for more details.}
 
-\item{ari.hclust.method}{Symbol. A symbol specifying the agglomeration method to be used when the 'clustering.method'
-is set to 'hclust' method for computing ARI. The options are: 'ward.D', 'ward.D2', 'single', 'complete', 'average' (= UPGMA),
-'mcquitty' (= WPGMA), median' (= WPGMC) or centroid' (= UPGMC). The default is set to 'complete'. Refer to the 'computeARI'
-for more details.}
+\item{ari.hclust.method}{Character. Specifies the agglomeration method to use when \code{clustering.method}
+is set to \code{hclust} for computing ARI. Options are: \code{ward.D}, \code{ward.D2}, \code{single}, \code{complete}, \code{average} (UPGMA),
+\code{mcquitty} (WPGMA), \code{median} (WPGMC), or \code{centroid} (UPGMC). Default is \code{complete}. Refer to the \code{computeARI}
+function for more details.}
 
-\item{ari.hclust.dist.measure}{Symbol. A symbol indicating the distance measure to be used in the 'dist' function when
-the 'clustering.method' is set to 'hclust' method for computing ARI. The options are 'euclidean', 'maximum', 'manhattan',
-'canberra', 'binary' or 'minkowski'. The default is set to 'euclidean'. Refer to the 'computeARI' for more details.}
+\item{ari.hclust.dist.measure}{Character. Specifies the distance measure to use in the \code{dist} function when
+\code{clustering.method} is set to \code{hclust} for computing ARI. Options are: \code{euclidean}, \code{maximum}, \code{manhattan},
+\code{canberra}, \code{binary}, or \code{minkowski}. Default is \code{euclidean}. Refer to the \code{computeARI} function for more details.}
 
-\item{output.file.name}{Path and name of the output file to save the assessments plots in a pdf format.}
+\item{output.file.name}{Character. The path and name of the output file where the assessment plots will be saved in PDF format.}
 
-\item{pdf.width}{TTT}
+\item{pdf.width}{Numeric. Specifies the width (in inches) of the output PDF file. Default is typically around 8.}
 
-\item{pdf.height}{TTT}
+\item{pdf.height}{Numeric. Specifies the height (in inches) of the output PDF file. Default is typically around 6.}
 
-\item{verbose}{Logical. If 'TRUE', shows the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages describing different steps of the function.}
 }
 \description{
-Plot the the variation of biological and unwanted variables.
+Plot the results of the assess variation .
 }

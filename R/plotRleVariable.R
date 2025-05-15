@@ -1,6 +1,10 @@
-#' Plots a variable against the medians and IQRs of relative log expression (RLE) data.
+#' Plots a variable against the medians and IQRs of relative log expression (RLE) plot.
 
 #' @author Ramyar Molania
+
+#' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
 
 #' @description
 #' This function plots a variable against the medians and IQR of a relative log expression (RLE) data. Because of the
@@ -11,40 +15,38 @@
 #' @details
 #' If the variable is categorical, boxplots of the RLE medians and IQR against the variable will be generated. If
 #' the variable is continuous, scatter plots will be created.
-#'
+
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character. A character string or a vector of character strings representing the names of the assay(s)
-#' in the SummarizedExperiment object to plot. The default is "all", which indicates that all assays in the SummarizedExperiment
-#' object will be selected.
-#' @param variable Character. The name of the column(s) in the sample annotation of the SummarizedExperiment object.
-#' The variable can be either categorical or continuous. If a categorical variable is provided, boxplots of the RLE medians
-#' and IQRs will be generated across the variable separately. If a continuous variable is provided, scatter plots of the RLE
-#' medians and IQRs will be produced against the variable separately.
-#' @param rle.data.type Character. Indicates which RLE data should be used for plotting. The options are 'rle.medians',
-#' 'rle.iqr', or 'both'. If 'rle.medians' is selected, the RLE medians will be plotted against the variable. If 'rle.iqr'
-#' is selected, the RLE IQRs will be plotted against the variable, and if 'both', both RLE medians and IQRs will be plotted
-#' against the variable. The default is 'both'.
+#' @param assay.names Character. A character string or a vector of character strings representing the names of the data
+#' set(s) in the SummarizedExperiment object. The RLE data of these data set(s) must be computed before using the `computeRLE()`
+#' function. The default is set to `all`, which indicates the RLE data of that all data set(s) in the SummarizedExperiment
+#' object will be selected and used.
+#' @param variable Character. A character that specifies a name of the columns in the sample annotation of the SummarizedExperiment
+#' object. The variable can be either categorical or continuous. If a categorical variable is provided, boxplots of the
+#' RLE medians and IQRs will be generated across the variable, separately. If a continuous variable is provided, scatter
+#' plots of the RLE medians and IQRs will be produced against the variable, separately.
+#' @param rle.data.type Character. Indicates which RLE data should be used for plotting. The options are `rle.medians`,
+#' `rle.iqr`, or `both`. If `rle.medians` is selected, the RLE medians will be plotted against the variable. If `rle.iqr`
+#' is selected, the RLE IQRs will be plotted against the variable, and if `both`, both RLE medians and IQRs will be plotted
+#' against the variable. The default is set to `both`.
 #' @param ylim.rle.med.plot Numeric. Specifies the ylim of the boxplot or scatter plots when the RLE medians are used. If
-#' NULL, the function will automatically determine an appropriate ylim for the plots.
+#' `NULL`, the function will automatically determine an appropriate ylim for the plots. The defualt is set to `NULL`.
 #' @param ylim.rle.iqr.plot Numeric. Specifies the ylim of the boxplot or scatter plots when the RLE IQRs are used. If
-#' NULL, the function will automatically determine an appropriate ylim for the plots. The default is NULL.
-#' @param points.size Numeric. Specifies the point size of the scatter plots. The default is 1.
-#' @param plot.ncol Numeric. Specifies the number of columns in the plot grid.
-#' @param plot.nrow Numeric. Specifies the number of rows in the plot grid.
-#' @param plot.output Logical. If TRUE, individual RLE plot(s) will be printed while the function is running.
+#' `NULL`, the function will automatically determine an appropriate ylim for the plots. The default is set to `NULL`.
+#' @param points.size Numeric. A numeric vlaue that specifies the point size of the scatter plots. The default is set to 1.
+#' @param plot.ncol Numeric. A numeric value indicating the number of columns in the plot grid. When the number of selected
+#' assays is more than 1, the function puts all the RLE boxplots in one grid. The default is set to 2.
+#' @param plot.nrow Numeric. A numeric value indicating the number of rows in the plot grid. When the number of selected
+#' assays is more than 1, the function puts all the RLE boxplots in one grid. The default is set to 3.
+#' @param plot.output Logical. If `TRUE`, individual RLE plot(s) will be printed while the function is running.
 #' @param save.se.obj Logical. Specifies whether to save the plots in the metadata of the SummarizedExperiment object or
-#' to output them as a list. The default is TRUE.
-#' @param verbose Logical. If TRUE, messages for different steps of the function will be shown.
-#'
+#' to output them as a list. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, messages for different steps of the function will be shown.
+
 #' @return A SummarizedExperiment object that contains all the plot(s) in the metadata or a list containing all the plot(s).
 
-
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
-#' @importFrom SummarizedExperiment assays
 #' @importFrom ggpubr ggarrange stat_cor stat_compare_means
+#' @importFrom SummarizedExperiment assays
 #' @import ggplot2
 #' @export
 

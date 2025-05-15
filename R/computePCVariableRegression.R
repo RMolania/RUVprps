@@ -1,4 +1,4 @@
-#' Computes the linear regression. --- Finalized
+#' Computes the linear regression.
 
 #' @author Ramyar Molania
 
@@ -13,17 +13,17 @@
 
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or list of character strings specifying the name(s) of the assay(s)
-#' in the SummarizedExperiment object for performing regression analysis. The default is set to "all", which indicates that
+#' in the SummarizedExperiment object for performing regression analysis. The default is set to `all`, which indicates that
 #' all assays of the SummarizedExperiment object will be selected.
 #' @param variable Character. A character string indicating the name of the column in the sample annotation of the
 #' SummarizedExperiment object. The variable must be continuous, such as library size, tumor purity, etc.
 #' @param fast.pca Logical. Indicates whether to use the computed fast PCA or PCA results from the 'computePCA' function.
-#' The default is set to 'TRUE'. If 'FALSE', the 'fast.pca' argument in the 'computePCA' function should be set to 'FALSE'.
+#' The default is set to `TRUE`. If `FALSE`, the `fast.pca` argument in the `computePCA()` function should be set to `FALSE`.
 #' @param nb.pcs Numeric. A numeric value specifying the number of the first principal components (PCs) to use for computing
 #' the vector correlation. The default is set to 10.
 #' @param save.se.obj Logical. Indicates whether to save the results, regression R^2, to the 'metadata' of the
-#' SummarizedExperiment object or output the result as a list. By default, it is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', displays the messages for the different steps of the function.
+#' SummarizedExperiment object or output the result as a list. By default, it is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays the messages for the different steps of the function.
 
 #' @return A SummarizedExperiment object containing the computed regression R^2 for or output the result as a list.
 

@@ -1,106 +1,72 @@
 #' Identify potential unknown sources of unwanted variation in RNA-seq data.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function identifies unknown sources of unwanted variation in RNA-seq data using different robust statistical
 #' approaches.
-
+#'
 #' @details
-#' Identification of sources of unwanted variation is essential to creating PRPS data for RUV-III normalization. There
-#' could be instances where certain sources of unwanted variation remain unrecorded. We refer to these as "unknown"
-#' sources of unwanted variation.
-#' This function uses three different approaches: 'rle', 'pca', and 'sample.scoring' to find potential sources of unwanted
-#' variation in RNA-seq data when none are known.
-#' - In the 'rle' approach, a clustering method specified by 'clustering.methods' will be applied on either the RLE medians
-#' or IQRs or both separately. In the absence of unwanted variation, there should be no clearly distinguishable clusters.
-#' - In the 'pca' approach, first, a principal component analysis on either a set of negative control genes or all genes
-#' will be applied and then a clustering method will be used to cluster the first principal components to find unknown
-#' sources of unwanted variation.
-#' - In the 'sample.scoring' approach, first, individual samples will be scored against a set of gene set(s) e.g.
-#' housekeeping gene, whose visible variation indicates the existence of unwanted variations, then a clustering method
-#' will be applied on the scoring to find potential unknown sources of unwanted variation.
-
+#' Identification of sources of unwanted variation is essential for creating PRPS data for RUV-III normalization.
+#' There may be instances where certain sources of unwanted variation remain unrecorded; these are referred to as
+#' "unknown" sources. This function uses three different approaches—`rle`, `pca`, and `sample.scoring`—to identify
+#' potential unknown sources of unwanted variation when none are known.
+#'
+#' - In the `rle` approach, a clustering method specified by `clustering.methods` is applied to the RLE medians,
+#' IQRs, or both. In the absence of unwanted variation, no distinguishable clusters should form.
+#' - In the `pca` approach, principal component analysis is applied to either a set of negative control genes or
+#' all genes. The first PCs are then clustered to detect unknown sources of variation.
+#' - In the `sample.scoring` approach, samples are scored against gene sets (e.g., housekeeping genes) whose variation
+#' may indicate unwanted variation. A clustering method is then applied to the scores.
+#'
 #' @references
 #' 1. Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
 #' 2. Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
-
-
+#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character string. A character string for the selection of the name of the assay in the SummarizedExperiment
-#'  object to be used to identify possible sources of unwanted variation.
-#' @param approach Character string. A character string indicating the approach to be employed for identifying unknown
-#' sources of unwanted variation. This should be one of 'rle', 'pca', or 'sample.scoring'. In the rle approach, a clustering
-#' method is applies to either medians or IQR or both of the rle data. In the absence of unwanted variation, no distinguishable
-#' clustering should occur. In the 'pca' approach, a principal component analysis is initially performed on either a set
-#' of negative control genes specified in 'ncg' or all genes. Subsequently, a clustering method is employed to cluster the
-#' first principal components and identify potential unknown sources of unwanted variation. In the 'sample.scoring' approach,
-#' all samples are initially scored against a set of signature genes related to unwanted variation specified in 'uv.gene.sets'.
-#' Then, a clustering method is applied to the scores to identify potential unknown sources of unwanted variation.
-#' @param rle.comp Character string. Specifies which properties, either 'median' or 'iqr' or 'both', of the RLE data
-#' should be used for clustering when the approach is set to 'RLE'. The default is 'median'.
-#' @param regress.out.bio.variables Character string or vector of character strings. Specifies the column names of biological
-#' variables in the sample annotation of the SummarizedExperiment object. These variables can be either categorical or
-#' continuous variables. The default is 'NULL'.
-#' @param regress.out.bio.gene.sets List. A list of biological gene signatures. Individual gene sets will be used to
-#' score samples and then each score will be regressed out from the data before identifying sources of unwanted variation.
-#' The default is 'NULL'.
-#' @param uv.gene.sets List. A list of gene signatures related to any possible unwanted variables. Individual gene sets will
-#' be used to score samples and then each score will be clustered to identify possible unknown batches. The default is NULL.
-#' @param ncg Vector. Specifies a set of negative control genes to identify sources of unwanted variation. The default
-#' is 'NULL'. If not 'NULL', the RLE or PCA and sample scoring will be conducted solely based on the negative control genes.
-#' @param clustering.methods Character string. Specifies the clustering method to be utilized for identifying potential
-#' unknown batches. This should be one of the following: 'kmeans', 'cut', 'quantile', 'nbClust'. The default is 'nbClust'.
-#' @param nbClust.diss Dissimilarity matrix to be used. By default, diss=NULL, but if it is replaced by a dissimilarity
-#' matrix, distance should be "NULL".
-#' @param nbClust.distance Character string. The distance measure to be used to compute the dissimilarity matrix. This
-#' must be one of: "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski" or "NULL".
-#' By default, distance="euclidean". If the distance is "NULL", the dissimilarity matrix (diss) should be given by the
-#' user. If distance is not "NULL", the dissimilarity matrix should be "NULL".
-#' @param nbClust.min.nc Numeric. Minimal number of clusters, between 1 and (number of objects - 1).
-#' @param nbClust.max.nc Numeric. Indicates maximal number of clusters, between 2 and (number of objects - 1),
-#' greater or equal to min.nc. By default, max.nc = 15. Refer to the NbClust function for more details.
-#' @param nbClust.method Character string. Indicates the cluster method to be used.
-#' This should be one of: "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid",
-#' "kmeans". Refer to the NbClust function for more details.
-#' @param nbClust.index Character string. The index to be calculated. This should be one of: 'kl', 'ch', 'hartigan',
-#' 'ccc', 'scott', marriot', 'trcovw', 'tracew', 'friedman', 'rubin', 'cindex', 'db', 'silhouette', 'duda', 'pseudot2',
-#' 'beale', ratkowsky', 'ball', 'ptbiserial', 'gap', 'frey', 'mcclain', 'gamma', 'gplus', 'tau', 'dunn', 'hubert', 'sdindex',
-#' 'dindex', 'sdbw', 'all' (all indices except GAP, Gamma, Gplus, and Tau),'alllong' (all indices with Gap, Gamma, Gplus
-#' and Tau included).
-#' @param nbClust.alphaBeale Numeric. Significance value for Beale's index.
-#' @param max.samples.per.batch Numeric. Indicates the maximum number of samples per cluster when the clustering.methods
-#' is nbClust. The default is 0.1 (10%) of total samples in the SummarizedExperiment object.
-#' @param nb.clusters Numeric. Specifies the number of clusters to be identified when "clustering.methods" is set to
-#' 'kmeans', cut', and 'quantile'. The default is set to 3.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data; by default, it is set to 'TRUE'.
-#' The data must be in log-transformed form before computing RLE or PCA.
-#' @param pseudo.count Numeric. A value serving as a pseudo count to be added to all measurements in the assay(s) before
-#' applying log-transformation. This helps prevent -Inf values for measurements equal to 0. The default is 1.
-#' @param nb.pcs Numeric. A value determining the number of first principal components to be selected for clustering
-#' when the approach is set to 'PCA'. The default is 2.
-#' @param center Logical. Indicates whether to center the data or not before performing PCA. The default is set to 'TRUE'.
-#' @param scale Logical. Indicates whether to scale the data or not before performing PCA. The default is set to 'FALSE'.
-#' @param svd.bsparam A BiocParallelParam object specifying how parallelization should be performed. We refer to the
-#' BiocParallelParam R package for more details. The default is bsparam().
-#' We refer to the 'runSVD' function from the BiocSingular R package for more details.
-#' @param remove.current.estimates Character string. Specifies whether to remove the current estimates of the unknown
-#' batch in the SummarizedExperiment object or not. The default is set to 'TRUE'.
-#' @param output.name Character string. A character string specifying the name of the output file. If it is 'NULL', the
-#' function creates a name.
-#' @param assess.se.obj Logical. Whether to assess the SummarizedExperiment object or not. If 'TRUE', the function
-#' 'checkSeobj' will be applied. The default is 'TRUE'.
-#' @param remove.na Character string. Indicates whether to remove NA or missing values from either the 'assays',
-#' 'sample.annotation', both' or 'none'. If 'assays' is selected, the genes that contain NA or missing values will be
-#' excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any 'bio.variables'
-#' and 'uv.variables' will be excluded. By default, it is set to 'both'.
-#' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment class.
-#' The default is 'TRUE', the results will be saved to the 'metadata$UV$Unknown'.
-#' @param plot.output Logical. When set to 'TRUE', the function generates a plot of the input data for clustering, with
-#' colors representing the identified groups. The default value is set to 'TRUE'.
-#' @param order.batches Logical. When set to 'TRUE', the estimated batches will be ordered in the plot.
-#' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
+#' @param assay.name Character string. Specifies the assay name to be used for identifying potential sources of unwanted
+#'  variation.
+#' @param approach Character string. One of `rle`, `pca`, or `sample.scoring`, specifying the method to detect unknown variation.
+#' @param rle.comp Character string. One of `median`, `iqr`, or `both`. Specifies which RLE summary statistic to use.
+#'The default is set to `median`.
+#' @param regress.out.bio.variables Character string or vector. Column name(s) of biological variables in the sample
+#' annotation.The default is set to `NULL`.
+#' @param regress.out.bio.gene.sets List. Biological gene signatures to regress out before identifying unwanted variation.
+#' The default is set to `NULL`.
+#' @param uv.gene.sets List. Gene sets related to unwanted variation for use in `sample.scoring`.The default is set to `NULL`.
+#' @param ncg Vector. Negative control genes. If not `NULL`, analysis will be restricted to these genes.The default is set to `NULL`.
+#' @param clustering.methods Character string. Clustering method: one of `kmeans`, `cut`, `quantile`, or `nbClust`.
+#'The default is set to `nbClust`.
+#' @param nbClust.diss Dissimilarity matrix. If provided, `nbClust.distance` must be `NULL`.The default is set to `NULL`.
+#' @param nbClust.distance Character string. Distance measure: `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`,
+#'  `minkowski`, or `NULL`.The default is set to `euclidean`.
+#' @param nbClust.min.nc Numeric. Minimum number of clusters. Must be between 1 and (n - 1).
+#' @param nbClust.max.nc Numeric. Maximum number of clusters. Must be ≥ `nbClust.min.nc`.The default is set to 15.
+#' @param nbClust.method Character string. Clustering method: `ward.D`, `ward.D2`, `single`, `complete`, `average`,
+#' `mcquitty`, `median`, `centroid`, or `kmeans`.
+#' @param nbClust.index Character string. Clustering index to evaluate: e.g., `silhouette`, `gap`, `ch`, `db`, `all`, etc.
+#' @param nbClust.alphaBeale Numeric. Significance threshold for Beale's index.
+#' @param max.samples.per.batch Numeric. Max proportion of samples per cluster (only applies to `nbClust`).The default is set to 0.1.
+#' @param nb.clusters Numeric. Number of clusters when using `kmeans`, `cut`, or `quantile`.The default is set to 3.
+#' @param apply.log Logical. Apply log-transformation before analysis.The default is set to `TRUE`.
+#' @param pseudo.count Numeric. Pseudo count added before log-transforming data.The default is set to 1.
+#' @param nb.pcs Numeric. Number of principal components to use in `pca` approach.The default is set to 2.
+#' @param center Logical. Whether to center data before PCA.The default is set to `TRUE`.
+#' @param scale Logical. Whether to scale data before PCA.The default is set to `FALSE`.
+#' @param svd.bsparam A `BiocParallelParam` object. Controls parallelization for SVD computation.The default is set to `bsparam()`.
+#' @param remove.current.estimates Character string. Whether to remove current estimates of unknown batches.The default is set to
+#'  `TRUE`.
+#' @param output.name Character string. Output file name. If `NULL`, a name is automatically generated.
+#' @param assess.se.obj Logical. If `TRUE`, the `checkSeobj` function is applied to validate the object.The default is set to
+#' `TRUE`.
+#' @param remove.na Character string. Where to remove `NA` values: `assays`, `sample.annotation`, `both`, or `none`.
+#'The default is set to `both`.
+#' @param save.se.obj Logical. If `TRUE`, results are saved in the metadata under `metadata$UV$Unknown`.The default is set to `TRUE`.
+#' @param plot.output Logical. If `TRUE`, generates clustering input plots colored by identified groups.The default is set to `TRUE`.
+#' @param order.batches Logical. If `TRUE`, orders estimated batches in the plot.The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays messages throughout function execution.
+
 
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom singscore rankGenes simpleScore
@@ -311,7 +277,6 @@ identifyUnknownUV <- function(
             se.obj = se.obj,
             assay.names = assay.name,
             pseudo.count = pseudo.count,
-            assessment = 'RLE or PCA'
             )[[assay.name]]
     }
     if (isFALSE(apply.log)){

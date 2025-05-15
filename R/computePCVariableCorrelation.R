@@ -23,20 +23,19 @@
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object for calculating the vector correlation. The default is set to "all", which indicates
 #' that all assays of the SummarizedExperiment object will be selected.
-#' @param variable Character. A character string indicating the name of the column in the sample annotation of the SummarizedExperiment
-#' object. The variable must be categorical variable such as batches or sample subtypes.
-#' @param fast.pca Logical. Indicates whether to use the fast PCA or PCA results computed by the 'computePCA' function.
-#' The default is set to 'TRUE'. If 'FALSE', the 'fast.pca' argument in the 'computePCA' function should be set to 'FALSE'.
+#' @param variable Character. A character string indicating the name of the column in the sample annotation of the
+#' SummarizedExperiment object. The variable must be categorical variable such as batches or sample subtypes.
+#' @param fast.pca Logical. Indicates whether to use the fast PCA or PCA results computed by the `computePCA()` function.
+#' The default is set to `TRUE`. If `FALSE`, the `fast.pca` argument in the `computePCA` function should be set to `FALSE`.
 #' @param nb.pcs Numeric. A numeric value indicating the number of the first principal components (PCs) to use for
 #' calculating the vector correlation. The default is set to 10. This number cannot exceed the number of PCs calculated
-#' by the 'computePCA' function.
+#' by the `computePCA()` function.
 #' @param save.se.obj Logical. Indicates whether to save the results, correlation coefficients, in the metadata of the
-#' SummarizedExperiment object or to output the result as a list. By default, it is set to 'TRUE'.
-#' @param verbose Logical. If 'TRUE', displays the messages for the different steps of the function.
+#' SummarizedExperiment object or to output the result as a list. By default, it is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays the messages for the different steps of the function.
 
 #' @return A SummarizedExperiment object or a list containing the vector correlation plots of individual assay(s) for
 #' a categorical variable.
-
 
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom fastDummies dummy_cols
@@ -140,7 +139,7 @@ computePCVariableCorrelation <- function(
         verbose = verbose
         )
 
-    ## obtaining computed PCs from the SummarizedExperiment object ####
+    ## Obtaining computed PCs from the SummarizedExperiment object ####
     printColoredMessage(
         message = paste0(
             '- Obtaining the first ',
@@ -165,9 +164,9 @@ computePCVariableCorrelation <- function(
         required.function = 'computePCA',
         message.to.print = 'PCs'
     )
-    ## calculate the vector correlation ####
+    ## Calculate the vector correlation ####
     printColoredMessage(
-        message = '- calculating the vector correlation.',
+        message = '- Calculating the vector correlation.',
         color = 'blue',
         verbose = verbose
         )
@@ -180,7 +179,8 @@ computePCVariableCorrelation <- function(
                     x,
                     '" data:'),
                 color = 'orange',
-                verbose = verbose)
+                verbose = verbose
+                )
             vector.corr <- sapply(
                 1:nb.pcs,
                 function(y) {

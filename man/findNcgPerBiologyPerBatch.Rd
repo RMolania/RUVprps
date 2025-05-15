@@ -91,8 +91,8 @@ variation. The default is set to 0.8.}
 \item{grid.group}{A character string. Indicates whether the grid search should be performed on biological ('top.rank.bio.genes'),
 unwanted ('top.rank.uv.genes') or both factors. The options are 'bio', 'uv', or 'both'. The default is set to 'uv'.}
 
-\item{grid.direction}{A character string. Indicates the direction of the grid search. The options are 'increase' or 'decrease'.
-The default is set to 'decrease'.}
+\item{grid.direction}{A character string. Indicates the direction of the grid search. The options are \code{increase} or
+\code{decrease}. The default is set to \code{decrease}.}
 
 \item{grid.nb}{Numeric. The percentage for grid search when the 'ncg.selection.method' is 'NoneOverlap'. In the 'NoneOverlap'
 approach, the grid search starts with the initial \code{top.rank.uv.genes} value and adds \code{grid.nb} in each loop to find
@@ -106,11 +106,11 @@ applying correlation analysis. The default is set to 10.}
 
 \item{regress.out.bio.variables}{A character vector. Indicates the column names of biological variables in the
 SummarizedExperiment object. These variables will be regressed out from the data before identifying genes that are
-highly affected by unwanted variation. The default is NULL.}
+highly affected by unwanted variation. The default is set to \code{NULL}.}
 
 \item{regress.out.uv.variables}{A character vector. Indicates the column names of unwanted variation variables in the
 SummarizedExperiment object. These variables will be regressed out from the data before identifying genes that are
-highly affected by biological variation. The default is NULL.}
+highly affected by biological variation. The default is set to \code{NULL}.}
 
 \item{bio.groups}{A character vector or a symbol. Indicates the column names that contain biological variables in the
 SummarizedExperiment object.
@@ -133,11 +133,11 @@ sources of unwanted variation. The default is set to 'kmeans' clustering.}
 By default, it is set to 2.}
 
 \item{normalization}{A character string. Indicates which normalization method should be applied to the data before
-identifying genes that are affected by biological variation. The default is 'CPM'. Refer to the 'applyOtherNormalizations
+identifying genes that are affected by biological variation. The default is 'CPM'. Refer to the \code{applyOtherNormalizations()}
 function for more details.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing correlation and
-ANOVA. The default is TRUE.}
+ANOVA. The default is set to \code{RUE}.}
 
 \item{pseudo.count}{Numeric. A value to be added as a pseudo-count to all measurements before log-transformation.}
 
@@ -150,37 +150,37 @@ is set to 0.05.}
 \item{rho}{Numeric. The hypothesized correlation value to be used in the hypothesis testing. The default is set to 0.}
 
 \item{anova.method}{A character string. Indicates which ANOVA method should be used to compute associations between
-gene-level expression and a categorical variable. The default is 'aov'.}
+gene-level expression and a categorical variable. The default is set to \code{aov}.}
 
 \item{assess.ncg}{Logical. Indicates whether to assess the performance of selected NCGs. This analysis involves
 principal component analysis (PCA) on the selected NCGs, followed by exploring the R-squared or vector correlation between
 the first 'nb.pcs' principal components and biological and unwanted variation variables.}
 
 \item{variables.to.assess.ncg}{A character vector. Indicates the column names of the SummarizedExperiment object that
-contain variables whose association with the selected NCGs needs to be evaluated. The default is NULL, meaning all
+contain variables whose association with the selected NCGs needs to be evaluated. The default is set to \code{NULL}, meaning all
 variables in 'bio.variables' and 'uv.variables' will be assessed.}
 
 \item{nb.pcs}{Numeric. Indicates the number of the first principal components of selected NCGs to be used to assess
 the performance of NCGs.}
 
 \item{center}{Logical. Indicates whether to center the data before applying principal component analysis. The default
-is set to 'TRUE'.}
+is set to \code{TRUE}.}
 
 \item{scale}{Logical. Indicates whether to scale the data before applying principal component analysis. The default is
-set to 'FALSE'.}
+set to \code{FALSE}.}
 
 \item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to  'TRUE'.}
 
-\item{remove.na}{A character string. Indicates whether to remove NA or missing values from either the 'assays', 'sample.annotation',
-'both', or 'none'. If 'assays' is selected, genes containing NA or missing values will be excluded. If 'sample.annotation'
-is selected, samples with NA or missing values for any \code{bio.variables} and \code{uv.variables} will be excluded. The default
-is set to  'both'.}
+\item{remove.na}{A character string. Indicates whether to remove NA or missing values from either the \code{assays},
+\code{sample.annotation},\code{both}, or \code{none}. If \code{assays} is selected, genes containing NA or missing values will be excluded.
+If 'sample.annotation' is selected, samples with NA or missing values for any \code{bio.variables} and \code{uv.variables} will
+be excluded. The default is set to  \code{both}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
-('se.obj') or to output the result.
-The default is TRUE.}
+('se.obj') or to output the result. The default is set to \code{TRUE}.}
 
-\item{output.name}{A character string. The name for the output. If set to NULL, the function will automatically generate a name.}
+\item{output.name}{A character string. The name for the output. If set to NULL, the function will automatically generate
+a name.}
 
 \item{ncg.group}{A character string. Indicates the name of the group of NCGs.}
 
@@ -190,15 +190,15 @@ The default is TRUE.}
 to TRUE, the results of the two-way ANOVA
 will be saved. If users wish to adjust parameters such as \code{nb.ncg}, \code{ncg.selection.method}, \code{top.rank.bio.genes},
 and \code{top.rank.uv.genes}, the ANOVA
-will not be recalculated. This accelerates parameter tuning for NCG selection. The default is FALSE.}
+will not be recalculated. This accelerates parameter tuning for NCG selection. The default is se to \code{FALSE}.}
 
-\item{imf.name}{A character string. The name to use when saving the intermediate file. If set to NULL, the function
-will automatically generate a name.
-The default is NULL.}
+\item{imf.name}{A character string. The name to use when saving the intermediate file. If set to \code{NULL}, the function
+will automatically generate a name. The default is set to \code{NULL}.}
 
-\item{use.imf}{Logical. Indicates whether to use the intermediate file for subsequent steps. The default is FALSE.}
+\item{use.imf}{Logical. Indicates whether to use the intermediate file for subsequent steps. The default is set to
+\code{FALSE}.}
 
-\item{verbose}{Logical. If TRUE, process messages will be displayed.}
+\item{verbose}{Logical. If \code{TRUE}, process messages will be displayed.}
 }
 \value{
 Either the SummarizedExperiment object containing a set of negative control genes, or a logical vector of
