@@ -166,6 +166,8 @@ unwanted variation. Default: \code{NULL}.}
 
 \item{remove.na}{Character. Indicates whether to remove \code{NA} values. Options: \code{assays}, \code{none}. Default is \code{assays}.}
 
+\item{prps.sets.name}{Character.}
+
 \item{prps.group}{Character.}
 
 \item{plot.output}{TTTT}
@@ -174,8 +176,6 @@ unwanted variation. Default: \code{NULL}.}
 returns results as a list. Default is \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, prints messages throughout function execution.}
-
-\item{output.name}{Character.}
 }
 \description{
 This function uses the \code{createUnSupervisedPRPSbyAnchors} or \code{createUnSupervisedPRPSbyMNN} to create PRPS sets of all

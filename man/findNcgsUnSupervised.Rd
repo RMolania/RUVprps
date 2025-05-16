@@ -42,8 +42,8 @@ findNcgsUnSupervised(
   pseudo.count = 1,
   assess.se.obj = TRUE,
   remove.na = "both",
-  output.name = NULL,
-  ncg.group = NULL,
+  ncg.set.name = NULL,
+  ncg.group.name = NULL,
   plot.output = TRUE,
   output.plot = "assessment",
   use.imf = FALSE,
@@ -148,9 +148,9 @@ is set to \code{TRUE}.}
 \item{remove.na}{Character. Whether to remove missing values from \code{assays}, \code{sample.annotation}, \code{both}, or \code{none}.
 The The default is set to \code{both}.}
 
-\item{output.name}{Character. Output name for metadata entry. If \code{NULL}, a name is auto-generated.}
+\item{ncg.set.name}{Character. Output name for metadata entry. If \code{NULL}, a name is auto-generated.}
 
-\item{ncg.group}{Character. Group label for selected NCGs. If \code{NULL}, the label \code{ncg|unsupervised} is used.}
+\item{ncg.group.name}{Character. Group label for selected NCGs. If \code{NULL}, the label \code{ncg|unsupervised} is used.}
 
 \item{plot.output}{Logical. Whether to plot NCG assessment during execution. The default is set to \code{TRUE}.}
 

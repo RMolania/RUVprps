@@ -43,8 +43,8 @@ findNcgPerBiologyPerBatch(
   assess.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
-  output.name = NULL,
-  ncg.group = NULL,
+  ncg.set.name = NULL,
+  ncg.group.name = NULL,
   plot.output = TRUE,
   save.imf = FALSE,
   imf.name = NULL,
@@ -179,10 +179,10 @@ be excluded. The default is set to  \code{both}.}
 \item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
 ('se.obj') or to output the result. The default is set to \code{TRUE}.}
 
-\item{output.name}{A character string. The name for the output. If set to NULL, the function will automatically generate
+\item{ncg.set.name}{A character string. The name for the output. If set to NULL, the function will automatically generate
 a name.}
 
-\item{ncg.group}{A character string. Indicates the name of the group of NCGs.}
+\item{ncg.group.name}{A character string. Indicates the name of the group of NCGs.}
 
 \item{plot.output}{Logical. If TRUE, a plot of the NCG selection process will be generated.}
 

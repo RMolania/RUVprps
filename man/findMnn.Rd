@@ -27,7 +27,7 @@ findMnn(
   assess.se.obj = TRUE,
   remove.na = "both",
   plot.output = TRUE,
-  output.name = NULL,
+  prps.sets.name = NULL,
   prps.group = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
@@ -109,7 +109,7 @@ removed before any down-stream analysis See the \code{checkSeObj()} function for
 \item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches. The default is
 set to \code{TRUE}.}
 
-\item{output.name}{Character. A character string specifying the name of the output file (MNN data) to be saved in the
+\item{prps.sets.name}{Character. A character string specifying the name of the output file (MNN data) to be saved in the
 metadata of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on:
 \code{paste0(uv.variable, '||' , assay.name)}.}
 

@@ -39,6 +39,7 @@ utils::globalVariables(
       'data',
       'assess',
       'variable',
+      'ref',
       'geneset',
       'mad'
       )

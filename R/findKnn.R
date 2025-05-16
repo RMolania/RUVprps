@@ -54,7 +54,7 @@
 #' performing any down-stream analysis. See the `checkSeObj()` function for more details.
 #' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
 #' If it is set to `NULL`, the function will automatically assign a name using `paste0('prps|mnn|', uv.variable)`.
-#' @param output.name Character. A character string specifying the name of the output file to be saved in the metadata
+#' @param prps.sets.name Character. A character string specifying the name of the output file to be saved in the metadata
 #' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
 #' "paste0(uv.variable, '|' , assay.name)".
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
@@ -87,7 +87,7 @@ findKnn <- function(
         assess.se.obj = TRUE,
         remove.na = 'both',
         prps.group = NULL,
-        output.name = NULL,
+        prps.sets.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -170,9 +170,9 @@ findKnn <- function(
     if (!is.logical(save.se.obj)){
         stop('The "save.se.obj" must be logical.')
     }
-    if (!is.null(output.name)){
-        if (!is.character(output.name)){
-            stop('The "output.name" must be a character.')
+    if (!is.null(prps.sets.name)){
+        if (!is.character(prps.sets.name)){
+            stop('The "prps.sets.name" must be a character.')
         }
     }
     if (!is.null(prps.group)){
@@ -625,8 +625,8 @@ findKnn <- function(
         prps.group <- paste0('prps|knnMnn|', uv.variable)
     }
     ## select output name ####
-    if (is.null(output.name))
-        output.name <- paste0(uv.variable, '|' , assay.name)
+    if (is.null(prps.sets.name))
+        prps.sets.name <- paste0(uv.variable, '|' , assay.name)
 
     ## save the results in the SummarizedExperiment object ####
     message(' ')
@@ -651,10 +651,10 @@ findKnn <- function(
         if (!'knn' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']])) {
             se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']] <- list()
         }
-        if (!output.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']][[output.name]] <- list()
+        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']])) {
+            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']][[prps.sets.name]] <- list()
         }
-        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']][[output.name]] <- all.knn
+        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']][[prps.sets.name]] <- all.knn
 
         printColoredMessage(
             message = '- All the knn results are saved in the metadata of the SummarizedExperiment object.',

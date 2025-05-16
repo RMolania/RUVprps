@@ -72,8 +72,8 @@
 #' is set to `TRUE`.
 #' @param remove.na Character. Whether to remove missing values from `assays`, `sample.annotation`, `both`, or `none`.
 #' The The default is set to `both`.
-#' @param output.name Character. Output name for metadata entry. If `NULL`, a name is auto-generated.
-#' @param ncg.group Character. Group label for selected NCGs. If `NULL`, the label `ncg|unsupervised` is used.
+#' @param ncg.set.name Character. Output name for metadata entry. If `NULL`, a name is auto-generated.
+#' @param ncg.group.name Character. Group label for selected NCGs. If `NULL`, the label `ncg|unsupervised` is used.
 #' @param plot.output Logical. Whether to plot NCG assessment during execution. The default is set to `TRUE`.
 #' @param output.plot Character. Plot type to display: `assessment`, `heatmap`, or `both`. The default is set to `assessment`.
 #' @param use.imf Logical. Whether to use intermediate file. The default is set to `FALSE`.
@@ -137,8 +137,8 @@ findNcgsUnSupervised <- function(
         pseudo.count = 1,
         assess.se.obj = TRUE,
         remove.na = 'both',
-        output.name = NULL,
-        ncg.group = NULL,
+        ncg.set.name = NULL,
+        ncg.group.name = NULL,
         plot.output = TRUE,
         output.plot = 'assessment',
         use.imf = FALSE,
@@ -235,11 +235,11 @@ findNcgsUnSupervised <- function(
         }
     }
     if (isTRUE(ncg.selection.method == 'quantile')){
-        if(is.null(bio.percentile) | is.null(uv.percentile))
+        if (is.null(bio.percentile) | is.null(uv.percentile))
             stop('The "bio.percentile" or "uv.percentile" cannot be NULL.')
-        if(bio.percentile > 1 | bio.percentile < 0)
+        if (bio.percentile > 1 | bio.percentile < 0)
             stop('The "bio.percentile" must be a postive value between 0 and 1.')
-        if(uv.percentile > 1 | uv.percentile < 0)
+        if (uv.percentile > 1 | uv.percentile < 0)
             stop('The "uv.percentile" must be a postive value between 0 and 1.')
     }
 
@@ -410,7 +410,7 @@ findNcgsUnSupervised <- function(
                 color = 'blue',
                 verbose = verbose
                 )
-            if(isTRUE(ncol(se.obj) <= min.sample.for.correlation)){
+            if (isTRUE(ncol(se.obj) <= min.sample.for.correlation)){
                 stop(paste0(
                     'There are not enough samples (min.sample.for.correlation:',
                     min.sample.for.correlation,
@@ -540,10 +540,10 @@ findNcgsUnSupervised <- function(
     # Intermediate file ####
     ## read intermediate file ####
     if (isTRUE(use.imf)){
-        if(is.null(imf.name)){
+        if (is.null(imf.name)){
             imf.name <- paste0(assay.name, '|un.supervised|', ncg.selection.method)
         }
-        if(is.null(se.obj@metadata$IMF$NCG[[imf.name]]))
+        if (is.null(se.obj@metadata$IMF$NCG[[imf.name]]))
             stop('The intermediate file cannot be found in the metadata of the SummarizedExperiment object.')
         all.tests <- se.obj@metadata$IMF$NCG[[imf.name]]
         bio.genes <- all.tests$bio.genes
@@ -552,17 +552,17 @@ findNcgsUnSupervised <- function(
     }
 
     ## save intermediate file ####
-    if(isTRUE(save.imf)){
-        if(length(se.obj@metadata$IMF) == 0 ) {
+    if (isTRUE(save.imf)){
+        if (length(se.obj@metadata$IMF) == 0 ) {
             se.obj@metadata[['IMF']] <- list()
         }
-        if(!'NCG' %in% names(se.obj@metadata[['IMF']])){
+        if (!'NCG' %in% names(se.obj@metadata[['IMF']])){
             se.obj@metadata[['IMF']][['NCG']] <- list()
         }
-        if(is.null(imf.name)){
+        if (is.null(imf.name)){
             imf.name <- paste0(assay.name, '|un.supervised|', ncg.selection.method)
         }
-        if(!imf.name %in% names(se.obj@metadata[['IMF']][['NCG']])){
+        if (!imf.name %in% names(se.obj@metadata[['IMF']][['NCG']])){
             se.obj@metadata[['IMF']][['NCG']][[imf.name]] <- list()
         }
         se.obj@metadata[['IMF']][['NCG']][[imf.name]] <- list(
@@ -584,7 +584,7 @@ findNcgsUnSupervised <- function(
             all.uv.tests,
             function(x){
                 temp <- get(x)
-                if(length(names(temp))!=0){
+                if (length(names(temp))!=0){
                     ranks.data <- lapply(
                         names(temp),
                         function(y) temp[[y]]$ranked.genes)
@@ -603,7 +603,7 @@ findNcgsUnSupervised <- function(
                 verbose = verbose
                 )
             stat.summary <- rowProds(as.matrix(all.ranks))
-            if(sum(is.infinite(stat.summary)) > 0)
+            if (sum(is.infinite(stat.summary)) > 0)
                 stop('The product of ranks results in infinity values.')
         }
         ## average of ranks ####
@@ -674,7 +674,7 @@ findNcgsUnSupervised <- function(
         top.uv.genes <- unique(unlist(lapply(
             all.uv.tests,
             function(x){
-                if(!is.null(x)){
+                if (!is.null(x)){
                     temp.data <- get(x)
                     ranks.data <- unique(unlist(lapply(
                         names(temp.data),
@@ -699,7 +699,7 @@ findNcgsUnSupervised <- function(
             verbose = verbose
         )
         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
-        if(isTRUE(length(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
+        if (isTRUE(length(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
         ncg.selected <- row.names(se.obj) %in% ncg.selected
     }
 
@@ -718,7 +718,7 @@ findNcgsUnSupervised <- function(
         top.uv.genes <- unique(unlist(lapply(
             all.uv.tests,
             function(x){
-                if(!is.null(x)){
+                if (!is.null(x)){
                     temp.data <- get(x)
                     ranks.data <- unique(unlist(lapply(
                         names(temp.data),
@@ -742,7 +742,7 @@ findNcgsUnSupervised <- function(
             color = 'blue',
             verbose = verbose)
         top.uv.genes <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
-        if(isTRUE(length(top.uv.genes) == 0)) stop('No NCGs can be found based on the current parameters.')
+        if (isTRUE(length(top.uv.genes) == 0)) stop('No NCGs can be found based on the current parameters.')
         ncg.selected <- row.names(se.obj) %in% top.uv.genes
     }
 
@@ -773,7 +773,7 @@ findNcgsUnSupervised <- function(
         top.uv.genes <- unique(unlist(lapply(
             all.uv.tests,
             function(x){
-                if(!is.null(x)){
+                if (!is.null(x)){
                     temp.data <- get(x)
                     ranks.data <- unique(unlist(lapply(
                         names(temp.data),
@@ -784,7 +784,7 @@ findNcgsUnSupervised <- function(
             })))
         ## select NCG ####
         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
-        if(isTRUE(length(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
+        if (isTRUE(length(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
         printColoredMessage(
             message = paste0('- ', length(ncg.selected), ' genes are found.'),
             color = 'blue',
@@ -793,8 +793,8 @@ findNcgsUnSupervised <- function(
         ## assess the need for grid search ####
         nb.ncg <- round(c(nb.ncg * nrow(se.obj)), digits = 0)
         ncg.ranges <- round(x = 0.01 *nb.ncg, digits = 0)
-        if(length(ncg.selected) > c(nb.ncg + ncg.ranges) | length(ncg.selected) < c(nb.ncg - ncg.ranges)) {
-            if(isTRUE(nb.ncg > length(ncg.selected))){
+        if (length(ncg.selected) > c(nb.ncg + ncg.ranges) | length(ncg.selected) < c(nb.ncg - ncg.ranges)) {
+            if (isTRUE(nb.ncg > length(ncg.selected))){
                 con <- parse(text = paste0("nb.ncg", ">", "length(ncg.selected)"))
                 printColoredMessage(
                     message = paste0(
@@ -807,7 +807,7 @@ findNcgsUnSupervised <- function(
                     color = 'blue',
                     verbose = verbose)
             }
-            if(isTRUE(nb.ncg < length(ncg.selected))){
+            if (isTRUE(nb.ncg < length(ncg.selected))){
                 con <- parse(text = paste0("length(ncg.selected)", ">", "nb.ncg"))
                 printColoredMessage(
                     message = paste0(
@@ -819,14 +819,14 @@ findNcgsUnSupervised <- function(
             }
             ## grid search ####
             ### grid group: both bio and uv variable ####
-            if(grid.group == 'both'){
+            if (grid.group == 'both'){
                 printColoredMessage(
                     message = '- The grid search will be applied on both biological and unwanted factors. ',
                     color = 'blue',
                     verbose = verbose
                     )
                 #### increasing order ####
-                if(grid.direction == 'increase'){
+                if (grid.direction == 'increase'){
                     printColoredMessage(
                         message = '- The grid search will increase the values of both "top.rank.uv.genes" and "top.rank.bio.genes". ',
                         color = 'blue',
@@ -840,12 +840,12 @@ findNcgsUnSupervised <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         # uv genes
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb + grid.nb
-                        if(top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
+                        if (top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x){
-                                if(!is.null(x)){
+                                if (!is.null(x)){
                                     temp.data <- get(x)
                                     ranks.data <- unique(unlist(lapply(
                                         names(temp.data),
@@ -856,7 +856,7 @@ findNcgsUnSupervised <- function(
                             })))
                         # bio genes
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb - grid.nb
-                        if(top.rank.bio.genes.nb < 1) top.rank.bio.genes.nb = 1
+                        if (top.rank.bio.genes.nb < 1) top.rank.bio.genes.nb = 1
                         top.bio.genes <- row.names(bio.genes)[bio.genes$bio.ranks > top.rank.bio.genes.nb]
                         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
                     }
@@ -873,12 +873,12 @@ findNcgsUnSupervised <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         # uv genes
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb - grid.nb
-                        if(top.rank.uv.genes.nb < 1) top.rank.uv.genes.nb = 1
+                        if (top.rank.uv.genes.nb < 1) top.rank.uv.genes.nb = 1
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x){
-                                if(!is.null(x)){
+                                if (!is.null(x)){
                                     temp.data <- get(x)
                                     ranks.data <- unique(unlist(lapply(
                                         names(temp.data),
@@ -889,22 +889,22 @@ findNcgsUnSupervised <- function(
                             })))
                         # bio genes
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb + grid.nb
-                        if(top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
+                        if (top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
                         top.bio.genes <- row.names(bio.genes)[bio.genes$bio.ranks > top.rank.bio.genes.nb]
                         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
                     }
                 }
                 ### check selection ####
-                if(length(ncg.selected) == 0)
+                if (length(ncg.selected) == 0)
                     stop('No NCGs can be found based on the current parameters.')
                 ### update numbers ####
                 # bio
                 top.rank.bio.genes.nb <- nrow(se.obj) - top.rank.bio.genes.nb
                 top.rank.bio.genes <- round(top.rank.bio.genes.nb/nrow(se.obj) * 100, digits = 2)
-                if(top.rank.bio.genes >= 100) top.rank.bio.genes = 100
+                if (top.rank.bio.genes >= 100) top.rank.bio.genes = 100
                 # uv
                 top.rank.uv.genes <- round(top.rank.uv.genes.nb/nrow(se.obj) * 100, digits = 2)
-                if(top.rank.uv.genes >= 100) top.rank.uv.genes = 100
+                if (top.rank.uv.genes >= 100) top.rank.uv.genes = 100
                 message(' ')
                 printColoredMessage(
                     message = paste0(
@@ -925,7 +925,7 @@ findNcgsUnSupervised <- function(
                     verbose = verbose
                     )
                 ###### increasing order ####
-                if(grid.direction == 'increase'){
+                if (grid.direction == 'increase'){
                     printColoredMessage(
                         message = '- The grid search will increase the value of "top.rank.bio.genes". ',
                         color = 'blue',
@@ -936,7 +936,7 @@ findNcgsUnSupervised <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         # bio genes
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb - grid.nb
-                        if(top.rank.bio.genes.nb < 1) top.rank.bio.genes.nb = 1
+                        if (top.rank.bio.genes.nb < 1) top.rank.bio.genes.nb = 1
                         top.bio.genes <- row.names(bio.genes)[bio.genes$bio.ranks > top.rank.bio.genes.nb]
                         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
                     }
@@ -954,13 +954,13 @@ findNcgsUnSupervised <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         # bio genes
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb + grid.nb
-                        if(top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
+                        if (top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
                         top.bio.genes <- row.names(bio.genes)[bio.genes$bio.ranks > top.rank.bio.genes.nb]
                         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
                     }
                 }
                 ##### check selection ####
-                if(length(ncg.selected) == 0)
+                if (length(ncg.selected) == 0)
                     stop('No NCGs can be found based on the current parameters.')
                 # gene selection
                 ncg.selected <- row.names(se.obj) %in% ncg.selected
@@ -968,7 +968,7 @@ findNcgsUnSupervised <- function(
                 # bio
                 top.rank.bio.genes.nb <- nrow(se.obj) - top.rank.bio.genes.nb
                 top.rank.bio.genes <- round(top.rank.bio.genes.nb/nrow(se.obj) * 100, digits = 0)
-                if(top.rank.bio.genes >= 100) top.rank.bio.genes = 100
+                if (top.rank.bio.genes >= 100) top.rank.bio.genes = 100
                 message(' ')
                 printColoredMessage(
                     message = paste0(
@@ -988,7 +988,7 @@ findNcgsUnSupervised <- function(
                     color = 'blue',
                     verbose = verbose)
                 ###### increasing order ####
-                if(grid.direction == 'increase'){
+                if (grid.direction == 'increase'){
                     printColoredMessage(
                         message = '- The grid search will increase the value of "top.rank.uv.genes". ',
                         color = 'blue',
@@ -1000,12 +1000,12 @@ findNcgsUnSupervised <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         # uv genes
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb + grid.nb
-                        if(top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
+                        if (top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x){
-                                if(!is.null(x)){
+                                if (!is.null(x)){
                                     temp.data <- get(x)
                                     ranks.data <- unique(unlist(lapply(
                                         names(temp.data),
@@ -1030,12 +1030,12 @@ findNcgsUnSupervised <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         # uv genes
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb - grid.nb
-                        if(top.rank.uv.genes.nb < 1) top.rank.uv.genes.nb = 1
+                        if (top.rank.uv.genes.nb < 1) top.rank.uv.genes.nb = 1
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x){
-                                if(!is.null(x)){
+                                if (!is.null(x)){
                                     temp.data <- get(x)
                                     ranks.data <- unique(unlist(lapply(
                                         names(temp.data),
@@ -1048,13 +1048,13 @@ findNcgsUnSupervised <- function(
                     }
                 }
                 ##### check selection ####
-                if(length(ncg.selected) == 0)
+                if (length(ncg.selected) == 0)
                     stop('No NCGs can be found based on the current parameters.')
                 ncg.selected <- row.names(se.obj) %in% ncg.selected
                 ##### update numbers ####
                 # uv
                 top.rank.uv.genes <- round(top.rank.uv.genes.nb/nrow(se.obj) * 100, digits = 2)
-                if(top.rank.uv.genes >= 100) top.rank.uv.genes = 100
+                if (top.rank.uv.genes >= 100) top.rank.uv.genes = 100
                 message(' ')
                 printColoredMessage(
                     message = paste0(
@@ -1189,7 +1189,7 @@ findNcgsUnSupervised <- function(
                     rSquared <- sapply(
                         1:nb.pcs,
                         function(y) summary(lm(se.obj[[x]] ~ pca.data[, 1:y]))$r.squared)
-                } else if(class(se.obj[[x]]) %in% c('factor', 'character')){
+                } else if (class(se.obj[[x]]) %in% c('factor', 'character')){
                     catvar.dummies <- dummy_cols(se.obj[[x]])
                     catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
                     cca.pcs <- sapply(
@@ -1242,11 +1242,11 @@ findNcgsUnSupervised <- function(
         color = 'magenta',
         verbose = verbose
         )
-    if(is.null(ncg.group)){
-        ncg.group <- paste0('ncg|unsupervised')
+    if (is.null(ncg.group.name)){
+        ncg.group.name <- paste0('ncg|unsupervised')
     }
-    if(is.null(output.name)){
-        output.name <- paste0(
+    if (is.null(ncg.set.name)){
+        ncg.set.name <- paste0(
             sum(ncg.selected),
             '|',
             paste0(uv.variables, collapse = '&'),
@@ -1271,29 +1271,29 @@ findNcgsUnSupervised <- function(
             se.obj@metadata[['NCG']][['un.supervised']] <- list()
         }
         ## check
-        if (!ncg.group %in% names(se.obj@metadata[['NCG']][['un.supervised']])) {
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]] <- list()
+        if (!ncg.group.name %in% names(se.obj@metadata[['NCG']][['un.supervised']])) {
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]] <- list()
         }
         ## check
-        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]])) {
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['ncg.set']] <- list()
+        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]])) {
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']] <- list()
         }
         ## check
-        if (!output.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['ncg.set']])) {
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['ncg.set']][[output.name]] <- list()
+        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']])) {
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- list()
         }
-        se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['ncg.set']][[output.name]] <- ncg.selected
+        se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- ncg.selected
 
         if (isTRUE(assess.ncg)){
             ## check
-            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]])) {
-                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['assessment.plot']] <- list()
+            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]])) {
+                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']] <- list()
             }
-            if (!output.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['assessment.plot']])) {
-                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['assessment.plot']][[output.name]] <- list()
+            if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']])) {
+                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- list()
             }
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['assessment.plot']][[output.name]] <- p.assess.ncg
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group]][['assessment.plot']][[output.name]] <- ncg.heatmap.plot
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- ncg.heatmap.plot
         }
 
         printColoredMessage(

@@ -71,7 +71,7 @@
 #' @param mnn.nbparam Character. A `BiocParallelParam` object for nearest neighbor search. Default: `KmknnParam()`.
 #' @param assess.se.obj Logical. Whether to assess the SummarizedExperiment object using `checkSeObj`.
 #' @param remove.na Character. Indicates whether to remove `NA` values. Options: `assays`, `none`. Default is `assays`.
-#' @param output.name Character.
+#' @param prps.sets.name Character.
 #' @param prps.group Character.
 #' @param plot.output TTTT
 #' @param save.se.obj Logical. If `TRUE`, saves results in `metadata` of the SummarizedExperiment object. Otherwise,
@@ -216,7 +216,7 @@ createPrPsUnSupervised <- function(
                 assess.se.obj = assess.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
-                output.name = output.name,
+                prps.sets.name = prps.sets.name,
                 prps.group = prps.group,
                 save.se.obj = save.se.obj,
                 verbose = verbose
@@ -252,7 +252,7 @@ createPrPsUnSupervised <- function(
                 assess.se.obj = assess.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
-                output.name = output.name,
+                prps.sets.name = prps.sets.name,
                 prps.group = prps.group,
                 save.se.obj = save.se.obj,
                 verbose = verbose

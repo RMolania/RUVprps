@@ -10,7 +10,6 @@ plotGeneSetScore(
   reference.score = NULL,
   gene.set.name,
   plot.output = TRUE,
-  assess.se.obj = TRUE,
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -18,28 +17,27 @@ plotGeneSetScore(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the SummarizedExperiment
-object to calculate sample-wise scores. The default is set to \code{all}, indicating all assays in the SummarizedExperiment
-object will be selected.}
+\item{assay.names}{Character. A character or character vector that specifies the name(s) of the data (assays) in the
+SummarizedExperiment object. The specified \code{gene.set.name} must be calculated by the \code{computeGeneSetScore()} function
+before. The default is set to \code{all}, indicating all data sets in the SummarizedExperiment object will be selected.}
 
-\item{reference.score}{Character. The name of the reference score variable.}
+\item{reference.score}{Character. A character string specifying the name of the data set whose gene set score will be
+used as the reference. All scores from other data sets will be plotted against this reference. The default is set to
+\code{NULL}, indicating that scores from all data sets will be plotted against each other.}
 
-\item{gene.set.name}{Character. A character string indicating the name to be used to save the score in the
-SummarizedExperiment object. If \code{NULL}, the function will select a name as follows:
-\code{gene.set.name <- paste0("singscore|", length(c(upset.genes, downset.genes)), "genes")}}
+\item{gene.set.name}{Character. A character string indicating the name of the gene set stored in the metadata of the
+SummarizedExperiment object. If \code{NULL}, the function will select the gene set name generated using the default parameters
+of the \code{computeGeneSetScore()} function. See \code{computeGeneSetScore()} for more details.}
 
 \item{plot.output}{Logical. Whether to plot the gene set score or not. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-to \code{TRUE}. Refer to the \code{checkSeObj()} function for more details.}
-
-\item{save.se.obj}{Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment
+\item{save.se.obj}{Logical. Indicates whether to save the plots of scores in the metadata of the SummarizedExperiment
 object or to output the result as a list. The default is set to \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-This function plots the score of the gene set enrichment analysis performed by the \code{computeGeneSetScore()} function.
+This function plots the score of the gene set scoring analysis performed by the \code{computeGeneSetScore()} function.
 }
 \author{
 Ramyar Molania

@@ -60,7 +60,7 @@
 #' removed before any down-stream analysis See the `checkSeObj()` function for more details.
 #' @param plot.output Logical. If `TRUE`, the function plots the distribution of MNN across the batches. The default is
 #' set to `TRUE`.
-#' @param output.name Character. A character string specifying the name of the output file (MNN data) to be saved in the
+#' @param prps.sets.name Character. A character string specifying the name of the output file (MNN data) to be saved in the
 #' metadata of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on:
 #' `paste0(uv.variable, '||' , assay.name)`.
 #' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
@@ -98,7 +98,7 @@ findMnn <- function(
         assess.se.obj = TRUE,
         remove.na = 'both',
         plot.output = TRUE,
-        output.name = NULL,
+        prps.sets.name = NULL,
         prps.group = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
@@ -190,9 +190,9 @@ findMnn <- function(
     if (!is.logical(save.se.obj)){
         stop('The "save.se.obj" must be logical.')
     }
-    if (!is.null(output.name)){
-        if (!is.character(output.name)){
-            stop('The "output.name" must be a character.')
+    if (!is.null(prps.sets.name)){
+        if (!is.character(prps.sets.name)){
+            stop('The "prps.sets.name" must be a character.')
         }
     }
     if (!is.null(prps.group)){
@@ -663,8 +663,8 @@ findMnn <- function(
         prps.group <- paste0('prps|knnMnn|', uv.variable)
     }
     ## selecting output name ####
-    if (is.null(output.name))
-        output.name <- paste0(uv.variable, '|' , assay.name)
+    if (is.null(prps.sets.name))
+        prps.sets.name <- paste0(uv.variable, '|' , assay.name)
 
     ## save the results in the SummarizedExperiment object ####
     message(' ')
@@ -687,10 +687,10 @@ findMnn <- function(
         if (!'knn' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']])) {
             se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']] <- list()
         }
-        if (!output.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][[output.name]] <- list()
+        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']])) {
+            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][[prps.sets.name]] <- list()
         }
-        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][[output.name]] <- all.mnn
+        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][[prps.sets.name]] <- all.mnn
         se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][['plot']] <- p.mnn
 
         printColoredMessage(

@@ -36,7 +36,7 @@ findNcgAcrossSamples(
   scale = FALSE,
   assess.se.obj = TRUE,
   remove.na = "none",
-  ncg.group = NULL,
+  ncg.group.name = NULL,
   ncg.set.name = NULL,
   plot.output = TRUE,
   save.imf = FALSE,
@@ -156,7 +156,7 @@ The default is \code{FALSE}.}
 is selected, the samples containing NA or missing values for any \code{bio.variables} or \code{uv.variables} will be excluded. By default,
 it is set to \code{none}.}
 
-\item{ncg.group}{Character string. A name indicating the group of NCG.}
+\item{ncg.group.name}{Character string. A name indicating the group of NCG.}
 
 \item{ncg.set.name}{Character string. A representation for the output's name. If set to \code{NULL}, the function will
 choose a name automatically.}

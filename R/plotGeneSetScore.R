@@ -3,23 +3,28 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function plots the score of the gene set enrichment analysis performed by the `computeGeneSetScore()` function.
+#' This function plots the score of the gene set scoring analysis performed by the `computeGeneSetScore()` function.
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the SummarizedExperiment
-#' object to calculate sample-wise scores. The default is set to `all`, indicating all assays in the SummarizedExperiment
-#' object will be selected.
-#' @param reference.score Character. The name of the reference score variable.
-#' @param gene.set.name Character. A character string indicating the name to be used to save the score in the
-#' SummarizedExperiment object. If `NULL`, the function will select a name as follows:
-#' `gene.set.name <- paste0("singscore|", length(c(upset.genes, downset.genes)), "genes")`
+#' @param assay.names Character. A character or character vector that specifies the name(s) of the data (assays) in the
+#' SummarizedExperiment object. The specified `gene.set.name` must be calculated by the `computeGeneSetScore()` function
+#' before. The default is set to `all`, indicating all data sets in the SummarizedExperiment object will be selected.
+#' @param gene.set.name Character. A character string indicating the name of the gene set stored in the metadata of the
+#' SummarizedExperiment object. If `NULL`, the function will select the gene set name generated using the default parameters
+#' of the `computeGeneSetScore()` function. See `computeGeneSetScore()` for more details.
+#' @param reference.score Character. A character string specifying the name of the data set whose gene set score will be
+#' used as the reference. All scores from other data sets will be plotted against this reference. The default is set to
+#' `NULL`, indicating that scores from all data sets will be plotted against each other.
 #' @param plot.output Logical. Whether to plot the gene set score or not. The default is set to `TRUE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-#' to `TRUE`. Refer to the `checkSeObj()` function for more details.
-#' @param save.se.obj Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment
+#' @param save.se.obj Logical. Indicates whether to save the plots of scores in the metadata of the SummarizedExperiment
 #' object or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 #'
+#' @importFrom ggpubr ggarrange stat_cor stat_compare_means
+#' @importFrom SummarizedExperiment assays
+#' @importFrom tidyr pivot_longer
+#' @importFrom GGally ggpairs
+#' @import ggplot2
 #' @export
 
 plotGeneSetScore <- function(
@@ -28,25 +33,32 @@ plotGeneSetScore <- function(
         reference.score = NULL,
         gene.set.name,
         plot.output = TRUE,
-        assess.se.obj = TRUE,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(message = '------------The plotGeneSetScore function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs ####
-
-    # Check the assays ####
+    # Checking the function inputs ####
+    if (!is.character(assay.names)){
+        stop('The "assay.names" must be a character or a vector of characters of names of the data in the SummarizedExperiment object.')
+    }
+    if (!is.logical(save.se.obj)){
+        stop('The "save.se.obj" must be logical.')
+    }
+    if (!is.logical(verbose)){
+        stop('The "verbose" must be logical.')
+    }
+    # Checking the assays ####
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
-    if(!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
+    if (!sum(assay.names %in% names(assays(se.obj))) == length(assay.names)){
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
-    # Scatter plot ####
-    ref <- NULL
-    if(!is.null(reference.score)){
+    # Plotting the gene set scores ####
+    ## Plotting the gene set scores against a reference score ####
+    if (!is.null(reference.score)){
         all.assay.score <- lapply(
             levels(assay.names),
             function(x){
@@ -54,7 +66,7 @@ plotGeneSetScore <- function(
             })
         colnames(all.assay.score) <- levels(assay.names)
         all.assay.score <- as.data.frame(all.assay.score)
-        if(!reference.score %in% levels(assay.names)){
+        if (!reference.score %in% levels(assay.names)){
             all.assay.score$ref <- se.obj[[reference.score]]
         } else if (reference.score %in% levels(assay.names)){
             index <- colnames(all.assay.score) %in% reference.score
@@ -71,7 +83,7 @@ plotGeneSetScore <- function(
             facet_wrap(~datasets) +
             geom_smooth(formula = y ~ x, method = 'lm', colour = "darkgreen") +
             ggpubr::stat_cor(
-                aes(label = after_stat(.r.label)),
+                aes(label = r.label),
                 color = "navy") +
             theme(panel.background = element_blank(),
                   axis.line = element_line(colour = 'black', linewidth = 1),
@@ -82,7 +94,8 @@ plotGeneSetScore <- function(
             )
         if (isTRUE(plot.output)) print(p.all.scores.plot)
     }
-    if(is.null(reference.score)){
+    ## Plotting the gene set scores against each other s####
+    if (is.null(reference.score)){
         all.assay.score <- lapply(
             levels(assay.names),
             function(x){
@@ -97,11 +110,11 @@ plotGeneSetScore <- function(
                   axis.text.y = element_text(size = 6))
         if (isTRUE(plot.output)) print(p.all.scores.plot)
     }
-
-    # Save the results ####
-    if(isTRUE(save.se.obj)){
+    # Saving the results ####
+    ## Adding the plots to the metadata of the SummarizedExperiment object ####
+    if (isTRUE(save.se.obj)){
         printColoredMessage(
-            message = '- Save all the score plots into the metadata of the SummarizedExperiment object.',
+            message = '- Saving all the score plots into the metadata of the SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
         )
@@ -125,8 +138,8 @@ plotGeneSetScore <- function(
     printColoredMessage(message = '------------The plotGeneSetScore function finished.',
                         color = 'white',
                         verbose = verbose)
-    ## save the plots as list ####
-    if(isFALSE(save.se.obj)){
+    ## Saving the plots as list ####
+    if (isFALSE(save.se.obj)){
         return(list(p.all.scores.plot = p.all.scores.plot))
     }
 }

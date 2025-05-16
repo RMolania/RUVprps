@@ -32,8 +32,8 @@ findNcgByTwoWayAnova(
   assess.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
-  output.name = NULL,
-  ncg.group = NULL,
+  ncg.group.name = NULL,
+  ncg.set.name = NULL,
   plot.output = TRUE,
   save.imf = FALSE,
   imf.name = NULL,
@@ -141,12 +141,12 @@ the performance of NCGs. The default is 5.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the \code{SummarizedExperiment} object or
 to output the result as a logical vector. The default is set to \code{TRUE}. The file will be saved in
-\code{se.obj@metadata$NCG$supervised$output.name}.}
+\code{se.obj@metadata$NCG$supervised$ncg.set.name}.}
 
-\item{output.name}{Character. A string representing the output’s name. If set to \code{NULL}, the function will choose a name
+\item{ncg.group.name}{Character. A string indicating the name of the group of NCG.}
+
+\item{ncg.set.name}{Character. A string representing the output’s name. If set to \code{NULL}, the function will choose a name
 automatically. In this case, the file name will be constructed as \code{paste0(sum(ncg.selected), '|', paste0(bio.variables, collapse = '&'), '|', paste0(uv.variables, collapse = '&'), '|TWAnova:', ncg.selection.method, '|', assay.name)}.}
-
-\item{ncg.group}{Character. A string indicating the name of the group of NCG.}
 
 \item{plot.output}{Logical. Indicates whether to plot the output or not.}
 
@@ -161,7 +161,8 @@ will create a name. In this case, the file name will be constructed as
 
 \item{use.imf}{Logical. Indicates whether to use the intermediate file}
 
-\item{verbose}{Logical. If \code{TRUE}, shows messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, shows messages of different steps of the function.
+choose a name automatically.}
 }
 \description{
 This function utilizes two-way ANOVA to identify a set of genes suitable as negative control genes (NCG) for \code{RUVIIIPRPS}

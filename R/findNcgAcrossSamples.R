@@ -135,7 +135,7 @@
 #' it is set to `none`.
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the SummarizedExperiment
 #' object or output the result. The default is `TRUE`.
-#' @param ncg.group Character string. A name indicating the group of NCG.
+#' @param ncg.group.name Character string. A name indicating the group of NCG.
 #' @param ncg.set.name Character string. A representation for the output's name. If set to `NULL`, the function will
 #' choose a name automatically.
 #' @param plot.output Logical. Indicates whether to generate output plots.
@@ -194,7 +194,7 @@ findNcgAcrossSamples <- function(
         scale = FALSE,
         assess.se.obj = TRUE,
         remove.na = 'none',
-        ncg.group = NULL,
+        ncg.group.name = NULL,
         ncg.set.name = NULL,
         plot.output = TRUE,
         save.imf = FALSE,
@@ -206,7 +206,7 @@ findNcgAcrossSamples <- function(
     printColoredMessage(message = '------------The findNcgAcrossSamples function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs ####
+    # Checking the function inputs ####
     if (!is.vector(assay.name) | length(assay.name) > 1 | is.logical(assay.name)){
         stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
     }
@@ -322,7 +322,7 @@ findNcgAcrossSamples <- function(
         }
     }
 
-    # Check the SummarizedExperiment object ####
+    # Checking the SummarizedExperiment object ####
     if (isTRUE(assess.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -342,13 +342,13 @@ findNcgAcrossSamples <- function(
                     stop('There are NA or missing values in the specified variables.')
             })
     }
-    # Data transformation and normalization ####
+    # Applying data transformation and normalization ####
     printColoredMessage(
         message = '-- Applyign data transformation and normalization:',
         color = 'magenta',
         verbose = verbose
         )
-    ## apply log ####
+    ## applying log transformation ####
     if (isTRUE(apply.log) & !is.null(pseudo.count)){
         printColoredMessage(
             message = paste0(
@@ -381,7 +381,7 @@ findNcgAcrossSamples <- function(
             verbose = verbose)
         expr.data <- assay(x = se.obj, i = assay.name)
     }
-    ## normalization ####
+    ## Applying library size normalization ####
     if (!is.null(normalization)){
         expr.data.nor <- applyOtherNormalizations(
             se.obj = se.obj,
@@ -395,7 +395,7 @@ findNcgAcrossSamples <- function(
             verbose = verbose
             )
     }
-    ## regress out unwanted variables ####
+    ## Regressing out unwanted variables ####
     if (!is.null(regress.out.uv.variables) & !is.null(normalization)){
         printColoredMessage(
             message = paste0(
@@ -457,7 +457,7 @@ findNcgAcrossSamples <- function(
         row.names(expr.data.reg.uv) <- row.names(se.obj)
     }
 
-    ## regress out biological variables ####
+    ## Regressing out biological variables ####
     if (!is.null(regress.out.bio.variables)){
         printColoredMessage(
             message = paste0(
@@ -487,9 +487,9 @@ findNcgAcrossSamples <- function(
         row.names(expr.data.reg.bio) <- row.names(se.obj)
     }
 
-    # Gene-level ANOVA and correlation analyses  ####
+    # Applying gene-level ANOVA and correlation analyses  ####
     if (isFALSE(use.imf)){
-        ## select genes that are highly affected by unwanted variation ####
+        ## Selecting genes that are highly affected by unwanted variation ####
         printColoredMessage(
             message = '-- Finding genes that are highly affected by each specified source(s) of unwnated variation:',
             color = 'magenta',
@@ -613,7 +613,7 @@ findNcgAcrossSamples <- function(
             rm(data.to.use)
         } else corr.genes.uv <- NULL
 
-        ## select genes that are not highly affected by biology ####
+        ## Selecting genes that are not highly affected by biology ####
         printColoredMessage(
             message = '-- Finding genes that are highly affected by each specified source(s) of biological variation:',
             color = 'magenta',
@@ -747,7 +747,7 @@ findNcgAcrossSamples <- function(
             names(corr.genes.bio) <- continuous.bio
         } else corr.genes.bio <- NULL
     }
-    # Read the intermediate file ####
+    # Reading the intermediate file ####
     if (isTRUE(use.imf)){
         printColoredMessage(
             message = '- Retrieving the results of ANOVA and correlations from the the SummarizedExperiment object.',
@@ -765,7 +765,7 @@ findNcgAcrossSamples <- function(
         anova.genes.uv <- all.tests$anova.genes.uv
         corr.genes.uv <- all.tests$corr.genes.uv
     }
-    # Save the intermediate file ####
+    # Saving the intermediate file ####
     if (isTRUE(save.imf)){
         printColoredMessage(
             message = '-- Save a intermediate file:',
@@ -795,7 +795,7 @@ findNcgAcrossSamples <- function(
             corr.genes.uv = corr.genes.uv)
     }
 
-    # Selection of NCG ####
+    # Selecting of NCG ####
     printColoredMessage(
         message = '-- Selecting a set of genes as NCG:',
         color = 'magenta',
@@ -1405,8 +1405,8 @@ findNcgAcrossSamples <- function(
     )
     if (isTRUE(plot.output)) print(ncg.plot)
 
-    # Assessment of the selected set of NCG ####
-    ### pca on the NCG ####
+    # Assessing of the selected set of NCG ####
+    ### Applying PCA using only the NCGs ####
     if (isTRUE(assess.ncg)){
         printColoredMessage(
             message = '-- Assessing the performance of the selected NCG set:',
@@ -1436,7 +1436,7 @@ findNcgAcrossSamples <- function(
             BSPARAM = bsparam(),
             center = center,
             scale = scale)$u
-        ### regression and vector correlations ####
+        ### Applying regression and vector correlations analysis ####
         all.corr <- lapply(
             variables.to.assess.ncg,
             function(x){
@@ -1485,11 +1485,12 @@ findNcgAcrossSamples <- function(
             )
         if (isTRUE(plot.output)) print(p.assess.ncg)
     }
-    # Save results ####
+    # Saving the results ####
     printColoredMessage(
         message = '-- Saving the selected NCG to the metadata of the SummarizedExperiment object.',
         color = 'magenta',
-        verbose = verbose)
+        verbose = verbose
+        )
     if (is.null(ncg.set.name)){
         ncg.set.name <- paste0(
             sum(ncg.selected),
@@ -1502,10 +1503,10 @@ findNcgAcrossSamples <- function(
             '|',
             assay.name)
     }
-    if (is.null(ncg.group)){
-        ncg.group <- paste0('ncg|unsupervised')
+    if (is.null(ncg.group.name)){
+        ncg.group.name <- paste0('ncg|unsupervised')
     }
-    ### add results to the SummarizedExperiment object ####
+    ### Adding the results to the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)){
         ## Check if metadata NCG already exists
         if (length(se.obj@metadata$NCG) == 0 ) {
@@ -1514,48 +1515,56 @@ findNcgAcrossSamples <- function(
         if (!'supervised' %in% names(se.obj@metadata[['NCG']])){
             se.obj@metadata[['NCG']][['supervised']] <- list()
         }
-        if (!ncg.group %in% names(se.obj@metadata[['NCG']][['supervised']])){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]] <- list()
+        if (!ncg.group.name %in% names(se.obj@metadata[['NCG']][['supervised']])){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]] <- list()
         }
-        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]])){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']] <- list()
+        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] <- list()
         }
-        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']] )){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']][[ncg.set.name]] <- list()
+        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] )){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- list()
         }
-        se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']][[ncg.set.name]] <- ncg.selected
+        se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- ncg.selected
 
         if (isTRUE(assess.ncg)){
-            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]])){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']] <- list()
+            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] <- list()
             }
-            if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']] )){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']][[ncg.set.name]] <- list()
+            if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] )){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- list()
             }
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
         }
         printColoredMessage(
             message = '- The NCGs are saved to metadata of the SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         printColoredMessage(
             message = '------------The findNcgAcrossSamples function finished.',
             color = 'white',
-            verbose = verbose)
+            verbose = verbose
+            )
         return(se.obj)
     }
-    ### export results as logical vector ####
+    ### Exporting the results as logical vector ####
     if (isFALSE(save.se.obj)){
         printColoredMessage(
-            message = '-- The NCGs are outputed as a logical vector.',
+            message = '-- The NCGs and assessment plot are outputed as a list.',
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         printColoredMessage(
             message = '------------The findNcgAcrossSamples function finished.',
             color = 'white',
-            verbose = verbose)
-        return(ncg.selected)
+            verbose = verbose
+            )
+        if (isTRUE(assess.ncg)){
+            return(list(ncg.selected = ncg.selected, assess.ncg.plot = p.assess.ncg))
+        }
+        if (isFALSE(assess.ncg)){
+            return(list(ncg.selected = ncg.selected))
+        }
     }
 }
 

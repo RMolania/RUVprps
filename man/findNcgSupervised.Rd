@@ -44,8 +44,8 @@ findNcgSupervised(
   assess.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
-  output.name = NULL,
-  ncg.group = NULL,
+  ncg.set.name = NULL,
+  ncg.group.name = NULL,
   plot.output = TRUE,
   use.imf = FALSE,
   save.imf = FALSE,
@@ -145,12 +145,12 @@ unwanted-variable-associated genes. The default is set to \code{NULL}.}
 \item{remove.na}{Character. Indicates whether to remove \code{NA} values from \code{assays}, \code{sample.annotation}, \code{both}, or \code{none}.
 The default is set to \code{none}.}
 
-\item{save.se.obj}{Logical. Whether to save results in \code{se.obj@metadata$NCG$supervised$output.name}. The default is set to \code{TRUE}.}
+\item{save.se.obj}{Logical. Whether to save results in \code{se.obj@metadata$NCG$supervised$ncg.set.name}. The default is set to \code{TRUE}.}
 
-\item{output.name}{Character. Name to store results under. If \code{NULL}, auto-generated using:
+\item{ncg.set.name}{Character. Name to store results under. If \code{NULL}, auto-generated using:
 \code{paste0(sum(ncg.selected), '|', paste0(bio.variables, collapse = '&'), '|', paste0(uv.variables, collapse = '&'), '|TWAnova:', ncg.selection.method, '|', assay.name)}.}
 
-\item{ncg.group}{Character. Label for the group of selected NCGs.}
+\item{ncg.group.name}{Character. Label for the group of selected NCGs.}
 
 \item{plot.output}{Character. Whether and what type of plot to produce.}
 

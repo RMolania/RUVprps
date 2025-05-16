@@ -154,9 +154,9 @@
 #' be excluded. The default is set to  `both`.
 #' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
 #' ('se.obj') or to output the result. The default is set to `TRUE`.
-#' @param output.name A character string. The name for the output. If set to NULL, the function will automatically generate
+#' @param ncg.set.name A character string. The name for the output. If set to NULL, the function will automatically generate
 #' a name.
-#' @param ncg.group A character string. Indicates the name of the group of NCGs.
+#' @param ncg.group.name A character string. Indicates the name of the group of NCGs.
 #' @param plot.output Logical. If TRUE, a plot of the NCG selection process will be generated.
 #' @param save.imf Logical. Indicates whether to save the intermediate file in the SummarizedExperiment object. If set
 #' to TRUE, the results of the two-way ANOVA
@@ -223,8 +223,8 @@ findNcgPerBiologyPerBatch <- function(
         assess.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
-        output.name = NULL,
-        ncg.group = NULL,
+        ncg.set.name = NULL,
+        ncg.group.name = NULL,
         plot.output = TRUE,
         save.imf = FALSE,
         imf.name = NULL,
@@ -1612,8 +1612,8 @@ findNcgPerBiologyPerBatch <- function(
     }
     # Save results ####
     ## add results to the SummarizedExperiment object ####
-    if(is.null(output.name)){
-        output.name <- paste0(
+    if(is.null(ncg.set.name)){
+        ncg.set.name <- paste0(
             sum(ncg.selected),
             '|',
             paste0(bio.variables, collapse = '&'),
@@ -1624,8 +1624,8 @@ findNcgPerBiologyPerBatch <- function(
             '|',
             assay.name)
     }
-    if(is.null(ncg.group)){
-        ncg.group <- paste0('ncg|supervised')
+    if(is.null(ncg.group.name)){
+        ncg.group.name <- paste0('ncg|supervised')
     }
 
     if (isTRUE(save.se.obj)) {
@@ -1639,25 +1639,25 @@ findNcgPerBiologyPerBatch <- function(
         if(!'supervised' %in% names(se.obj@metadata[['NCG']])){
             se.obj@metadata[['NCG']][['supervised']] <- list()
         }
-        if(!ncg.group %in% names(se.obj@metadata[['NCG']][['supervised']])){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]] <- list()
+        if(!ncg.group.name %in% names(se.obj@metadata[['NCG']][['supervised']])){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]] <- list()
         }
-        if(!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]])){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']] <- list()
+        if(!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] <- list()
         }
-        if(!output.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']] )){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']][[output.name]] <- list()
+        if(!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] )){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- list()
         }
-        se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['ncg.set']][[output.name]] <- ncg.selected
+        se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- ncg.selected
 
         if(isTRUE(assess.ncg)){
-            if(!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]])){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']] <- list()
+            if(!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] <- list()
             }
-            if(!output.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']] )){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']][[output.name]] <- list()
+            if(!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] )){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- list()
             }
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group]][['assessment.plot']][[output.name]] <- p.assess.ncg
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
         }
         printColoredMessage(
             message = '- The NCGs are saved to metadata of the SummarizedExperiment object.',

@@ -24,7 +24,7 @@ findKnn(
   assess.se.obj = TRUE,
   remove.na = "both",
   prps.group = NULL,
-  output.name = NULL,
+  prps.sets.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -96,7 +96,7 @@ performing any down-stream analysis. See the \code{checkSeObj()} function for mo
 \item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
 If it is set to \code{NULL}, the function will automatically assign a name using \code{paste0('prps|mnn|', uv.variable)}.}
 
-\item{output.name}{Character. A character string specifying the name of the output file to be saved in the metadata
+\item{prps.sets.name}{Character. A character string specifying the name of the output file to be saved in the metadata
 of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
 "paste0(uv.variable, '|' , assay.name)".}
 

@@ -60,10 +60,10 @@
 #' @param assess.se.obj Logical. Whether to validate the `SummarizedExperiment` object using `checkSeObj()`. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove `NA` values from `assays`, `sample.annotation`, `both`, or `none`.
 #' The default is set to `none`.
-#' @param save.se.obj Logical. Whether to save results in `se.obj@metadata$NCG$supervised$output.name`. The default is set to `TRUE`.
-#' @param output.name Character. Name to store results under. If `NULL`, auto-generated using:
+#' @param save.se.obj Logical. Whether to save results in `se.obj@metadata$NCG$supervised$ncg.set.name`. The default is set to `TRUE`.
+#' @param ncg.set.name Character. Name to store results under. If `NULL`, auto-generated using:
 #' `paste0(sum(ncg.selected), '|', paste0(bio.variables, collapse = '&'), '|', paste0(uv.variables, collapse = '&'), '|TWAnova:', ncg.selection.method, '|', assay.name)`.
-#' @param ncg.group Character. Label for the group of selected NCGs.
+#' @param ncg.group.name Character. Label for the group of selected NCGs.
 #' @param plot.output Character. Whether and what type of plot to produce.
 #' @param use.imf Logical. Whether to use an intermediate file. The default is set to `FALSE`.
 #' @param save.imf Logical. Whether to save the intermediate file (results from two-way ANOVA). Speeds up tuning when reusing results.
@@ -120,8 +120,8 @@ findNcgSupervised <- function(
         assess.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
-        output.name = NULL,
-        ncg.group = NULL,
+        ncg.set.name = NULL,
+        ncg.group.name = NULL,
         plot.output = TRUE,
         use.imf = FALSE,
         save.imf = FALSE,
@@ -178,8 +178,8 @@ findNcgSupervised <- function(
             assess.se.obj = assess.se.obj,
             remove.na = remove.na,
             save.se.obj = save.se.obj,
-            output.name = output.name,
-            ncg.group = ncg.group,
+            ncg.set.name = ncg.set.name,
+            ncg.group.name = ncg.group.name,
             plot.output = plot.output,
             save.imf = save.imf,
             imf.name = imf.name,
@@ -222,8 +222,8 @@ findNcgSupervised <- function(
             assess.se.obj = assess.se.obj,
             remove.na = remove.na,
             save.se.obj = save.se.obj,
-            output.name = output.name,
-            ncg.group = ncg.group,
+            ncg.set.name = ncg.set.name,
+            ncg.group.name = ncg.group.name,
             plot.output = plot.output,
             save.imf = save.imf,
             imf.name = imf.name,
@@ -261,8 +261,8 @@ findNcgSupervised <- function(
             assess.se.obj = assess.se.obj,
             remove.na = remove.na,
             save.se.obj = save.se.obj,
-            output.name = output.name,
-            ncg.group = ncg.group,
+            ncg.set.name = ncg.set.name,
+            ncg.group.name = ncg.group.name,
             plot.output = plot.output,
             save.imf = save.imf,
             imf.name = imf.name,
