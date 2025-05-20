@@ -10,7 +10,7 @@ applyOtherNormalizations(
   method = "CPM",
   apply.log = TRUE,
   pseudo.count = 1,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "assays",
   new.assay.name = NULL,
   save.se.obj = TRUE,
@@ -23,7 +23,8 @@ applyOtherNormalizations(
 \item{assay.name}{Character. A character that specifies the name of the data (assay) in the SummarizedExperiment object.
 The selected data should contain raw count data.}
 
-\item{method}{Character. A character that indicates the normalization method to apply to the assay specified by \code{assay.name}.
+\item{method}{Character. A character that indicates which normalization method should be applied the data sets specified
+by \code{assay.name}.
 Options include:
 \itemize{
 \item \code{'CPM'}: Counts Per Million, from the \strong{edgeR} package.
@@ -32,35 +33,34 @@ Options include:
 \item \code{'median'}: A scaling normalization that adjusts the median of each lane, from the \strong{EDASeq} package.
 \item \code{'full'}: Full quantile normalization (nonlinear), from the \strong{EDASeq} package.
 \item \code{'VST'}: Variance Stabilizing Transformation, from the \strong{DESeq2} package.
-The default is \code{'CPM'}.
+The default is set to \code{'CPM'}.
 }}
 
-\item{apply.log}{Logical. Indicates whether to apply a log transformation to the data after normalization.
-The default is set to \code{TRUE}.}
+\item{apply.log}{Logical. Indicates whether to apply a log transformation to the data after normalization. The default
+is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value as pseudo count to be added to all measurements after normalization and
 before log transformation to avoid \code{-Inf} for zero values. The default is set to \code{1}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not.
-The default is set to \code{TRUE}. We refer to the \code{checkSeObj()} function for more details.}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not before applying
+nationalizations. The default is set  to \code{TRUE}. We refer to the \code{checkSeObj()} function for more details.}
 
 \item{remove.na}{Character. A character that indicates whether to remove NA or missing values from the data sets or
 not. The options are \code{'assays'} or \code{'none'}. The default is set to \code{'assays'}. Refer to the \code{checkSeObj()} function
 for more details.}
 
-\item{new.assay.name}{Character. Specifies the name of the newly normalized assay. If set to \code{NULL} (default),
-the function will automatically generate a name using the format: paste0(method, ' on ', assay.name).}
+\item{new.assay.name}{Character. A character that specifies the name of the newly normalized assay. If set to \code{NULL}
+(default), the function will automatically generate a name using the format: paste0(method, ' on ', assay.name).}
 
 \item{save.se.obj}{Logical. Indicates whether to save the normalized data as new data (assay) within the
-\code{SummarizedExperiment} object. If set to \code{FALSE}, the normalized data will be returned as a matrix.
-The default is set to \code{TRUE}. Then, each normalized data will be added a new data (assay) to \code{SummarizedExperiment}
-object.}
+SummarizedExperiment object. If set to \code{FALSE}, the normalized data will be returned as a matrix. The default is set
+to \code{TRUE}. Then, each normalized data will be added a new data (assay) to SummarizedExperiment object.}
 
-\item{verbose}{Logical. Indicates whether to display messages and output during function execution.
-The default is to \code{TRUE}.}
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
+\code{TRUE}.}
 }
 \value{
-A SummarizedExperiment object containing the newly normalized data, or a normalized expression matrix
+Either a SummarizedExperiment object containing the newly normalized data, or a normalized expression matrix
 if \code{save.se.obj} is set to \code{FALSE}.
 }
 \description{

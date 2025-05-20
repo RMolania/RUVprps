@@ -3,15 +3,19 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function uses the `createUnSupervisedPRPSbyAnchors` or `createUnSupervisedPRPSbyMNN` to create PRPS sets of all
+#' This function uses the `createUnSupervisedPRPSbyAnchors()` or `createUnSupervisedPRPSbyMNN()` to create PRPS sets of all
 #' the unwanted variables in situations when the biological variation are unknown.
+#'
+#' @details
+#' Additional details...
+#'
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character string indicating the assay name within the SummarizedExperiment object for
 #' the creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.
-#' @param uv.variables Character. A character string or vector of strings specifying the name(s) of column(s) in the sample annotation
-#' of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous variable
-#' is provided, this will be divided into groups using the clustering method.
+#' @param uv.variables Character. A character string or vector of strings specifying the name(s) of column(s) in the
+#' sample annotation of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous
+#' variable is provided, this will be divided into groups using the clustering method.
 #' @param approach Character. Indicates which method to be used. The options are `anchor` and `mnn`.
 #' @param data.input Character. Indicates which data should be used as input for finding the k nearest neighbors. Options
 #' include: `expr` and `pcs`. If `pcs` is selected, the first PCs of the data will be used as input. If `expr` is selected,
@@ -25,7 +29,9 @@
 #' @param nb.other.uv.clusters TTT
 #' @param hvg Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
 #' anchor samples across different batches. The default value is set to `NULL`
-#' @param select.extreme.groups TTTT
+#' @param select.extreme.groups Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
+#' clusters, when the `main.uv.variable` is a continuous variable. Default is set to `TRUE`. This will increase the
+#' variation between PR sets in order to better capture the unwanted variation.
 #' @param min.batches.to.cover TTTT
 #' @param filter.prps.sets TTTT
 #' @param max.prps.sets Numeric. The maximum number of PRPS sets across batches. The default is 10.
@@ -61,24 +67,29 @@
 #' from the BiocSingular package.
 #' @param normalization Character. Normalization method before computing nearest neighbors. Default: `cpm`. If `NULL`,
 #' no normalization is applied.
-#' @param apply.cosine.norm TTTT
+#' @param apply.cosine.norm Logical. Indicates whether cosine normalization should be applied before finding MNN. Default
+#' is set to `TRUE`.
+#' @param check.prps.connectedness Logical. Indicates whether to assess the `connectedness` between the PRPS sets across
+#' all batches. Default is set to `TRUE`, indicating if there is not connections between all PRPS sets across all batches,
+#' the function will give error.We refer to the checkPRPSconnectedness() function for more details.
 #' @param regress.out.variables Character. Column names containing biological variables to regress out before estimating
 #'  unwanted variation. Default: `NULL`.
-#' @param check.prps.connectedness TTT
 #' @param apply.log Logical. Whether to apply a log transformation. Default is `TRUE`.
 #' @param pseudo.count Numeric. Value added to counts before log transform to avoid `-Inf`. Default is 1.
 #' @param mnn.bpparam Character. A `BiocParallelParam` object for parallel MNN search. Default: `SerialParam()`. See `findMutualNN`.
 #' @param mnn.nbparam Character. A `BiocParallelParam` object for nearest neighbor search. Default: `KmknnParam()`.
-#' @param assess.se.obj Logical. Whether to assess the SummarizedExperiment object using `checkSeObj`.
+#' @param check.se.obj Logical. Whether to assess the SummarizedExperiment object using `checkSeObj`.
 #' @param remove.na Character. Indicates whether to remove `NA` values. Options: `assays`, `none`. Default is `assays`.
-#' @param prps.sets.name Character.
-#' @param prps.group Character.
+#' @param prps.group.name Character. A character specifying the name of the prps.group.name to which the current KNN belong.
+#' If set to `NULL`, the function will automatically assign a name using  `main.uv.variable`.
+#' @param prps.sets.name Character. A character specifying the name of the output file to be saved in the metadata
+#' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
+#' `paste0(uv.variable, '|', assay.name)`.
 #' @param plot.output TTTT
 #' @param save.se.obj Logical. If `TRUE`, saves results in `metadata` of the SummarizedExperiment object. Otherwise,
 #' returns results as a list. Default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, prints messages throughout function execution.
-
-
+#'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
 #' @importFrom tidyr %>%
@@ -128,10 +139,10 @@ createPrPsUnSupervised <- function(
         pseudo.count = 1,
         mnn.bpparam = SerialParam(),
         mnn.nbparam = KmknnParam(),
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'both',
         prps.sets.name = NULL,
-        prps.group = NULL,
+        prps.group.name = NULL,
         plot.output = TRUE,
         save.se.obj = TRUE,
         verbose = TRUE
@@ -174,8 +185,8 @@ createPrPsUnSupervised <- function(
                 remove.na = remove.na,
                 plot.output = plot.output,
                 prps.sets.name = prps.sets.name,
-                prps.group = prps.group,
-                assess.se.obj = assess.se.obj,
+                prps.group.name = prps.group.name,
+                check.se.obj = check.se.obj,
                 save.se.obj = save.se.obj,
                 verbose = verbose
             )
@@ -213,11 +224,11 @@ createPrPsUnSupervised <- function(
                 pseudo.count = pseudo.count,
                 mnn.bpparam = mnn.bpparam,
                 mnn.nbparam = mnn.nbparam,
-                assess.se.obj = assess.se.obj,
+                check.se.obj = check.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
                 prps.sets.name = prps.sets.name,
-                prps.group = prps.group,
+                prps.group.name = prps.group.name,
                 save.se.obj = save.se.obj,
                 verbose = verbose
             )
@@ -249,11 +260,11 @@ createPrPsUnSupervised <- function(
                 pseudo.count = pseudo.count,
                 mnn.bpparam = mnn.bpparam,
                 mnn.nbparam = mnn.nbparam,
-                assess.se.obj = assess.se.obj,
+                check.se.obj = check.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
                 prps.sets.name = prps.sets.name,
-                prps.group = prps.group,
+                prps.group.name = prps.group.name,
                 save.se.obj = save.se.obj,
                 verbose = verbose
             )

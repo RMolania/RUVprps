@@ -1,16 +1,16 @@
-#' Finds negative control genes using ANOVA and correlation per sample groups.
+#' Finds NCGs using ANOVA and correlation per sample groups.
 
 #' @author Ramyar Molania
 
 #' @description
-#' This function employs correlation and ANOVA analyses across within groups of samples that are homogeneous with respect
+#' This function employs correlation and ANOVA analyses within groups of samples that are homogeneous with respect
 #' to biological or unwanted variation. Correlation analysis is utilized to identify genes highly affected by continuous
 #' sources of variation, while ANOVA is used to identify genes affected by categorical sources of variation.
+
+#' @details
 #' The function selects genes as negative control genes (NCG) based on high correlation coefficients and F-statistics for
 #' unwanted sources of variation, and low correlation coefficients and F-statistics for biological sources of variation.
 #' Various approaches are employed for the final gene selection; please refer to the details for more information.
-
-#' @details
 #' The function uses 5 ways to summarize two gene-level F-statistics obtained for the biological and unwanted variation
 #' . The function uses either the values or the ranks of F-statistics for NCGs selection. The function ranks the
 #' negative of F-statistics values for unwanted variation. The lower the ranks, the greater the impact of unwanted
@@ -64,43 +64,64 @@
 #'    \item This will facilitate finding genes that are highly affected by unwanted variation.
 #'    item Regress out unwanted variation.
 #' }
-
-
+#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name A character string. The name of the assay in the SummarizedExperiment object to be used for selecting
-#' negative control genes.
-#' @param bio.variables A character vector. The column names that contain biological variables in the SummarizedExperiment
-#' object. Both continuous and categorical variables can be provided.
-#' @param uv.variables A character vector. The column names that contain unwanted variation (UV) variables in the
-#' SummarizedExperiment object.
-#' @param nb.ncg Numeric. The proportion of the total genes to be selected as a Negative Control Gene (NCG) set. The
-#' default is .1.
-#' @param ncg.selection.method A character string. Indicates how to select the genes as NCGs. For individual genes,
-#' the two-way ANOVA calculates F-statistics for biological and unwanted variation factors separately. An ideal NCG set
-#' should have high F-statistics for the unwanted variation variables and low F-statistics for the biological variables.
-#' The function ranks the F-statistics obtained for the biological variables and the negative of the F-statistics obtained
-#' for the unwanted variables. The function then offers 5 ways to summarize the ranks of the two F-statistics:
-#' 'Prod' (product of the ranks), 'Sum' (sum of the ranks), 'Average' (average of the ranks), 'AbsNoneOverlap' (non-overlapping genes
-#' between 'top.rank.uv.genes' and 'top.rank.bio.genes'), and 'NoneOverlap' (non-overlapping genes between 'top.rank.uv.genes'
-#' and at least 'top.rank.bio.genes'). The F-statistics for biological and UV are first ranked.
-#' @param grid.nb Numeric. The percentage for grid search when the 'ncg.selection.method' is 'NoneOverlap'. In the 'NoneOverlap'
-#' approach, the grid search starts with the initial `top.rank.uv.genes` value and adds `grid.nb` in each loop to find
-#' the desired 'nb.ncg'.
-#' @param top.rank.bio.genes Numeric. The percentage of top-ranked genes that are highly affected by the biological variation.
-#' This parameter is required when `ncg.selection.method` is either 'NoneOverlap' or 'AbsNoneOverlap'.
-#' @param top.rank.uv.genes Numeric. The percentage of top-ranked genes that are highly affected by the unwanted variation variables.
-#' This parameter is required when `ncg.selection.method` is either 'NoneOverlap' or 'Auto'.
-#' @param bio.percentile Numeric. The percentile cut-off for selecting genes that are highly affected by the biological
-#' variation. The default is set to 0.8.
-#' @param uv.percentile Numeric. The percentile cut-off for selecting genes that are highly affected by the unwanted
-#' variation. The default is set to 0.8.
+#' @param assay.name Character. A character that indicates the name of an data (assay) in the SummarizedExperiment object.
+#' The selected assay should be the one that will be used for the RUV-III-PRPS normalization.
+#' @param bio.variables Character. A character string or vector of strings indicating the column name(s) of the biological
+#' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination. This
+#' argument cannot be `NULL`.
+#' @param uv.variables Character. A character string or vector of strings indicating the column name(s) of the unwanted
+#' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
+#'  argument cannot be `NULL`.
+#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
+#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
+#' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
+#' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
+#' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
+#' or `non.overlap`. The default is set to 0.2.
+#' @param top.rank.uv.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
+#' affected by unwanted variables. This is required to be specified when the `ncg.selection.method` is either `auto` or
+#' `non.overlap`. The default is set to 0.2.
+#' @param bio.percentile Numeric. A numeric value that specifies the percentile cut-off to select genes that are highly
+#' affected by biological variation. This is required to be specified when the `ncg.selection.method` is set to `quantile`.
+#' The default is set to 0.8.
+#' @param uv.percentile Numeric. A numeric value that specifies the percentile cut-off to select genes that are highly
+#' affected by unwanted variation. This is required to be specified when the `ncg.selection.method` is set to `quantile`.
+#' The default is set to 0.8.
+#' @param grid.group Character. A character that indicates whether the grid search should be performed on biological,
+#' unwanted, or both factors when the `ncg.selection.method` is set to `auto`. The options are `bio`, `uv`, or `both`.
+#' The default is set to `uv`. For more details, refer to the function documentation.
+#' @param grid.direction Character. A character that indicates whether the grid search should be performed in decreasing
+#' or increasing order when the `ncg.selection.method` is set to `auto`. The options are: `increase` and `decrease`. The
+#' default is set to `decrease`.
+#' @param grid.nb Numeric. A numeric value that indicates the number of genes for grid search when the `ncg.selection.method`
+#' is set to `auto`. In the `auto` approach, the grid search starts with the initial `top.rank.uv.genes` and
+#' `top.rank.bio.genes` values and adds or drops the `grid.nb` in each loop to find `nb.ncg` of genes as negative control
+#' genes. The default is set to 20.
+#' @param create.ncg.rank.plot Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
+#' with respect to their biological and unwanted variation effects. The default is set to `FALSE`.
+#' @param plot.ncg.rank Logical. Indicates whether to plot a heatmap that shows the rank of the all genes
+#' with respect to their biological and unwanted variation effects, while function is running. The default is set to `FALSE`.
+#' @param min.sample.for.aov Numeric. A numeric value that indicates the minimum number of samples that are required to
+#' perform ANOVA analyses between continuous sources of variation (biological and unwanted variation) with individual
+#' gene expression. The default is set to 3. The minimum value is 3.
+#' @param min.sample.for.correlation Numeric. A numeric value that indicates the minimum number of samples that are required
+#' to perform correlation analyses between continuous sources of variation (biological and unwanted variation) with
+#'individual gene expression. The default is set to 10. The minimum value can be 3.
+#' @param regress.out.bio.variables Character. A character string or vector of strings that indicate the column names of
+#' biological variables in the SummarizedExperiment object that will be regressed out from the data before performing
+#' correlation and ANOVA. Regressing out biological variables might help better identify genes that are highly affected
+#' by unwanted variation. The default is set to `NULL`.
+#' @param regress.out.uv.variables Character. A character string or vector of strings that indicate the column names of
+#' unwanted variables in the SummarizedExperiment object that will be regressed out from the data before performing
+#' correlation and ANOVA. Regressing out unwanted variables might help better identify genes that are highly affected by
+#' biological variation. The default is set to `NULL`.
 #' @param bio.groups A character vector or a symbol. Indicates the column names that contain biological variables in the
-#' SummarizedExperiment object.
-#' If not NULL, bio.groups' will be used to group samples into different homogeneous biological groups.
-#' @param grid.group A character string. Indicates whether the grid search should be performed on biological ('top.rank.bio.genes'),
-#' unwanted ('top.rank.uv.genes') or both factors. The options are 'bio', 'uv', or 'both'. The default is set to 'uv'.
-#' @param grid.direction A character string. Indicates the direction of the grid search. The options are `increase` or
-#' `decrease`. The default is set to `decrease`.
+#' SummarizedExperiment object. If not NULL, bio.groups' will be used to group samples into different homogeneous biological groups.
 #' @param bio.clustering.method A character string. Indicates which clustering method should be used to group continuous
 #' sources of biological variation if any are provided. The default is 'kmeans' clustering.
 #' @param nb.bio.clusters Numeric. Indicates the number of clusters for each continuous source of biological variation.
@@ -112,65 +133,65 @@
 #' sources of unwanted variation. The default is set to 'kmeans' clustering.
 #' @param nb.uv.clusters Numeric. Indicates the number of clusters for each continuous source of unwanted variation (UV).
 #' By default, it is set to 2.
-#' @param normalization A character string. Indicates which normalization method should be applied to the data before
-#' identifying genes that are affected by biological variation. The default is 'CPM'. Refer to the `applyOtherNormalizations()`
+#' @param normalization Character. A character that indicates which normalization method should be use to mitigate the
+#' variation in library size before finding genes that are highly affected by biological variation. The options are :
+#' `CPM`, `TMM`, `VST`, `upper`, `full` and `medium`. The default is set to  `CPM`. Refer to the `applyOtherNormalization()`
 #' function for more details.
-#' @param regress.out.bio.variables A character vector. Indicates the column names of biological variables in the
-#' SummarizedExperiment object. These variables will be regressed out from the data before identifying genes that are
-#' highly affected by unwanted variation. The default is set to `NULL`.
-#' @param regress.out.uv.variables A character vector. Indicates the column names of unwanted variation variables in the
-#' SummarizedExperiment object. These variables will be regressed out from the data before identifying genes that are
-#' highly affected by biological variation. The default is set to `NULL`.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing correlation and
-#' ANOVA. The default is set to `RUE`.
-#' @param pseudo.count Numeric. A value to be added as a pseudo-count to all measurements before log-transformation.
-#' @param min.sample.for.aov Numeric. Indicates the minimum number of samples to be present in each group before applying
-#' the ANOVA. The default is set to 3.
-#' @param min.sample.for.correlation Numeric. Indicates the minimum number of samples to be considered in each group before
-#' applying correlation analysis. The default is set to 10.
-#' @param corr.method A character string. Indicates which correlation method should be used to compute associations between
-#' gene-level expression and a continuous variable. The default is set to 'spearman'.
-#' @param a Numeric. The significance level used for the confidence intervals in the correlation analysis. The default
-#' is set to 0.05.
-#' @param rho Numeric. The hypothesized correlation value to be used in the hypothesis testing. The default is set to 0.
-#' @param anova.method A character string. Indicates which ANOVA method should be used to compute associations between
-#' gene-level expression and a categorical variable. The default is set to `aov`.
-#' @param assess.ncg Logical. Indicates whether to assess the performance of selected NCGs. This analysis involves
-#' principal component analysis (PCA) on the selected NCGs, followed by exploring the R-squared or vector correlation between
-#' the first 'nb.pcs' principal components and biological and unwanted variation variables.
-#' @param variables.to.assess.ncg A character vector. Indicates the column names of the SummarizedExperiment object that
-#' contain variables whose association with the selected NCGs needs to be evaluated. The default is set to `NULL`, meaning all
-#' variables in 'bio.variables' and 'uv.variables' will be assessed.
-#' @param nb.pcs Numeric. Indicates the number of the first principal components of selected NCGs to be used to assess
-#' the performance of NCGs.
-#' @param center Logical. Indicates whether to center the data before applying principal component analysis. The default
-#'  is set to `TRUE`.
-#' @param scale Logical. Indicates whether to scale the data before applying principal component analysis. The default is
-#' set to `FALSE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to  'TRUE'.
-#' @param remove.na A character string. Indicates whether to remove NA or missing values from either the `assays`,
-#' `sample.annotation`,`both`, or `none`. If `assays` is selected, genes containing NA or missing values will be excluded.
-#' If 'sample.annotation' is selected, samples with NA or missing values for any `bio.variables` and `uv.variables` will
-#' be excluded. The default is set to  `both`.
-#' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
-#' ('se.obj') or to output the result. The default is set to `TRUE`.
-#' @param ncg.set.name A character string. The name for the output. If set to NULL, the function will automatically generate
-#' a name.
-#' @param ncg.group.name A character string. Indicates the name of the group of NCGs.
-#' @param plot.output Logical. If TRUE, a plot of the NCG selection process will be generated.
-#' @param save.imf Logical. Indicates whether to save the intermediate file in the SummarizedExperiment object. If set
-#' to TRUE, the results of the two-way ANOVA
-#' will be saved. If users wish to adjust parameters such as `nb.ncg`, `ncg.selection.method`, `top.rank.bio.genes`,
-#' and `top.rank.uv.genes`, the ANOVA
-#' will not be recalculated. This accelerates parameter tuning for NCG selection. The default is se to `FALSE`.
-#' @param imf.name A character string. The name to use when saving the intermediate file. If set to `NULL`, the function
-#' will automatically generate a name. The default is set to `NULL`.
-#' @param use.imf Logical. Indicates whether to use the intermediate file for subsequent steps. The default is set to
-#' `FALSE`.
-#' @param verbose Logical. If `TRUE`, process messages will be displayed.
-#'
-#' @return Either the SummarizedExperiment object containing a set of negative control genes, or a logical vector of
-#' the selected negative control genes.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before any statistical analyses.
+#' The default is set to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before applying log
+#' transformation. The default is set to 1.
+#' @param corr.method Character. A character that indicates which correlation methods should be used for the correlation
+#' analyses. The options are `pearson` or `spearman`. The default is set to `spearman`.
+#' @param a Numeric. The significance level used for the confidence intervals in the correlation; by default, it is set
+#' to 0.05. Refer to the function `correls` from the **Rfast** R package for more details.
+#' @param rho Numeric. The value of the hypothesized correlation to be used in the hypothesis testing. The default is
+#' set to 0. Refer to the function `correls` from the **Rfast** R package for more details.
+#' @param anova.method Character. A character that  indicates which ANOVA method to use. The options are `aov` or `welch`.
+#' The default is se to `aov`. Refer to the function `row_oneway_equalvar()` or `row_oneway_welch()` from the
+#' **matrixTests** R package for more details.
+#' @param assess.ncg Logical. Indicates whether to assess the performance of selected genes as negative control or not.
+#' This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
+#' correlation between the first `nb.pcs` principal components and the biological and unwanted variables. The default is
+#' set to `TRUE`.
+#' @param variables.to.assess.ncg Character. A character string or vector of strings indicating the column names in sample
+#' annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
+#' NCG needs to be evaluated. The default is set to `NULL`. This means all the variables specified in the `bio.variables`
+#' and `uv.variables` will be assessed.
+#' @param nb.pcs Numeric. A numeric value that indicates the number of the first principal components of selected negative
+#' control genes to be used to assess their performance. The default is set to 10.
+#' @param center Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, centering is done by subtracting
+#' the column means of the assay from their corresponding columns. The default is set to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing the
+#' (centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square otherwise.
+#' The default is set to `FALSE`.
+#' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
+#' . The default is set to `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
+#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
+#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
+#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
+#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
+#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
+#' @param ncg.group.name Character. A character to be used as name of the group of NCG. The default is set to `NULL`, then
+#' the function create a names as following: `paste0('ncg|unsupervised')`. We refer to the details of the function for
+#' more details.
+#' @param ncg.set.name Character. A character to be used as name of the NCG set based on current variables and parameters
+#' The default is set to `NULL`, then the function create a names as following:
+#' `paste0(sum(ncg.selected),'|',paste0(bio.variables, collapse = '&'),'|',paste0(uv.variables, collapse = '&'),'|AnoCorrAs:',
+#' ncg.selection.method,'|',assay.name)`.We refer to the details of the function for more details.
+#' @param save.imf Logical. Indicates whether to save the intermediate file. If `TRUE`, the function saves the results
+#' of the statistical analyses in the metadata of the SummarizedExperiment object. If users want to change the parameters
+#' including `nb.ncg`, `ncg.selection.method`, `top.rank.bio.genes`, and `top.rank.uv.genes`, the analyses will not be
+#' re-calculated. The default is set to `FALSE`.
+#' @param imf.name Character string. A name to save the intermediate file. If `NULL`, the function generates a name.
+#' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to `FALSE`.
+#' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the
+#' SummarizedExperiment object or output the result. The default is `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
+
+#' @return Either the SummarizedExperiment object containing a set of negative control genes in the metadata or a
+#' logical vector of the selected negative control genes.
 
 #' @importFrom SummarizedExperiment assay SummarizedExperiment
 #' @importFrom matrixTests row_oneway_welch row_oneway_equalvar
@@ -198,6 +219,8 @@ findNcgPerBiologyPerBatch <- function(
         grid.group = 'uv',
         grid.direction = 'decrease',
         grid.nb = 20,
+        create.ncg.rank.plot = FALSE,
+        plot.ncg.rank = FALSE,
         min.sample.for.aov = 3,
         min.sample.for.correlation = 10,
         regress.out.bio.variables = NULL,
@@ -220,15 +243,15 @@ findNcgPerBiologyPerBatch <- function(
         nb.pcs = 5,
         center = TRUE,
         scale = FALSE,
-        assess.se.obj = TRUE,
+        plot.ncg.assessment = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
-        save.se.obj = TRUE,
-        ncg.set.name = NULL,
         ncg.group.name = NULL,
-        plot.output = TRUE,
+        ncg.set.name = NULL,
         save.imf = FALSE,
         imf.name = NULL,
         use.imf = FALSE,
+        save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(message = '------------The findNcgPerBiologyPerBatch function starts:',
@@ -299,10 +322,10 @@ findNcgPerBiologyPerBatch <- function(
     if (pseudo.count < 0){
         stop('The "pseudo.count" must be 0 or a postive integer value.')
     }
-    if (isFALSE(is.logical(assess.se.obj))) {
-        stop('The "assess.se.obj" must be "TRUE" or "FALSE.')
+    if (isFALSE(is.logical(check.se.obj))) {
+        stop('The "check.se.obj" must be "TRUE" or "FALSE.')
     }
-    if (isFALSE(assess.se.obj)) {
+    if (isFALSE(check.se.obj)) {
         if (isTRUE(sum(uv.variables %in% colnames(colData(se.obj))) != length(uv.variables))) {
             stop('All or some of "uv.variables" cannot be found in the SummarizedExperiment object.')
         } else if (!is.null(variables.to.assess.ncg)) {
@@ -323,16 +346,16 @@ findNcgPerBiologyPerBatch <- function(
     }
 
     if (isTRUE(ncg.selection.method == 'quantile')){
-        if(is.null(bio.percentile) | is.null(uv.percentile))
+        if (is.null(bio.percentile) | is.null(uv.percentile))
             stop('The "bio.percentile" or "uv.percentile" cannot be NULL.')
-        if(bio.percentile > 1 | bio.percentile < 0)
+        if (bio.percentile > 1 | bio.percentile < 0)
             stop('The "bio.percentile" must be a postive value between 0 and 1.')
-        if(uv.percentile > 1 | uv.percentile < 0)
+        if (uv.percentile > 1 | uv.percentile < 0)
             stop('The "uv.percentile" must be a postive value between 0 and 1.')
     }
 
     # Checking the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
@@ -403,7 +426,7 @@ findNcgPerBiologyPerBatch <- function(
             method = normalization,
             pseudo.count = pseudo.count,
             apply.log = apply.log,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose)
@@ -417,13 +440,13 @@ findNcgPerBiologyPerBatch <- function(
             )
     }
     ## regress out unwanted variables ####
-    if(!is.null(regress.out.uv.variables)){
+    if (!is.null(regress.out.uv.variables)){
         printColoredMessage(
             message = '- Regressing out the specified unwanted variables:',
             color = 'blue',
             verbose = verbose
             )
-        if(!is.null(normalization)){
+        if (!is.null(normalization)){
             expr.data.reg.uv <- expr.data.nor
         } else expr.data.reg.uv <- expr.data
         printColoredMessage(
@@ -531,7 +554,7 @@ findNcgPerBiologyPerBatch <- function(
                 bio.variables = bio.variables,
                 nb.clusters = nb.bio.clusters,
                 clustering.method = bio.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = verbose
@@ -543,13 +566,14 @@ findNcgPerBiologyPerBatch <- function(
                     paste0(bio.groups, collapse = ' & '),
                     ' variables will be used to create all possible major homogeneous biological groups.'),
                 color = 'blue',
-                verbose = verbose)
+                verbose = verbose
+                )
             all.bio.groups <- createHomogeneousBioGroups(
                 se.obj = se.obj,
                 bio.variables = bio.groups,
                 nb.clusters = nb.bio.clusters,
                 clustering.method = bio.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = verbose)
@@ -654,7 +678,7 @@ findNcgPerBiologyPerBatch <- function(
                             verbose = verbose)
                     }
                     selected.bio.groups <- names(which(rowSums(bio.batch >= min.sample.for.aov) > 1))
-                    if(isTRUE(length(selected.bio.groups) == 0)){
+                    if (isTRUE(length(selected.bio.groups) == 0)){
                         stop('There is not enough groups to perform ANOVA.')
                     }
                     if (is.null(regress.out.bio.variables)) {
@@ -714,11 +738,11 @@ findNcgPerBiologyPerBatch <- function(
                 uv.variables = uv.variables,
                 nb.clusters = nb.uv.clusters,
                 clustering.method = uv.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 verbose = verbose
                 )
-        } else if(!is.null(uv.groups)){
+        } else if (!is.null(uv.groups)){
             printColoredMessage(
                 message = paste0(
                     'The ',
@@ -733,7 +757,7 @@ findNcgPerBiologyPerBatch <- function(
                 uv.variables = uv.groups,
                 nb.clusters = nb.uv.clusters,
                 clustering.method = uv.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 verbose = verbose)
         }
@@ -885,10 +909,10 @@ findNcgPerBiologyPerBatch <- function(
     # Intermediate file ####
     ## read intermediate file ####
     if (isTRUE(use.imf)){
-        if(is.null(imf.name)){
+        if (is.null(imf.name)){
             imf.name <- paste0(assay.name, '|PerBiologyPerBatch|', ncg.selection.method)
         }
-        if(is.null(se.obj@metadata$IMF$NCG[[imf.name]]))
+        if (is.null(se.obj@metadata$IMF$NCG[[imf.name]]))
             stop('The intermediate file cannot be found in the metadata of the SummarizedExperiment object.')
         all.tests <- se.obj@metadata$IMF$NCG[[imf.name]]
         anova.genes.bio <- all.tests$anova.genes.bio
@@ -898,17 +922,17 @@ findNcgPerBiologyPerBatch <- function(
     }
 
     ## save intermediate file ####
-    if(isTRUE(save.imf)){
-        if(length(se.obj@metadata$IMF) == 0 ) {
+    if (isTRUE(save.imf)){
+        if (length(se.obj@metadata$IMF) == 0 ) {
             se.obj@metadata[['IMF']] <- list()
         }
-        if(!'NCG' %in% names(se.obj@metadata[['IMF']])){
+        if (!'NCG' %in% names(se.obj@metadata[['IMF']])){
             se.obj@metadata[['IMF']][['NCG']] <- list()
         }
-        if(is.null(imf.name)){
+        if (is.null(imf.name)){
             imf.name <- paste0(assay.name, '|PerBiologyPerBatch|', ncg.selection.method)
         }
-        if(!imf.name %in% names(se.obj@metadata[['IMF']][['NCG']])){
+        if (!imf.name %in% names(se.obj@metadata[['IMF']][['NCG']])){
             se.obj@metadata[['IMF']][['NCG']][[imf.name]] <- list()
         }
         se.obj@metadata[['IMF']][['NCG']][[imf.name]] <- list(
@@ -1107,7 +1131,7 @@ findNcgPerBiologyPerBatch <- function(
             })))
         ## select NCG ####
         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
-        if(isTRUE(length(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
+        if (isTRUE(length(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
         printColoredMessage(
             message = paste0('- ', length(ncg.selected), ' genes are found.'),
             color = 'blue',
@@ -1118,7 +1142,7 @@ findNcgPerBiologyPerBatch <- function(
         ncg.ranges <- round(x = 0.01 *nb.ncg, digits = 0)
 
         if (length(ncg.selected) > c(nb.ncg + ncg.ranges) | length(ncg.selected) < c(nb.ncg - ncg.ranges)) {
-            if(isTRUE(nb.ncg > length(ncg.selected))){
+            if (isTRUE(nb.ncg > length(ncg.selected))){
                 con <- parse(text = paste0("nb.ncg", ">", "length(ncg.selected)"))
                 printColoredMessage(
                     message = paste0(
@@ -1160,7 +1184,7 @@ findNcgPerBiologyPerBatch <- function(
                         # uv
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb + grid.nb
-                        if(top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
+                        if (top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x) {
@@ -1179,7 +1203,7 @@ findNcgPerBiologyPerBatch <- function(
                             })))
                         # bio
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb - grid.nb
-                        if(top.rank.bio.genes.nb < 0) top.rank.bio.genes.nb = 1
+                        if (top.rank.bio.genes.nb < 0) top.rank.bio.genes.nb = 1
                         all.bio.tests <- c('anova.genes.bio', 'corr.genes.bio')
                         top.bio.genes <- unique(unlist(lapply(
                             all.bio.tests,
@@ -1200,7 +1224,7 @@ findNcgPerBiologyPerBatch <- function(
                             })))
                         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
                     }
-                    if(length(ncg.selected) == 0)
+                    if (length(ncg.selected) == 0)
                         stop('No NCGs can be found based on the current parameters.')
                 }
                 ### decreasing order ####
@@ -1212,7 +1236,7 @@ findNcgPerBiologyPerBatch <- function(
                         # uv
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb - grid.nb
-                        if(top.rank.uv.genes.nb < 0 ) top.rank.uv.genes.nb = 1
+                        if (top.rank.uv.genes.nb < 0 ) top.rank.uv.genes.nb = 1
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x) {
@@ -1231,7 +1255,7 @@ findNcgPerBiologyPerBatch <- function(
                             })))
                         # bio
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb + grid.nb
-                        if(top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
+                        if (top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
                         all.bio.tests <- c('anova.genes.bio', 'corr.genes.bio')
                         top.bio.genes <- unique(unlist(lapply(
                             all.bio.tests,
@@ -1252,20 +1276,20 @@ findNcgPerBiologyPerBatch <- function(
                             })))
                         ncg.selected <- top.uv.genes[!top.uv.genes %in% top.bio.genes]
                     }
-                    if(length(ncg.selected) == 0)
+                    if (length(ncg.selected) == 0)
                         stop('No NCGs can be found based on the current parameters.')
                 }
                 ### check selection ####
-                if(length(ncg.selected) == 0)
+                if (length(ncg.selected) == 0)
                     stop('No NCGs can be found based on the current parameters.')
                 ### update numbers ####
                 # bio
                 top.rank.bio.genes.nb <- nrow(se.obj) - top.rank.bio.genes.nb
                 top.rank.bio.genes <- round(top.rank.bio.genes.nb/nrow(se.obj) * 100, digits = 2)
-                if(top.rank.bio.genes >= 100) top.rank.bio.genes = 100
+                if (top.rank.bio.genes >= 100) top.rank.bio.genes = 100
                 # uv
                 top.rank.uv.genes <- round(top.rank.uv.genes.nb/nrow(se.obj) * 100, digits = 2)
-                if(top.rank.uv.genes >= 100) top.rank.uv.genes = 100
+                if (top.rank.uv.genes >= 100) top.rank.uv.genes = 100
                 message(' ')
                 printColoredMessage(
                     message = paste0(
@@ -1281,13 +1305,13 @@ findNcgPerBiologyPerBatch <- function(
             ##### grid group: bio ####
             if (grid.group == 'bio'){
                 ###### increasing order ####
-                if(grid.direction == 'increase'){
+                if (grid.direction == 'increase'){
                     lo <- top.rank.bio.genes.nb
                     pro.bar <- progress_estimated(round(lo/grid.nb, digits = 0) + 2)
                     while(eval(con) & top.rank.bio.genes.nb > 1){
                         pro.bar$pause(0.1)$tick()$print()
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb - grid.nb
-                        if(top.rank.bio.genes.nb < 1) top.rank.bio.genes.nb = 1
+                        if (top.rank.bio.genes.nb < 1) top.rank.bio.genes.nb = 1
                         all.bio.tests <- c('anova.genes.bio', 'corr.genes.bio')
                         top.bio.genes <- unique(unlist(lapply(
                             all.bio.tests,
@@ -1317,7 +1341,7 @@ findNcgPerBiologyPerBatch <- function(
                     while(eval(con) & top.rank.bio.genes.nb < nrow(se.obj)){
                         pro.bar$pause(0.1)$tick()$print()
                         top.rank.bio.genes.nb <- top.rank.bio.genes.nb + grid.nb
-                        if(top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
+                        if (top.rank.bio.genes.nb > nrow(se.obj)) top.rank.bio.genes.nb = nrow(se.obj)
                         all.bio.tests <- c('anova.genes.bio', 'corr.genes.bio')
                         top.bio.genes <- unique(unlist(lapply(
                             all.bio.tests,
@@ -1338,13 +1362,13 @@ findNcgPerBiologyPerBatch <- function(
                             })))
                     }
                     ##### check selection ####
-                    if(length(ncg.selected) == 0) stop('NCGs cannot be found based on the current parameters.')
+                    if (length(ncg.selected) == 0) stop('NCGs cannot be found based on the current parameters.')
                     ncg.selected <- row.names(se.obj) %in% ncg.selected
                     ##### update numbers ####
                     # bio
                     top.rank.bio.genes.nb <- nrow(se.obj) - top.rank.bio.genes.nb
                     top.rank.bio.genes <- round(top.rank.bio.genes.nb/nrow(se.obj) * 100, digits = 0)
-                    if(top.rank.bio.genes >= 100) top.rank.bio.genes = 100
+                    if (top.rank.bio.genes >= 100) top.rank.bio.genes = 100
                     message(' ')
                     printColoredMessage(
                         message = paste0(
@@ -1376,7 +1400,7 @@ findNcgPerBiologyPerBatch <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb + grid.nb
-                        if(top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
+                        if (top.rank.uv.genes.nb > nrow(se.obj)) top.rank.uv.genes.nb = nrow(se.obj)
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x) {
@@ -1409,7 +1433,7 @@ findNcgPerBiologyPerBatch <- function(
                         pro.bar$pause(0.1)$tick()$print()
                         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
                         top.rank.uv.genes.nb <- top.rank.uv.genes.nb - grid.nb
-                        if(top.rank.uv.genes.nb < 0 ) top.rank.uv.genes.nb = 1
+                        if (top.rank.uv.genes.nb < 0 ) top.rank.uv.genes.nb = 1
                         top.uv.genes <- unique(unlist(lapply(
                             all.uv.tests,
                             function(x) {
@@ -1431,13 +1455,13 @@ findNcgPerBiologyPerBatch <- function(
                     }
                 }
                 ##### check selection ####
-                if(length(ncg.selected) == 0)
+                if (length(ncg.selected) == 0)
                     stop('No NCGs can be found based on the current parameters.')
                 ncg.selected <- row.names(se.obj) %in% ncg.selected
                 ##### update numbers ####
                 # uv
                 top.rank.uv.genes <- round(top.rank.uv.genes.nb/nrow(se.obj) * 100, digits = 0)
-                if(top.rank.uv.genes >= 100) top.rank.uv.genes = 100
+                if (top.rank.uv.genes >= 100) top.rank.uv.genes = 100
                 message(' ')
                 printColoredMessage(
                     message = paste0(
@@ -1461,65 +1485,68 @@ findNcgPerBiologyPerBatch <- function(
         verbose = verbose
         )
     # Plotting ####
-    printColoredMessage(
-        message = '- Generating a heatmap plot of all the ranks of all the NCGs across all the variables',
-        color = 'magenta',
-        verbose = verbose
+    if (isTRUE(create.ncg.rank.plot)){
+        printColoredMessage(
+            message = '- Generating a heatmap plot of all the ranks of all the NCGs across all the variables',
+            color = 'magenta',
+            verbose = verbose
         )
-    all.uv.bio.tests <- lapply(
-        c(all.bio.tests, all.uv.tests),
-        function(x){
-            if (!is.null(x)){
-                temp.data <- get(x)
-                temp.data <- lapply(
-                    names(temp.data),
-                    function(y) {
-                        tests.data <- sapply(
-                            names(temp.data[[y]]),
-                            function(z){
-                                tm <- temp.data[[y]][[z]][ , 'ranked.genes']
-                            })
-                        tests.data <- rowMeans(tests.data)
-                        tests.data <- data.frame(
-                            ranks = tests.data,
-                            group = rep(y, length(tests.data))
+        all.uv.bio.tests <- lapply(
+            c(all.bio.tests, all.uv.tests),
+            function(x){
+                if (!is.null(x)){
+                    temp.data <- get(x)
+                    temp.data <- lapply(
+                        names(temp.data),
+                        function(y) {
+                            tests.data <- sapply(
+                                names(temp.data[[y]]),
+                                function(z){
+                                    tm <- temp.data[[y]][[z]][ , 'ranked.genes']
+                                })
+                            tests.data <- rowMeans(tests.data)
+                            tests.data <- data.frame(
+                                ranks = tests.data,
+                                group = rep(y, length(tests.data))
                             )
-                        tests.data
-                    })
-                temp.data <- do.call(cbind , temp.data)
+                            tests.data
+                        })
+                    temp.data <- do.call(cbind , temp.data)
+                    temp.data
+                }
+            })
+        all.uv.bio.tests <- Filter(Negate(is.null), all.uv.bio.tests)
+        all.uv.bio.tests <- do.call(cbind, all.uv.bio.tests)
+        temp.data <- lapply(
+            seq(1, ncol(all.uv.bio.tests), 2),
+            function(x){
+                temp.data <- all.uv.bio.tests[ , x, drop = FALSE]
+                colnames(temp.data) <- all.uv.bio.tests[ , x+1][1]
                 temp.data
-            }
-        })
-    all.uv.bio.tests <- Filter(Negate(is.null), all.uv.bio.tests)
-    all.uv.bio.tests <- do.call(cbind, all.uv.bio.tests)
-    temp.data <- lapply(
-        seq(1, ncol(all.uv.bio.tests), 2),
-        function(x){
-            temp.data <- all.uv.bio.tests[ , x, drop = FALSE]
-            colnames(temp.data) <- all.uv.bio.tests[ , x+1][1]
-            temp.data
-        })
-    temp.data <- do.call(cbind, temp.data)
-    temp.data$ncg <- ncg.selected
-    ha <- ComplexHeatmap::rowAnnotation(
-        NCG = temp.data$ncg,
-        col = list(NCG = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
-    )
-    ncg.plot <- ComplexHeatmap::Heatmap(
-        temp.data[ , seq_len(ncol(temp.data) - 1)],
-        cluster_rows = TRUE,
-        cluster_columns = FALSE,
-        show_row_names = FALSE,
-        right_annotation = ha,
-        column_names_rot = 45,
-        col = viridis::magma(n = 20),
-        heatmap_legend_param = list(
-            title = 'Ranks',
-            title_gp = grid::gpar(fontsize = 14),
-            by_row = TRUE,
-            ncol = 1)
-    )
-    if (isTRUE(plot.output)) print(ncg.plot)
+            })
+        temp.data <- do.call(cbind, temp.data)
+        temp.data$ncg <- ncg.selected
+        ha <- ComplexHeatmap::rowAnnotation(
+            NCG = temp.data$ncg,
+            col = list(NCG = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
+        )
+        ncg.rank.plot <- ComplexHeatmap::Heatmap(
+            temp.data[ , seq_len(ncol(temp.data) - 1)],
+            cluster_rows = TRUE,
+            cluster_columns = FALSE,
+            show_row_names = FALSE,
+            right_annotation = ha,
+            column_names_rot = 45,
+            col = viridis::magma(n = 20),
+            heatmap_legend_param = list(
+                title = 'Ranks',
+                title_gp = grid::gpar(fontsize = 14),
+                by_row = TRUE,
+                ncol = 1)
+        )
+        if (isTRUE(plot.ncg.rank)) print(ncg.rank.plot)
+    }
+
 
     # Assessment of selected set of NCG  ####
     ## pca ####
@@ -1577,7 +1604,6 @@ findNcgPerBiologyPerBatch <- function(
                         })
                 }
             })
-        pcs <- Groups <- NULL
         names(all.corr) <- all.variables
         pca.ncg <- as.data.frame(do.call(cbind, all.corr))
         pca.ncg['pcs'] <- c(1:nb.pcs)
@@ -1585,7 +1611,7 @@ findNcgPerBiologyPerBatch <- function(
             data = pca.ncg, -pcs,
             names_to = 'Groups',
             values_to = 'ls')
-        p.assess.ncg <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
+        assess.ncg.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
             geom_line(aes(color = Groups), size = 1) +
             geom_point(aes(color = Groups), size = 2) +
             xlab('PCs') +
@@ -1608,11 +1634,11 @@ findNcgPerBiologyPerBatch <- function(
                 strip.text.x = element_text(size = 10),
                 plot.title = element_text(size = 16)
             )
-        if(isTRUE(plot.output )) print(p.assess.ncg)
+        if (isTRUE(plot.ncg.assessment)) print(assess.ncg.plot)
     }
     # Save results ####
     ## add results to the SummarizedExperiment object ####
-    if(is.null(ncg.set.name)){
+    if (is.null(ncg.set.name)){
         ncg.set.name <- paste0(
             sum(ncg.selected),
             '|',
@@ -1624,49 +1650,51 @@ findNcgPerBiologyPerBatch <- function(
             '|',
             assay.name)
     }
-    if(is.null(ncg.group.name)){
-        ncg.group.name <- paste0('ncg|supervised')
+    if (is.null(ncg.group.name)){
+        ncg.group.name <- 'NcgPerBioPerBatch'
     }
-
-    if (isTRUE(save.se.obj)) {
-        printColoredMessage(message = '-- Saving a selected set of NCG to the metadata of the SummarizedExperiment object.',
-                            color = 'magenta',
-                            verbose = verbose)
+    ### Adding the results to the SummarizedExperiment object ####
+    if (isTRUE(save.se.obj)){
         ## Check if metadata NCG already exists
-        if(length(se.obj@metadata$NCG) == 0 ) {
+        if (length(se.obj@metadata$NCG) == 0 ) {
             se.obj@metadata[['NCG']] <- list()
         }
-        if(!'supervised' %in% names(se.obj@metadata[['NCG']])){
+        if (!'supervised' %in% names(se.obj@metadata[['NCG']])){
             se.obj@metadata[['NCG']][['supervised']] <- list()
         }
-        if(!ncg.group.name %in% names(se.obj@metadata[['NCG']][['supervised']])){
+        if (!ncg.group.name %in% names(se.obj@metadata[['NCG']][['supervised']])){
             se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]] <- list()
         }
-        if(!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] <- list()
+        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]] )){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]] <- list()
         }
-        if(!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] )){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- list()
+        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]])){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['ncg.set']] <- list()
         }
-        se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- ncg.selected
+        se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['ncg.set']] <- ncg.selected
 
-        if(isTRUE(assess.ncg)){
-            if(!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] <- list()
+        if (isTRUE(create.ncg.rank.plot)){
+            if (!'ranl.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]])){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['rank.plot']] <- list()
             }
-            if(!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] )){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- list()
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['rank.plot']] <- ncg.rank.plot
+        }
+        if (isTRUE(assess.ncg)){
+            if (!'ranl.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]])){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['assessment.plot']] <- list()
             }
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['assessment.plot']] <- assess.ncg.plot
         }
         printColoredMessage(
             message = '- The NCGs are saved to metadata of the SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
         )
-        printColoredMessage(message = '------------The findNcgPerBiologyPerBatch function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The findNcgByTwoWayAnova function finished.',
+            color = 'white',
+            verbose = verbose
+        )
         return(se.obj)
     }
     ## add results to the SummarizedExperiment object ####
@@ -1674,7 +1702,7 @@ findNcgPerBiologyPerBatch <- function(
         printColoredMessage(message = '------------The findNcgPerBiologyPerBatch function finished.',
                             color = 'white',
                             verbose = verbose)
-        return(ncg.selected)
+        return(list(ncg.selected = ncg.selected))
     }
 }
 

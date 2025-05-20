@@ -58,7 +58,7 @@
 #' @param remove.current.estimates Character string. Whether to remove current estimates of unknown batches.The default is set to
 #'  `TRUE`.
 #' @param output.name Character string. Output file name. If `NULL`, a name is automatically generated.
-#' @param assess.se.obj Logical. If `TRUE`, the `checkSeobj` function is applied to validate the object.The default is set to
+#' @param check.se.obj Logical. If `TRUE`, the `checkSeobj` function is applied to validate the object.The default is set to
 #' `TRUE`.
 #' @param remove.na Character string. Where to remove `NA` values: `assays`, `sample.annotation`, `both`, or `none`.
 #'The default is set to `both`.
@@ -106,7 +106,7 @@ identifyUnknownUV <- function(
         svd.bsparam = bsparam(),
         remove.current.estimates = FALSE,
         output.name = NULL,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
         plot.output = TRUE,
@@ -257,7 +257,7 @@ identifyUnknownUV <- function(
         }
     }
     # Checking the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,

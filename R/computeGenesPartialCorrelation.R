@@ -32,7 +32,7 @@
 #' set(s) before applying the log transformation to avoid `-Inf` for measurements that are equal to 0. The default is set
 #' to 1.
 #' @param apply.round Logical. Indicates whether to round the correlation coefficients. The default is set to `TRUE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. See the `checkSeObj()`
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. See the `checkSeObj()`
 #' function for more details.
 #' @param remove.na Character. Specifies whether to remove NA or missing values from the assays. The options are `assays`
 #' and `none`. The default is set to `assays`, meaning that all NA or missing values from the assays will be removed
@@ -64,7 +64,7 @@ computeGenesPartialCorrelation <- function(
         apply.log = TRUE,
         pseudo.count = 1,
         apply.round = TRUE,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         override.check = FALSE,
         save.se.obj = TRUE,
@@ -152,7 +152,7 @@ computeGenesPartialCorrelation <- function(
         }
 
         # Assessing the SummarizedExperiment object ####
-        if (isTRUE(assess.se.obj)) {
+        if (isTRUE(check.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),

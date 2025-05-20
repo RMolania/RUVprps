@@ -11,7 +11,7 @@ computeDGE(
   method = "limma",
   apply.log = TRUE,
   pseudo.count = 1,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
   override.check = FALSE,
@@ -38,7 +38,7 @@ expression. The default is set to \code{TRUE}.}
 \item{pseudo.count}{Numeric. A numeric value representing a pseudo count to be added to all measurements before log
 transformation. The default is set to 1.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
 Refer to the \code{checkSeObj()} function for more detail.}
 
 \item{remove.na}{Character. A character that indicates whether to remove missing/NA values from either \code{assays},

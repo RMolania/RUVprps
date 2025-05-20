@@ -1,27 +1,27 @@
 #' Creates PRPS for a continuous source of unwanted variation.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' The function creates PRPS sets for a continuous source of unwanted variation defined in the `main.uv.variable` argument.
 #' For example to correct for library size if defined in the `uv.variables` argument, several group of pseudo-samples
 #' will be created by averaging the top and bottom-ranked samples by library size of the same biological subtype in each
 #'  batch. Then those pseudo-samples will be defined as pseudo-replicates which constitutes a PRPS set
-
+#'
 #' @details
 #' Distinct group of PRPS are created for each source of unwanted variation defined in the `main.uv.variable` argument
 #' within an homogeneous group of samples. The grouping of samples are created based on each biological subtype defined
 #' using the `bio.variables` using the `bio.clustering.method` selected and it might be also be combined with
-#' `other.uv.variables` if requested. By default `other.uv.variables` is set up to NULL, meaning that the homogeneous
+#' `other.uv.variables` if requested. By default `other.uv.variables` is set up to `NULL`, meaning that the homogeneous
 #' grouping of samples created is based solely on the biological subtype(s) defined in `bio.variables`. If
-#' `other.uv.variables` is not set to NULL, the creation of homogeneous groups of samples is based on the biological subtype
+#' `other.uv.variables` is not set to `NULL`, the creation of homogeneous groups of samples is based on the biological subtype
 #' defined in `bio.variables` combined with `other.uv.variables` using the `other.uv.clustering.method` selected. A
 #' pseudo-sample will be created for each homogeneous group of samples by averaging all the samples within that group of
 #' samples. For example to correct for library size if defined in the `main.uv.variable` argument, a pair of pseudo-samples
 #' will be created for each homogeneous group of samples, each pair by averaging the top and the bottom-ranked samples by
 #' library size.Each pair of pseudo-samples belonging to the same group will be defined as pseudo-replicates which
 #' constitutes a PRPS set.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character string specifying an assay (data) name within the SummarizedExperiment object.
 #' The selected assay should be the one that will be used for RUV-III normalization.
@@ -46,13 +46,13 @@
 #' the `bio.clustering.method`.
 #' @param other.uv.clustering.method Character. A character string specifying which clustering method should be used to
 #' group each continuous unwanted variable specified in the `other.uv.variables`. The options include `kmeans`, `cut`,
-#' and `quantile`. The default is `kmeans`. We refer to the createHomogeneousUVGroups() function for more details.
+#' and `quantile`. The default is set to `kmeans`. We refer to the `createHomogeneousUVGroups()` function for more details.
 #' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
 #' unwanted variable specified in the `other.uv.variables`. The default is set to 2.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the checkSeObj
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
 #' function will be applied inside the function. The default is set to `TRUE`.
 #' @param remove.na Character. A character string indicating whether to remove NA or missing values from either the `assays`,
 #' the `sample.annotation`, `both`, or `none`. If `assays` is selected, the genes that contain NA or missing values will be
@@ -62,15 +62,15 @@
 #' or to output the result as a list. The default is set to `TRUE`.
 #' @param plot.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
 #' variation. The default is set to `TRUE`.
-#' @param prps.group Character. A character string specifying a name for the PRPS data sets created for a specific group.
+#' @param prps.group.name Character. A character string specifying a name for the PRPS data sets created for a specific group.
 #' The default is set to `NULL`.
 #' @param prps.sets.name Character. A character string to specify the name of all PRPS sets that will be created for all
 #' specified sources of unwanted variation. The default is set to `NULL`. If not specified, the function creates a name
 #' based on `paste0(prps_, uv.variable)`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
-
+#'
 #' @return Either a SummarizedExperiment object containing the PRPS data or just PRPS data.
-
+#'
 #' @importFrom dplyr group_by arrange slice desc add_count filter mutate
 #' @importFrom SummarizedExperiment assay
 #' @importFrom tidyr %>%
@@ -90,10 +90,10 @@ createPrPsForContinuousUV <- function(
         nb.other.uv.clusters = 2,
         apply.log = TRUE,
         pseudo.count = 1,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'both',
         plot.prps.map = TRUE,
-        prps.group = NULL,
+        prps.group.name = NULL,
         prps.sets.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
@@ -118,7 +118,7 @@ createPrPsForContinuousUV <- function(
         stop('The main.uv.variable cannot be empty.')
     }
     if (class(se.obj[[main.uv.variable]]) %in% c('character', 'factor')) {
-        stop('The "main.uv.variable" must be a continuous source of unwanted variation, e.g., platform effects')
+        stop('The "main.uv.variable" must be a continuous source of unwanted variation, e.g., library size')
     }
     if (length(unique(se.obj[[main.uv.variable]])) == 1) {
         stop('The "main.uv.variable" must have at least two levels or groups.')
@@ -132,8 +132,8 @@ createPrPsForContinuousUV <- function(
     if (!is.logical(apply.log)){
         stop('The "apply.log" must be logical.')
     }
-    if (!is.logical(assess.se.obj)){
-        stop('The "assess.se.obj" must be logical.')
+    if (!is.logical(check.se.obj)){
+        stop('The "check.se.obj" must be logical.')
     }
     if (pseudo.count < 0){
         stop('The value for "pseudo.count" can not be negative.')
@@ -147,11 +147,11 @@ createPrPsForContinuousUV <- function(
     if (is.logical(prps.sets.name)){
         stop('The "prps.sets.name" must be a character or NULL.')
     }
-    if (is.logical(prps.group)){
-        stop('The "prps.group" must be a character or NULL.')
+    if (is.logical(prps.group.name)){
+        stop('The "prps.group.name" must be a character or NULL.')
     }
     # Assessing the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
@@ -212,13 +212,13 @@ createPrPsForContinuousUV <- function(
             message = '-- Creating all possible homogeneous bioloical populations:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         homo.bio.groups <- createHomogeneousBioGroups(
             se.obj = se.obj,
             bio.variables = bio.variables,
             nb.clusters = nb.bio.clusters,
             clustering.method = bio.clustering.method,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose
@@ -237,7 +237,7 @@ createPrPsForContinuousUV <- function(
             uv.variables = other.uv.variables,
             nb.clusters = nb.other.uv.clusters,
             clustering.method = other.uv.clustering.method,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose
@@ -346,7 +346,7 @@ createPrPsForContinuousUV <- function(
                     top.samples <- se.obj[[main.uv.variable]][index.top]
                     bot.samples <- se.obj[[main.uv.variable]][index.bot]
                     c(top.samples, bot.samples) }) %>%
-                data.frame(.) %>%
+                as.data.frame(.) %>%
                 pivot_longer(everything(), values_to = 'uv.var', names_to = 'bio.batch') %>%
                 arrange(bio.batch, uv.var) %>%
                 mutate(groups = rep(rep(c('bottom', 'top'), each = min.sample.for.ps), length(selected.groups)))
@@ -357,27 +357,34 @@ createPrPsForContinuousUV <- function(
                 rbind(., prps.sets.plot) %>%
                 mutate(groups = factor(groups, levels= c(main.uv.variable, unique(prps.sets.plot$groups)))) %>%
                 mutate(new.g = ifelse(groups == main.uv.variable, 'UV', 'PRPS sets')) %>%
-                mutate(new.g = factor(new.g, levels = c('UV', 'PRPS sets'))) %>%
-                ggplot(aes(x = bio.batch, y = uv.var, color = groups)) +
+                mutate(new.g = factor(new.g, levels = c('UV', 'PRPS sets')))
+            prps.map.plot <- ggplot(data = prps.map.plot, aes(x = uv.var , y = bio.batch , color = groups)) +
                 geom_boxplot() +
                 geom_point() +
                 scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
-                facet_grid(.~new.g, scales = 'free_x', space = 'free') +
-                scale_x_discrete(expand = c(0, 0.9)) +
-                ylab(main.uv.variable) +
-                xlab('Homogeneous groups') +
-                ylim(c(min(se.obj[[main.uv.variable]]), max(se.obj[[main.uv.variable]]))) +
-                geom_hline(yintercept = c(min(se.obj[[main.uv.variable]]), max(se.obj[[main.uv.variable]])), color = 'gray70') +
+                facet_grid(new.g~., scales = 'free', space = 'free') +
+                scale_x_discrete(expand = c(0, 0.5)) +
+                xlab(main.uv.variable) +
+                ylab('Homogeneous groups') +
+                xlim(c(
+                    min(se.obj[[main.uv.variable]]),
+                    max(se.obj[[main.uv.variable]])
+                )) +
+                geom_hline(yintercept = c(
+                    min(se.obj[[main.uv.variable]]),
+                    max(se.obj[[main.uv.variable]])), color = 'gray70') +
+                theme_bw() +
                 theme(
                     legend.key = element_blank(),
                     axis.line = element_line(colour = 'black', linewidth = 1),
                     axis.title.x = element_text(size = 16),
                     axis.title.y = element_text(size = 16),
                     axis.text.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                    axis.text.x = element_text(size = 14),
                     legend.text = element_text(size = 14),
                     legend.title = element_text(size = 18),
-                    strip.text.x = element_text(size = 15))
+                    strip.text.y = element_text(size = 15)
+                )
             print(prps.map.plot)
         }
     }
@@ -394,7 +401,7 @@ createPrPsForContinuousUV <- function(
             bio.variables = bio.variables,
             nb.clusters = nb.bio.clusters,
             clustering.method = bio.clustering.method,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose
@@ -519,7 +526,7 @@ createPrPsForContinuousUV <- function(
                     axis.title.x = element_text(size = 16),
                     axis.title.y = element_text(size = 16),
                     axis.text.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 14, angle = 90, vjust = 1, hjust = 1),
+                    axis.text.x = element_text(size = 14),
                     legend.text = element_text(size = 14),
                     legend.title = element_text(size = 18),
                     strip.text.y = element_text(size = 15)
@@ -547,11 +554,12 @@ createPrPsForContinuousUV <- function(
             assay.name)
     }
     ## Selecting prps group name ####
-    if (is.null(prps.group)) {
-        prps.group <- paste0('prps|supervised|', main.uv.variable)
+    if (is.null(prps.group.name)) {
+        prps.group.name <- main.uv.variable
     }
+    ## Saving the output in the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)) {
-        ## check if PRPS exists
+        ## check
         if (!'PRPS' %in% names(se.obj@metadata)) {
             se.obj@metadata[['PRPS']] <- list()
         }
@@ -560,40 +568,36 @@ createPrPsForContinuousUV <- function(
             se.obj@metadata[['PRPS']][['supervised']] <- list()
         }
         ## check
-        if (!prps.group %in% names(se.obj@metadata[['PRPS']][['supervised']])) {
-            se.obj@metadata[['PRPS']][['supervised']][[prps.group]] <- list()
+        if (!prps.group.name %in% names(se.obj@metadata[['PRPS']][['supervised']])) {
+            se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]] <- list()
         }
         ## check
-        if (!'prps.data' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]])) {
-            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']] <- list()
+        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]])) {
+            se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]] <- list()
         }
         ## check
-        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']])) {
-            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']][[prps.sets.name]] <- list()
+        if (!'prps.data' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]])) {
+            se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- list()
         }
-        se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.data']][[prps.sets.name]] <- prps.sets
+        se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- prps.sets
 
         ## plot
-        if(isTRUE(plot.prps.map)){
-            ## check
-            if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]])) {
-                se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']] <- list()
+        if (isTRUE(plot.prps.map)){
+            if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]])) {
+                se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.map.plot']] <- list()
             }
-            if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']])) {
-                se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']][[prps.sets.name]] <- list()
-            }
-            se.obj@metadata[['PRPS']][['supervised']][[prps.group]][['prps.map.plot']][[prps.sets.name]] <- prps.map.plot
+            se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.map.plot']] <- prps.map.plot
         }
         printColoredMessage(
-            message = paste0('The PRPS data and PRPS map plots are saved to the metadata of the SummarizedExperiment object.'),
+            message = 'The PRPS data and PRPS map plot are saved to th metdata in the SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
-            )
+        )
         printColoredMessage(
             message = '------------The createPrPsForContinuousUV function finished.',
             color = 'white',
             verbose = verbose
-            )
+        )
         return(se.obj)
     }
     if(isFALSE(save.se.obj)){

@@ -9,22 +9,27 @@ addNCGs(se.obj, ncg, subset.name = NULL, verbose = TRUE)
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{ncg}{A logical or vector of gene names of pre-selected genes as NCGs.}
+\item{ncg}{A logical value or a vector of gene names or IDs representing pre-selected NCGs. If gene names or IDs are
+provided, the row names of the SummarizedExperiment object must match these names or IDs.}
 
-\item{subset.name}{Character. Specifies the name of the NCG set in the metadata of the \code{SummarizedExperiment} object.
-The default is 'NULL', in which case the function will generate a name  based on the number of NCGs using:
-paste0(sum(ncg), '_genes').}
+\item{subset.name}{Character. A character that specifies the name of the NCG set in the metadata of the SummarizedExperiment
+object. The default is set to \code{NULL}, in which case the function will generate a name as following:
+\code{paste0(sum(ncg), '_psg')}.}
 
-\item{verbose}{Logical. If TRUE, displaying process messages is enabled.}
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
+\code{TRUE}.}
+}
+\value{
+A SummarizedExperiment object with a metadata that contains the NCGs.
 }
 \description{
 This function adds pre-selected sets of negative control genes (NCGs) to a SummarizedExperiment object.
-These genes can be used for various analyses, including identifying unknown sources of variation, assessing variation,
-performing RUV normalization, and evaluating normalization steps.
 }
 \details{
 A pre-selected set of negative control genes (NCGs) will be stored in the following location:
-se.obj->metadata->NCG->pre.selected->subset.name.
+se.obj->metadata->NCG->pre.selected->subset.name. These genes can be used for various analyses, including identifying
+unknown sources of variation, assessing variation, performing RUV normalization, and evaluating normalization steps. The
+gene set will be stored in: metadata->NCG->pre.selected->subset.name->gene.set
 }
 \author{
 Ramyar Molania

@@ -41,6 +41,11 @@ utils::globalVariables(
       'variable',
       'ref',
       'geneset',
-      'mad'
+      'mad',
+      'pcs',
+      'Groups',
+      'r.label',
+      'mnn.sets',
+      'score'
       )
     )

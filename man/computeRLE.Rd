@@ -10,7 +10,7 @@ computeRLE(
   apply.log = TRUE,
   pseudo.count = 1,
   outputs.to.return = "all",
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "assays",
   save.se.obj = TRUE,
   override.check = FALSE,
@@ -36,7 +36,7 @@ medians and interquartile ranges. Choosing "rle" returns only the RLE data for e
 RLE  medians. \code{rle.iqr} returns only the interquartile ranges of the RLE data. \code{rle.med.iqr} returns both the
 RLE medians and interquartile ranges. The default is set to  \code{all}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
 function will be applied. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are \code{assays} or

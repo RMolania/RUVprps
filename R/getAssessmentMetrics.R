@@ -20,7 +20,6 @@
 #' @importFrom tibble tibble
 #' @export
 
-
 getAssessmentMetrics <- function(
         se.obj ,
         variables,

@@ -38,7 +38,7 @@ to \code{TRUE}.}
 \item{save.se.obj}{Logical. If \code{TRUE}, the plots will be saved to the metadata of the SummarizedExperiment object. The
 default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If \code{TRUE}, the function will display progress messages. The default is sey to \code{TRUE}.}
+\item{verbose}{Logical. If \code{TRUE}, the function will display progress messages. The default is set to \code{TRUE}.}
 }
 \description{
 This function assesses the association between the W matrix from RUV-III normalized data and known variables. It calculates

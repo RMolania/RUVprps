@@ -30,7 +30,7 @@
 #' `right`, `bottom`, `left`, `top`. The default is set to `bottom`.
 #' @param column.names.rot Numeric. A numeric value indicating the angle of the column labels in the heatmap. The default
 #' is set to 25.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. See the `checkSeObj()`
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. See the `checkSeObj()`
 #' function for more details. The default is set to `TRUE`.
 #' @param remove.na Character. Specifies whether to remove NA or missing values from the assays. The options are `assays`
 #' , `sample.annotation`, `both` or `none`. The default is set to `none`. See the `checkSeObj` function for more details.
@@ -58,7 +58,7 @@ plotStudyOutline <- function(
         legend.direction = 'horizontal',
         heatmap.legend.side = 'bottom',
         column.names.rot = 25,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE

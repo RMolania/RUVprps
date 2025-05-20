@@ -1,26 +1,27 @@
 #' Finds mutual nearest neighbors in RNA-seq data.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function finds mutual nearest neighbors (MNN) between all pairs of specified batches in RNA-seq data. The mutual
 #' nearest neighbors will be used to find and create pseudo samples (Ps) and eventually pseudo-replicates (PS )for RUV-III
 #' with PRPS normalization. This function is used in the `createPRPSByKnnMnn()` function.
-
+#'
 #' @param se.obj A summarized experiment object.
-#' @param assay.name Character. A character string that indicates the name of the data(assay) in the SummarizedExperiment
+#' @param assay.name Character. A character that indicates the name of the data (assay) in the SummarizedExperiment
 #' object.
-#' @param uv.variable Character. A character string indicating the name of the column in the SummarizedExperiment object.
-#' The `uv.variable` can be either categorical or continuous. If `uv.variable` is a continuous variable, this will be
-#' divided into `nb.clusters` groups using the `clustering.method` method.
-#' @param nb.mnn Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
-#' default is set to 1.
-#' @param clustering.method Character. A character string that indicates the choice of clustering method for grouping the
+#' @param uv.variable Character. A character indicating the name of a column in the sample annotation in the
+#' SummarizedExperiment object. The `uv.variable` can be either a categorical or continuous source of unwanted variation.
+#' If `uv.variable` is a continuous variable, this will be divided into `nb.clusters` groups using the `clustering.method`
+#' method.
+#' @param nb.mnn Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute across
+#' batches or subgroups. The default is set to 1.
+#' @param clustering.method Character. A character that indicates the choice of clustering method for grouping the
 #' `uv.variable`, if a continuous variable is provided. Options include `kmeans`, `cut`, and `quantile`. The default is
 #' set to `kmeans`.
 #' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the `uv.variable` is a
 #' continuous variable. The default is set to 3.
-#' @param data.input Character. A character string that indicates which data should be used as input for finding the mutual
+#' @param data.input Character. A character that indicates which data should be used as input for finding the mutual
 #' nearest neighbors. Options include: `expr` and `pcs`. If `pcs` is selected, the first `nb.pcs` of PCs of the data will
 #' be computed and used as input. If `expr` is selected, the expression data will be used as input. The default is set
 #' to `expr`.
@@ -35,40 +36,41 @@
 #' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed to compute
 #' PCs. The default is set to bsparam(). We refer to the `runSVD()` function from the **BiocSingular** R package for
 #' further details.
-#' @param normalization Character. A character string that indicates which normalization methods should be applied before
-#' finding the MNN. The options are `CPM`, `TMM`, `VST`. The default is set to `CPM`. Refer to the `applyOtherNormalization()`
-#' for more details.
-#' @param apply.cosine.norm Logical. Indicates whether to apply cosine normalization on the data or not. The default is
-#'  set to `FALSE`.
-#' @param regress.out.variables Character. A character string or vector of character strings indicating the column name(s)
-#' that contain biological variable(s) in the SummarizedExperiment object. These variables will be regressed out from the
-#' data before finding genes that are highly affected by unwanted variation. The default is set to `NULL`, indicating
-#' the regression will not be applied.
+#' @param normalization Character. A character that indicates which normalization methods should be applied before finding
+#' the MNN. The options are: `CPM`, `TMM`, `VST`, `full`, `upper` and `median`. The default is set to `CPM`. Refer to the
+#' `applyOtherNormalization()` for more details.
+#' @param apply.cosine.norm Logical. Indicates whether to apply cosine normalization on the data before finding MNN. The
+#'  default is set to `TRUE`.
+#' @param regress.out.variables Character. A character or a vector of characters indicating the column name(s) in sample
+#' annotation in the SummarizedExperiment object. These variables will be regressed out from the data before finding MNN.
+#' The default is set to `NULL`, indicating the regression will not be applied.
 #' @param hvg Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
-#' will be used to prepare the input data for knn analysis. The default is set to `NULL`, this means all genes will be used.
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.
+#' will be used to prepare the input data, either `pcs` or `expre`, for MNN analysis. The default is set to `NULL`, this
+#' means all genes will be used.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to
+#' `TRUE`.
 #' @param pseudo.count Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
 #' log transformation to avoid `-Inf` for measurements that are equal to 0. The default is set to 1.
 #' @param mnn.bpparam Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
 #' The default is set to `SerialParam()`. We refer to the `findMutualNN()` function from the `BiocNeighbors` R package.
 #' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 #' The default is set to `KmknnParam()`. We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+#' @param check.se.obj Logical. Indicates whether to check the SummarizedExperiment object or not. The default is set
 #' to `TRUE`. See the `checkSeObj()` function for more details.
-#' @param remove.na Character. Specifies whether to remove NA or missing values from the assays(data) or not. The options
-#' are `assays` and 'none'. The default is set to `assays`, so all the NA or missing values from the assay(s) will be
-#' removed before any down-stream analysis See the `checkSeObj()` function for more details.
-#' @param plot.output Logical. If `TRUE`, the function plots the distribution of MNN across the batches. The default is
-#' set to `TRUE`.
-#' @param prps.sets.name Character. A character string specifying the name of the output file (MNN data) to be saved in the
+#' @param remove.na Character. Specifies whether to remove NA or missing values from the assays (data) or not. The options
+#' are `assays`, `sample.annotation`, `both` and `none`. The default is set to `both`, so all the NA or missing values
+#' from the provided data and variables will be removed before any analysis See the `checkSeObj()` function for more details.
+#' @param plot.output Logical. If `TRUE`, the function plots the distribution of MNN across the batches or subgroups. The
+#' default is set to `TRUE`.
+#' @param mnn.group.name Character. A character specifying the name of the MNN group to which the current MNN belong.
+#' If set to `NULL`, the function will automatically assign a name using the `uv.variable`.
+#' @param mnn.sets.name Character. A character specifying the name of the output file (MNN data) to be saved in the
 #' metadata of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on:
-#' `paste0(uv.variable, '||' , assay.name)`.
-#' @param prps.group Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-#' If set to `NULL`, the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.
+#' `paste0(assay.name, '|', length(unique(se.obj[[uv.variable]])) ,'groups|', nb.mnn, 'mnn')`.
 #' @param save.se.obj Logical. Indicates whether to save the MNN results in the metadata of the SummarizedExperiment object
-#' or to output the result as a list. The default, it is set to `TRUE`.
+#' or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
-
+#'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom BiocNeighbors findMutualNN KmknnParam
 #' @importFrom BiocParallel SerialParam
@@ -95,18 +97,18 @@ findMnn <- function(
         pseudo.count = 1,
         mnn.bpparam = SerialParam(),
         mnn.nbparam = KmknnParam(),
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'both',
         plot.output = TRUE,
-        prps.sets.name = NULL,
-        prps.group = NULL,
+        mnn.group.name = NULL,
+        mnn.sets.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(message = '------------The findMnn function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check inputs #####
+    # Checking the function inputs #####
     if (is.list(assay.name)) {
         stop('The "assay.name" cannot be a list.')
     }
@@ -122,7 +124,7 @@ findMnn <- function(
     if (!uv.variable %in% colnames(colData(se.obj))) {
         stop('The "uv.variable" variable cannot be found in the SummarizedExperiment object.')
     }
-    if (isFALSE(assess.se.obj)){
+    if (isFALSE(check.se.obj)){
         if (!uv.variable %in% colnames(colData(se.obj))) {
             stop('The "uv.variable" cannot be found in the SummarizedExperiment object.')
         }
@@ -184,20 +186,20 @@ findMnn <- function(
             stop('The "pseudo.count" must be a postive numeric value.')
         }
     }
-    if (!is.logical(assess.se.obj)){
+    if (!is.logical(check.se.obj)){
         stop('The "apply.log" must be logical.')
     }
     if (!is.logical(save.se.obj)){
         stop('The "save.se.obj" must be logical.')
     }
-    if (!is.null(prps.sets.name)){
-        if (!is.character(prps.sets.name)){
-            stop('The "prps.sets.name" must be a character.')
+    if (!is.null(mnn.sets.name)){
+        if (!is.character(mnn.sets.name)){
+            stop('The "mnn.sets.name" must be a character.')
         }
     }
-    if (!is.null(prps.group)){
-        if (!is.character(prps.group)){
-            stop('The "prps.group" must be logical.')
+    if (!is.null(mnn.group.name)){
+        if (!is.character(mnn.group.name)){
+            stop('The "mnn.group.name" must be logical.')
         }
     }
     if (!is.logical(verbose)){
@@ -205,7 +207,7 @@ findMnn <- function(
     }
 
     # Assessing the SummarizedExperiment object #####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
@@ -320,7 +322,7 @@ findMnn <- function(
                     method = normalization,
                     apply.log = apply.log,
                     pseudo.count = pseudo.count,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = FALSE
@@ -347,7 +349,7 @@ findMnn <- function(
                     method = normalization,
                     apply.log = apply.log,
                     pseudo.count = pseudo.count,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = FALSE
@@ -658,41 +660,45 @@ findMnn <- function(
         stop('There are NA in the MNN. This is not supported.')
 
     # Saving the results ####
-    ## selecting prps name ####
-    if(is.null(prps.group)){
-        prps.group <- paste0('prps|knnMnn|', uv.variable)
+    ## Selecting prps name ####
+    if(is.null(mnn.group.name)){
+        mnn.group.name <- uv.variable
     }
-    ## selecting output name ####
-    if (is.null(prps.sets.name))
-        prps.sets.name <- paste0(uv.variable, '|' , assay.name)
+    ## Selecting output name ####
+    ## Selecting mnn sets name ####
+    if (is.null(mnn.sets.name)){
+        if (is.numeric(se.obj[[uv.variable]])){
+            mnn.sets.name <- paste0(assay.name, '|', nb.clusters ,'groups|', nb.mnn, 'mnn')
+        } else mnn.sets.name <- paste0(assay.name, '|', length(unique(se.obj[[uv.variable]])) ,'groups|', nb.mnn, 'mnn')
+    }
 
-    ## save the results in the SummarizedExperiment object ####
+    ## Saving the results in the SummarizedExperiment object ####
     message(' ')
     printColoredMessage(message = '-- Saving the results.',
                         color = 'magenta',
                         verbose = verbose)
     if (isTRUE(save.se.obj)) {
-        if (!'PRPS' %in% names(se.obj@metadata)) {
-            se.obj@metadata[['PRPS']] <- list()
+        if (!'KnnMnn' %in% names(se.obj@metadata)) {
+            se.obj@metadata[['KnnMnn']] <- list()
         }
-        if (!'un.supervised' %in% names(se.obj@metadata[['PRPS']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']] <- list()
+        if (!'Mnn' %in% names(se.obj@metadata[['KnnMnn']])) {
+            se.obj@metadata[['KnnMnn']][['Mnn']] <- list()
         }
-        if (!prps.group %in% names(se.obj@metadata[['PRPS']][['un.supervised']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]] <- list()
-        }
-        if (!'KnnMnn' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']] <- list()
-        }
-        if (!'knn' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']] <- list()
-        }
-        if (!prps.sets.name %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['knn']])) {
-            se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][[prps.sets.name]] <- list()
-        }
-        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][[prps.sets.name]] <- all.mnn
-        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group]][['KnnMnn']][['mnn']][['plot']] <- p.mnn
 
+        if (!mnn.group.name %in% names(se.obj@metadata[['KnnMnn']][['Mnn']])) {
+            se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.group.name]] <- list()
+        }
+        if (!mnn.sets.name %in% names(se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.sets.name]])) {
+            se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.group.name]][[mnn.sets.name]] <- list()
+        }
+        if (!'data' %in% names(se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.sets.name]])) {
+            se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.group.name]][[mnn.sets.name]][['data']] <- list()
+        }
+        se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.group.name]][[mnn.sets.name]][['data']]  <- all.mnn
+        if (!'plot' %in% names(se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.sets.name]])) {
+            se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.group.name]][[mnn.sets.name]][['plot']] <- list()
+        }
+        se.obj@metadata[['KnnMnn']][['Mnn']][[mnn.group.name]][[mnn.sets.name]][['plot']] <- p.mnn
         printColoredMessage(
             message = '- All the mnn results are saved in the metadata of the SummarizedExperiment object.',
             color = 'blue',

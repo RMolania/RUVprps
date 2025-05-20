@@ -1,16 +1,16 @@
 #' Creates all possible homogeneous groups with respect to biological variables.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function generates all possible homogeneous sample groups based on the specified biological variables.
-
+#'
 #' @details
 #' The function generates all possible homogeneous sample groups based on the specified biological variables. If continuous
 #' variables are provided, the function splits each into a number of clusters determined by ’nb.clusters’, using the
 #' clustering method specified in ’clustering.method’. Ultimately, all combinations of all clusters are created and
 #' each such combination is regarded as a homogeneous sample group concerning biological variables.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param bio.variables Character. A character string or a vector of character strings specifying the column names of biological
 #' variables in the sample annotation of the 'SummarizedExperiment  object. These 'bio.variables' can be either categorical
@@ -20,7 +20,7 @@
 #' @param nb.clusters Numeric. A value indicating the number of groups for continuous sources of biological variation.
 #' The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
 #' `clustering.method`.
-#' @param assess.se.obj Logical. Whether to assess the SummarizedExperiment object or not. If 'TRUE', the function
+#' @param check.se.obj Logical. Whether to assess the SummarizedExperiment object or not. If 'TRUE', the function
 #' `checkSeObj()` will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove missing values from the specified variables. The options are
 #' 'sample.annotation' or 'none'. The default is set to `sample.annotation`, meaning that missing values in the variables
@@ -29,10 +29,10 @@
 #' or not. If `TRUE` , all the possible homogeneous groups will be saved into 'se.obj->metadata->HomogeneousGroups->
 #' BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE` , displays messages for different steps of the function.
-
+#'
 #' @return Either a ' SummarizedExperiment' object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
 #' ->BiologicalVariables' or a vector of all possible homogeneous sample groups.
-
+#'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom stats kmeans quantile
 #' @importFrom knitr kable
@@ -43,7 +43,7 @@ createHomogeneousBioGroups <- function(
         bio.variables,
         clustering.method = 'kmeans',
         nb.clusters = 3,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'sample.annotation',
         save.se.obj = TRUE,
         verbose = TRUE
@@ -78,7 +78,7 @@ createHomogeneousBioGroups <- function(
     }
 
     # Assessing SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         printColoredMessage(
             message = '-- Assessing the SummarizedExperiment object:',
             color = 'magenta',

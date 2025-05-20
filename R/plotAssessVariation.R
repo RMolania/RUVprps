@@ -6,7 +6,8 @@
 #' be selected.
 #' @param variables Character or character vector. Specifies the name(s) of the column(s) in the SummarizedExperiment
 #' object for which the specified metrics below have been calculated.
-#' @param fast.pca Logical. Indicates whether the fast SVD approach was used in the `computePCA` function. The default is set to `TRUE`.
+#' @param fast.pca Logical. Indicates whether the fast SVD approach was used in the `computePCA` function. The default
+#' is set to `TRUE`.
 #' @param anova.method Character. Indicates which ANOVA method was used to compute the association between
 #' gene-level expression and a categorical variable. Options are: `aov` and `welch`. Default is `aov`.
 #' @param corr.method Character. Specifies which correlation method to use to compute correlation between
@@ -25,7 +26,8 @@
 #' @param ari.hclust.dist.measure Character. Specifies the distance measure to use in the `dist` function when
 #' `clustering.method` is set to `hclust` for computing ARI. Options are: `euclidean`, `maximum`, `manhattan`,
 #' `canberra`, `binary`, or `minkowski`. Default is `euclidean`. Refer to the `computeARI` function for more details.
-#' @param output.file.name Character. The path and name of the output file where the assessment plots will be saved in PDF format.
+#' @param output.file.name Character. The path and name of the output file where the assessment plots will be saved in
+#' PDF format.
 #' @param pdf.width Numeric. Specifies the width (in inches) of the output PDF file. Default is typically around 8.
 #' @param pdf.height Numeric. Specifies the height (in inches) of the output PDF file. Default is typically around 6.
 #' @param verbose Logical. If `TRUE`, displays messages describing different steps of the function.

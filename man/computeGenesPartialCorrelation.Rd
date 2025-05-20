@@ -16,7 +16,7 @@ computeGenesPartialCorrelation(
   apply.log = TRUE,
   pseudo.count = 1,
   apply.round = TRUE,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   override.check = FALSE,
   save.se.obj = TRUE,
@@ -57,7 +57,7 @@ to 1.}
 
 \item{apply.round}{Logical. Indicates whether to round the correlation coefficients. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. See the \code{checkSeObj()}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. See the \code{checkSeObj()}
 function for more details.}
 
 \item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays. The options are \code{assays}

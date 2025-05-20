@@ -20,6 +20,8 @@ assessNCGs(
   pseudo.count = 1,
   plot.output = TRUE,
   output.name = NULL,
+  check.se.obj = TRUE,
+  remove.na = "none",
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -31,7 +33,7 @@ assessNCGs(
 data should one that will be used as the input data for RUV-III-PRPS normalization.}
 
 \item{variables}{Character. One or more variable names in the SummarizedExperiment object. These will be used to assess
-the performance of the NCGs. If this is set to NULL, both \code{bio.variables} and \code{uv.variables} must be specified.}
+the performance of the NCGs. If this is set to \code{NULL}, both \code{bio.variables} and \code{uv.variables} must be specified.}
 
 \item{bio.variables}{Character. One or more variable names representing biological variables (e.g., cancer subtypes,
 tumor purity) within the SummarizedExperiment object. This can be a vector of categorical, continuous, or mixed variable
@@ -49,14 +51,14 @@ Options are \code{'supervised'}, \code{'un.supervised'}, \code{pre.selected} and
 NCGS for more details.}
 
 \item{ncg.set.names}{Character. Specifies the exact name of an NCG set under the given \code{ncg.group} in either the
-'supervised' or 'un.supervised' slot or in the \code{pre.selected} slot. The default is \code{'all'}, which selects all available
-NCG sets.}
+'supervised' or 'un.supervised' slot or in the \code{pre.selected} slot. The default is se to \code{'all'}, which selects all
+available NCG sets.}
 
 \item{nb.pcs}{Numeric. A numeric value that indicates the number of principal components (PCs) to compute and use for
 the assessment analysis. The default is set to \code{10}.}
 
-\item{center}{Logical. Indicates whether to center the data prior to applying PCA suing SVD. If \code{TRUE},
-centering is done by subtracting the column means from the respective columns. The default is set to \code{TRUE}.}
+\item{center}{Logical. Indicates whether to center the data prior to applying PCA suing SVD. If \code{TRUE}, centering is
+done by subtracting the column means from the respective columns. The default is set to \code{TRUE}.}
 
 \item{scale}{Logical. Indicates whether to scale the data prior to applying PCA using SVD. If \code{TRUE}, the centered
 columns are divided by their standard deviations (if \code{center = TRUE}), or by the root mean square
@@ -75,19 +77,27 @@ is set to \code{TRUE}.}
 SummarizedExperiment object. If \code{NULL}, a name will be generated using:
 \code{paste0('comparison_', paste0(names(ncgs), collapse = '&'))}.}
 
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not before applying
+nationalizations. The default is set  to \code{TRUE}. We refer to the \code{checkSeObj()} function for more details.}
+
+\item{remove.na}{Character. A character that indicates whether to remove NA or missing values from the data sets or
+not. The options are \code{'assays'} or \code{'none'}. The default is set to \code{'assays'}. Refer to the \code{checkSeObj()} function
+for more details.}
+
 \item{save.se.obj}{Logical. Indicates whether to save the assessment plot metadata of the SummarizedExperiment object.
 The default is set to \code{TRUE}. The plot will be saved to:}
 
-\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is \code{TRUE}.}
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set
+to \code{TRUE}.}
 }
 \value{
-A SummarizedExperiment object containing the newly normalized data, or a normalized expression matrix
-if \code{save.se.obj} is set to \code{FALSE}.
+Either a SummarizedExperiment object containing the NCG assessment plots, or out theses results as list if
+\code{save.se.obj} is set to \code{FALSE}.
 }
 \description{
-This function globally assesses and comapre the performance of various sets of negative control genes (NCGs) based on
+This function globally assesses and compares the performance of various sets of negative control genes (NCGs) based on
 their ability to capture unwanted variation while remaining unassociated with biological variation. This is essential
-to select a suitable set of NCGs for RUV-III normalization,
+to select a suitable set of NCGs for RUV-III normalization.
 }
 \details{
 For each NCG set, the function performs PCA on the specified data using only the genes in the set. It then evaluates
@@ -97,7 +107,7 @@ set, $R^2$ values (from regression) and vector correlation coefficients are comp
 The $R^2$ and vector correlation values calculated for individual variables are plotted against the cumulative PCs.
 Ideally, a suitable set of NCGs should show high and low correlation values, respectively, for the unwanted and biological
 variables.\
-If both \code{bio.variables} and \code{ub.variables} are specifed, then the function generates a performance score between 0 and
+If both \code{bio.variables} and \code{ub.variables} are specified, then the function generates a performance score between 0 and
 1 is for NCG each set, reflecting how effectively the NCGs capture unwanted variation while minimizing association
 with biological factors. To compute such scores, the correlations obtained for biological variables are subtracted
 from 1, and then the correlations for biological and unwanted variables are averaged, separately. The final score for

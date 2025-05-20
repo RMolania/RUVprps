@@ -31,7 +31,7 @@
 #' transformation. The default is set to 1.
 #' @param svd.bsparam A BiocParallelParam object specifying how parallelization should be performed. The default is set
 #' to `bsparam()`. See the `runSVD()` function from the BiocSingular R package for more details.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
 #' See the `checkSeObj()` function for more details.
 #' @param remove.na Character. Specifies whether to remove NA or missing values from the data sets (assays). Options are
 #' 'assays' and 'none'. The default is set to `assays`.
@@ -60,7 +60,7 @@ computePCA <- function(
         apply.log = TRUE,
         pseudo.count = 1,
         svd.bsparam = bsparam(),
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'assays',
         override.check = FALSE,
         save.se.obj = TRUE,
@@ -133,8 +133,8 @@ computePCA <- function(
                 stop('A value for the "pseudo.count" must be specified.')
             }
         }
-        if (!is.logical(assess.se.obj)){
-            stop('The "assess.se.obj" must be logical.')
+        if (!is.logical(check.se.obj)){
+            stop('The "check.se.obj" must be logical.')
         }
         if (!remove.na %in% c('assays','none')){
             stop('The "remove.na" must be on of the "assays" or "none"')
@@ -157,7 +157,7 @@ computePCA <- function(
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
         }
         # Assessing the SummarizedExperiment object ####
-        if (isTRUE(assess.se.obj)) {
+        if (isTRUE(check.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),

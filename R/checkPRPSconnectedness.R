@@ -11,8 +11,6 @@
 #' @param verbose TTTTTT
 
 #' @importFrom Matrix colSums rowSums
-
-
 checkPRPSconnectedness <- function(
         data.input,
         min.samples,

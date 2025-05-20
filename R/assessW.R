@@ -32,7 +32,7 @@
 #' to `TRUE`.
 #' @param save.se.obj Logical. If `TRUE`, the plots will be saved to the metadata of the SummarizedExperiment object. The
 #' default is set to `TRUE`.
-#' @param verbose Logical. If `TRUE`, the function will display progress messages. The default is sey to `TRUE`.
+#' @param verbose Logical. If `TRUE`, the function will display progress messages. The default is set to `TRUE`.
 
 #' @importFrom dplyr bind_rows summarise mutate group_by
 #' @importFrom fastDummies dummy_cols

@@ -31,7 +31,7 @@
 #' @param nb.top.genes Numeric. A numeric value that defines the number of genes with the highest or lowest correlation
 #' to the variable to plot. The default is set to 3.
 #' @param apply.round Logical. Indicates whether to round the correlation coefficients values. The default is set to `TRUE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. Refer to the `checkSeObj()`
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. Refer to the `checkSeObj()`
 #' function for more details. The default is set to `TRUE`.
 #' @param remove.na Character. A character that specifies whether to remove NA or missing values from the data sets (assays).
 #' Options are `assays`, `sample.annotation`, `none` and `both`. The default is set to `assays`.
@@ -64,7 +64,7 @@ computeGenesVariableCorrelation <- function(
         plot.top.genes = FALSE,
         nb.top.genes = 3,
         apply.round = TRUE,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'both',
         save.se.obj = TRUE,
         override.check = FALSE,
@@ -139,7 +139,7 @@ computeGenesVariableCorrelation <- function(
         }
 
         # Checking SummarizedExperiment object ####
-        if (isTRUE(assess.se.obj)) {
+        if (isTRUE(check.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),

@@ -31,7 +31,7 @@ identifyUnknownUV(
   svd.bsparam = bsparam(),
   remove.current.estimates = FALSE,
   output.name = NULL,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
   plot.output = TRUE,
@@ -100,7 +100,7 @@ The default is set to \code{nbClust}.}
 
 \item{output.name}{Character string. Output file name. If \code{NULL}, a name is automatically generated.}
 
-\item{assess.se.obj}{Logical. If \code{TRUE}, the \code{checkSeobj} function is applied to validate the object.The default is set to
+\item{check.se.obj}{Logical. If \code{TRUE}, the \code{checkSeobj} function is applied to validate the object.The default is set to
 \code{TRUE}.}
 
 \item{remove.na}{Character string. Where to remove \code{NA} values: \code{assays}, \code{sample.annotation}, \code{both}, or \code{none}.

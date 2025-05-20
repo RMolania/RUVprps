@@ -68,7 +68,7 @@ assessVariation(
   gene.set.score.normalization = NULL,
   gene.set.score.assessment = FALSE,
   gene.set.score.variables.to.assess = NULL,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   override.check = FALSE,
   verbose = TRUE
@@ -204,7 +204,7 @@ assessVariation(
 
 \item{gene.set.score.variables.to.assess}{TTT}
 
-\item{assess.se.obj}{Logical. Whether to check the SummarizedExperiment object.}
+\item{check.se.obj}{Logical. Whether to check the SummarizedExperiment object.}
 
 \item{remove.na}{Character. Whether to remove \code{NA} values from assays. Options: \code{assays}, \code{none}. The default is set to \code{assays}.}
 

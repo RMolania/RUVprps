@@ -14,7 +14,7 @@ plotStudyOutline(
   legend.direction = "horizontal",
   heatmap.legend.side = "bottom",
   column.names.rot = 25,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
   verbose = TRUE
@@ -47,7 +47,7 @@ is set to 4.}
 \item{column.names.rot}{Numeric. A numeric value indicating the angle of the column labels in the heatmap. The default
 is set to 25.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. See the \code{checkSeObj()}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. See the \code{checkSeObj()}
 function for more details. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays. The options are \code{assays}

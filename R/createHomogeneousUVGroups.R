@@ -20,7 +20,7 @@
 #' @param nb.clusters Numeric. A value indicating the number of groups for continuous sources of unwanted variation.
 #' The default is set to 3. This implies that each continuous variable will be split into 3 groups using the specified
 #' 'clustering.method'.
-#' @param assess.se.obj Logical. Whether to assess the SummarizedExperiment object or not. If `TRUE`, the function
+#' @param check.se.obj Logical. Whether to assess the SummarizedExperiment object or not. If `TRUE`, the function
 #' `checkSeObj()` will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove missing values from the specified variables. The options are
 #' `sample.annotation` or `none`. The default is set to `sample.annotation`, meaning that missing values in the variables
@@ -38,13 +38,12 @@
 #' @importFrom knitr kable
 #' @export
 
-
 createHomogeneousUVGroups <- function(
         se.obj,
         uv.variables,
         clustering.method = 'kmeans',
         nb.clusters = 3,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'sample.annotation',
         save.se.obj = TRUE,
         verbose = TRUE
@@ -76,7 +75,7 @@ createHomogeneousUVGroups <- function(
     }
 
     # Assessing SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         printColoredMessage(
             message = '-- Assessing the SummarizedExperiment object:',
             color = 'magenta',

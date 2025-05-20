@@ -32,7 +32,8 @@ be selected.}
 \item{variables}{Character or character vector. Specifies the name(s) of the column(s) in the SummarizedExperiment
 object for which the specified metrics below have been calculated.}
 
-\item{fast.pca}{Logical. Indicates whether the fast SVD approach was used in the \code{computePCA} function. The default is set to \code{TRUE}.}
+\item{fast.pca}{Logical. Indicates whether the fast SVD approach was used in the \code{computePCA} function. The default
+is set to \code{TRUE}.}
 
 \item{anova.method}{Character. Indicates which ANOVA method was used to compute the association between
 gene-level expression and a categorical variable. Options are: \code{aov} and \code{welch}. Default is \code{aov}.}
@@ -59,7 +60,8 @@ function for more details.}
 \code{clustering.method} is set to \code{hclust} for computing ARI. Options are: \code{euclidean}, \code{maximum}, \code{manhattan},
 \code{canberra}, \code{binary}, or \code{minkowski}. Default is \code{euclidean}. Refer to the \code{computeARI} function for more details.}
 
-\item{output.file.name}{Character. The path and name of the output file where the assessment plots will be saved in PDF format.}
+\item{output.file.name}{Character. The path and name of the output file where the assessment plots will be saved in
+PDF format.}
 
 \item{pdf.width}{Numeric. Specifies the width (in inches) of the output PDF file. Default is typically around 8.}
 

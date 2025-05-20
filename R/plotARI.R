@@ -1,17 +1,16 @@
 #' Generates barplot or scatter plot the Adjusted Rand Index (ARI).
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
 #' @description
 #' This function generates barplots of the Adjusted Rand Index (ARI) for individual datasets in the `SummarizedExperiment`
 #' object. If two variables are provided, the function creates scatter plots comparing the ARIs of each variable across
 #' the assays. The `computeARI()` function must applied before using the `plotARI()` function.
-
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
-#' @param se.obj A `SummarizedExperiment` object.
+#'
+#' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the `SummarizedExperiment`
 #' object to be used for generating barplots or scatter plots of the computed Adjusted Rand Index (ARI). By default,
 #' all assays in the `SummarizedExperiment` object will be selected.
@@ -30,11 +29,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the `SummarizedExperiment` object
 #' or return them as a list. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, messages for different steps of the function will be displayed.
-
+#'
 #' @return A `SummarizedExperiment` object or a list containing all the plots of the computed ARIs for the categorical
 #' variable(s).
-
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom tidyr pivot_longer

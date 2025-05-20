@@ -16,7 +16,7 @@ computeGenesVariableCorrelation(
   plot.top.genes = FALSE,
   nb.top.genes = 3,
   apply.round = TRUE,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
   save.se.obj = TRUE,
   override.check = FALSE,
@@ -56,7 +56,7 @@ to the variable to plot. The default is set to 3.}
 
 \item{apply.round}{Logical. Indicates whether to round the correlation coefficients values. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. Refer to the \code{checkSeObj()}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. Refer to the \code{checkSeObj()}
 function for more details. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. A character that specifies whether to remove NA or missing values from the data sets (assays).

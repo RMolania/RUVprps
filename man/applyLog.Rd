@@ -8,7 +8,7 @@ applyLog(
   se.obj,
   assay.names = "all",
   pseudo.count = 1,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "assays",
   verbose = TRUE
 )
@@ -16,21 +16,22 @@ applyLog(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Character. A character or character vectos specifying the name(s) of the data (assays) in the
-\code{SummarizedExperiment} object to be selected. These assays will be log2-transformed with a pseudo count. The default
-is \code{all}, which indicates that all assays in the \code{SummarizedExperiment} object will be selected.}
+\item{assay.names}{Character. A character or a vector of characters specifying the name(s) of the data (assays) in the
+SummarizedExperiment object to be selected. These data stes will be log2-transformed with a pseudo count. The default
+is se to \code{all}, which indicates that all data sets in the SummarizedExperiment object will be selected.}
 
-\item{pseudo.count}{Numeric. A pseudo count value to be added to all measurements in the selected assay(s) before
-applying the log2 transformation, to avoid \code{-Inf} values for zero measurements. The default is 1.}
+\item{pseudo.count}{Numeric. A numeric value as pseudo count value to be added to all measurements in the selected
+data sets before applying the log2 transformation, to avoid \code{-Inf} values for zero measurements. The default is set to 1.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
 set to \code{TRUE}.}
 
-\item{remove.na}{Character. A Character. that indicates whether to remove NA or missing values from the data sets or
-not. The options are \code{assays} or \code{none}. The default is set to \code{assays}.  Refer to the \code{checkSeObj()} function for more
+\item{remove.na}{Character. A Character that indicates whether to remove NA or missing values from the data sets or
+not. The options are: \code{assays} or \code{none}. The default is set to \code{assays}.  Refer to the \code{checkSeObj()} function for more
 details.}
 
-\item{verbose}{Logical. If it is set to \code{TRUE}, displays messages describing the steps of the function.}
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
+\code{TRUE}.}
 }
 \value{
 The function returns a log2 transformed of all specified data sets as a list object.

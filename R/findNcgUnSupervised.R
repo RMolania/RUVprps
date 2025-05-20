@@ -1,90 +1,146 @@
-#' Finds negative control genes (NCG) using an unsupervised approach.
+#' Finds NCGs using an unsupervised approach.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' Identifies a set of genes to be used as negative control genes when no biological variation is known. This function
-#' applies gene-level correlation, ANOVA, mean-variance relationship, and MAD analyses across and between sample groups
-#' to select negative control genes for different purposes, including `RUV-III` normalization.
+#' This function identifies a set of genes to be used as negative control genes (NCGs) when no biological variation is
+#' known. This function applies gene-level correlation, ANOVA, mean-variance relationship, and MAD analyses across and
+#' between sample groups to select NCGs for different purposes, including RUV-III normalization.
 #'
 #' @details
-#' The function initially uses gene-level correlation and ANOVA to identify genes significantly influenced
-#' by continuous and categorical sources of variation, respectively. Then, it performs a mean-variance relationship
-#' or Median Absolute Deviation (MAD) analysis on each gene within homogeneous sample groups, considering unwanted variables,
-#' to detect genes that are highly variable due to biological factors. Finally, various methods are applied to consolidate
-#' the statistical findings and determine an appropriate set of genes as negative control genes for different purposes,
-#' including `RUV-III` normalization.
+#' The function initially uses gene-level correlation and ANOVA to identify genes significantly influenced by continuous
+#' and categorical sources of variation, respectively. Then, it performs a mean-variance relationship or median absolute
+#' deviation (MAD) analysis on each gene within homogeneous sample groups, considering unwanted variables, to detect genes
+#' that are highly variable due to biological factors. Finally, various methods are applied to consolidate the statistical
+#' findings and determine an appropriate set of genes as NCGs for different purposes,
+#' including RUV-III normalization.
 #'
-#' @param se.obj A `SummarizedExperiment` object.
-#' @param assay.name Character. The name of the assay in the `SummarizedExperiment` object to be used to find NCGs.
-#' This must be the same data used for `RUV-III` normalization.
-#' @param uv.variables Character. A character vector indicating the name(s) of the columns in the `SummarizedExperiment` object
-#' that contain unwanted variable(s). If all unwanted variation is unknown, use the `identifyUnknownUV()` function
-#' to estimate them first, then run `findNcgsUnSupervised()`.
-#' @param clustering.method Character. The clustering method used to group continuous unwanted variation. Options are
-#' `kmeans`, `cut`, and `quantile`. The default is set to `kmeans`.
-#' @param nb.clusters Numeric. Number of clusters for grouping continuous unwanted variation. The default is set to `3`.
-#' @param nb.ncg Numeric. Number of genes to select as negative control genes when `ncg.selection.method` is `auto`.
-#' This value represents a fraction of total genes. The default is set to `0.1`.
-#' @param hvg.method Character. Method to select highly variable genes. Options: `var`, `mad`. `var` models gene variance
-#' based on a mean-variance trend. `mad` uses the Median Absolute Deviation. The default is set to `var`.
-#' @param ncg.selection.method Character. Method for selecting negative control genes. Options: `prod`, `sum`, `average`,
-#' `non.overlap`, `quantile`, `auto`. The default is set to `non.overlap`.
-#' @param top.rank.bio.genes Numeric. Fraction of top-ranked genes highly affected by biological variation. The default
-#' is set to `0.5`.
-#' @param top.rank.uv.genes Numeric. Fraction of top-ranked genes highly affected by unwanted variation. The default is
-#' set to `0.5`.
-#' @param bio.percentile Numeric. Percentile threshold for selecting biologically variable genes (used with `quantile`
-#' method). The default is set to `0.8`.
-#' @param uv.percentile Numeric. Percentile threshold for selecting unwanted-variable genes (used with `quantile`
-#' method). The default is set to `0.8`.
-#' @param grid.group Character. Scope of grid search: `bio`, `uv`, or `both`.
-#' @param grid.direction Character. Direction of grid search: `increase` or `decrease`.
-#' @param grid.nb Numeric. Number of genes to test in grid search when `ncg.selection.method` is `auto`. The default is
-#' set to `20`.
-#' @param normalization Character. Method for library size normalization before analysis. Options: `CPM`, `TMM`, `VST`,
-#' `full`, `median`, `upper`. The default is set to `CPM`.
-#' @param regress.out.variables Character. Variable(s) to regress out before analysis.
-#' @param min.sample.for.mad Numeric. Minimum number of samples per group for MAD analysis. The default is set to `3`.
-#' @param min.sample.for.var Numeric. Minimum number of samples per group for variance analysis. The default is set to `15`.
-#' @param min.sample.for.aov Numeric. Minimum number of samples for ANOVA. The default is set to `3`.
-#' @param min.sample.for.correlation Numeric. Minimum number of samples for correlation analysis. The default is set to `10`.
-#' @param corr.method Character. Correlation method: `pearson` or `spearman`. The default is set to `spearman`.
-#' @param a Numeric. Significance level (alpha) for correlation confidence intervals. The default is set to `0.05`.
-#' @param rho Numeric. Hypothesized correlation value for testing. The default is set to `0`.
-#' @param anova.method Character. ANOVA method: `aov` or `welch`. The default is set to `aov`.
+#' @param se.obj A SummarizedExperiment object.
+#' @param assay.name Character. A character that indicates the name of an data (assay) in the SummarizedExperiment object.
+#' The selected assay should be the one that will be used for the RUV-III-PRPS normalization.
+#' @param uv.variables Character. A character or a vector of characters indicating the name of the columns in the
+#' SummarizedExperiment object that contain unwanted variables. These variables can be both categorical or continouse or
+#' a combination of these. If all unwanted variation is unknown, use the  `identifyUnknownUV()` function to estimate them
+#' first, then run `findNcgsUnSupervised()`.
+#' @param clustering.method Character. The clustering method that should be used to group any continuous unwanted variable.
+#' The options are: `kmeans`, `cut`, and `quantile`. The default is set to `kmeans`.
+#' @param nb.clusters Numeric. A numeric value that indicates the number of clusters for grouping continuous unwanted
+#' variation. The default is set to 3.
+#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
+#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
+#' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
+#' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param hvg.method Character. A character indicating the method to select highly variable genes. The options are: `var`
+#' and `mad`. `var` models gene variance based on a mean-variance trend. `mad` uses the median absolute deviation. The
+#' default is set to `var`.
+#' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
+#' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
+#' or `non.overlap`. The default is set to 0.2.
+#' @param top.rank.uv.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
+#' affected by unwanted variables. This is required to be specified when the `ncg.selection.method` is either `auto` or
+#' `non.overlap`. The default is set to 0.2.
+#' @param bio.percentile Numeric. A numeric value that specifies the percentile cut-off to select genes that are highly
+#' affected by biological variation. This is required to be specified when the `ncg.selection.method` is set to `quantile`.
+#' The default is set to 0.8.
+#' @param uv.percentile Numeric. A numeric value that specifies the percentile cut-off to select genes that are highly
+#' affected by unwanted variation. This is required to be specified when the `ncg.selection.method` is set to `quantile`.
+#' The default is set to 0.8.
+#' @param grid.group Character. A character that indicates whether the grid search should be performed on biological,
+#' unwanted, or both factors when the `ncg.selection.method` is set to `auto`. The options are `bio`, `uv`, or `both`.
+#' The default is set to `uv`. For more details, refer to the function documentation.
+#' @param grid.direction Character. A character that indicates whether the grid search should be performed in decreasing
+#' or increasing order when the `ncg.selection.method` is set to `auto`. The options are: `increase` and `decrease`. The
+#' default is set to `decrease`.
+#' @param grid.nb Numeric. A numeric value that indicates the number of genes for grid search when the `ncg.selection.method`
+#' is set to `auto`. In the `auto` approach, the grid search starts with the initial `top.rank.uv.genes` and
+#' `top.rank.bio.genes` values and adds or drops the `grid.nb` in each loop to find `nb.ncg` of genes as negative control
+#' genes. The default is set to 20.
+#' @param min.sample.for.mad Numeric. A numeric value that indicates minimum number of samples required per group for MAD
+#' analysis. The default is set to 3.
+#' @param min.sample.for.var Numeric. A numeric value that indicates minimum number of samples required per group for
+#' gene-variance relationship analysis. The default is set to 15.
+#' @param min.sample.for.aov Numeric. A numeric value that indicates minimum number of samples required per group  for
+#' ANOVA. The default is set to 3.
+#' @param min.sample.for.correlation Numeric. A numeric value that indicates minimum number of samples required for
+#' correlation analysis. The default is set to 10
+#' @param corr.method Character. A character that indicates which correlation methods should be used for the correlation
+#' analyses. The options are `pearson` or `spearman`. The default is set to `spearman`.
+#' @param a Numeric. The significance level used for the confidence intervals in the correlation; by default, it is set
+#' to 0.05. Refer to the function `correls` from the **Rfast** R package for more details.
+#' @param rho Numeric. The value of the hypothesized correlation to be used in the hypothesis testing. The default is
+#' set to 0. Refer to the function `correls` from the **Rfast** R package for more details.
+#' @param anova.method Character. A character that  indicates which ANOVA method to use. The options are `aov` or `welch`.
+#' The default is se to `aov`. Refer to the function `row_oneway_equalvar()` or `row_oneway_welch()` from the
+#' **matrixTests** R package for more details.
+#' @param create.ncg.rank.plot Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
+#' with respect to their biological and unwanted variation effects. The default is set to `FALSE`.
+#' @param plot.ncg.rank Logical. Indicates whether to plot a heatmap that shows the rank of the all genes
+#' with respect to their biological and unwanted variation effects, while function is running. The default is set to `FALSE`.
 #' @param filter.ncgs Logical. Whether to filter selected NCGs based on public human housekeeping gene sets. The default
 #' is set to `FALSE`.
 #' @param common.hk Character. Specifies group of housekeeping genes to use: `cancer` or `non.cancer`. The default is set
 #' to `cancer`.
+#' @param nb.stable.genes Numeric. A numeric value that specifies the number of top stable genes to be obtained from the
+#' `getStableGenes()` function in the **singescore** R package. The default is set to 2000.
 #' @param hk.group Character. Column name in the gene annotation containing non-cancer housekeeping genes. Options include:
 #' `bulk.rnaseq.hk.genes.v1`, `bulk.rnaseq.hk.genes.v2`, `micorarray.hk.genes`, `nanostring.pan.cancer.hk.genes`,
 #' `singscore.pan.cancer.hk.genes`. The default is set to `micorarray.hk.genes`.
-#' @param assess.ncg Logical. Whether to assess the performance of selected NCGs using PCA and R² or vector correlations.
+#' @param assess.ncg Logical. Indicates whether to assess the performance of selected genes as negative control or not.
+#' This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
+#' correlation between the first `nb.pcs` principal components and the biological and unwanted variables. The default is
+#' set to `TRUE`.
+#' @param variables.to.assess.ncg Character. A character string or vector of strings indicating the column names in sample
+#' annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
+#' NCG needs to be evaluated. The default is set to `NULL`. This means all the variables specified in the `bio.variables`
+#' and `uv.variables` will be assessed.
+#' @param nb.pcs Numeric. A numeric value that indicates the number of the first principal components of selected negative
+#' control genes to be used to assess their performance. The default is set to 10.
+#' @param center Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, centering is done by subtracting
+#' the column means of the assay from their corresponding columns. The default is set to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing the
+#' (centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square otherwise.
+#' The default is set to `FALSE`.
+#' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
+#' . The default is set to `TRUE`.
+#' @param regress.out.variables Character. A character or a vector of character indicating the names of the columns in
+#' the SummarizedExperiment object that contain variables to be regressed out from the data before identifying biologically
+#' variable genes. The default is set to `NULL`.
+#' @param normalization Character. A character that indicates which normalization method should be use to mitigate the
+#' variation in library size before finding genes that are highly affected by biological variation. The options are :
+#' `CPM`, `TMM`, `VST`, `upper`, `full` and `medium`. The default is set to  `CPM`. Refer to the `applyOtherNormalization()`
+#' function for more details.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before any statistical analyses.
 #' The default is set to `TRUE`.
-#' @param variables.to.assess.ncg Character. Variables to assess with the NCGs. The default is set to `NULL` (all in `uv.variables`).
-#' @param nb.pcs Numeric. Number of principal components to use for NCG assessment. The default is set to `10`.
-#' @param center Logical. Whether to center data before PCA. The default is set to `TRUE`.
-#' @param scale Logical. Whether to scale data before PCA. The default is set to `TRUE`.
-#' @param apply.log Logical. Whether to log-transform the data before analysis. The default is set to `TRUE`.
-#' @param pseudo.count Numeric. Pseudo count to add before log transformation. The default is set to `1`.
-#' @param assess.se.obj Logical. Whether to validate the `SummarizedExperiment` object with `checkSeObj()`. The The default
-#' is set to `TRUE`.
-#' @param remove.na Character. Whether to remove missing values from `assays`, `sample.annotation`, `both`, or `none`.
-#' The The default is set to `both`.
-#' @param ncg.set.name Character. Output name for metadata entry. If `NULL`, a name is auto-generated.
-#' @param ncg.group.name Character. Group label for selected NCGs. If `NULL`, the label `ncg|unsupervised` is used.
-#' @param plot.output Logical. Whether to plot NCG assessment during execution. The default is set to `TRUE`.
-#' @param output.plot Character. Plot type to display: `assessment`, `heatmap`, or `both`. The default is set to `assessment`.
-#' @param use.imf Logical. Whether to use intermediate file. The default is set to `FALSE`.
-#' @param save.imf Logical. Whether to save the intermediate file for reuse. The default is set to `FALSE`.
-#' @param imf.name Character. Name for intermediate file. If `NULL`, generated as `paste0(assay.name, '|un.supervised|', ncg.selection.method)`.
-#' @param save.se.obj Logical. Whether to save results in `metadata` of the `SummarizedExperiment` object. The default is set to `TRUE`.
-#' @param verbose Logical. If `TRUE`, function will print progress messages.
+#' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before applying log
+#' transformation. The default is set to 1.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
+#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
+#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
+#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
+#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
+#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
+#' @param ncg.group.name Character. A character to be used as name of the group of NCG. The default is set to `NULL`, then
+#' the function create a names as following: `paste0('ncg|unsupervised')`. We refer to the details of the function for
+#' more details.
+#' @param ncg.set.name Character. A character to be used as name of the NCG set based on current variables and parameters
+#' The default is set to `NULL`, then the function create a names as following:
+#' `paste0(sum(ncg.selected),'|',paste0(bio.variables, collapse = '&'),'|',paste0(uv.variables, collapse = '&'),'|AnoCorrAs:',
+#' ncg.selection.method,'|',assay.name)`.We refer to the details of the function for more details.
+#' @param save.imf Logical. Indicates whether to save the intermediate file. If `TRUE`, the function saves the results
+#' of the statistical analyses in the metadata of the SummarizedExperiment object. If users want to change the parameters
+#' including `nb.ncg`, `ncg.selection.method`, `top.rank.bio.genes`, and `top.rank.uv.genes`, the analyses will not be
+#' re-calculated. The default is set to `FALSE`.
+#' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to `FALSE`.
+#' @param imf.name Character string. A name to save the intermediate file. If `NULL`, the function generates a name.
+#' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the
+#' SummarizedExperiment object or output the result. The default is `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
 #'
 #' @return A `SummarizedExperiment` object containing the selected negative control genes and optional assessment plots,
 #' or a list of the results.
-
+#'
 #' @importFrom matrixTests row_oneway_equalvar row_oneway_welch
 #' @importFrom ComplexHeatmap Heatmap rowAnnotation
 #' @importFrom BiocSingular bsparam runSVD
@@ -105,18 +161,16 @@ findNcgsUnSupervised <- function(
         uv.variables,
         clustering.method = 'kmeans',
         nb.clusters = 3,
+        ncg.selection.method = 'non.overlap',
         nb.ncg = 0.1,
         hvg.method = 'var',
-        ncg.selection.method = 'non.overlap',
-        top.rank.bio.genes = 0.5,
+        top.rank.bio.genes = 0.9,
         top.rank.uv.genes = 0.5,
         bio.percentile = 0.2,
         uv.percentile = 0.2,
         grid.group = 'uv',
         grid.direction = 'decrease',
         grid.nb = 20,
-        normalization = 'CPM',
-        regress.out.variables = NULL,
         min.sample.for.mad = 3,
         min.sample.for.var = 15,
         min.sample.for.aov = 3,
@@ -125,24 +179,28 @@ findNcgsUnSupervised <- function(
         a = 0.05,
         rho = 0,
         anova.method = 'aov',
+        create.ncg.rank.plot = FALSE,
+        plot.ncg.rank = FALSE,
         filter.ncgs = FALSE,
         common.hk = 'cancer',
+        nb.stable.genes = 2000,
         hk.group = 'micorarray.hk.genes',
         assess.ncg = TRUE,
         variables.to.assess.ncg = NULL,
         nb.pcs = 5,
         center = TRUE,
         scale = FALSE,
+        plot.ncg.assessment = TRUE,
+        regress.out.variables = NULL,
+        normalization = 'CPM',
         apply.log = TRUE,
         pseudo.count = 1,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'both',
-        ncg.set.name = NULL,
         ncg.group.name = NULL,
-        plot.output = TRUE,
-        output.plot = 'assessment',
-        use.imf = FALSE,
+        ncg.set.name = NULL,
         save.imf = FALSE,
+        use.imf = FALSE,
         imf.name = NULL,
         save.se.obj = TRUE,
         verbose = TRUE
@@ -150,7 +208,7 @@ findNcgsUnSupervised <- function(
     printColoredMessage(message = '------------The findNcgsUnSupervised function starts:',
                         color = 'white',
                         verbose = verbose)
-    # Check functions inputs ####
+    # Checking the  functions inputs ####
     if (length(assay.name) > 1 | is.logical(assay.name)){
         stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
     }
@@ -217,10 +275,10 @@ findNcgsUnSupervised <- function(
     if (pseudo.count < 0){
         stop('The "pseudo.count" must be 0 or a postive integer value.')
     }
-    if (isFALSE(is.logical(assess.se.obj))) {
-        stop('The "assess.se.obj" must be "TRUE" or "FALSE.')
+    if (isFALSE(is.logical(check.se.obj))) {
+        stop('The "check.se.obj" must be "TRUE" or "FALSE.')
     }
-    if (is.null(assess.se.obj)) {
+    if (is.null(check.se.obj)) {
         if (isTRUE(sum(uv.variables %in% colnames(colData(se.obj))) != length(uv.variables))) {
             stop('All or some of "uv.variables" cannot be found in the SummarizedExperiment object.')
         } else if (!is.null(variables.to.assess.ncg)) {
@@ -244,7 +302,7 @@ findNcgsUnSupervised <- function(
     }
 
     # Checking the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
@@ -253,13 +311,13 @@ findNcgsUnSupervised <- function(
             verbose = verbose
             )
     }
-    # Data transformation and normalization ####
+    # Applying data normalization and transformation ####
     printColoredMessage(
         message = '-- Applying data normalization and transformation:',
         color = 'magenta',
         verbose = verbose
         )
-    ## normalization ####
+    ## Applying library size normalization ####
     if (!is.null(normalization)){
         expr.data.nor <- applyOtherNormalizations(
             se.obj = se.obj,
@@ -267,13 +325,13 @@ findNcgsUnSupervised <- function(
             method = normalization,
             pseudo.count = pseudo.count,
             apply.log = apply.log,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose
             )
     }
-    ## apply log ####
+    ## Applying log transformation ####
     if (isTRUE(apply.log) & !is.null(pseudo.count)){
         printColoredMessage(
             message = paste0(
@@ -315,14 +373,14 @@ findNcgsUnSupervised <- function(
             color = 'magenta',
             verbose = verbose
             )
-        ## identifying genes that are highly affected by unwanted variation ####
+        ## Identifying genes that are highly affected by unwanted variation ####
         printColoredMessage(
             message = '-- Finding genes that are highly affected by each specified source(s) of unwanted variation:',
             color = 'orange',
             verbose = verbose
             )
 
-        ### find classes of variables ####
+        ### Finding the classes of variables ####
         uv.var.class <- unlist(lapply(
             uv.variables,
             function(x) class(colData(se.obj)[[x]]))
@@ -330,7 +388,7 @@ findNcgsUnSupervised <- function(
         categorical.uv <- uv.variables[uv.var.class %in% c('factor', 'character')]
         continuous.uv <- uv.variables[uv.var.class %in% c('numeric', 'integer')]
 
-        ### anova between genes and categorical sources of unwanted variation ####
+        ### Performing ANOVA between genes and categorical sources of unwanted variation ####
         if (isTRUE(length(categorical.uv) > 0)){
             printColoredMessage(
                 message = paste0(
@@ -397,7 +455,7 @@ findNcgsUnSupervised <- function(
             names(anova.genes.uv) <- categorical.uv
         } else anova.genes.uv <- NULL
 
-        ### correlation between genes and continuous sources of unwanted variation ####
+        ### Applying correlation between genes and continuous sources of unwanted variation ####
         if (isTRUE(length(continuous.uv) > 0)){
             printColoredMessage(
                 message = paste0(
@@ -443,19 +501,20 @@ findNcgsUnSupervised <- function(
             names(corr.genes.uv) <- continuous.uv
         } else corr.genes.uv <- NULL
 
-        ## finding genes that are highly affected by possible biological variation ####
+        ## Finding genes that are highly affected by possible biological variation ####
         printColoredMessage(
             message = '-- Finding genes that are potentially highly affected by biological variation:',
             color = 'orange',
             verbose = verbose
         )
+        #### Selecting the data input ####
         if (!is.null(normalization)) {
             data.to.use <- expr.data.nor
         } else if (is.null(normalization)){
             data.to.use <- expr.data
         }
 
-        #### regress out variables ####
+        #### Regressing out variables ####
         if (!is.null(regress.out.variables)){
             printColoredMessage(
                 message = paste0(
@@ -464,7 +523,8 @@ findNcgsUnSupervised <- function(
                     ' variable(s) will be regressed out from the data,',
                     ' please make sure your data is log transformed.'),
                 color = 'blue',
-                verbose = verbose)
+                verbose = verbose
+                )
             data.to.use <- t(data.to.use)
             lm.formula <- paste('se.obj', regress.out.variables, sep = '$')
             adjusted.data <- lm(as.formula(
@@ -474,7 +534,7 @@ findNcgsUnSupervised <- function(
             colnames(data.to.use) <- colnames(se.obj)
             row.names(data.to.use) <- row.names(se.obj)
         }
-        ### apply mad within each homogeneous sample groups with respect to the unwanted variable ####
+        ### Applying MAD or mean-variance analysis within each homogeneous sample groups with respect to the unwanted variable ####
         printColoredMessage(
             message = paste0(
                 '- Performing mean-variance or MAD on individual gene expression',
@@ -482,36 +542,17 @@ findNcgsUnSupervised <- function(
             color = 'orange',
             verbose = verbose
             )
-        #### find all possible sample groups with respect to the unwanted variables ####
+        ##### Finding all possible sample groups with respect to the unwanted variables ####
         homo.uv.groups <- createHomogeneousUVGroups(
             se.obj = se.obj,
             uv.variables = uv.variables,
             clustering.method =  clustering.method,
             nb.clusters = nb.clusters,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             verbose = verbose
             )
-        #### apply mad ####
-        if (hvg.method == 'var'){
-            selected.homo.uv.groups <- findRepeatingPatterns(
-                vec = homo.uv.groups,
-                n.repeat = min.sample.for.var
-            )
-            if (isTRUE(length(selected.homo.uv.groups) > 0)){
-                selected.samples <- homo.uv.groups %in% selected.homo.uv.groups
-                batch.design <- design.matrix(a = homo.uv.groups[selected.samples])
-                bio.genes <- modelGeneVar(x = data.to.use[ , selected.samples], design = batch.design)
-                bio.genes$bio.ranks <- rank(x = bio.genes$bio, ties.method = 'random')
-            } else {
-                stop(paste0(
-                    'There is no any homogenous sample groups with at least ',
-                    min.sample.for.mad,
-                    ' samples to perform MAD.')
-                )
-            }
-
-        }
+        ##### Applying  MAD ####
         if (hvg.method == 'mad'){
             selected.homo.uv.groups <- findRepeatingPatterns(
                 vec = homo.uv.groups,
@@ -536,8 +577,27 @@ findNcgsUnSupervised <- function(
                 )
             }
         }
+        ##### Applying  gene-variance relationship analysis ####
+        if (hvg.method == 'var'){
+            selected.homo.uv.groups <- findRepeatingPatterns(
+                vec = homo.uv.groups,
+                n.repeat = min.sample.for.var
+            )
+            if (isTRUE(length(selected.homo.uv.groups) > 0)){
+                selected.samples <- homo.uv.groups %in% selected.homo.uv.groups
+                batch.design <- design.matrix(a = homo.uv.groups[selected.samples])
+                bio.genes <- modelGeneVar(x = data.to.use[ , selected.samples], design = batch.design)
+                bio.genes$bio.ranks <- rank(x = bio.genes$bio, ties.method = 'random')
+            } else {
+                stop(paste0(
+                    'There is no any homogenous sample groups with at least ',
+                    min.sample.for.var,
+                    ' samples to perform mean-variacne relationship analysis.')
+                )
+            }
+        }
     }
-    # Intermediate file ####
+    # Checking and reading the intermediate file ####
     ## read intermediate file ####
     if (isTRUE(use.imf)){
         if (is.null(imf.name)){
@@ -571,13 +631,13 @@ findNcgsUnSupervised <- function(
             corr.genes.uv = corr.genes.uv)
     }
 
-    # Selection of NCG ####
+    # Summarizing the statistical results to select NCGs ####
     printColoredMessage(
         message = '-- Summarizing the statistical results to select a set of genes as NCGs:',
         color = 'magenta',
         verbose = verbose
         )
-    ## product, sum or average of ranks ####
+    ## Product, sum or average of ranks ####
     if (ncg.selection.method %in% c('prod', 'sum', 'average')) {
         all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
         all.uv.ranks <- lapply(
@@ -595,7 +655,7 @@ findNcgsUnSupervised <- function(
         all.uv.ranks <- do.call(cbind, all.uv.ranks)
         row.names(all.uv.ranks) <- row.names(se.obj)
         all.ranks <- cbind(all.uv.ranks, bio.genes[ , 'bio.ranks', drop = FALSE])
-        ### product of ranks ####
+        ### Applying the product of ranks ####
         if (ncg.selection.method == 'prod'){
             printColoredMessage(
                 message = '- A set of NCG will be selected based on the product of ranks.',
@@ -606,7 +666,7 @@ findNcgsUnSupervised <- function(
             if (sum(is.infinite(stat.summary)) > 0)
                 stop('The product of ranks results in infinity values.')
         }
-        ## average of ranks ####
+        ## Applying the average of ranks ####
         if (ncg.selection.method == 'sum'){
             printColoredMessage(
                 message = '- A set of NCG will be selected based on the sum of ranks.',
@@ -615,7 +675,7 @@ findNcgsUnSupervised <- function(
                 )
             stat.summary <- rowSums(as.matrix(all.ranks))
         }
-        ## sum of ranks ####
+        ## Applying the sum of ranks ####
         if (ncg.selection.method == 'average'){
             printColoredMessage(
                 message = '- A set of NCG will be selected based on the average of ranks.',
@@ -624,7 +684,7 @@ findNcgsUnSupervised <- function(
                 )
             stat.summary <- rowMeans(as.matrix(all.ranks))
         }
-        ## select top genes as NCGS ####
+        ## Selecting top genes as NCGS ####
         all.ranks$stat.summary <- stat.summary
         set.seed(112233)
         all.ranks$rank.stat.summary <- rank(x = all.ranks$stat.summary, ties.method = 'random')
@@ -633,7 +693,7 @@ findNcgsUnSupervised <- function(
         ncg.selected <- row.names(se.obj) %in% ncg.selected
     }
 
-    ## non-overlap approach ####
+    ## Non-overlap approach ####
     if (ncg.selection.method == 'non.overlap'){
         printColoredMessage(
             message = '- A set of genes will be selected as NCGs using the "non.overlap" approach.',
@@ -642,28 +702,28 @@ findNcgsUnSupervised <- function(
             )
         printColoredMessage(
             message = paste0(
-                '*1: selecting top ',
+                '-1: selecting top ',
                 top.rank.bio.genes *100,
                 '% of highly affected genes by possible bioloigcal variation.'),
             color = 'blue',
             verbose = verbose
         )
-        ### select genes affected by biological variation ####
+        ### Selecting genes affected by biological variation ####
         top.rank.bio.genes.nb <- round(c(1 - top.rank.bio.genes) * nrow(se.obj), digits = 0)
         top.bio.genes <- row.names(bio.genes)[bio.genes$bio.ranks > top.rank.bio.genes.nb]
         printColoredMessage(
             message = paste0(
-                '- ',
+                '-- ',
                 length(top.bio.genes),
                 ' genes are selected.'),
             color = 'blue',
             verbose = verbose
         )
 
-        ## select genes affected by unwanted variation ####
+        ## Selecting genes affected by unwanted variation ####
         printColoredMessage(
             message = paste0(
-                '*2: selecting top ',
+                '-2: selecting top ',
                 top.rank.uv.genes * 100,
                 '% of highly affected genes by each unwanted variation.'),
             color = 'blue',
@@ -686,13 +746,13 @@ findNcgsUnSupervised <- function(
             })))
         printColoredMessage(
             message = paste0(
-                '- ',
+                '-- ',
                 length(top.uv.genes),
                 ' genes are selected.'),
             color = 'blue',
             verbose = verbose
         )
-        ## select of NCGS ####
+        ## Selecting of NCGS ####
         printColoredMessage(
             message = '- all genes found in 1 will be excluded from ones found in 2.',
             color = 'blue',
@@ -703,7 +763,7 @@ findNcgsUnSupervised <- function(
         ncg.selected <- row.names(se.obj) %in% ncg.selected
     }
 
-    ## quantile approach ####
+    ## Quantile approach ####
     if (isTRUE(ncg.selection.method == 'quantile')){
         printColoredMessage(
             message = '- A set of genes will be selected as NCGs based on the "quantile" approach..',
@@ -746,7 +806,7 @@ findNcgsUnSupervised <- function(
         ncg.selected <- row.names(se.obj) %in% top.uv.genes
     }
 
-    ## auto approach ####
+    ## Auto approach ####
     if (ncg.selection.method == 'auto'){
         printColoredMessage(
             message = '- A set of genes will be selected as NCGs using the "auto" approach.',
@@ -1076,15 +1136,20 @@ findNcgsUnSupervised <- function(
 
     # Filtering selected negative control genes ######
     if (isTRUE(filter.ncgs)){
+        printColoredMessage(
+            message = '- Filtering the selected NCGs based on publicly available stable genes:',
+            color = 'blue',
+            verbose = verbose
+        )
         if (common.hk == 'cancer'){
-            common.hk <- singscore::getStableGenes(n_stable = 7000)
-            common.hk <- intersect(common.hk, row.names(se.obj)[ncg.selected])
-            ncg.selected <- row.names(se.obj) %in% common.hk
+            common.hks <- singscore::getStableGenes(n_stable = nb.stable.genes)
+            common.hks <- intersect(common.hks, row.names(se.obj)[ncg.selected])
+            ncg.selected <- row.names(se.obj) %in% common.hks
         }
         if (common.hk == 'non.cancer'){
-            common.hk <- row.names(se.obj)[rowData(se.obj)[[hk.group]]]
-            common.hk <- intersect(common.hk, row.names(se.obj)[ncg.selected])
-            ncg.selected <- row.names(se.obj) %in% common.hk
+            common.hks <- row.names(se.obj)[rowData(se.obj)[[hk.group]]]
+            common.hks <- intersect(common.hks, row.names(se.obj)[ncg.selected])
+            ncg.selected <- row.names(se.obj) %in% common.hks
         }
     }
 
@@ -1098,57 +1163,57 @@ findNcgsUnSupervised <- function(
         )
 
     # Plotting ####
-    all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
-    all.test.res <- lapply(
-        all.uv.tests,
-        function(x){
-            if (!is.null(x)){
-                temp.data <- get(x)
-                all.test.res <- lapply(
-                    names(temp.data),
-                    function(y){
-                        test.res <- temp.data[[y]][ , 'ranked.genes', drop = FALSE]
-                        test.res$group <- rep(y , nrow(test.res))
-                        test.res
-                    })
-                all.test.res <- do.call(cbind, all.test.res)
-            }
-            all.test.res
-        })
-    all.test.res <- Filter(Negate(is.null), all.test.res)
-    all.test.res <- do.call(cbind, all.test.res)
-    temp.data <- lapply(
-        seq(1, ncol(all.test.res), 2),
-        function(x){
-            temp.data <- all.test.res[ , x, drop = FALSE]
-            colnames(temp.data) <- all.test.res[ , x+1][1]
-            temp.data
-        })
-    temp.data <- do.call(cbind, temp.data)
-    temp.data$Biology <- bio.genes$bio.ranks
-    temp.data$NCG <- ncg.selected
-    ha <- ComplexHeatmap::rowAnnotation(
-        NCG = temp.data$NCG,
-        col = list(NCG = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
+    if (isTRUE(create.ncg.rank.plot)){
+        all.uv.tests <- c('anova.genes.uv', 'corr.genes.uv')
+        all.test.res <- lapply(
+            all.uv.tests,
+            function(x){
+                if (!is.null(x)){
+                    temp.data <- get(x)
+                    all.test.res <- lapply(
+                        names(temp.data),
+                        function(y){
+                            test.res <- temp.data[[y]][ , 'ranked.genes', drop = FALSE]
+                            test.res$group <- rep(y , nrow(test.res))
+                            test.res
+                        })
+                    all.test.res <- do.call(cbind, all.test.res)
+                }
+                all.test.res
+            })
+        all.test.res <- Filter(Negate(is.null), all.test.res)
+        all.test.res <- do.call(cbind, all.test.res)
+        temp.data <- lapply(
+            seq(1, ncol(all.test.res), 2),
+            function(x){
+                temp.data <- all.test.res[ , x, drop = FALSE]
+                colnames(temp.data) <- all.test.res[ , x+1][1]
+                temp.data
+            })
+        temp.data <- do.call(cbind, temp.data)
+        temp.data$Biology <- bio.genes$bio.ranks
+        temp.data$NCG <- ncg.selected
+        ha <- ComplexHeatmap::rowAnnotation(
+            NCG = temp.data$NCG,
+            col = list(NCG = c('TRUE' = 'gray10', 'FALSE' = 'gray'))
         )
-    ncg.heatmap.plot <- ComplexHeatmap::Heatmap(
-        temp.data[ , seq_len(ncol(temp.data) - 1)],
-        cluster_rows = TRUE,
-        cluster_columns = FALSE,
-        show_row_names = FALSE,
-        right_annotation = ha,
-        column_names_rot = 45,
-        col = viridis::magma(n = 20),
-        heatmap_legend_param = list(
-            title = 'Ranks',
-            title_gp = grid::gpar(fontsize = 14),
-            by_row = TRUE,
-            ncol = 1)
-    )
-    if (isTRUE(plot.output)){
-        if (output.plot == 'heatmap' | output.plot == 'both')
-            print(ncg.heatmap.plot)
+        ncg.rank.plot <- ComplexHeatmap::Heatmap(
+            temp.data[ , seq_len(ncol(temp.data) - 1)],
+            cluster_rows = TRUE,
+            cluster_columns = FALSE,
+            show_row_names = FALSE,
+            right_annotation = ha,
+            column_names_rot = 45,
+            col = viridis::magma(n = 20),
+            heatmap_legend_param = list(
+                title = 'Ranks',
+                title_gp = grid::gpar(fontsize = 14),
+                by_row = TRUE,
+                ncol = 1)
+        )
+        if (isTRUE(plot.ncg.rank)) print(ncg.rank.plot)
     }
+
 
     # Performance assessment of the selected NCG ####
     ## pca ####
@@ -1201,7 +1266,6 @@ findNcgsUnSupervised <- function(
                 }
             })
         names(all.corr) <- variables.to.assess.ncg
-        pcs <- Groups <- NULL
         pca.ncg <- as.data.frame(do.call(cbind, all.corr)) %>%
             dplyr::mutate(pcs = c(1:nb.pcs)) %>%
             tidyr::pivot_longer(
@@ -1209,7 +1273,7 @@ findNcgsUnSupervised <- function(
                 names_to = 'Groups',
                 values_to = 'ls'
                 )
-        p.assess.ncg <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
+        ncg.assessment.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
             geom_line(aes(color = Groups), size = 1) +
             geom_point(aes(color = Groups), size = 2) +
             xlab('PCs') +
@@ -1229,11 +1293,7 @@ findNcgsUnSupervised <- function(
                 strip.text.x = element_text(size = 10),
                 plot.title = element_text(size = 16)
             )
-        if (isTRUE(plot.output)){
-            if (output.plot == 'assessment' | output.plot == 'both'){
-                print(p.assess.ncg)
-            }
-        }
+        if (isTRUE(plot.ncg.assessment)) print(ncg.assessment.plot)
     }
     # Save the NCGs ####
     ## add results to the SummarizedExperiment object ####
@@ -1275,27 +1335,30 @@ findNcgsUnSupervised <- function(
             se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]] <- list()
         }
         ## check
-        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]])) {
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']] <- list()
+        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]])) {
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]] <- list()
         }
         ## check
-        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']])) {
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- list()
+        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]])) {
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]][['ncg.set']] <- list()
         }
-        se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- ncg.selected
+        se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]][['ncg.set']] <- ncg.selected
 
         if (isTRUE(assess.ncg)){
             ## check
-            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]])) {
-                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']] <- list()
+            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]])) {
+                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]][['assessment.plot']] <- list()
             }
-            if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']])) {
-                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- list()
-            }
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
-            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- ncg.heatmap.plot
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]][['assessment.plot']] <-
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- ncg.assessment.plot
         }
-
+        if (isTRUE(create.ncg.rank.plot)){
+            ## check
+            if (!'rank.plot' %in% names(se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]])) {
+                se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]][['rank.plot']] <- list()
+            }
+            se.obj@metadata[['NCG']][['un.supervised']][[ncg.group.name]][[ncg.set.name]][['rank.plot']] <- ncg.rank.plot
+        }
         printColoredMessage(
             message = '- The NCGs are saved to metadata of the SummarizedExperiment object.',
             color = 'blue',
@@ -1320,6 +1383,9 @@ findNcgsUnSupervised <- function(
             color = 'white',
             verbose = verbose
             )
-        return(ncg.selected)
+        return(list(ncg.selected = ncg.selected))
     }
 }
+
+
+

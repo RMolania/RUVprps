@@ -1,7 +1,7 @@
 #' Add overall plot to the "metadata" of SummarizedExperiment object.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param slot Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.
 #' @param assessment.type Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.

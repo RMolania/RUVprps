@@ -1,11 +1,11 @@
 #' Calculates relative log expression (RLE) of RNA-seq data.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function calculates relative log expression (RLE) of the assay(s) in a SummarizedExperiment object. In addition,
 #' the function returns the RLE medians and interquartile ranges (IQRs) of each sample for individual assay(s).
-
+#'
 #' @details
 #' RLE plots are used to reveal trends, temporal clustering and other non-random patterns resulting from unwanted variation
 #' in gene expression data. To generate RLE plots, we first form the log ratio log(yig/yg) of the raw count yig for
@@ -16,7 +16,7 @@
 #' sensitivity to unwanted variation, we also examine the relationships between RLE medians and interquartile ranges with
 #' potential sources of unwanted variation and individual gene expression levels in the datasets. In the absence of any
 #' influence of unwanted variation in the data, we should see no such associations.
-
+#'
 #' @references
 #' Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
 #'
@@ -25,7 +25,7 @@
 #'
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object to calculate RLE data, medians, and interquartile ranges. The default is set to `all`,
@@ -39,7 +39,7 @@
 #' medians and interquartile ranges. Choosing "rle" returns only the RLE data for each assay. "rle.med" returns only the
 #' RLE  medians. `rle.iqr` returns only the interquartile ranges of the RLE data. `rle.med.iqr` returns both the
 #' RLE medians and interquartile ranges. The default is set to  `all`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
 #' function will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove NA or missing values from the assays. Options are `assays` or
 #' `none`. The default is `assays`, meaning all NA or missing values in the assays will be removed before computing RLE.
@@ -53,7 +53,7 @@
 #'
 #' @return Either a SummarizedExperiment object that contain the RLE results or a list containing the RLE data for each
 #' individual assay in the SummarizedExperiment object.
-
+#'
 #' @importFrom matrixStats rowMedians colMedians colIQRs
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom stats median
@@ -66,7 +66,7 @@ computeRLE <- function(
         apply.log = TRUE,
         pseudo.count = 1,
         outputs.to.return = 'all',
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'assays',
         save.se.obj = TRUE,
         override.check = FALSE,
@@ -120,7 +120,7 @@ computeRLE <- function(
         if (!remove.na %in% c('assays', 'none')) {
             stop('The "remove.na" must be one of the "assays" or "none".')
         }
-        if (!is.logical(assess.se.obj)){
+        if (!is.logical(check.se.obj)){
             stop('The "save.se.obj" must be logical (TRUE or FALSE)')
         }
         if (!is.logical(save.se.obj)){
@@ -131,7 +131,7 @@ computeRLE <- function(
         }
 
         # Assess the SummarizedExperiment object ####
-        if (isTRUE(assess.se.obj)) {
+        if (isTRUE(check.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
                 assay.names = assay.names,

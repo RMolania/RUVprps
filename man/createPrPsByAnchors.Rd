@@ -13,12 +13,12 @@ createPrPsByAnchors(
   other.uv.variables = NULL,
   other.uv.clustering.method = "kmeans",
   nb.other.uv.clusters = 2,
+  min.sample.for.ps = 3,
+  max.sample.for.ps = 10,
   filter.prps.sets = TRUE,
   max.prps.sets = 3,
   min.batches.to.cover = "all",
   select.extreme.groups = FALSE,
-  min.sample.for.ps = 3,
-  max.sample.for.ps = 10,
   check.prps.connectedness = TRUE,
   hvg = NULL,
   apply.log = TRUE,
@@ -29,18 +29,18 @@ createPrPsByAnchors(
   sct.clip.range = NULL,
   reduction = "cca",
   l2.norm = TRUE,
-  dims = 1:15,
+  dims = 1:10,
   k.anchor = 2,
-  k.filter = 10,
+  k.filter = 5,
   k.score = 30,
   max.features = 200,
   nn.method = "annoy",
   n.trees = 50,
   eps = 0,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
   plot.output = TRUE,
-  prps.group = NULL,
+  prps.group.name = NULL,
   prps.sets.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
@@ -55,7 +55,7 @@ RUV-III-PRPS normalization.}
 
 \item{main.uv.variable}{Character. Indicates the name of a column in the sample annotation of the SummarizedExperiment
 object. PRPS data will be created for this variable. The \code{main.uv.variable} can be either categorical or continuous.
-If 'main.uv.variable' is a continuous variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.}
+If 'main.uv.variable' is a continuous variable, this will be divided into 'nb.clusters' groups using the \code{clustering.method}.}
 
 \item{clustering.method}{Character. A string indicating the choice of clustering method for grouping the 'main.uv.variable'
 if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.}
@@ -65,7 +65,7 @@ a continuous variable. The default is set to 3.}
 
 \item{other.uv.variables}{Character. A character string or character vector representing the name(s) of the columns of
 unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
-continuous, or a combination. These variables will be considered when generating PRPS sets for the "main.uv.variable"
+continuous, or a combination. These variables will be considered when generating PRPS sets for the \code{main.uv.variable}
 to help avoid potential contamination in PRPS data. The default is set to \code{NULL}}
 
 \item{other.uv.clustering.method}{Character. A character string indicating which clustering method should be used to
@@ -75,12 +75,18 @@ and \code{quantile}. The default is set to \code{kmeans}. See createHomogeneousU
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
 unwanted variable specified in the \code{other.uv.variables}. The default is set to 3.}
 
+\item{min.sample.for.ps}{Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
+to 3. The minimum value is 2.}
+
+\item{max.sample.for.ps}{Numeric. Maximum number of samples required for pseudo-replicate creation. The default is set
+to 3. The maximum value is 10.}
+
 \item{filter.prps.sets}{Logical. If \code{TRUE}, the number of PRPS sets across each pair of batches will be filtered if
 they are higher than the \code{max.prps.sets} value. A high number of PRPS sets will increase the computational time for
 the RUV-III normalization. The default is set to \code{TRUE}.}
 
 \item{max.prps.sets}{Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches(
-subgrouos of the 'main.uv.variable'). The default is set to 10.}
+subgrouos of the \code{main.uv.variable}). The default is set to 10.}
 
 \item{min.batches.to.cover}{Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
 \code{all}, indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.}
@@ -89,14 +95,8 @@ subgrouos of the 'main.uv.variable'). The default is set to 10.}
 clusters, when the \code{main.uv.variable} is a continuous variable. The default is set to \code{TRUE}. This will increase the
 variation between PR sets in order to better capture the unwanted variation.}
 
-\item{min.sample.for.ps}{Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
-to 3. The minimum value is 2.}
-
-\item{max.sample.for.ps}{Numeric. Maximum number of samples required for pseudo-replicate creation. The default is set
-to 3. The maximum value is 10.}
-
-\item{check.prps.connectedness}{Logical. Indicates whether to assess the 'connectedness' between the PRPS sets across
-all batches. Default is set to 'TRUE', indicating if there is not connections between all PRPS sets across all batches,
+\item{check.prps.connectedness}{Logical. Indicates whether to assess the connectedness between the PRPS sets across
+all batches. Default is set to \code{TRUE}, indicating if there is not connections between all PRPS sets across all batches,
 the function will give error.We refer to the \code{checkPRPSconnectedness()} function for more details.}
 
 \item{hvg}{Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
@@ -111,7 +111,7 @@ log transformation to avoid \code{-Inf} for raw counts that are equal to 0. The 
 \item{anchor.features}{Numeric. A numeric value indicating the provided number of features to be used in anchor
 finding. The default is 2000. We refer to the \code{FindIntegrationAnchors()} R function for more details.}
 
-\item{scale}{Logical. Whether or not to scale the features provided. Only set to FALSE if you have previously scaled
+\item{scale}{Logical. Whether or not to scale the features provided. Only set to \code{FALSE} if you have previously scaled
 the features you want to use for each object in the object.list.}
 
 \item{normalization}{Character. Indicate which normalization methods should be used before finding the anchors.
@@ -131,9 +131,9 @@ is 10.}
 
 \item{k.anchor}{Numeric. How many neighbors (k) to use when picking anchors. The default is set to 2.}
 
-\item{k.filter}{Numeric. How many neighbors (k) to use when filtering anchors. The default is 20.}
+\item{k.filter}{Numeric. How many neighbors (k) to use when filtering anchors. The default is set to 20.}
 
-\item{k.score}{Numeric. How many neighbors (k) to use when scoring anchors. The default is 30.}
+\item{k.score}{Numeric. How many neighbors (k) to use when scoring anchors. The default is set to 30.}
 
 \item{max.features}{Numeric. The maximum number of features to use when specifying the neighborhood search space in
 the anchor filtering. The default is set to 30.}
@@ -145,7 +145,7 @@ the anchor filtering. The default is set to 30.}
 
 \item{eps}{Numeric. Error bound on the neighbor finding algorithm (from RANN/Annoy).}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the \code{checkSeObj()}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. See the \code{checkSeObj()}
 function for more details.}
 
 \item{remove.na}{Character. To remove NA or missing values from the assays or not. The options are \code{assays} and \code{none}.
@@ -155,7 +155,7 @@ the \code{checkSeObj()} function for more details.}
 \item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches and PRPS sets
 across the 'main.uv.variable'.}
 
-\item{prps.group}{Character. A string specifying the name of the PRPS group. If it is \code{NULL}, the function will select
+\item{prps.group.name}{Character. A string specifying the name of the PRPS group. If it is \code{NULL}, the function will select
 a name based on "paste0('prps|anchor|', uv.variable)".}
 
 \item{prps.sets.name}{Character. A string specifying the name of the output file. If it is \code{NULL}, the function will

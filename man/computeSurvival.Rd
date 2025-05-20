@@ -15,7 +15,7 @@ computeSurvival(
   return.p.value = TRUE,
   return.survival.plot = FALSE,
   plot.output = TRUE,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
   verbose = TRUE
@@ -50,7 +50,7 @@ meaning the expression level of each specified gene will be divided into two gro
 
 \item{plot.output}{Logical. Indicates whether to plot variable-level survival analysis. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the \code{checkSeObj}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the \code{checkSeObj}
 function will be applied. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are \code{assays}

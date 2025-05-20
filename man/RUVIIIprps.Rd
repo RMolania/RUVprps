@@ -22,7 +22,7 @@ RUVIIIprps(
   eta = NULL,
   include.intercept = TRUE,
   return.info = FALSE,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   output.name = NULL,
   save.se.obj = TRUE,
@@ -92,7 +92,7 @@ will automatically include one.}
 \item{return.info}{Logical. If 'TRUE', additional information including the W matrix of the RUV-III method is returned.
 The default is set to 'TRUE'.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to 'TRUE'. Refer to the checkSeObj function for more details.}
 
 \item{remove.na}{Character string. A character string indicating whether to remove NA or missing values from the assays

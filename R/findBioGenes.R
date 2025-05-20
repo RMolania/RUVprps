@@ -87,7 +87,7 @@
 #' the correlation analysis. The default is 10.
 #' @param min.sample.for.mad Numeric. Specifies the minimum number of samples required to perform the Median Absolute
 #' Deviation (MAD) calculation on each gene within homogeneous sample groups. The default is 3.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj' function
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj' function
 #' will be applied. The default is 'TRUE'.
 #' @param remove.na Character. Specifies whether to remove NA or missing values from 'assays', 'sample.annotation', 'both', or 'none'.
 #' If 'assays' is selected, genes with missing values will be excluded. If 'sample.annotation' is selected, samples with missing
@@ -138,7 +138,7 @@ findBioGenes <- function(
         rho = 0,
         min.sample.for.correlation = 10,
         min.sample.for.mad = 3,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
         output.name = NULL,
@@ -183,7 +183,7 @@ findBioGenes <- function(
             stop('The "pseudo.count" must be 0 or a postive integer value.')
     }
 
-    if (is.null(assess.se.obj)) {
+    if (is.null(check.se.obj)) {
         if (isTRUE(sum(bio.variables %in% colnames(colData(se.obj))) != length(bio.variables))) {
             stop('All or some of "bio.variables" cannot be found in the SummarizedExperiment object.')
         }
@@ -200,7 +200,7 @@ findBioGenes <- function(
     }
 
     # Check the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
@@ -234,7 +234,7 @@ findBioGenes <- function(
                 bio.variables = bio.variables,
                 nb.clusters = nb.bio.clusters,
                 clustering.method = bio.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = verbose
@@ -250,7 +250,7 @@ findBioGenes <- function(
                 uv.variables = uv.variables,
                 nb.clusters = nb.uv.clusters,
                 clustering.method = uv.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = verbose)
@@ -354,7 +354,7 @@ findBioGenes <- function(
                     method = normalization,
                     pseudo.count = pseudo.count,
                     apply.log = apply.log,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = verbose)
@@ -425,7 +425,7 @@ findBioGenes <- function(
                 uv.variables = uv.variables,
                 nb.clusters = nb.uv.clusters,
                 clustering.method = uv.clustering.method,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 verbose = verbose
                 )
@@ -659,7 +659,7 @@ findBioGenes <- function(
                     method = normalization,
                     pseudo.count = pseudo.count,
                     apply.log = apply.log,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = verbose
@@ -922,7 +922,7 @@ findBioGenes <- function(
                     method = normalization,
                     pseudo.count = pseudo.count,
                     apply.log = apply.log,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = verbose)
@@ -962,7 +962,7 @@ findBioGenes <- function(
                 uv.variables = uv.variables,
                 clustering.method =  uv.clustering.method,
                 nb.clusters = nb.uv.clusters,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 save.se.obj = FALSE,
                 verbose = verbose
                 )

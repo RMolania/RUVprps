@@ -23,7 +23,7 @@
 #' @param return.p.value Logical. Indicates whether to calculate p-values in the survival analysis. The default is `TRUE`.
 #' @param return.survival.plot Logical. Indicates whether to generate survival plots. The default is set to `FALSE`.
 #' @param plot.output Logical. Indicates whether to plot variable-level survival analysis. The default is set to `TRUE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the `checkSeObj`
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the `checkSeObj`
 #' function will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove NA or missing values from the assays. Options are `assays`
 #' ,`sample annotation` or `none`. The default is set to `assays`, which removes all NA or missing values from the data
@@ -48,7 +48,7 @@ computeSurvival <- function(
         return.p.value = TRUE,
         return.survival.plot = FALSE,
         plot.output = TRUE,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
@@ -107,7 +107,7 @@ computeSurvival <- function(
     }
 
     # Assess the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.names,

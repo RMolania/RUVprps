@@ -1,8 +1,8 @@
 #' Generates scatter and boxplot plot of principal components.
 #'
 #' @description
-#' This function generates scatter and boxplots of the first principal components (PCs) of the assay(s) in a
-#' SummarizedExperiment object. The function can generate pairwise scatter plots of the first principal components,
+#' This function generates scatter and boxplots of the principal components (PCs) of the data(assay) in a
+#' SummarizedExperiment object. The function can generate pairwise scatter plots of the principal components,
 #' colored by a categorical variable, or create boxplots of each PC across the variable. Boxplots of principal components
 #' are especially useful when the levels of a categorical variable are numerous, making visualization through colored
 #' scatter plots challenging. If a continuous variable is provided, the function creates scatter plots of each PC against
@@ -49,7 +49,7 @@
 #' @param verbose Logical. If `TRUE`, process messages will be displayed during execution.
 #'
 #' @return A SummarizedExperiment object containing the PCA plot(s) in its metadata, or a list containing the PCA plot(s).
-
+#'
 #' @importFrom ggpubr ggarrange theme_pubr stat_cor
 #' @importFrom patchwork plot_spacer plot_layout
 #' @importFrom tidyr pivot_longer
@@ -110,7 +110,7 @@ plotPCA <- function(
 
     # Selecting colors ####
     if (!is.null(variable)){
-        if(is.null(variable.colors)){
+        if (is.null(variable.colors)){
             n.colors <- length(unique(colData(se.obj)[[variable]]))
             pca.plot.colors <- scales::hue_pal()(n.colors*2)
             pca.plot.colors <- pca.plot.colors[seq(1, n.colors*2, 2)]
@@ -128,7 +128,7 @@ plotPCA <- function(
         color = 'magenta',
         verbose = verbose
         )
-    if( isTRUE(fast.pca)){
+    if ( isTRUE(fast.pca)){
         method = 'fast.svd'
     } else method = 'svd'
     all.pca.data <- getMetricFromSeObj(
@@ -268,7 +268,7 @@ plotPCA <- function(
             names(all.scat.pca.plots.assays) <- levels(assay.names)
 
             ### put all the scatter PCA of all the assays together ####
-            if(length(assay.names) > 1){
+            if (length(assay.names) > 1){
                 printColoredMessage(
                     message = '-- Combining all the scatter PCA plots of all the assyas together:',
                     color = 'magenta',
@@ -288,7 +288,7 @@ plotPCA <- function(
                     nrow = plot.nrow,
                     ncol = plot.ncol
                     )
-                if(class(overall.scat.pca.plot)[[1]] == 'list'){
+                if (class(overall.scat.pca.plot)[[1]] == 'list'){
                     plot.list <- lapply(
                         seq(length(overall.scat.pca.plot)),
                         function(x){
@@ -389,7 +389,7 @@ plotPCA <- function(
                             axis.text.y = element_text(size = 10),
                             strip.text.x = element_text(size = 12),
                             legend.position = 'none')
-                    if(isTRUE(plot.output) & length(assay.names) == 1) print(plot.p)
+                    if (isTRUE(plot.output) & length(assay.names) == 1) print(plot.p)
                     return(plot.p)
                 })
             names(all.boxplot.pca.plots) <- levels(assay.names)
@@ -453,7 +453,7 @@ plotPCA <- function(
                     message = '- The individual assay boxplot of PCs are combined into one.',
                     color = 'blue',
                     verbose = verbose)
-                if(isTRUE(plot.output))
+                if (isTRUE(plot.output))
                     suppressMessages(print(overall.boxplot.pca.plot))
             }
         }
@@ -516,11 +516,11 @@ plotPCA <- function(
                         axis.text.y = element_text(size = 8),
                         strip.text.x = element_text(size = 10),
                         legend.position = 'none')
-                if(isTRUE(plot.output) & length(assay.names) == 1) print(plot.p)
+                if (isTRUE(plot.output) & length(assay.names) == 1) print(plot.p)
                 return(plot.p)
             })
         names(all.scat.pca.plots.assays) <- levels(assay.names)
-        if(length(assay.names) > 1){
+        if (length(assay.names) > 1){
             printColoredMessage(
                 message = '-- Putting all the plots of each assyas together:',
                 color = 'magenta',
@@ -531,7 +531,7 @@ plotPCA <- function(
                 nrow = plot.nrow,
                 ncol = plot.ncol
                 )
-            if(class(overall.scat.pca.plot)[[1]] == 'list'){
+            if (class(overall.scat.pca.plot)[[1]] == 'list'){
                 plot.list <- lapply(
                     seq(length(overall.scat.pca.plot)),
                     function(x){
@@ -582,7 +582,7 @@ plotPCA <- function(
                 color = 'blue',
                 verbose = verbose
                 )
-            if(isTRUE(plot.output))
+            if (isTRUE(plot.output))
                 suppressMessages(print(overall.scat.pca.plot))
         }
     }
@@ -594,10 +594,10 @@ plotPCA <- function(
         )
     ## add the pca plots to the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)) {
-        if(isTRUE(fast.pca)){
+        if (isTRUE(fast.pca)){
             method <- 'fast.svd'
         } else method <- 'ordinary.svd'
-        if(plot.type == 'scatter'){
+        if (plot.type == 'scatter'){
             results.data <- all.scat.pca.plots.assays
         } else results.data <- all.boxplot.pca.plots
         se.obj <- addMetricToSeObj(
@@ -622,7 +622,7 @@ plotPCA <- function(
             )
         ### overall pca plots ####
         if (length(assay.names) > 1){
-            if(plot.type == 'scatter'){
+            if (plot.type == 'scatter'){
                 results.data <- overall.scat.pca.plot
             } else results.data <- overall.boxplot.pca.plot
             se.obj <- addOverallPlotToSeObj(
@@ -650,12 +650,12 @@ plotPCA <- function(
         printColoredMessage(message = '------------The plotPCA function finished.',
                             color = 'white',
                             verbose = verbose)
-        if(length(assay.names) == 1){
-            if(plot.type == 'scatter'){
+        if (length(assay.names) == 1){
+            if (plot.type == 'scatter'){
                 return(all.scat.pca.plots = all.scat.pca.plots)
             } else return(all.boxplot.pca.plots = all.boxplot.pca.plots)
         } else {
-            if(plot.type == 'scatter'){
+            if (plot.type == 'scatter'){
                 return(pca.plots = list(
                     all.scat.pca.plots = all.scat.pca.plots.assays,
                     overall.scat.pca.plots = overall.scat.pca.plots))

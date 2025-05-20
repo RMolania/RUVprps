@@ -48,10 +48,10 @@ createPrPsUnSupervised(
   pseudo.count = 1,
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
   prps.sets.name = NULL,
-  prps.group = NULL,
+  prps.group.name = NULL,
   plot.output = TRUE,
   save.se.obj = TRUE,
   verbose = TRUE
@@ -63,9 +63,9 @@ createPrPsUnSupervised(
 \item{assay.name}{Character. A character string indicating the assay name within the SummarizedExperiment object for
 the creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.}
 
-\item{uv.variables}{Character. A character string or vector of strings specifying the name(s) of column(s) in the sample annotation
-of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous variable
-is provided, this will be divided into groups using the clustering method.}
+\item{uv.variables}{Character. A character string or vector of strings specifying the name(s) of column(s) in the
+sample annotation of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous
+variable is provided, this will be divided into groups using the clustering method.}
 
 \item{approach}{Character. Indicates which method to be used. The options are \code{anchor} and \code{mnn}.}
 
@@ -88,7 +88,9 @@ continuous variable. The default is 3.}
 \item{hvg}{Vector. A vector containing the names of highly variable genes. These genes will be utilized to identify
 anchor samples across different batches. The default value is set to \code{NULL}}
 
-\item{select.extreme.groups}{TTTT}
+\item{select.extreme.groups}{Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
+clusters, when the \code{main.uv.variable} is a continuous variable. Default is set to \code{TRUE}. This will increase the
+variation between PR sets in order to better capture the unwanted variation.}
 
 \item{min.batches.to.cover}{TTTT}
 
@@ -147,12 +149,15 @@ from the BiocSingular package.}
 \item{normalization}{Character. Normalization method before computing nearest neighbors. Default: \code{cpm}. If \code{NULL},
 no normalization is applied.}
 
-\item{apply.cosine.norm}{TTTT}
+\item{apply.cosine.norm}{Logical. Indicates whether cosine normalization should be applied before finding MNN. Default
+is set to \code{TRUE}.}
 
 \item{regress.out.variables}{Character. Column names containing biological variables to regress out before estimating
 unwanted variation. Default: \code{NULL}.}
 
-\item{check.prps.connectedness}{TTT}
+\item{check.prps.connectedness}{Logical. Indicates whether to assess the \code{connectedness} between the PRPS sets across
+all batches. Default is set to \code{TRUE}, indicating if there is not connections between all PRPS sets across all batches,
+the function will give error.We refer to the checkPRPSconnectedness() function for more details.}
 
 \item{apply.log}{Logical. Whether to apply a log transformation. Default is \code{TRUE}.}
 
@@ -162,13 +167,16 @@ unwanted variation. Default: \code{NULL}.}
 
 \item{mnn.nbparam}{Character. A \code{BiocParallelParam} object for nearest neighbor search. Default: \code{KmknnParam()}.}
 
-\item{assess.se.obj}{Logical. Whether to assess the SummarizedExperiment object using \code{checkSeObj}.}
+\item{check.se.obj}{Logical. Whether to assess the SummarizedExperiment object using \code{checkSeObj}.}
 
 \item{remove.na}{Character. Indicates whether to remove \code{NA} values. Options: \code{assays}, \code{none}. Default is \code{assays}.}
 
-\item{prps.sets.name}{Character.}
+\item{prps.sets.name}{Character. A character specifying the name of the output file to be saved in the metadata
+of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
+\code{paste0(uv.variable, '|', assay.name)}.}
 
-\item{prps.group}{Character.}
+\item{prps.group.name}{Character. A character specifying the name of the prps.group.name to which the current KNN belong.
+If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}
 
 \item{plot.output}{TTTT}
 
@@ -178,8 +186,11 @@ returns results as a list. Default is \code{TRUE}.}
 \item{verbose}{Logical. If \code{TRUE}, prints messages throughout function execution.}
 }
 \description{
-This function uses the \code{createUnSupervisedPRPSbyAnchors} or \code{createUnSupervisedPRPSbyMNN} to create PRPS sets of all
+This function uses the \code{createUnSupervisedPRPSbyAnchors()} or \code{createUnSupervisedPRPSbyMNN()} to create PRPS sets of all
 the unwanted variables in situations when the biological variation are unknown.
+}
+\details{
+Additional details...
 }
 \author{
 Ramyar Molania

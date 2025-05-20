@@ -97,7 +97,7 @@
 #' @param gene.set.score.normalization Character. Normalization method for gene set scoring. The default is set to `NULL`.
 #' @param gene.set.score.assessment TTT
 #' @param gene.set.score.variables.to.assess TTT
-#' @param assess.se.obj Logical. Whether to check the SummarizedExperiment object.
+#' @param check.se.obj Logical. Whether to check the SummarizedExperiment object.
 #' @param remove.na Character. Whether to remove `NA` values from assays. Options: `assays`, `none`. The default is set to `assays`.
 #' @param override.check Logical. Skip recalculating metrics if already present. The default is set to `FALSE`.
 #' @param verbose Logical. Print progress messages. The default is set to `FALSE`.
@@ -176,7 +176,7 @@ assessVariation <- function(
         gene.set.score.normalization = NULL,
         gene.set.score.assessment = FALSE,
         gene.set.score.variables.to.assess = NULL,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         override.check = FALSE,
         verbose = TRUE
@@ -256,7 +256,7 @@ assessVariation <- function(
     }
 
     # Assessing the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = levels(assay.names),
@@ -303,7 +303,7 @@ assessVariation <- function(
             apply.log = apply.log,
             pseudo.count = pseudo.count,
             outputs.to.return = rle.outputs.to.return,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             remove.na = 'none',
             save.se.obj = TRUE,
             override.check = override.check,
@@ -409,7 +409,7 @@ assessVariation <- function(
             apply.log = apply.log,
             pseudo.count = pseudo.count,
             svd.bsparam = svd.bsparam,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             remove.na = 'none',
             save.se.obj = TRUE,
             override.check = override.check,
@@ -667,7 +667,7 @@ assessVariation <- function(
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 apply.round = TRUE,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 override.check = override.check,
                 remove.na = 'none',
                 save.se.obj = TRUE)
@@ -707,7 +707,7 @@ assessVariation <- function(
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 apply.round = TRUE,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 remove.na = 'none',
                 override.check = override.check,
                 save.se.obj = TRUE)
@@ -744,7 +744,7 @@ assessVariation <- function(
                 method = deg.method,
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 remove.na = 'none',
                 save.se.obj = TRUE,
                 override.check = override.check,
@@ -789,7 +789,7 @@ assessVariation <- function(
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 apply.round = TRUE,
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 remove.na = 'none',
                 save.se.obj = TRUE,
                 override.check = override.check,
@@ -848,7 +848,7 @@ assessVariation <- function(
                     corr.method = 'spearman',
                     gene.set.name = i,
                     plot.output = FALSE,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = TRUE,
                     verbose = verbose
                 )
@@ -868,7 +868,6 @@ assessVariation <- function(
                 reference.score = gene.set.score.reference.data,
                 gene.set.name = i,
                 plot.output = FALSE,
-                assess.se.obj = FALSE,
                 save.se.obj = TRUE,
                 verbose = verbose
                 )

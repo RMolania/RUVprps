@@ -35,7 +35,7 @@
 #' gene.set.name <- paste0('singscore|', length(c(upset.genes, downset.genes)), 'genes')
 #' @param plot.output Logical. If `TRUE`, the assessment plot will be printed while running the function. The default is
 #' se to `TRUE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is se to `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is se to `TRUE`.
 #' Refer to the `checkSeObj()` function for more details.
 #' @param save.se.obj Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment
 #' object or to output the result as a list. The default is set to `TRUE`.
@@ -62,7 +62,7 @@ computeGeneSetScore <- function(
         corr.method = 'spearman',
         gene.set.name = NULL,
         plot.output = TRUE,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -129,8 +129,8 @@ computeGeneSetScore <- function(
     if (!is.logical(plot.output)){
         stop('The "plot.output" must be logical.')
     }
-    if (!is.logical(assess.se.obj)){
-        stop('The "assess.se.obj" must be logical.')
+    if (!is.logical(check.se.obj)){
+        stop('The "check.se.obj" must be logical.')
     }
     if (!is.logical(save.se.obj)){
         stop('The "save.se.obj" must be logical.')
@@ -206,7 +206,7 @@ computeGeneSetScore <- function(
                     method = normalization,
                     pseudo.count = pseudo.count,
                     apply.log = apply.log,
-                    assess.se.obj = FALSE,
+                    check.se.obj = FALSE,
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = verbose

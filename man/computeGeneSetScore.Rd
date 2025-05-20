@@ -18,7 +18,7 @@ computeGeneSetScore(
   corr.method = "spearman",
   gene.set.name = NULL,
   plot.output = TRUE,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -66,7 +66,7 @@ gene.set.name <- paste0('singscore|', length(c(upset.genes, downset.genes)), 'ge
 \item{plot.output}{Logical. If \code{TRUE}, the assessment plot will be printed while running the function. The default is
 se to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is se to \code{TRUE}.
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is se to \code{TRUE}.
 Refer to the \code{checkSeObj()} function for more details.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment

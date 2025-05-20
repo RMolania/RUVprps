@@ -33,7 +33,7 @@ findBioGenes(
   rho = 0,
   min.sample.for.correlation = 10,
   min.sample.for.mad = 3,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
   output.name = NULL,
@@ -132,7 +132,7 @@ the correlation analysis. The default is 10.}
 \item{min.sample.for.mad}{Numeric. Specifies the minimum number of samples required to perform the Median Absolute
 Deviation (MAD) calculation on each gene within homogeneous sample groups. The default is 3.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj' function
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the 'checkSeObj' function
 will be applied. The default is 'TRUE'.}
 
 \item{remove.na}{Character. Specifies whether to remove NA or missing values from 'assays', 'sample.annotation', 'both', or 'none'.

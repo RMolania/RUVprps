@@ -24,11 +24,11 @@ findMnn(
   pseudo.count = 1,
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
   plot.output = TRUE,
-  prps.sets.name = NULL,
-  prps.group = NULL,
+  mnn.group.name = NULL,
+  mnn.sets.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -36,24 +36,25 @@ findMnn(
 \arguments{
 \item{se.obj}{A summarized experiment object.}
 
-\item{assay.name}{Character. A character string that indicates the name of the data(assay) in the SummarizedExperiment
+\item{assay.name}{Character. A character that indicates the name of the data (assay) in the SummarizedExperiment
 object.}
 
-\item{uv.variable}{Character. A character string indicating the name of the column in the SummarizedExperiment object.
-The \code{uv.variable} can be either categorical or continuous. If \code{uv.variable} is a continuous variable, this will be
-divided into \code{nb.clusters} groups using the \code{clustering.method} method.}
+\item{uv.variable}{Character. A character indicating the name of a column in the sample annotation in the
+SummarizedExperiment object. The \code{uv.variable} can be either a categorical or continuous source of unwanted variation.
+If \code{uv.variable} is a continuous variable, this will be divided into \code{nb.clusters} groups using the \code{clustering.method}
+method.}
 
-\item{nb.mnn}{Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
-default is set to 1.}
+\item{nb.mnn}{Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute across
+batches or subgroups. The default is set to 1.}
 
-\item{clustering.method}{Character. A character string that indicates the choice of clustering method for grouping the
+\item{clustering.method}{Character. A character that indicates the choice of clustering method for grouping the
 \code{uv.variable}, if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is
 set to \code{kmeans}.}
 
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the \code{uv.variable} is a
 continuous variable. The default is set to 3.}
 
-\item{data.input}{Character. A character string that indicates which data should be used as input for finding the mutual
+\item{data.input}{Character. A character that indicates which data should be used as input for finding the mutual
 nearest neighbors. Options include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first \code{nb.pcs} of PCs of the data will
 be computed and used as input. If \code{expr} is selected, the expression data will be used as input. The default is set
 to \code{expr}.}
@@ -73,22 +74,23 @@ and the root mean square otherwise. The default is set to \code{FALSE}.}
 PCs. The default is set to bsparam(). We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package for
 further details.}
 
-\item{normalization}{Character. A character string that indicates which normalization methods should be applied before
-finding the MNN. The options are \code{CPM}, \code{TMM}, \code{VST}. The default is set to \code{CPM}. Refer to the \code{applyOtherNormalization()}
-for more details.}
+\item{normalization}{Character. A character that indicates which normalization methods should be applied before finding
+the MNN. The options are: \code{CPM}, \code{TMM}, \code{VST}, \code{full}, \code{upper} and \code{median}. The default is set to \code{CPM}. Refer to the
+\code{applyOtherNormalization()} for more details.}
 
-\item{apply.cosine.norm}{Logical. Indicates whether to apply cosine normalization on the data or not. The default is
-set to \code{FALSE}.}
+\item{apply.cosine.norm}{Logical. Indicates whether to apply cosine normalization on the data before finding MNN. The
+default is set to \code{TRUE}.}
 
-\item{regress.out.variables}{Character. A character string or vector of character strings indicating the column name(s)
-that contain biological variable(s) in the SummarizedExperiment object. These variables will be regressed out from the
-data before finding genes that are highly affected by unwanted variation. The default is set to \code{NULL}, indicating
-the regression will not be applied.}
+\item{regress.out.variables}{Character. A character or a vector of characters indicating the column name(s) in sample
+annotation in the SummarizedExperiment object. These variables will be regressed out from the data before finding MNN.
+The default is set to \code{NULL}, indicating the regression will not be applied.}
 
 \item{hvg}{Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
-will be used to prepare the input data for knn analysis. The default is set to \code{NULL}, this means all genes will be used.}
+will be used to prepare the input data, either \code{pcs} or \code{expre}, for MNN analysis. The default is set to \code{NULL}, this
+means all genes will be used.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to 'TRUE'.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not. The default is set to
+\code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A value as a pseudo count to be added to all measurements of the assay(s) before applying
 log transformation to avoid \code{-Inf} for measurements that are equal to 0. The default is set to 1.}
@@ -99,25 +101,25 @@ The default is set to \code{SerialParam()}. We refer to the \code{findMutualNN()
 \item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 The default is set to \code{KmknnParam()}. We refer to the 'findMutualNN()' function from the 'BiocNeighbors' R package.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+\item{check.se.obj}{Logical. Indicates whether to check the SummarizedExperiment object or not. The default is set
 to \code{TRUE}. See the \code{checkSeObj()} function for more details.}
 
-\item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays(data) or not. The options
-are \code{assays} and 'none'. The default is set to \code{assays}, so all the NA or missing values from the assay(s) will be
-removed before any down-stream analysis See the \code{checkSeObj()} function for more details.}
+\item{remove.na}{Character. Specifies whether to remove NA or missing values from the assays (data) or not. The options
+are \code{assays}, \code{sample.annotation}, \code{both} and \code{none}. The default is set to \code{both}, so all the NA or missing values
+from the provided data and variables will be removed before any analysis See the \code{checkSeObj()} function for more details.}
 
-\item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches. The default is
-set to \code{TRUE}.}
+\item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches or subgroups. The
+default is set to \code{TRUE}.}
 
-\item{prps.sets.name}{Character. A character string specifying the name of the output file (MNN data) to be saved in the
+\item{mnn.group.name}{Character. A character specifying the name of the MNN group to which the current MNN belong.
+If set to \code{NULL}, the function will automatically assign a name using the \code{uv.variable}.}
+
+\item{mnn.sets.name}{Character. A character specifying the name of the output file (MNN data) to be saved in the
 metadata of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on:
-\code{paste0(uv.variable, '||' , assay.name)}.}
-
-\item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-If set to \code{NULL}, the function will automatically assign a name using 'paste0('prps|mnn|', uv.variable)'.}
+\code{paste0(assay.name, '|', length(unique(se.obj[[uv.variable]])) ,'groups|', nb.mnn, 'mnn')}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the MNN results in the metadata of the SummarizedExperiment object
-or to output the result as a list. The default, it is set to \code{TRUE}.}
+or to output the result as a list. The default is set to \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }

@@ -18,10 +18,10 @@ createPrPsSupervised(
   check.prps.connectedness = TRUE,
   apply.log = TRUE,
   pseudo.count = 1,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
   plot.output = TRUE,
-  prps.group = NULL,
+  prps.group.name = NULL,
   prps.sets.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
@@ -30,21 +30,21 @@ createPrPsSupervised(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A character string used to specify the assay name within the SummarizedExperiment object.
+\item{assay.name}{Character. A character used to specify the assay name within the SummarizedExperiment object.
 The selected assay should be the one that will be used for RUV-III-PRPS normalization.}
 
-\item{bio.variables}{Character. A character string or character vector representing the label of biological variable(s),
+\item{bio.variables}{Character. A character or character vector representing the label of biological variable(s),
 such as cancer subtypes, tumor purity, etc., within the SummarizedExperiment object. This can comprise a vector
 containing either categorical, continuous, or a combination of both variables.}
 
-\item{uv.variables}{Character. A character string or character vector representing the label of unwanted variable(s),
+\item{uv.variables}{Character. A character or character vector representing the label of unwanted variable(s),
 such as batch effects, library size, etc., within the SummarizedExperiment object. This can comprise a vector containing
 either categorical, continuous, or a combination of both variables.}
 
 \item{apply.other.uv.variables}{Logical. Determines whether to include other specified unwanted variables when generating
 PRPS sets for individual ones. The default is set to \code{TRUE}.}
 
-\item{other.uv.clustering.method}{Character. A character string indicating the clustering method used to group each
+\item{other.uv.clustering.method}{Character. A character indicating the clustering method used to group each
 continuous unwanted variable. The options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.
 We refer to the \code{createHomogeneousUVGroups()} function for more details.}
 
@@ -54,7 +54,7 @@ unwanted variable. The default is set to 3.}
 \item{min.sample.for.ps}{Numeric. Indicates the minimum number of biologically homogeneous samples to be averaged
 to create one pseudo-sample. The default is set to 3.}
 
-\item{bio.clustering.method}{Character. A character string indicating the clustering method used to group each
+\item{bio.clustering.method}{Character. A character indicating the clustering method used to group each
 continuous biological variable. The options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to 'kmeans'.
 We refer to the \code{createHomogeneousBioGroups()} function for more details.}
 
@@ -69,10 +69,10 @@ The default is set to \code{TRUE}. See the details for more information.}
 \item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 The default is set to 1.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
 function will be applied inside the function. The default is set to \code{TRUE}.}
 
-\item{remove.na}{Character. A character string indicating whether to remove NA or missing values from either the 'assays',
+\item{remove.na}{Character. A character indicating whether to remove NA or missing values from either the 'assays',
 the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, the genes that contain NA or missing values will
 be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any \code{bio.variables}
 and \code{uv.variables} will be excluded. The default is set to \code{both}.}
@@ -80,9 +80,10 @@ and \code{uv.variables} will be excluded. The default is set to \code{both}.}
 \item{plot.output}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
 The default is se to \code{TRUE}.}
 
-\item{prps.group}{Character. A character string specifying a name for the PRPS data sets created for a specific group.}
+\item{prps.group.name}{Character. A character specifying a name for the PRPS data sets created for a specific group.
+The default is set to \code{NULL}.}
 
-\item{prps.sets.name}{Character. A character string to specify the name of all PRPS sets that will be created for all
+\item{prps.sets.name}{Character. A character to specify the name of all PRPS sets that will be created for all
 specified source(s) of unwanted variation. The default is set to \code{NULL}. If not specified, the function creates a
 name based on \code{paste0('prps_', uv.variable)}.}
 

@@ -9,22 +9,22 @@ findKnn(
   assay.name,
   uv.variable,
   nb.knn = 3,
+  clustering.method = "kmeans",
+  nb.clusters = 3,
   data.input = "expr",
   nb.pcs = 2,
   center = TRUE,
   scale = FALSE,
   svd.bsparam = bsparam(),
-  clustering.method = "kmeans",
-  nb.clusters = 3,
   hvg = NULL,
   normalization = "CPM",
   regress.out.variables = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
-  prps.group = NULL,
-  prps.sets.name = NULL,
+  knn.group.name = NULL,
+  knn.sets.name = NULL,
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -32,20 +32,26 @@ findKnn(
 \arguments{
 \item{se.obj}{A summarized experiment object.}
 
-\item{assay.name}{Character. A character string representing the name of the assay in the SummarizedExperiment object
+\item{assay.name}{Character. A character representing the name of the data (assay) in the SummarizedExperiment object
 to be used to find k nearest neighbors.}
 
-\item{uv.variable}{Character. A character string that indicates the name of the column in the sample annotation of the
+\item{uv.variable}{Character. A character that indicates the name of the column in the sample annotation of the
 SummarizedExperiment object. The \code{uv.variable} can be either categorical or continuous. If \code{uv.variable} is a continuous
-variable, this will be divided into 'nb.clusters' groups using the 'clustering.method'.}
+variable, this will be divided into \code{nb.clusters} groups using the \code{clustering.method}.}
 
 \item{nb.knn}{Numeric. A numeric number that indicates the maximum number of nearest neighbors to compute for each
 sample. The default is set to 3.}
 
-\item{data.input}{Character. A character string that indicates which data type should be used as input for finding
-the k nearest neighbors. Options include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first \code{nb.pcs} of PCs of
-the data will be used as input. If \code{expr} is selected, the expression data will be used as input. The default is set
-to \code{expr}.}
+\item{clustering.method}{Character. A character indicating the choice of clustering method for grouping the
+\code{uv.variable} if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is
+set to \code{kmeans}.}
+
+\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the \code{uv.variable} is a
+continuous variable. The default is set to 3.}
+
+\item{data.input}{Character. A character that indicates which data type should be used as input for finding the k nearest
+neighbors. Options include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first \code{nb.pcs} of PCs of the data will be used
+as input. If \code{expr} is selected, the expression data will be used as input. The default is set to \code{expr}.}
 
 \item{nb.pcs}{Numeric. A numeric value that indicates the number of PCs to be calculated and then used as data input
 for finding the k nearest neighbors. The default is set to 2. The \code{nb.pcs} must be set when \code{data.input = pcs}.}
@@ -58,50 +64,44 @@ to \code{TRUE}.}
 scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is \code{TRUE}, and
 the root mean square otherwise. The default is set to \code{FALSE}.}
 
-\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed. The default
-is set to \code{bsparam()}. We refer to the \code{runSVD} function from the \strong{BiocSingular} R package for further details.}
-
-\item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the
-\code{uv.variable} if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is
-set to \code{kmeans}.}
-
-\item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the \code{uv.variable} is a
-continuous variable. The default is set to 3.}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+PCA using SVD. The default is set to \code{bsparam()}. We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package
+for further details.}
 
 \item{hvg}{Vector. A logical vector or a vector of the names (feature ids) of the highly variable genes. These genes
 will be used to prepare the input data for knn analysis. The default is set to \code{NULL}, this means all genes will be used.}
 
-\item{normalization}{Character. A character string that indicates which normalization method should be applied on the
+\item{normalization}{Character. A character that indicates which normalization method should be applied on the
 data before finding the knn. Options are: \code{CPM},\code{TMM}, \code{upper}, \code{median}, \code{full} and \code{VST}. The default is set to \code{CPM}.
 If set to \code{NULL}, no normalization will be applied. See the \code{applyOtherNormalizations()} function for more details.}
 
-\item{regress.out.variables}{Character. A character string or strings that indicate the column name(s) in the sample
-annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
-finding KNN. The default is set to \code{NULL}, indicating that regression will not be applied.}
+\item{regress.out.variables}{Character. A character or a vector characters that indicate the column name(s) in the sample
+annotation in the SummarizedExperiment object. These variables will be regressed out from the data before finding KNN.
+The default is set to \code{NULL}, indicating that regression will not be applied.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
-assay(data) before applying log transformation to avoid \code{-Inf}for measurements that are equal to 0. The default is set
+assay (data) before applying log transformation to avoid \code{-Inf}for measurements that are equal to 0. The default is set
 to 1.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to \code{TRUE}. See the \code{checkSeObj()} function for more details.}
 
 \item{remove.na}{Character. To remove NA or missing values from the assay (data) or not. The options are \code{assays} and
-'none'. The default is set to \code{assays}, so all the NA or missing values from the data(assay) will be removed before computing
-performing any down-stream analysis. See the \code{checkSeObj()} function for more details.}
+'none'. The default is set to \code{assays}, so all the NA or missing values from the data(assay) will be removed before
+computing performing any down-stream analysis. See the \code{checkSeObj()} function for more details.}
 
-\item{prps.group}{Character. A character string specifying the name of the PRPS group to which the current KNN belong.
-If it is set to \code{NULL}, the function will automatically assign a name using \code{paste0('prps|mnn|', uv.variable)}.}
+\item{knn.group.name}{Character. A character specifying the name of the PRPS group to which the current KNN belong.
+If it is set to \code{NULL}, the function will automatically assign a name using \code{uv.variable}.}
 
-\item{prps.sets.name}{Character. A character string specifying the name of the output file to be saved in the metadata
+\item{knn.sets.name}{Character. A character specifying the name of the output file to be saved in the metadata
 of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
-"paste0(uv.variable, '|' , assay.name)".}
+\code{paste0(assay.name, '|', length(unique(se.obj[[uv.variable]])) ,'groups|', nb.knn, 'lnn')}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
-or to output the result as a list. By default, it is set to \code{TRUE}.}
+or to output the result as a list. The defaults is set to \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }

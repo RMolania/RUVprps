@@ -39,7 +39,7 @@
 #' second value applies to each pair of `bio.variables`. If the correlation of a pair of variables exceeds the cut-off,
 #' the variable with the highest variance will be kept, and the other will be excluded from the remaining analysis. By
 #' default, both values are set to 0.9.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the function
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the function
 #' `checkSeObj()` will be applied.
 #' @param remove.na Character. Indicates whether to remove missing values from the `bio.variables` and `uv.variables`. The
 #' options are 'sample.annotation' or `none`. The default is `sample.annotation`, meaning the missing values from the
@@ -60,7 +60,7 @@ assessVariablesAssociation <- function(
         uv.variables,
         cat.cor.coef = c(0.9, 0.9),
         cont.cor.coef = c(0.9, 0.9),
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'sample.annotation',
         verbose = TRUE
         ){
@@ -100,15 +100,15 @@ assessVariablesAssociation <- function(
     if (!remove.na %in% c('sample.annotation', 'none')){
         stop( 'The "remove.na" must be one of the "sample.annotation" or "none".')
     }
-    if (!is.logical(assess.se.obj)){
-        stop('The "assess.se.obj" must be logical.')
+    if (!is.logical(check.se.obj)){
+        stop('The "check.se.obj" must be logical.')
     }
     if (!is.logical(verbose)){
         stop('The "verbose" must be logical.')
     }
 
     # Assessing the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = NULL,

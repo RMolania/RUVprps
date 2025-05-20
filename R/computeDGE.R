@@ -26,7 +26,7 @@
 #' expression. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before log
 #' transformation. The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
 #' Refer to the `checkSeObj()` function for more detail.
 #' @param remove.na Character. A character that indicates whether to remove missing/NA values from either `assays`,
 #' `sample.annotation`,`both`, or `none`. If `assays` is selected, the genes that contain missing/NA values will be
@@ -55,7 +55,7 @@ computeDGE <- function(
         method = 'limma',
         apply.log = TRUE,
         pseudo.count = 1,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
         override.check = FALSE,
@@ -115,8 +115,8 @@ computeDGE <- function(
             if (pseudo.count < 0 | !is.numeric(pseudo.count))
                 stop('The "pseudo.count" must be a positive numeric value.')
         }
-        if (!is.logical(assess.se.obj)){
-            stop('The "assess.se.obj" must be logical ("TRUE" or "FALSE").')
+        if (!is.logical(check.se.obj)){
+            stop('The "check.se.obj" must be logical ("TRUE" or "FALSE").')
         }
         if (!is.logical(save.se.obj)){
             stop('The "save.se.obj" must be logical ("TRUE" or "FALSE").')
@@ -134,7 +134,7 @@ computeDGE <- function(
         }
 
         # Assessing the SummarizedExperiment object ####
-        if (isTRUE(assess.se.obj)) {
+        if (isTRUE(check.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),

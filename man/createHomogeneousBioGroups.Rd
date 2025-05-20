@@ -9,7 +9,7 @@ createHomogeneousBioGroups(
   bio.variables,
   clustering.method = "kmeans",
   nb.clusters = 3,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "sample.annotation",
   save.se.obj = TRUE,
   verbose = TRUE
@@ -29,7 +29,7 @@ continuous biological variable. Options include \code{kmeans}, \code{cut}, and \
 The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
 \code{clustering.method}.}
 
-\item{assess.se.obj}{Logical. Whether to assess the SummarizedExperiment object or not. If 'TRUE', the function
+\item{check.se.obj}{Logical. Whether to assess the SummarizedExperiment object or not. If 'TRUE', the function
 \code{checkSeObj()} will be applied. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. Indicates whether to remove missing values from the specified variables. The options are

@@ -14,7 +14,7 @@ computeGenesVariableAnova(
   plot.top.genes = FALSE,
   nb.top.genes = 3,
   apply.round = TRUE,
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "both",
   save.se.obj = TRUE,
   override.check = FALSE,
@@ -51,7 +51,7 @@ F-statistics list. The default is set to 3.}
 
 \item{apply.round}{Logical. Indicates whether to round the values of F-statistics. The default is set to \code{TRUE}.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
 This means the function will apply the \code{checkSeObj()} function.}
 
 \item{remove.na}{Character. A character string specifying whether to eliminate missing values from \code{assays}, \code{sample.annotation},

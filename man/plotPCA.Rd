@@ -87,8 +87,8 @@ or to output the results as a list. By default, this is set to \code{TRUE}.}
 A SummarizedExperiment object containing the PCA plot(s) in its metadata, or a list containing the PCA plot(s).
 }
 \description{
-This function generates scatter and boxplots of the first principal components (PCs) of the assay(s) in a
-SummarizedExperiment object. The function can generate pairwise scatter plots of the first principal components,
+This function generates scatter and boxplots of the principal components (PCs) of the data(assay) in a
+SummarizedExperiment object. The function can generate pairwise scatter plots of the principal components,
 colored by a categorical variable, or create boxplots of each PC across the variable. Boxplots of principal components
 are especially useful when the levels of a categorical variable are numerous, making visualization through colored
 scatter plots challenging. If a continuous variable is provided, the function creates scatter plots of each PC against

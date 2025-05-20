@@ -1,27 +1,30 @@
 #' Adds pre-selected sets of NCGs to SummarizedExperiment object.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function adds pre-selected sets of negative control genes (NCGs) to a SummarizedExperiment object.
-#' These genes can be used for various analyses, including identifying unknown sources of variation, assessing variation,
-#' performing RUV normalization, and evaluating normalization steps.
-
+#'
 #' @details
 #' A pre-selected set of negative control genes (NCGs) will be stored in the following location:
-#' se.obj->metadata->NCG->pre.selected->subset.name.
-
-
+#' se.obj->metadata->NCG->pre.selected->subset.name. These genes can be used for various analyses, including identifying
+#' unknown sources of variation, assessing variation, performing RUV normalization, and evaluating normalization steps. The
+#' gene set will be stored in: metadata->NCG->pre.selected->subset.name->gene.set
+#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param ncg A logical or vector of gene names of pre-selected genes as NCGs.
-#' @param subset.name Character. Specifies the name of the NCG set in the metadata of the `SummarizedExperiment` object.
-#' The default is 'NULL', in which case the function will generate a name  based on the number of NCGs using:
-#' paste0(sum(ncg), '_genes').
-#' @param verbose Logical. If TRUE, displaying process messages is enabled.
-
+#' @param ncg A logical value or a vector of gene names or IDs representing pre-selected NCGs. If gene names or IDs are
+#' provided, the row names of the SummarizedExperiment object must match these names or IDs.
+#' @param subset.name Character. A character that specifies the name of the NCG set in the metadata of the SummarizedExperiment
+#' object. The default is set to `NULL`, in which case the function will generate a name as following:
+#' `paste0(sum(ncg), '_psg')`.
+#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
+#' `TRUE`.
+#'
+#' @return A SummarizedExperiment object with a metadata that contains the NCGs.
+#'
 #' @importFrom SummarizedExperiment colData
-#' @importFrom BiocSingular bsparam
 #' @importFrom Matrix rowSums colSums
+#' @importFrom BiocSingular bsparam
 #' @importFrom ruv replicate.matrix
 #' @export
 
@@ -93,7 +96,7 @@ addNCGs <- function(
     # Checking the number of genes ####
     if (sum(ncg.log) < .01*nrow(se.obj)){
         printColoredMessage(
-            message = '* The number of genes provided may be too few for RUV-III normalization.',
+            message = '- The number of genes provided may be too few for RUV-III normalization.',
             color = 'blue',
             verbose = verbose
         )
@@ -114,13 +117,13 @@ addNCGs <- function(
     if (!'pre.selected' %in% names(se.obj@metadata[['NCG']])){
         se.obj@metadata[['NCG']][['pre.selected']] <- list()
     }
-    if (!'gene.set' %in% names(se.obj@metadata[['NCG']][['pre.selected']])){
-        se.obj@metadata[['NCG']][['pre.selected']][['gene.set']] <- list()
+    if (!subset.name %in% names(se.obj@metadata[['NCG']][['pre.selected']])){
+        se.obj@metadata[['NCG']][['pre.selected']][[subset.name]] <- list()
     }
-    if (!subset.name %in% names(se.obj@metadata[['NCG']][['pre.selected']][['gene.set']])){
-        se.obj@metadata[['NCG']][['pre.selected']][['gene.set']][[subset.name]] <- list()
+    if (!'gene.set' %in% names(se.obj@metadata[['NCG']][['pre.selected']][[subset.name]])){
+        se.obj@metadata[['NCG']][['pre.selected']][[subset.name]][['gene.set']] <- list()
     }
-    se.obj@metadata[['NCG']][['pre.selected']][['gene.set']][[subset.name]] <- ncg
+    se.obj@metadata[['NCG']][['pre.selected']][[subset.name]][['gene.set']] <- ncg
     printColoredMessage(
         message = 'The NCGs are saved to metadata of the SummarizedExperiment object.',
         color = 'blue',

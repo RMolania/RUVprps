@@ -87,7 +87,7 @@
 #' will automatically include one.
 #' @param return.info Logical. If 'TRUE', additional information including the W matrix of the RUV-III method is returned.
 #' The default is set to 'TRUE'.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to 'TRUE'. Refer to the checkSeObj function for more details.
 #' @param remove.na Character string. A character string indicating whether to remove NA or missing values from the assays
 #' or not. The options are assays' and 'none'. The default is "assays", so all the NA or missing values from the assay(s)
@@ -127,7 +127,7 @@ RUVIIIprps <- function(
         eta = NULL,
         include.intercept = TRUE,
         return.info = FALSE,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
         output.name = NULL,
         save.se.obj = TRUE,
@@ -294,7 +294,7 @@ RUVIIIprps <- function(
     }
 
     # Assessing the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,

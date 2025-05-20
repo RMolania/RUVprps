@@ -10,7 +10,7 @@ assessVariablesAssociation(
   uv.variables,
   cat.cor.coef = c(0.9, 0.9),
   cont.cor.coef = c(0.9, 0.9),
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "sample.annotation",
   verbose = TRUE
 )
@@ -38,7 +38,7 @@ second value applies to each pair of \code{bio.variables}. If the correlation of
 the variable with the highest variance will be kept, and the other will be excluded from the remaining analysis. By
 default, both values are set to 0.9.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the function
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the function
 \code{checkSeObj()} will be applied.}
 
 \item{remove.na}{Character. Indicates whether to remove missing values from the \code{bio.variables} and \code{uv.variables}. The

@@ -1,12 +1,12 @@
 #' Assesses and compares the performance of NCGs gene sets.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
-#' This function globally assesses and comapre the performance of various sets of negative control genes (NCGs) based on
+#' This function globally assesses and compares the performance of various sets of negative control genes (NCGs) based on
 #' their ability to capture unwanted variation while remaining unassociated with biological variation. This is essential
-#' to select a suitable set of NCGs for RUV-III normalization,
-
+#' to select a suitable set of NCGs for RUV-III normalization.
+#'
 #' @details
 #' For each NCG set, the function performs PCA on the specified data using only the genes in the set. It then evaluates
 #' the association of the top `nb.pcs` principal components with variables as defined by `variables`. Linear regression
@@ -15,7 +15,7 @@
 #' The $R^2$ and vector correlation values calculated for individual variables are plotted against the cumulative PCs.
 #' Ideally, a suitable set of NCGs should show high and low correlation values, respectively, for the unwanted and biological
 #' variables.\
-#' If both `bio.variables` and `ub.variables` are specifed, then the function generates a performance score between 0 and
+#' If both `bio.variables` and `ub.variables` are specified, then the function generates a performance score between 0 and
 #' 1 is for NCG each set, reflecting how effectively the NCGs capture unwanted variation while minimizing association
 #' with biological factors. To compute such scores, the correlations obtained for biological variables are subtracted
 #' from 1, and then the correlations for biological and unwanted variables are averaged, separately. The final score for
@@ -25,7 +25,7 @@
 #' @param assay.name Character. A character that specifies the name of the data in the SummarizedExperiment object. This
 #' data should one that will be used as the input data for RUV-III-PRPS normalization.
 #' @param variables Character. One or more variable names in the SummarizedExperiment object. These will be used to assess
-#' the performance of the NCGs. If this is set to NULL, both `bio.variables` and `uv.variables` must be specified.
+#' the performance of the NCGs. If this is set to `NULL`, both `bio.variables` and `uv.variables` must be specified.
 #' @param bio.variables Character. One or more variable names representing biological variables (e.g., cancer subtypes,
 #' tumor purity) within the SummarizedExperiment object. This can be a vector of categorical, continuous, or mixed variable
 #' types. The default is set to `NULL`. This must be specified if the performance scores is need to be calculated.
@@ -38,12 +38,12 @@
 #' 'un.supervised' slots in the SummarizedExperiment object. Refer to supervised and unsupervised functions for finding
 #' NCGS for more details.
 #' @param ncg.set.names Character. Specifies the exact name of an NCG set under the given `ncg.group` in either the
-#' 'supervised' or 'un.supervised' slot or in the `pre.selected` slot. The default is `'all'`, which selects all available
-#' NCG sets.
+#' 'supervised' or 'un.supervised' slot or in the `pre.selected` slot. The default is se to `'all'`, which selects all
+#' available NCG sets.
 #' @param nb.pcs Numeric. A numeric value that indicates the number of principal components (PCs) to compute and use for
 #' the assessment analysis. The default is set to `10`.
-#' @param center Logical. Indicates whether to center the data prior to applying PCA suing SVD. If `TRUE`,
-#' centering is done by subtracting the column means from the respective columns. The default is set to `TRUE`.
+#' @param center Logical. Indicates whether to center the data prior to applying PCA suing SVD. If `TRUE`, centering is
+#' done by subtracting the column means from the respective columns. The default is set to `TRUE`.
 #' @param scale Logical. Indicates whether to scale the data prior to applying PCA using SVD. If `TRUE`, the centered
 #' columns are divided by their standard deviations (if `center = TRUE`), or by the root mean square
 #' (if `center = FALSE`). The default is set to `FALSE`.
@@ -56,13 +56,19 @@
 #' @param output.name Character. Specifies the name under which the assessment plot will be saved in the
 #' SummarizedExperiment object. If `NULL`, a name will be generated using:
 #' `paste0('comparison_', paste0(names(ncgs), collapse = '&'))`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not before applying
+#' nationalizations. The default is set  to `TRUE`. We refer to the `checkSeObj()` function for more details.
+#' @param remove.na Character. A character that indicates whether to remove NA or missing values from the data sets or
+#' not. The options are `'assays'` or `'none'`. The default is set to `'assays'`. Refer to the `checkSeObj()` function
+#' for more details.
 #' @param save.se.obj Logical. Indicates whether to save the assessment plot metadata of the SummarizedExperiment object.
 #' The default is set to `TRUE`. The plot will be saved to:
-#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is `TRUE`.
-
-#' @return A SummarizedExperiment object containing the newly normalized data, or a normalized expression matrix
-#' if `save.se.obj` is set to `FALSE`.
-
+#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set
+#' to `TRUE`.
+#'
+#' @return Either a SummarizedExperiment object containing the NCG assessment plots, or out theses results as list if
+#' `save.se.obj` is set to `FALSE`.
+#'
 #' @importFrom dplyr bind_rows summarise mutate group_by
 #' @importFrom fastDummies dummy_cols
 #' @importFrom gtools mixedorder
@@ -86,6 +92,8 @@ assessNCGs <- function(
         pseudo.count = 1,
         plot.output = TRUE,
         output.name = NULL,
+        check.se.obj = TRUE,
+        remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -190,6 +198,17 @@ assessNCGs <- function(
     }
     if (!is.logical(verbose)){
         stop('The "verbose" must be logical.')
+    }
+
+    # Checking SummarizedExperiment object ####
+    if (isTRUE(check.se.obj)) {
+        se.obj <- checkSeObj(
+            se.obj = se.obj,
+            assay.names = assay.name,
+            variables = c(variables, bio.variables, uv.variables),
+            remove.na = remove.na,
+            verbose = verbose
+        )
     }
 
     # Obtaining the NCGs sets ####
@@ -298,7 +317,7 @@ assessNCGs <- function(
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 svd.bsparam = bsparam(),
-                assess.se.obj = FALSE,
+                check.se.obj = FALSE,
                 remove.na = 'none',
                 save.se.obj = FALSE
             )

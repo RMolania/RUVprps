@@ -16,7 +16,7 @@ plotARI(
 )
 }
 \arguments{
-\item{se.obj}{A \code{SummarizedExperiment} object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the \code{SummarizedExperiment}
 object to be used for generating barplots or scatter plots of the computed Adjusted Rand Index (ARI). By default,

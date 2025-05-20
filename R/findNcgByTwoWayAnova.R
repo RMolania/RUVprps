@@ -1,17 +1,17 @@
-#' Finds a set of negative control genes using two-way ANOVA.
+#' Finds NCGs using two-way ANOVA.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function utilizes two-way ANOVA to identify a set of genes suitable as negative control genes (NCG) for `RUVIIIPRPS`
-#' normalization. Prior knowledge of biological and unwanted variation sources is necessary and should be specified. The
-#' function begins by creating all possible sample groups based on biological and unwanted variation separately.
+#' This function utilizes two-way ANOVA to identify a set of suitable genes as negative control genes (NCG) for RUV-III
+#' normalization. Both biological and unwanted variation sources is necessary and should be specified.
+#'
+#' @details
+#' The function begins by creating all possible sample groups based on biological and unwanted variation separately.
 #' Subsequently, these groups are used as factors in two-way ANOVA to identify genes highly influenced by biological and
 #' unwanted variation. Finally, the function selects genes with the possible highest F-statistics for unwanted variation and
 #' lowest F-statistics for biological variation. Various approaches are employed for the final gene selection; please refer
 #' to the details for more information.
-#'
-#' @details
 #' The function uses 5 ways to summarize two gene-level F-statistics obtained for the biological and unwanted variation.
 #' The function uses either the values or the ranks of F-statistics for NCGs selection. The function ranks the
 #' negative of F-statistics values for unwanted variation. The lower the ranks, the greater the impact of unwanted
@@ -67,96 +67,101 @@
 #' * Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
 #'
-#' @param se.obj A `SummarizedExperiment` object.
-#' @param assay.name Character. A string indicating the name of the assay in the `SummarizedExperiment` object. This assay
-#' should be the one that will be used as input data for the RUV-III normalization. We recommend using raw data,
-#' if available.
-#' @param bio.variables Character. Indicating the column names that contain known biological variable(s) in the
-#' `SummarizedExperiment` object. These biological variables can be categorical or continuous. Continuous variables will be
-#' divided into `nb.bio.clusters` groups based on a clustering method selected in the `bio.clustering.method` argument.
-#' This argument cannot be empty.
-#' @param uv.variables Character. Indicating the column names that contain unwanted variable(s) in the `SummarizedExperiment`
-#' object. These unwanted variables can be categorical or continuous. Continuous variables will be divided into
-#' `nb.uv.clusters` groups based on a clustering method selected in the `uv.clustering.method` argument. This argument
-#' cannot be empty.
-#' @param ncg.selection.method Character. Indicating how to summarize F-statistics obtained from two-way ANOVA and select a
-#' set of genes as negative control genes. The options are `prod`, `average`, `sum`, `non.overlap`, `auto` and `quantile`.
+#' @param se.obj A SummarizedExperiment object.
+#' @param assay.name Character. A character string indicating the name of the data (assay) in the `SummarizedExperiment`
+#' object. This data should be the one that will be used as input data for the RUV-III normalization.
+#' @param bio.variables Character. A character string or vector of strings indicating the column name(s) of the biological
+#' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination. This
+#' argument cannot be `NULL`.
+#' @param uv.variables Character. A character string or vector of strings indicating the column name(s) of the unwanted
+#' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
+#'  argument cannot be `NULL`.
+#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
 #' The default is set to `non.overlap`. For more information, refer to the details of the function.
-#' @param nb.ncg Numeric. Indicating how many genes should be selected as NCG. The value represents the proportion of the
-#' total genes in the `SummarizedExperiment` object. The default is set to 0.1.
-#' @param top.rank.bio.genes Numeric. Indicating the top-ranked genes that are highly affected by the biological variation.
-#' This is required to be specified when the `ncg.selection.method` is set to either `non.overlap` or `auto`. The default
-#' is set to 0.5.
-#' @param top.rank.uv.genes Numeric. Indicating the top-ranked genes that are highly affected by the unwanted variation.
-#' This is required to be specified when the `ncg.selection.method` is set to either `non.overlap` or `auto`. The default
-#' is set to 0.5.
-#' @param bio.percentile Numeric. The percentile cut-off of F-statistics to select genes that are highly affected by
-#' the biological variation. The default is set to 0.8.
-#' @param uv.percentile Numeric. The percentile cut-off of F-statistics to select genes that are highly affected by
-#' the unwanted variation. The default is set to 0.8.
-#' @param grid.group Character. Indicating whether the grid search should be performed on biological (`top.rank.bio.genes`),
-#' unwanted (`top.rank.uv.genes`) or both factors when the `ncg.selection.method` is set to `auto`. The options are
-#' `bio`, `uv`, or `both`. If set to `both`, the grid search will be performed on both biological and unwanted factors.
-#' If set to `bio` or `uv`, the grid search will be performed only on biological or unwanted factors. The default is
-#' set to `uv`.
-#' @param grid.direction Character. Indicating whether the grid search should be performed in decreasing or increasing
-#' order. The options are `increase` or `decrease`. The default is set to `decrease`.
-#' @param grid.nb Numeric. Indicating the number of genes for grid search when the `ncg.selection.method` is set to `auto`.
-#' In the `auto` approach, the grid search increases or decreases the initial values of `top.rank.bio.genes` or
-#' `top.rank.uv.genes` or `both` to find approximately `nb.ncg` genes as NCGs. The default is set to 20.
-#' @param bio.clustering.method Character. Indicating which clustering methods should be used to group continuous sources
-#' of biological variation. Refer to the `createHomogeneousBioGroups` function for more details. The default is set to
-#' `kmeans` clustering.
-#' @param nb.bio.clusters Numeric. Indicating the number of clusters for each continuous source of biological variation.
-#' By default, it is set to 2. This means individual continuous sources of biological variation will be divided into two
-#' groups.
+#' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
+#' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
+#' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
+#' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
+#' or `non.overlap`. The default is set to 0.2.
+#' @param top.rank.uv.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
+#' affected by unwanted variables. This is required to be specified when the `ncg.selection.method` is either `auto` or
+#' `non.overlap`. The default is set to 0.2.
+#' @param bio.percentile Numeric. A numeric value that specifies the percentile cut-off to select genes that are highly
+#' affected by biological variation. This is required to be specified when the `ncg.selection.method` is set to `quantile`.
+#' The default is set to 0.8.
+#' @param uv.percentile Numeric. A numeric value that specifies the percentile cut-off to select genes that are highly
+#' affected by unwanted variation. This is required to be specified when the `ncg.selection.method` is set to `quantile`.
+#' The default is set to 0.8.
+#' @param grid.group Character. A character that indicates whether the grid search should be performed on biological,
+#' unwanted, or both factors when the `ncg.selection.method` is set to `auto`. The options are `bio`, `uv`, or `both`.
+#' The default is set to `uv`. For more details, refer to the function documentation.
+#' @param grid.direction Character. A character that indicates whether the grid search should be performed in decreasing
+#' or increasing order when the `ncg.selection.method` is set to `auto`. The options are: `increase` and `decrease`. The
+#' default is set to `decrease`.
+#' @param grid.nb Numeric. A numeric value that indicates the number of genes for grid search when the `ncg.selection.method`
+#' is set to `auto`. In the `auto` approach, the grid search starts with the initial `top.rank.uv.genes` and
+#' `top.rank.bio.genes` values and adds or drops the `grid.nb` in each loop to find `nb.ncg` of genes as negative control
+#' genes. The default is set to 20.
+#' @param create.ncg.rank.plot Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
+#' with respect to their biological and unwanted variation effects. The default is set to `FALSE`.
+#' @param plot.ncg.rank Logical. Indicates whether to plot a heatmap that shows the rank of the all genes
+#' with respect to their biological and unwanted variation effects, while function is running. The default is set to `FALSE`.
+#' @param bio.clustering.method Character. A character Indicating which clustering methods should be used to group continuous
+#' sources of biological variation if any is provided. The options are: `kmeans`, `cut`, and `quantile`. The default is
+#' set to `kmeans` clustering. Refer to the `createHomogeneousBioGroups()` function for more details.
+#' @param nb.bio.clusters Numeric. A numeric value indicating the number of clusters for each continuous source of biological
+#' variation. The default is set to 2.
 #' @param uv.clustering.method Character. Indicates which clustering methods should be used to group continuous sources
-#' of unwanted variation. Refer to the `createHomogeneousUvGroups` function for more details. The default is set to
-#' `kmeans` clustering.
-#' @param nb.uv.clusters Numeric. Indicates the number of clusters for each continuous source of unwanted variation.
-#' By default, it is set to 2. This means individual continuous sources of unwanted variation will be divided into two
-#' groups.
+#' of unwanted variation if any is provided. The options are: `kmeans`, `cut`, and `quantile`. The default is
+#' set to `kmeans` clustering. Refer to the `createHomogeneousUvGroups()` function for more details.
+#' @param nb.uv.clusters Numeric. A numeric that indicates the number of clusters for each continuous source of unwanted
+#' variation. The default is set to 2.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing any statistical
 #' analysis. The default is set to `TRUE`.
-#' @param pseudo.count Numeric. A value to be added as a pseudo count to all measurements before log transformation. The
-#' default is 1.
-#' @param assess.ncg Logical. Indicates whether to assess the performance of selected NCG or not. This analysis involves
-#' principal component analysis on only the selected NCG and then exploring the R² or vector correlation between the `nb.pcs`
-#' first principal components and the specified variables.
-#' @param variables.to.assess.ncg Character. Indicates the column names of the `SummarizedExperiment` object that contain
-#' variables whose association with the selected genes as NCG needs to be evaluated. The default is `NULL`. This means all
-#' the variables specified in the `bio.variables` and `uv.variables` will be assessed.
-#' @param nb.pcs Numeric. Indicating the number of the first principal components of selected NCG to be used to assess
-#' the performance of NCGs. The default is 5.
-#' @param center Logical. Indicates whether to center the data before applying principal component analysis. Refer to the
-#' `computePCA` function for more details. The default is set to `TRUE`.
-#' @param scale Logical. Indicates whether to scale the data before applying principal component analysis. Refer to the
-#' `computePCA` function for more details. The default is `FALSE`.
-#' @param assess.se.obj Logical. Indicates whether to assess the `SummarizedExperiment` object or not. If `TRUE`, the function
-#' `checkSeObj` will be applied. The default is set to `TRUE`.
-#' @param remove.na Character. Indicates whether to remove NA or missing values from either the `assays`, `sample.annotation`,
-#' `both` or `none`. If `assays` is selected, the genes that contain NA or missing values will be excluded. If
-#' `sample.annotation` is selected, the samples that contain NA or missing values for any `bio.variables` and
-#' `uv.variables` will be excluded. The default is set to `none`.
-#' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the `SummarizedExperiment` object or
-#' to output the result as a logical vector. The default is set to `TRUE`. The file will be saved in
-#' `se.obj@metadata$NCG$supervised$ncg.set.name`.
-#' @param ncg.set.name Character. A string representing the output’s name. If set to `NULL`, the function will choose a name
-#' automatically. In this case, the file name will be constructed as `paste0(sum(ncg.selected), '|', paste0(bio.variables,
-#' collapse = '&'), '|', paste0(uv.variables, collapse = '&'), '|TWAnova:', ncg.selection.method, '|', assay.name)`.
-#' @param ncg.group.name Character. A string indicating the name of the group of NCG.
-#' @param plot.output Logical. Indicates whether to plot the output or not.
-#' @param save.imf Logical. Indicates whether to save the intermediate file in the `SummarizedExperiment` object. If set to `TRUE`,
-#' the function saves the results of the two-way ANOVA. Subsequently, if users wish to adjust parameters such as `nb.ncg`,
-#' `ncg.selection.method`, `top.rank.bio.genes`, and `top.rank.uv.genes`, the two-way ANOVA will not be recalculated. This
-#' accelerates parameter tuning for NCG selection. The default is set to `FALSE`.
-#' @param imf.name Character. Indicates the name to use when saving the intermediate file. If set to `NULL`, the function
-#' will create a name. In this case, the file name will be constructed as
-#' `paste0(assay.name, '|TwoWayAnova|', ncg.selection.method)`. The default is `NULL`.
-#' @param use.imf Logical. Indicates whether to use the intermediate file
+#' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before log transformation
+#' .The default is se to 1.
+#' @param assess.ncg Logical. Indicates whether to assess the performance of selected genes as negative control or not.
+#' This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
+#' correlation between the first `nb.pcs` principal components and the biological and unwanted variables. The default is
+#' set to `TRUE`.
+#' @param variables.to.assess.ncg Character. A character string or vector of strings indicating the column names in sample
+#' annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
+#' NCG needs to be evaluated. The default is set to `NULL`. This means all the variables specified in the `bio.variables`
+#' and `uv.variables` will be assessed.
+#' @param nb.pcs Numeric. A numeric value that indicates the number of the first principal components of selected negative
+#' control genes to be used to assess their performance. The default is set to 10.
+#' @param center Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, centering is done by subtracting
+#' the column means of the assay from their corresponding columns. The default is set to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing
+#' the(centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square
+#' otherwise. The default is set to `FALSE`.
+#' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
+#' . The default is set to `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
+#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
+#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
+#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
+#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
+#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
+#' @param ncg.group.name Character. A character to be used as name of the group of NCG. The default is set to `NULL`, then
+#' the function create a names as following: `paste0('ncg|unsupervised')`. We refer to the details of the function for
+#' more details.
+#' @param ncg.set.name Character. A character to be used as name of the NCG set based on current variables and parameters
+#' The default is set to `NULL`, then the function create a names as following:
+#' `paste0(sum(ncg.selected),'|',paste0(bio.variables, collapse = '&'),'|',paste0(uv.variables, collapse = '&'),'|AnoCorrAs:',
+#' ncg.selection.method,'|',assay.name)`.We refer to the details of the function for more details.
+#' @param save.imf Logical. Indicates whether to save the intermediate file. If `TRUE`, the function saves the results
+#' of the statistical analyses in the metadata of the SummarizedExperiment object. If users want to change the parameters
+#' including `nb.ncg`, `ncg.selection.method`, `top.rank.bio.genes`, and `top.rank.uv.genes`, the analyses will not be
+#' re-calculated. The default is set to `FALSE`.
+#' @param imf.name Character string. A name to save the intermediate file. If `NULL`, the function generates a name.
+#' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to `FALSE`.
+#' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the SummarizedExperiment
+#' object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-
-#' choose a name automatically.
+#'
 #' @importFrom dplyr mutate progress_estimated
 #' @importFrom BiocSingular runSVD bsparam
 #' @importFrom SummarizedExperiment assay
@@ -181,6 +186,8 @@ findNcgByTwoWayAnova <- function(
         grid.group = 'uv',
         grid.direction = 'decrease',
         grid.nb = 20,
+        create.ncg.rank.plot = FALSE,
+        plot.ncg.rank = FALSE,
         bio.clustering.method = 'kmeans',
         nb.bio.clusters = 3,
         uv.clustering.method = 'kmeans',
@@ -192,15 +199,15 @@ findNcgByTwoWayAnova <- function(
         nb.pcs = 5,
         center = TRUE,
         scale = FALSE,
-        assess.se.obj = TRUE,
+        plot.ncg.assessment = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'none',
-        save.se.obj = TRUE,
         ncg.group.name = NULL,
         ncg.set.name = NULL,
-        plot.output = TRUE,
         save.imf = FALSE,
         imf.name = NULL,
         use.imf = FALSE,
+        save.se.obj = TRUE,
         verbose = TRUE
         ){
     printColoredMessage(
@@ -280,7 +287,7 @@ findNcgByTwoWayAnova <- function(
             stop('The "uv.percentile" must be a postive value between 0 and 1.')
     }
 
-    if (isFALSE(assess.se.obj)) {
+    if (isFALSE(check.se.obj)) {
         if (isTRUE(sum(bio.variables %in% colnames(colData(se.obj))) != length(bio.variables))) {
             stop('All or some of "bio.variables" cannot be found in the SummarizedExperiment object.')
         }
@@ -294,7 +301,7 @@ findNcgByTwoWayAnova <- function(
     }
 
     # Checking the SummarizedExperiment object ####
-    if (isTRUE(assess.se.obj)) {
+    if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
@@ -368,7 +375,7 @@ findNcgByTwoWayAnova <- function(
             bio.variables = bio.variables,
             nb.clusters = nb.bio.clusters,
             clustering.method = bio.clustering.method,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = remove.na,
             verbose = verbose
@@ -385,7 +392,7 @@ findNcgByTwoWayAnova <- function(
             uv.variables = uv.variables,
             nb.clusters = nb.uv.clusters,
             clustering.method = uv.clustering.method,
-            assess.se.obj = FALSE,
+            check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose
@@ -428,7 +435,7 @@ findNcgByTwoWayAnova <- function(
         all.aov$uv.rank.plot <- rank(x = all.aov$UV, ties.method = 'random')
     }
     # Plotting the F-statistics ####
-    if (isTRUE(plot.output)){
+    if (isTRUE(create.ncg.rank.plot)){
         p.fvalues <- ggplot(all.aov, aes(x = log2(Biology), y = log2(UV)) ) +
             geom_point(alpha = .1) +
             xlab('Biology (log2 of F-values)') +
@@ -584,7 +591,7 @@ findNcgByTwoWayAnova <- function(
         if (isTRUE(length(top.uv.genes) == 0)) stop('No NCGs can be found based on the current parameters.')
         ncg.selected <- row.names(se.obj) %in% top.uv.genes
         ## plot ####
-        if (isTRUE(plot.output)){
+        if (isTRUE(create.ncg.rank.plot)){
             all.aov$ncg <- row.names(all.aov) %in%  row.names(se.obj)[ncg.selected]
             p.fvalues <- ggplot(all.aov, aes(x = log2(Biology), y = log2(UV), color = ncg)) +
                 geom_point(alpha = .1) +
@@ -645,7 +652,7 @@ findNcgByTwoWayAnova <- function(
         ncg.selected <- row.names(se.obj) %in% ncg.selected
         if (isTRUE(sum(ncg.selected) == 0)) stop('NCGs cannot be found based on the current parameters.')
         ## plot ####
-        if (isTRUE(plot.output)){
+        if (isTRUE(create.ncg.rank.plot)){
             all.aov$ncg <- row.names(all.aov) %in%  row.names(se.obj)[ncg.selected]
             p.fvalues <- ggplot(all.aov, aes(x = log2(Biology), y = log2(UV), color = ncg)) +
                 geom_point(alpha = .1) +
@@ -950,7 +957,7 @@ findNcgByTwoWayAnova <- function(
                     verbose = verbose)
             }
             ## plotting ####
-            if (isTRUE(plot.output)){
+            if (isTRUE(create.ncg.rank.plot)){
                 all.aov$ncg <- row.names(all.aov) %in%  row.names(se.obj)[ncg.selected]
                 p.fvalues <- ggplot(all.aov, aes(x = log2(Biology), y = log2(UV), color = ncg)) +
                     geom_point(alpha = .1) +
@@ -1061,7 +1068,7 @@ findNcgByTwoWayAnova <- function(
             names_to = 'Groups',
             values_to = 'ls')
         # plot ####
-        p.assess.ncg <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
+        assess.ncg.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
             geom_line(aes(color = Groups), linewidth = 1) +
             geom_point(aes(color = Groups), size = 2) +
             xlab('PCs') +
@@ -1080,13 +1087,13 @@ findNcgByTwoWayAnova <- function(
                 legend.title = element_text(size = 14),
                 plot.title = element_text(size = 16)
             )
-        if (isTRUE(plot.output)) print(p.assess.ncg)
+        if (isTRUE(plot.ncg.assessment)) print(assess.ncg.plot)
     }
 
-    # Save results ####
+    # Saving results ####
     ### add results to the SummarizedExperiment object ####
     if (is.null(ncg.group.name)){
-        ncg.group.name <- paste0('ncg|supervised')
+        ncg.group.name <- 'NcgTwoWayAnova'
     }
     if (is.null(ncg.set.name)){
         ncg.set.name <- paste0(
@@ -1099,13 +1106,8 @@ findNcgByTwoWayAnova <- function(
             ncg.selection.method,
             '|',
             assay.name)}
-
+    ### Adding the results to the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)){
-        printColoredMessage(
-            message = '-- Saving the selected NCG to the metadata of the SummarizedExperiment object.',
-            color = 'magenta',
-            verbose = verbose
-            )
         ## Check if metadata NCG already exists
         if (length(se.obj@metadata$NCG) == 0 ) {
             se.obj@metadata[['NCG']] <- list()
@@ -1116,33 +1118,36 @@ findNcgByTwoWayAnova <- function(
         if (!ncg.group.name %in% names(se.obj@metadata[['NCG']][['supervised']])){
             se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]] <- list()
         }
-        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] <- list()
+        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]] )){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]] <- list()
         }
-        if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']] )){
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- list()
+        if (!'ncg.set' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]])){
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['ncg.set']] <- list()
         }
-        se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['ncg.set']][[ncg.set.name]] <- ncg.selected
+        se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['ncg.set']] <- ncg.selected
 
+        if (isTRUE(create.ncg.rank.plot)){
+            if (!'ranl.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]])){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['rank.plot']] <- list()
+            }
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['rank.plot']] <- all.plots
+        }
         if (isTRUE(assess.ncg)){
-            if (!'assessment.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]])){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] <- list()
+            if (!'ranl.plot' %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]])){
+                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['assessment.plot']] <- list()
             }
-            if (!ncg.set.name %in% names(se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']] )){
-                se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- list()
-            }
-            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][['assessment.plot']][[ncg.set.name]] <- p.assess.ncg
+            se.obj@metadata[['NCG']][['supervised']][[ncg.group.name]][[ncg.set.name]][['assessment.plot']] <- assess.ncg.plot
         }
         printColoredMessage(
             message = '- The NCGs are saved to metadata of the SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
-            )
+        )
         printColoredMessage(
             message = '------------The findNcgByTwoWayAnova function finished.',
             color = 'white',
             verbose = verbose
-            )
+        )
         return(se.obj)
     }
     ### export results as logical vector ####

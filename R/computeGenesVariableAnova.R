@@ -1,11 +1,11 @@
 #' Computes ANOVA between individual gene expression and a categorical variable
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function calculates the ANOVA between individual gene expression of the assay(s) in a SummarizedExperiment object
 #' and a categorical variable as factor.
-
+#'
 #' @details
 #' ANOVA enables us to assess the effects of a given qualitative variable (which we call a factor) on gene expression
 #' measurements across any set of groups (labeled by the levels of the factor) under study. We use ANOVA F-statistics
@@ -13,7 +13,7 @@
 #' of individual genes, where genes having large F-statistics are deemed to be affected by the unwanted variation.
 #' We also use ANOVA tests (the aov() function in R) to assign P values to the association between tumor purity and
 #' molecular subtypes.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object to compute the ANOVA. By default is set to 'all', which means all assays of the
@@ -33,7 +33,7 @@
 #' default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 #' the log transformation. The default is set to 1.
-#' @param assess.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
 #' This means the function will apply the `checkSeObj()` function.
 #' @param remove.na Character. A character string specifying whether to eliminate missing values from `assays`, `sample.annotation`,
 #' `both`, or `none`. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
@@ -45,10 +45,10 @@
 #' current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is
 #' set to `FALSE`.
 #' @param verbose Logical. If `TRUE`, displays the messages of different steps of the function.
-
+#'
 #' @return Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
 #' variable or a list of these results.
-
+#'
 #' @importFrom matrixTests row_oneway_equalvar row_oneway_welch
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom tidyr pivot_longer %>%
@@ -66,7 +66,7 @@ computeGenesVariableAnova <- function(
         plot.top.genes = FALSE,
         nb.top.genes = 3,
         apply.round = TRUE,
-        assess.se.obj = TRUE,
+        check.se.obj = TRUE,
         remove.na = 'both',
         save.se.obj = TRUE,
         override.check = FALSE,
@@ -149,7 +149,7 @@ computeGenesVariableAnova <- function(
         }
 
         # Assess the SummarizedExperiment object ####
-        if (isTRUE(assess.se.obj)) {
+        if (isTRUE(check.se.obj)) {
             se.obj <- checkSeObj(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),

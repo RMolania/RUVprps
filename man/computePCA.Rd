@@ -14,7 +14,7 @@ computePCA(
   apply.log = TRUE,
   pseudo.count = 1,
   svd.bsparam = bsparam(),
-  assess.se.obj = TRUE,
+  check.se.obj = TRUE,
   remove.na = "assays",
   override.check = FALSE,
   save.se.obj = TRUE,
@@ -50,7 +50,7 @@ transformation. The default is set to 1.}
 \item{svd.bsparam}{A BiocParallelParam object specifying how parallelization should be performed. The default is set
 to \code{bsparam()}. See the \code{runSVD()} function from the BiocSingular R package for more details.}
 
-\item{assess.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
 See the \code{checkSeObj()} function for more details.}
 
 \item{remove.na}{Character. Specifies whether to remove NA or missing values from the data sets (assays). Options are
