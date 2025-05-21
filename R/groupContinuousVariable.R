@@ -1,7 +1,7 @@
 #' Groups a continuous variable.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param variable Symbol. A symbol specifying the column in the SummarizedExperiment object. This should be a continuous
 #' variable.

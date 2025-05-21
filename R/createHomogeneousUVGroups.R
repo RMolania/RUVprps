@@ -1,17 +1,17 @@
 #' Creates all possible homogeneous groups with respect to unwanted variables.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function generates all possible homogeneous sample groups based on the specified unwanted variation variables.
-
+#'
 #' @details
 #' The function generates all possible homogeneous sample groups based on the specified biological variables. If continuous
 #' variables are provided, the function splits each into a number of clusters determined by ’nb.clusters’, using the
 #' clustering method specified in ’clustering.method’. Ultimately, all combinations of all clusters are created and
 #' each such combination is regarded as a homogeneous sample group concerning biological variables.
-
-#' @param se.obj A 'SummarizedExperiment' object.
+#'
+#' @param se.obj A SummarizedExperiment object.
 #' @param uv.variables Character. A character string or a vector of character strings specifying the column names of unwanted
 #' variables in the sample annotation of the 'SummarizedExperiment  object. These 'uv.variables' can be either categorical
 #' or continuous variables.
@@ -29,10 +29,10 @@
 #' or not. If `TRUE` , all the possible homogeneous groups will be saved into 'se.obj->metadata->HomogeneousGroups->
 #' BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE` , displays messages for different steps of the function.
-
+#'
 #' @return Either a  SummarizedExperiment object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
 #' ->UnwantedVariables' or a vector of all possible homogeneous sample groups.
-
+#'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom stats kmeans quantile
 #' @importFrom knitr kable

@@ -1,18 +1,18 @@
 #' Performs differential gene expression analysis.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function performs differential gene expression analysis using Limma and Wilcoxon test between all possible pairs
 #' of a categorical variable in a SummarizedExperiment object.
-
+#'
 #' @details
 #' DE analyses is performed using the Limma or Wilcoxon signed-rank test with log-transformed data e.g. raw counts,
 #' normalized data, .... To evaluate the effects of the different sources of unwanted variation on the data, DE analyses
 #' is performed across batches. In the absence of any batch effects, the histogram of the resulting un-adjusted P values
 #' should be uniformly distributed. Further, differential gene expression analysis can be performed across the levels of
 #' a biological factor of interest.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings for the selection of the name(s) of
 #' the assay(s) in the SummarizedExperiment object to compute the differential gene expression analysis. By default, it
@@ -38,10 +38,10 @@
 #' determine if the differential gene expression (DGE) analysis has already been computed for the current parameters. If
 #' it has, the metric will not be recalculated. The default is set to `FALSE`.
 #' @param verbose Logical. If `TRUE`, displays process messages during execution.
-
+#'
 #' @return Either a SummarizedExperiment object or a list containing all the statistics from the Limma or Wilcoxon test
 #' and, if requested.
-
+#'
 #' @importFrom limma makeContrasts lmFit contrasts.fit eBayes
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom matrixTests row_wilcoxon_twosample

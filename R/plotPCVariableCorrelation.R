@@ -2,14 +2,14 @@
 #'
 #' @author Ramyar Molania
 #'
+#' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function generates a dot-line plot between the first cumulative PCs and the correlation coefficient (R2) obtained
 #' from the vector correlation analysis. An ideal normalization should result in a low correlation with unwanted variation
 #' variables and a high correlation with known biology.
-#'
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings for the selection of the name(s) of the

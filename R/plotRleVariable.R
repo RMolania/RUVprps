@@ -1,21 +1,21 @@
 #' Plots a variable against the medians and IQRs of relative log expression (RLE) plot.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @references
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
-
+#'
 #' @description
 #' This function plots a variable against the medians and IQR of a relative log expression (RLE) data. Because of the
 #' sensitivity of the RLE medians and IQR to unwanted variation, we  examine the relationships between RLE medians and
 #' IQR with potential sources of unwanted variation. In the absence of any influence of unwanted variation in the data,
 #' we should see no such associations.
-
+#'
 #' @details
 #' If the variable is categorical, boxplots of the RLE medians and IQR against the variable will be generated. If
 #' the variable is continuous, scatter plots will be created.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings representing the names of the data
 #' set(s) in the SummarizedExperiment object. The RLE data of these data set(s) must be computed before using the `computeRLE()`
@@ -42,9 +42,9 @@
 #' @param save.se.obj Logical. Specifies whether to save the plots in the metadata of the SummarizedExperiment object or
 #' to output them as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, messages for different steps of the function will be shown.
-
+#'
 #' @return A SummarizedExperiment object that contains all the plot(s) in the metadata or a list containing all the plot(s).
-
+#'
 #' @importFrom ggpubr ggarrange stat_cor stat_compare_means
 #' @importFrom SummarizedExperiment assays
 #' @import ggplot2

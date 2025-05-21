@@ -1,15 +1,15 @@
 #' Computes gene-gene partial correlation analysis.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function computes all possible gene-gene pairwise ordinary and partial correlation of the assays in the
 #' SummarizedExperiment object.
-
+#'
 #' @details
 #' Partial correlation is used to estimate correlation between two variables while controlling for third
 #' variables.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the data set(s)
 #' in the SummarizedExperiment object for calculating the correlations. The default is set to `all`, which indicates that
@@ -43,11 +43,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the correlation results in the metadata of the SummarizedExperiment
 #' object or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If TRUE, displays the messages for different steps of the function.
-
+#'
 #' @return A SummarizedExperiment object containing the correlation coefficients or a list of the correlation coefficients
 #' for individual assays.
-
-
+#'
 #' @importFrom Rfast correls
 #' @importFrom stats cor
 #' @export

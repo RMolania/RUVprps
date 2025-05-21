@@ -1,17 +1,17 @@
 #' Performs principal component analysis (PCA)
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function uses singular value decomposition to perform principal component on the dataset(s) (assay(s) in a
 #' SummarizedExperiment object. The function provides fast singular value decomposition using the BiocSingular R package.
-
+#'
 #' @details
 #' The PCs (in this context also called singular vectors) of the sample × transcript array of log counts are the linear
 #' combinations of the transcript measurements having the largest, second largest, third largest, etc., variation,
 #' standardized to be of unit length and orthogonal to the preceding components. Each will give a single value for
 #' each sample.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings for selecting the name(s) of the
 #' assay(s) in the SummarizedExperiment object to compute PCA. The default is set to "all", which indicates all the
@@ -41,10 +41,10 @@
 #' or to output the results as a list. The default is set to `TRUE`. The results can be found:
 #' "se.obj->metadata->metric->AssayName->global.level->PCA$"
 #' @param verbose Logical. If `TRUE`, displays messages for the different steps of the function.
-
+#'
 #' @return A SummarizedExperiment object or a list containing the singular value decomposition results and the
 #' percentage variation of each principal component (PC).
-
+#'
 #' @importFrom SummarizedExperiment assay
 #' @importFrom BiocSingular runSVD bsparam
 #' @import ggplot2

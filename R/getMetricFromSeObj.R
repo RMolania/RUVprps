@@ -15,6 +15,7 @@
 #' @param required.function Character string. Name of the function that must have been run prior to retrieving this metric.
 #' @param message.to.print Character string. A message to print when retrieving the metric.
 #' @param verbose Logical. If `TRUE`, prints messages describing the function's progress.
+
 getMetricFromSeObj <- function(
         se.obj,
         slot = 'Metrics',

@@ -2,6 +2,10 @@
 #'
 #' @author Ramyar Molania
 #'
+#'#' @references
+#' Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research, 2019.
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS, Nature Biotechnology, 2023
+#'
 #' @description
 #' This function applies a range of global and gene-level metrics to assess the variation of specified
 #' variables in the assay(s) of a SummarizedExperiment object.
@@ -26,10 +30,6 @@
 #' - Linear regression between the first cumulative PC and each continuous variable.
 #' - Boxplot of the correlation between gene expression and each continuous variable.
 #' - RLE plot distribution.
-#'
-#' @references
-#' Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research, 2019.
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS, Nature Biotechnology, 2023
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector for selecting assay name(s) in the SummarizedExperiment object. The default is set to `all`.
@@ -103,8 +103,7 @@
 #' @param verbose Logical. Print progress messages. The default is set to `FALSE`.
 #'
 #' @return A SummarizedExperiment object containing assessment metrics and plots. Optionally saves a PDF of results.
-
-
+#'
 #' @importFrom grDevices colorRampPalette dev.off pdf
 #' @importFrom SummarizedExperiment assays colData
 #' @importFrom gridExtra grid.arrange grid.table

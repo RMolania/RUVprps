@@ -53,10 +53,10 @@ of variables, such as the first k PCs (that is 1 ≤ k ≤ 10) and dummy variabl
 biological variables. Not only does this quantity summarize the full set of canonical correlations, but it also reduces
 to the familiar R2 from multiple regression when one of the variable sets contains just one element.
 }
-\references{
-Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-Nature Biotechnology, 2023
-}
 \author{
 Ramyar Molania
+
+#' @references
+Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+Nature Biotechnology, 2023
 }

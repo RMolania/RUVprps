@@ -16,7 +16,7 @@ createHomogeneousUVGroups(
 )
 }
 \arguments{
-\item{se.obj}{A 'SummarizedExperiment' object.}
+\item{se.obj}{A SummarizedExperiment object.}
 
 \item{uv.variables}{Character. A character string or a vector of character strings specifying the column names of unwanted
 variables in the sample annotation of the 'SummarizedExperiment  object. These 'uv.variables' can be either categorical

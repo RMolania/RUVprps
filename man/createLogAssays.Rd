@@ -2,7 +2,7 @@
 % Please edit documentation in R/createLogAssays.R
 \name{createLogAssays}
 \alias{createLogAssays}
-\title{Apply log-transformation to the assay(s) of a SummarizedExperiment object.}
+\title{Applies log-transformation to the assay(s) of a SummarizedExperiment object.}
 \usage{
 createLogAssays(
   se.obj,
@@ -34,7 +34,7 @@ The default is 'TRUE'.}
 \item{verbose}{Logical. If \code{TRUE}, the function will display messages about the different steps being executed.}
 }
 \description{
-Apply log-transformation to the assay(s) of a SummarizedExperiment object.
+Applies log-transformation to the assay(s) of a SummarizedExperiment object.
 }
 \author{
 Marie Trussart

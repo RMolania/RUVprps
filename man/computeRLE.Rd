@@ -32,7 +32,7 @@ log transformation. This avoids \code{-Inf} for measurements equal to 0. The def
 
 \item{outputs.to.return}{Character. Specifies the type of RLE computations to be performed and the data to be returned.
 Options include \code{all}, \code{rle}, \code{rle.med}, \code{rle.iqr}, and \code{rle.med.iqr}. Selecting \code{all} returns RLE data along with
-medians and interquartile ranges. Choosing "rle" returns only the RLE data for each assay. "rle.med" returns only the
+medians and interquartile ranges. Choosing "rle" returns only the RLE data for each assay. \code{rle.med} returns only the
 RLE  medians. \code{rle.iqr} returns only the interquartile ranges of the RLE data. \code{rle.med.iqr} returns both the
 RLE medians and interquartile ranges. The default is set to  \code{all}.}
 
@@ -73,10 +73,8 @@ influence of unwanted variation in the data, we should see no such associations.
 }
 \references{
 Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
-
 Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
 2019.
-
 Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 Nature Biotechnology, 2023
 }

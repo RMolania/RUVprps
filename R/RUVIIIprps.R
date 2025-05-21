@@ -1,10 +1,16 @@
 #' The RUV-III method with technical replicates or PRPS normalization.
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' @references
+#' * Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
+#' 2019.
+#' * Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function applies the RUV-III with technical replicates or PRPS on transcriptions data.
-
+#'
 #' @details
 #' RUV-III normalization. Before we can describe the linear model underlying RUV-III, we need to introduce the m × m1
 #' mapping matrix M connecting assays to distinct samples, which captures the pattern of replication in our assays. Here,
@@ -34,14 +40,7 @@
 #' I- Define αˆ(k) = U(k)TY, where U(k) is the first k columns of U
 #' II- Estimate W by regressing the centered negative controls (I − P1)Yc on αˆ(k)T c
 #' III-
-
-
-#' @references
-#' * Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
-#' 2019.
-#' * Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character string indicating the name of the assay in the SummarizedExperiment
 #' object. The selected assay should be the one that has been used for PRPS and NCGs selection.

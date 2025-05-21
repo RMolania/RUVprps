@@ -1,7 +1,7 @@
 #' Assesses the W matrix of RUV-III.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function assesses the association between the W matrix from RUV-III normalized data and known variables. It calculates
 #' the correlation between the columns of the W matrix and both the specified biological and unwanted variables.
@@ -16,7 +16,7 @@
 #' values is sum of the half of the average scores. A higher score indicates a better value for $k$. It is important to
 #' note that the assessment of W, should be used in combination with all other normalization assessments to select suitable
 #' RUV-III normalized data.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param variables Character. A character or character vector of variables within the SummarizedExperiment object. These
 #' can be categorical, continuous, or a combination of both. If oit is specified, a line-dot plots between correlations
@@ -33,7 +33,7 @@
 #' @param save.se.obj Logical. If `TRUE`, the plots will be saved to the metadata of the SummarizedExperiment object. The
 #' default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, the function will display progress messages. The default is set to `TRUE`.
-
+#'
 #' @importFrom dplyr bind_rows summarise mutate group_by
 #' @importFrom fastDummies dummy_cols
 #' @importFrom gtools mixedorder

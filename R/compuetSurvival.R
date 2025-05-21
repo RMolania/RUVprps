@@ -1,10 +1,10 @@
 #' Computes variable and gene-level survival analysis.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function computes gene-level and variable-level survival analysis.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character or a vector of characters specifying the name(s) of the assay(s) in the
 #' SummarizedExperiment object for gene-level survival analysis. The default is set to `all`, which indicates that all
@@ -31,7 +31,7 @@
 #' @param save.se.obj Logical. Indicates whether to save the results of the survival analysis in the metadata of the
 #' SummarizedExperiment object or output the results as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages for each step of the function.
-
+#'
 #' @importFrom survival survfit survdiff Surv
 #' @importFrom survminer ggsurvplot
 #' @import RColorBrewer

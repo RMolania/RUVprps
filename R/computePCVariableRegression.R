@@ -1,16 +1,16 @@
 #' Computes the linear regression.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function calculates the linear regression between the the first 'nb.pcs' PCs (cumulatively) of the gene expression
 #' data (assays) of a SummarizedExperiment object and a continuous variable (i.e. library size or tumor purity).
-
+#'
 #' @details
 #' R2 values of fitted linear models are used to quantity the strength of the (linear) relationships between a single
 #' quantitative source of unwanted variation, such as sample (log) library size or tumor purity, and global sample
 #' summary statistics, such as the first k PCs (1 ≤ k ≤ 10).
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or list of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object for performing regression analysis. The default is set to `all`, which indicates that
@@ -24,10 +24,9 @@
 #' @param save.se.obj Logical. Indicates whether to save the results, regression R^2, to the 'metadata' of the
 #' SummarizedExperiment object or output the result as a list. By default, it is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays the messages for the different steps of the function.
-
+#'
 #' @return A SummarizedExperiment object containing the computed regression R^2 for or output the result as a list.
-
-
+#'
 #' @importFrom stats lm var
 #' @import ggplot2
 #' @export

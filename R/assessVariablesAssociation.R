@@ -1,14 +1,14 @@
 #' Assesses the association between variables in a SummarizedExperiment object.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' The function assesses the association between all selected biological and unwanted variation variables, separately.
 #' If two categorical variables are highly correlated, the function keeps one that has the highest number of factors.
 #' For two highly correlated continuous variables, the one with higher variance will be kept. This assessment could be
 #' useful for creating PRPS and finding NGCs. If two variables exhibit high correlation, utilizing one of them is
 #' sufficient for PRPS or identifying NCGs.
-
+#'
 #' @details
 #' For each pair of categorical variables from 'uv.variables' and each pair of categorical variables from 'bio.variables',
 #' the correlation is computed using the function 'ContCoef' from the DescTools R package. For each pair of continuous
@@ -21,7 +21,7 @@
 #' variables in the 'cont.cor.coef' for the unwanted variables, followed by the minimum cut-off of the correlation coefficient
 #' for the biological variables. If the correlation of a pair of variable is higher than the minimum cut-off, only the variable
 #' that has the highest variance will be kept and the other one will be excluded from the remaining analysis.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param bio.variables Character or character vector. Specifies the column names of biological variables in
 #' the sample annotation of the SummarizedExperiment object. These `bio.variables` can be either categorical or continuous
@@ -45,9 +45,9 @@
 #' options are 'sample.annotation' or `none`. The default is `sample.annotation`, meaning the missing values from the
 #' variables will be removed before calculating the associations.
 #' @param verbose Logical. If `TRUE`, shows messages for different steps of the function.
-
+#'
 #' @return A list that contains the SummarizedExperiment object and the selected biological and unwanted variables.
-
+#'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom DescTools ContCoef
 #' @importFrom stats cor.test

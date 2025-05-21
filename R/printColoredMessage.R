@@ -1,5 +1,5 @@
 #' Print colored messages.
-
+#'
 #' @param message Message to be printed.
 #' @param color The color of the message.
 #' @param verbose whether to show the messages or not.

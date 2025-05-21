@@ -1,10 +1,10 @@
 #' Checks whether to override a current metric or not. Finalized
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function checks whether to re-calculate the specified metric or no.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param slot Character. A character string indicating the name of the slot(s) in the 'metadata' of the SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s) in the SummarizedExperiment
@@ -15,7 +15,7 @@
 #' @param variable Character. A character string indicating the variable used to calculate the metric.
 #' @param file.name Character. A character string indicating the file name to which the results of the metric are assigned.
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
-
+#'
 #' @importFrom SummarizedExperiment assays
 #' @export
 

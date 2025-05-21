@@ -1,10 +1,10 @@
 #' Plots F-statistics obtained from ANOVA.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This functions plots the results of the ANOVA analysis computed by the `computeGenesVariableANOVA()` function.
-
+#'
 #' @param se.obj A `SummarizedExperiment` object.
 #' @param assay.names Character or vector. A character string or a vector of strings specifying the name(s) of the
 #' assay(s) in the `SummarizedExperiment` object to include. By default, all assays will be selected—provided that
@@ -23,10 +23,10 @@
 #' @param save.se.obj Logical. If `TRUE`, saves the plots in the metadata of the `SummarizedExperiment` object. If `FALSE`,
 #' returns the plots as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages during execution.
-
+#'
 #' @return Either a `SummarizedExperiment` object containing the plots in its metadata, or a list of boxplots showing
 #' ANOVA results for the specified categorical variable across the selected assays.
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @import ggplot2
 #' @export

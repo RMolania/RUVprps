@@ -2,7 +2,7 @@
 % Please edit documentation in R/indentifyUnknownUV.R
 \name{identifyUnknownUV}
 \alias{identifyUnknownUV}
-\title{Identify potential unknown sources of unwanted variation in RNA-seq data.}
+\title{Identifies potential unknown sources of unwanted variation in RNA-seq data.}
 \usage{
 identifyUnknownUV(
   se.obj,
@@ -58,7 +58,8 @@ The default is set to \code{NULL}.}
 
 \item{uv.gene.sets}{List. Gene sets related to unwanted variation for use in \code{sample.scoring}.The default is set to \code{NULL}.}
 
-\item{ncg}{Vector. Negative control genes. If not \code{NULL}, analysis will be restricted to these genes.The default is set to \code{NULL}.}
+\item{ncg}{Vector. Negative control genes. If not \code{NULL}, analysis will be restricted to these genes.The default is
+set to \code{NULL}.}
 
 \item{clustering.methods}{Character string. Clustering method: one of \code{kmeans}, \code{cut}, \code{quantile}, or \code{nbClust}.
 The default is set to \code{nbClust}.}
@@ -79,7 +80,8 @@ The default is set to \code{nbClust}.}
 
 \item{nbClust.alphaBeale}{Numeric. Significance threshold for Beale's index.}
 
-\item{max.samples.per.batch}{Numeric. Max proportion of samples per cluster (only applies to \code{nbClust}).The default is set to 0.1.}
+\item{max.samples.per.batch}{Numeric. Max proportion of samples per cluster (only applies to \code{nbClust}).The default
+is set to 0.1.}
 
 \item{nb.clusters}{Numeric. Number of clusters when using \code{kmeans}, \code{cut}, or \code{quantile}.The default is set to 3.}
 
@@ -93,10 +95,11 @@ The default is set to \code{nbClust}.}
 
 \item{scale}{Logical. Whether to scale data before PCA.The default is set to \code{FALSE}.}
 
-\item{svd.bsparam}{A \code{BiocParallelParam} object. Controls parallelization for SVD computation.The default is set to \code{bsparam()}.}
+\item{svd.bsparam}{A \code{BiocParallelParam} object. Controls parallelization for SVD computation.The default is set to
+\code{bsparam()}.}
 
-\item{remove.current.estimates}{Character string. Whether to remove current estimates of unknown batches.The default is set to
-\code{TRUE}.}
+\item{remove.current.estimates}{Character string. Whether to remove current estimates of unknown batches.The default
+is set to \code{TRUE}.}
 
 \item{output.name}{Character string. Output file name. If \code{NULL}, a name is automatically generated.}
 

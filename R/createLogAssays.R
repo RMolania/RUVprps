@@ -1,7 +1,7 @@
-#' Apply log-transformation to the assay(s) of a SummarizedExperiment object.
-
+#' Applies log-transformation to the assay(s) of a SummarizedExperiment object.
+#'
 #' @author Marie Trussart
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A single symbol or a vector of symbols specifying the name(s) of the assay(s) in the
 #' SummarizedExperiment object. The default is "all," indicating that all assays in the SummarizedExperiment object will
@@ -13,7 +13,7 @@
 #' @param apply.round Logical. If 'TRUE', the measurements in the individual assays will be rounded to two decimal places.
 #' The default is 'TRUE'.
 #' @param verbose Logical. If `TRUE`, the function will display messages about the different steps being executed.
-
+#'
 #' @importFrom SummarizedExperiment assays assay colData
 
 

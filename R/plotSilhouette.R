@@ -1,16 +1,16 @@
 #' Computes the average Silhouette coefficients.
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' @references
+#' *Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This functions generates barplots of average Silhouette coefficients for individual assays. If two variables are
 #' provided, the function creates combined scatter plots of the average silhouette coefficients of each variables for the
 #' individual assays.
-
-#' @references
-#' *Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the data set(s)
 #' in the SummarizedExperiment object to generate barplots or scatter plots of the computed Silhouette coefficients.

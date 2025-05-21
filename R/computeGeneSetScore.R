@@ -1,11 +1,11 @@
 #' Computes sample level enrichment score of a gene set.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' The function uses the `singscore` function from the R/Bioconductor **singscore** package to calculate sample-wise
 #' scores of a gene set across all data(assay) in a SummarizedExperiment object.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character or a vector of characters specifying the name(s) of the data set(s) in the
 #' SummarizedExperiment object for which to calculate sample-wise scores. The default is set to `all`, indicating that all
@@ -40,7 +40,7 @@
 #' @param save.se.obj Logical. Indicates whether to save the score results in the metadata of the SummarizedExperiment
 #' object or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, messages describing the steps of the function will be shown.
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom singscore rankGenes simpleScore
 #' @importFrom fastDummies dummy_cols

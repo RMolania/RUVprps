@@ -246,10 +246,10 @@ It will output the following plots:
 \item RLE plot distribution.
 }
 }
-\references{
-Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research, 2019.
-Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS, Nature Biotechnology, 2023
-}
 \author{
 Ramyar Molania
+
+#' @references
+Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research, 2019.
+Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS, Nature Biotechnology, 2023
 }

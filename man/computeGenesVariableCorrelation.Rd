@@ -66,8 +66,8 @@ Options are \code{assays}, \code{sample.annotation}, \code{none} and \code{both}
 object or to output the result.The default is set to \code{TRUE}.}
 
 \item{override.check}{Logical. When set to \code{TRUE}, the function verifies the current SummarizedExperiment object to
-determine if the correlation has already been computed with the current parameters. If so, the metric will not be recalculated.
-The default is set to \code{FALSE}.}
+determine if the correlation has already been computed with the current parameters. If so, the metric will not be
+recalculated. The default is set to \code{FALSE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, displays the messages for different steps of the function.}
 }
@@ -79,10 +79,10 @@ genes.
 This function computes Spearman or Pearson correlations between individual gene-level expression of each assay and
 a continuous variable in SummarizedExperiment object.
 }
-\references{
-Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-Nature Biotechnology, 2023
-}
 \author{
 Ramyar Molania
+
+#' @references
+Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+Nature Biotechnology, 2023
 }

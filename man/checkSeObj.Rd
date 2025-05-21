@@ -2,7 +2,7 @@
 % Please edit documentation in R/checkSeObj.R
 \name{checkSeObj}
 \alias{checkSeObj}
-\title{Assess SummarizedExperiment object. -Finalized}
+\title{Assesses SummarizedExperiment object.}
 \usage{
 checkSeObj(
   se.obj,

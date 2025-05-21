@@ -1,15 +1,15 @@
 #' Computes the correlation between individual gene expression and a continuous variable.
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' #' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function computes Spearman or Pearson correlations between individual gene-level expression of each assay and
 #' a continuous variable in SummarizedExperiment object.
-
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object for computing the correlation. By default is set to 'all', which indicates all
@@ -38,13 +38,13 @@
 #' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the current SummarizedExperiment
 #' object or to output the result.The default is set to `TRUE`.
 #' @param override.check Logical. When set to `TRUE`, the function verifies the current SummarizedExperiment object to
-#' determine if the correlation has already been computed with the current parameters. If so, the metric will not be recalculated.
-#' The default is set to `FALSE`.
+#' determine if the correlation has already been computed with the current parameters. If so, the metric will not be
+#' recalculated. The default is set to `FALSE`.
 #' @param verbose Logical. If `TRUE`, displays the messages for different steps of the function.
-
+#'
 #' @return Either a SummarizedExperiment object or a list containing the correlation coefficients for computed for individual
 #' genes.
-
+#'
 #' @importFrom SummarizedExperiment assays assay colData
 #' @importFrom tidyr pivot_longer %>%
 #' @importFrom Rfast correls

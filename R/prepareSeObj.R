@@ -1,7 +1,7 @@
 #' Prepares a SummarizedExperiment object from tabular data.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function creates a SummarizedExperiment object from tabular expression data set(s) and sample annotation (if
 #' available). The function can identify and remove lowly expressed genes if a raw count data is provided, add a range
@@ -9,7 +9,7 @@
 #' sets of housekeeping genes and a immune and stromal gene signatures. The housekeeping gene sets could be suitable
 #' negative control genes for identification of sources of unknown unwanted variation and the implementation of the RUV
 #' methods. The immune and stromal gene signature could be used to estimate tumor purity variation in cancer RNA-seq data.
-
+#'
 #' @details
 #' The SummarizedExperiment object is a data structure used in the R for representing and manipulating high-dimensional
 #' experimental data. Here are some key features and components of the SummarizedExperiment object:
@@ -25,7 +25,7 @@
 #' The Metadata of the SummarizedExperiment allows for flexibility in terms of data types and structures. This makes it
 #' suitable for saving metrics and plots in the RUVIIIPRPS R package. We refer to the SummarizedExperiment R package for
 #' more details.
-
+#'
 #' @param data List or a SummarizedExperiment object. Either a list containing data sets (assays) or expression data. For
 #' individual datasets, genes should be arranged in rows and samples in columns. If multiple datasets are provided, ensure
 #' that the row names of the assays are in the same order or a SummarizedExperiment object.
@@ -68,10 +68,10 @@
 #' be added to the gene annotation. These signatures can be used to estimate tumor purity in cancer RNA-seq data.
 #' @param metaData Any. Metadata in any format and dimensions.
 #' @param verbose Logical. If `TRUE`, the function will print messages at various steps of the process.
-
+#'
 #' @return A SummarizedExperiment object containing assay(s) and also samples annotation, gene annotation and metadata
 #' if there are specified.
-
+#'
 #' @importFrom SummarizedExperiment SummarizedExperiment assay rowData colData
 #' @importFrom tidyestimate filter_common_genes estimate_score
 #' @importFrom biomaRt getBM useMart useDataset

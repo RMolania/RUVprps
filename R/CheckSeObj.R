@@ -1,16 +1,16 @@
-#' Assess SummarizedExperiment object. -Finalized
-
+#' Assesses SummarizedExperiment object.
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function assesses the structure of a SummarizedExperiment object and removes any missing values from both
 #' data(assay) and sample annotation.
-
+#'
 #' @details
 #' When multiple assays are provided, if data are missing in only one of the datasets, the corresponding rows in the other
 #' datasets will also be removed. If the specified variables contain missing values, the corresponding samples will be removed
 #' from the data as well. Please note that the current RUV-III method does not support missing values in the data.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character or character vector. A character or character vector of the name(s) of the data(assay) in
 #' the SummarizedExperiment object. The default is set to `all`, indicating that all data in the SummarizedExperiment
@@ -23,9 +23,9 @@
 #' `sample.annotation` is selected, samples with NA or missing values for each `variables` will be excluded. The default
 #' is set to `both`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
-
+#'
 #' @return A SummarizedExperiment object.
-
+#'
 #' @importFrom SummarizedExperiment assays assay colData
 #' @importFrom stats complete.cases
 #' @export

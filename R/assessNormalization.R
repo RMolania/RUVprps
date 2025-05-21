@@ -1,12 +1,18 @@
 #' Assesses the performance of normalization methods.
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' @references
+#' **Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids
+#' Research, 2019.
+#' **Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function summarizes a range of global and gene level metrics obtained using the `assessVariation` function for
 #' individual biological and unwanted variables. The functions returns numerical assessments in a table to assess the
 #' performance of difference normalization. Refer to details for more information.
-
+#'
 #' @details
 #' It is essential to assess the performance of a normalization as a remover of unwanted variation and a preserver of
 #' biological variation in the data. An ideal normalization should preserve all known sources of biological variation
@@ -30,13 +36,7 @@
 #' - Linear regression between the first cumulative PC and continuous variable.
 #' - Boxplot of the correlation between gene expression and continuous variable.
 #' - It will also output the RLE plot distribution.
-
-#' @references
-#' **Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids
-#' Research, 2019.
-#' **Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names character or character vector. One or more names of assays to select from the SummarizedExperiment
 #' object.
@@ -83,10 +83,8 @@
 #' not exceed `compute.nb.pcs`.
 #' @param lra.nb.pcs Numeric. Number of principal components to use for latent representation analysis. Default is 3.
 #' Must not exceed `compute.nb.pcs`.
-
 #' @return A SummarizedExperiment object containing the assessment matrix, plot, and table, or a list containing all results.
-
-
+#'
 #' @importFrom ggh4x strip_nested elem_list_text elem_list_rect facet_nested
 #' @importFrom dplyr summarise_at case_match row_number
 #' @importFrom grDevices colorRampPalette dev.off pdf

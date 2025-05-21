@@ -1,21 +1,21 @@
 #' Computes the average silhouette width using PCs.
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function calculates the average silhouette width for each categorical variables such as sample biological subtypes,
 #' batches, etc.. The distance matrix is based on the principal components.
-
+#'
 #' @details
 #' The Silhouette coefficient analysis is used to assess the separation of categorical samples groups. We use first few
 #' principal components to calculate both the similarity between one sample and the other samples in each cluster and the
 #' separation between samples in different clusters. A better normalization method will lead to higher and lower silhouette
 #' coefficients for biological and batch variables, respectively.
-
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object for which to calculate the Silhouette coefficient. The default is set to 'all', which
@@ -32,11 +32,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the silhouette coefficient  results in the metadata of the
 #' SummarizedExperiment object or to output the result. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
-
+#'
 #' @return Either the SummarizedExperiment object containing the computed Silhouette coefficient stored in the metadata
 #' or a list of Silhouette coefficients for all specified assay(s).
-
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom cluster silhouette
 #' @importFrom stats dist

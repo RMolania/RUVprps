@@ -1,18 +1,17 @@
 #' Generates study outline of a SummarizedExperiment object.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function generates a heatmap of sample-level features such as batches, biological populations, library size, and
 #' tumor purity.
-
-
+#'
 #' @details
 #' This plot is helpful for exploring how these factors are distributed across samples and for examining visible unwanted
 #' variation in the data. Further, it can visually reveal confounder factors in the data. It can be initially
 #' generated based on the known variables and updated with any estimated biological and unwanted variables during the
 #' normalization process. We highly recommend generating the plot before performing downstream analyses.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param variables Character or character vector. The label(s) of variable(s) within the SummarizedExperiment
 #' object. This can include a vector containing categorical, continuous, or a combination of both types of variables. This

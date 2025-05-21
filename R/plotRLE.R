@@ -1,24 +1,24 @@
 #' Generates boxplot of the relative log expression (RLE) data of RNA-seq data.
-
+#'
 #' @author Ramyar Molania
-
-#' @description
-#' This function generates a boxplot for individual RLE data. The function does not plot the outliers in the boxplot in
-#' order to enhance the visibility of the variation in the RLE medians and interquartile ranges. The RLE data can be
-#' obtained using the 'computeRLE' function. We refer to the 'computeRLE' function for more detail about RLE.
-
-#' @details
-#' An ideal RLE plot should have its medians centered around zero, and its box widths and their interquartile ranges
-#' (IQRs) should be similar in magnitude. We refer to Gandolfo L. C. & Speed, T. P., PLoS ONE, 2018 for more details and
-#' assumption about the RLE plots.
-
+#'
 #' @references
 #' Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
 #' Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
 #' 2019.
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
-
+#'
+#' @description
+#' This function generates a boxplot for individual RLE data. The function does not plot the outliers in the boxplot in
+#' order to enhance the visibility of the variation in the RLE medians and interquartile ranges. The RLE data can be
+#' obtained using the 'computeRLE' function. We refer to the 'computeRLE' function for more detail about RLE.
+#'
+#' @details
+#' An ideal RLE plot should have its medians centered around zero, and its box widths and their interquartile ranges
+#' (IQRs) should be similar in magnitude. We refer to Gandolfo L. C. & Speed, T. P., PLoS ONE, 2018 for more details and
+#' assumption about the RLE plots.
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings for the selection of the name(s) of
 #' the assay(s) in the SummarizedExperiment object to plot the RLE data. The default is set to "all", which indicates that

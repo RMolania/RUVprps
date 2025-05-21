@@ -1,24 +1,24 @@
 #' Computes the vector correlation.
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' #' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function calculates the the vector correlation between the first cumulative PCs of the gene expression (assay)
 #' of a SummarizedExperiment object and a categorical variable (i.e. batch). Then, the functions generates a line-dot plot
 #' between the first cumulative PCs and the correlation coefficient to see the relationship between different PCs with the
 #' variable. An ideal normalization should results a low correlation with unwanted variation variables and high correlation
 #' with known biology.
-
+#'
 #' @details
 #' We use the Rozeboom squared vector correlation to quantify the strength of (linear) relationships between two sets
 #' of variables, such as the first k PCs (that is 1 ≤ k ≤ 10) and dummy variables representing time, batches, plates and
 #' biological variables. Not only does this quantity summarize the full set of canonical correlations, but it also reduces
 #' to the familiar R2 from multiple regression when one of the variable sets contains just one element.
-
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object for calculating the vector correlation. The default is set to "all", which indicates
@@ -33,10 +33,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the results, correlation coefficients, in the metadata of the
 #' SummarizedExperiment object or to output the result as a list. By default, it is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays the messages for the different steps of the function.
-
+#'
 #' @return A SummarizedExperiment object or a list containing the vector correlation plots of individual assay(s) for
 #' a categorical variable.
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom fastDummies dummy_cols
 #' @importFrom stats cancor

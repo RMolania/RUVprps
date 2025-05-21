@@ -1,6 +1,11 @@
-#' Identify potential unknown sources of unwanted variation in RNA-seq data.
+#' Identifies potential unknown sources of unwanted variation in RNA-seq data.
 #'
 #' @author Ramyar Molania
+#'
+#' @references
+#' 1. Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
+#' 2. Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
 #'
 #' @description
 #' This function identifies unknown sources of unwanted variation in RNA-seq data using different robust statistical
@@ -19,11 +24,6 @@
 #' - In the `sample.scoring` approach, samples are scored against gene sets (e.g., housekeeping genes) whose variation
 #' may indicate unwanted variation. A clustering method is then applied to the scores.
 #'
-#' @references
-#' 1. Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
-#' 2. Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character string. Specifies the assay name to be used for identifying potential sources of unwanted
 #'  variation.
@@ -35,7 +35,8 @@
 #' @param regress.out.bio.gene.sets List. Biological gene signatures to regress out before identifying unwanted variation.
 #' The default is set to `NULL`.
 #' @param uv.gene.sets List. Gene sets related to unwanted variation for use in `sample.scoring`.The default is set to `NULL`.
-#' @param ncg Vector. Negative control genes. If not `NULL`, analysis will be restricted to these genes.The default is set to `NULL`.
+#' @param ncg Vector. Negative control genes. If not `NULL`, analysis will be restricted to these genes.The default is
+#' set to `NULL`.
 #' @param clustering.methods Character string. Clustering method: one of `kmeans`, `cut`, `quantile`, or `nbClust`.
 #'The default is set to `nbClust`.
 #' @param nbClust.diss Dissimilarity matrix. If provided, `nbClust.distance` must be `NULL`.The default is set to `NULL`.
@@ -47,16 +48,18 @@
 #' `mcquitty`, `median`, `centroid`, or `kmeans`.
 #' @param nbClust.index Character string. Clustering index to evaluate: e.g., `silhouette`, `gap`, `ch`, `db`, `all`, etc.
 #' @param nbClust.alphaBeale Numeric. Significance threshold for Beale's index.
-#' @param max.samples.per.batch Numeric. Max proportion of samples per cluster (only applies to `nbClust`).The default is set to 0.1.
+#' @param max.samples.per.batch Numeric. Max proportion of samples per cluster (only applies to `nbClust`).The default
+#' is set to 0.1.
 #' @param nb.clusters Numeric. Number of clusters when using `kmeans`, `cut`, or `quantile`.The default is set to 3.
 #' @param apply.log Logical. Apply log-transformation before analysis.The default is set to `TRUE`.
 #' @param pseudo.count Numeric. Pseudo count added before log-transforming data.The default is set to 1.
 #' @param nb.pcs Numeric. Number of principal components to use in `pca` approach.The default is set to 2.
 #' @param center Logical. Whether to center data before PCA.The default is set to `TRUE`.
 #' @param scale Logical. Whether to scale data before PCA.The default is set to `FALSE`.
-#' @param svd.bsparam A `BiocParallelParam` object. Controls parallelization for SVD computation.The default is set to `bsparam()`.
-#' @param remove.current.estimates Character string. Whether to remove current estimates of unknown batches.The default is set to
-#'  `TRUE`.
+#' @param svd.bsparam A `BiocParallelParam` object. Controls parallelization for SVD computation.The default is set to
+#' `bsparam()`.
+#' @param remove.current.estimates Character string. Whether to remove current estimates of unknown batches.The default
+#' is set to `TRUE`.
 #' @param output.name Character string. Output file name. If `NULL`, a name is automatically generated.
 #' @param check.se.obj Logical. If `TRUE`, the `checkSeobj` function is applied to validate the object.The default is set to
 #' `TRUE`.

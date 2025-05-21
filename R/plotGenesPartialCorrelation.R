@@ -1,15 +1,15 @@
 #' Plots gene-gene partial correlation results.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function computes all possible gene-gene pairwise ordinary and partial correlation of the data sets in the
 #' SummarizedExperiment object. All genes or a subset of genes can specified.
-
+#'
 #' @details
 #' Partial correlation is used to estimate correlation between two variables while controlling for third
 #' variables.
-
+#'
 #' @param se.obj A `SummarizedExperiment` object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the names of the data sets
 #' in the `SummarizedExperiment` object for which the computed correlations are to be obtained. The default is set to
@@ -35,7 +35,7 @@
 #' @param verbose Logical. If `TRUE`, displays messages for the different steps of the function.
 #'
 #' @return A `SummarizedExperiment` object containing the correlation plots, or a list of plots for individual assays.
-
+#'
 #' @importFrom ggpubr ggarrange annotate_figure text_grob
 #' @importFrom dplyr group_by summarise
 #' @importFrom tidyr pivot_longer

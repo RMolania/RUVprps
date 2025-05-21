@@ -1,20 +1,20 @@
 #' Computes Adjusted Rand Index (ARI).
-
+#'
 #' @author Ramyar Molania
-
+#'
+#' @references
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This functions computes the adjusted rand index(ARI) for given a categorical variable using the first PCs of the specified
 #' data(assay) in a SummarizedExperiment object.
-
+#'
 #' @details
 #' The ARI is the corrected-for-chance version of the Rand index. The ARI measures the percentage of matches between
 #' two label lists. We use the ARI to assess the performance of normalization methods in terms of sample subtype
 #' separation and batch mixing. We first calculate PCs and use the first PCs to perform ARI.
-
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names character or character vector. A character or a vector of characters of name(s) of the data(assay)
 #' in the SummarizedExperiment object to use for ARI computation. The default is set to `all`, meaning all assays in the
@@ -37,9 +37,9 @@
 #' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
 #' returns the result as list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages for each step of the function.
-
+#'
 #' @return A SummarizedExperiment object or a list containing the computed ARI for specified categorical variable.
-
+#'
 #' @importFrom mclust mclustBIC Mclust adjustedRandIndex
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom stats cutree hclust dist

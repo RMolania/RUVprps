@@ -1,11 +1,11 @@
 #' Finds highly variable genes.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function uses different approaches to find genes that are highly affected by biological variables or highly
 #' variable genes. Refer to the details for more information.
-
+#'
 #' @details
 #' Additional details...
 #' - TwoWayAnov: In this process, all the biological and unwanted variables will be grouped into two categorical variables
@@ -25,8 +25,7 @@
 #' estimate them. Subsequently, the functions conducts a Median Absolute Deviation (MAD) analysis on each gene within
 #' sample groups homogeneous with respect to unwanted variables, to pinpoint genes highly
 #' variable due to biological factors. The higher the MAD, the more likely the genes are to be biologically variable.
-
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A symbol indicating the name of the assay in the SummarizedExperiment object.
 #' @param approach Character. A symbol specifying the biological gene selection method to be used. Options include:

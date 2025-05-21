@@ -5,6 +5,7 @@
 #' @references
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function generates barplots of the Adjusted Rand Index (ARI) for individual datasets in the `SummarizedExperiment`
 #' object. If two variables are provided, the function creates scatter plots comparing the ARIs of each variable across

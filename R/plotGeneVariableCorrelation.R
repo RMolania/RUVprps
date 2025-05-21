@@ -1,12 +1,12 @@
 #' Plots Spearman or Pearson correlations coefficients obtained from gene-level analysis.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function generates boxplots of computed Spearman or Pearson correlation coefficients of individual assays in a
 #' SummarizedExperiment object. The correlation coefficients must be computed by the `computeGeneVariableCorrelation()`
 #' function.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character or vector. A character string or vector of strings for selecting the name(s) of the assay(s)
 #' in the SummarizedExperiment for which gene-level correlation with the specified for computing the correlation. By
@@ -21,10 +21,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
 #' or to output the result. By default, this is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, process messages will be displayed during the function's execution.
-
+#'
 #' @return A SummarizedExperiment object or a list that containing the boxplots of the Spearman or Pearson correlations
 #' coefficients for individual assays.
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr everything

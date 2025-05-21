@@ -1,12 +1,12 @@
 #' Generates line-dot plot of the PCs-variable regression analysis.
-
+#'
 #' @author Ramyar Molania
-
+#'
 #' @description
 #' This function generate a dot-line plot between the first n cumulative PCs and the regression R squared obtained
 #' from the regression analysis. An ideal normalization should results a low R squared with unwanted variation
 #' variables and high R squared with known biology.
-
+#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object to generate a vector correlation. The default is "all", which indicates that all
@@ -22,10 +22,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
 #' or to return the results directly. By default, this is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, process messages will be displayed.
-
+#'
 #' @return A SummarizedExperiment object containing the line-dot plots for the continuous variable and if requested
 #'  the associated plot.
-
+#'
 #' @importFrom tidyr pivot_longer
 #' @importFrom RColorBrewer brewer.pal
 #' @import ggplot2

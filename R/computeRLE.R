@@ -2,6 +2,13 @@
 #'
 #' @author Ramyar Molania
 #'
+#' @references
+#' Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
+#' Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
+#' 2019.
+#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
+#' Nature Biotechnology, 2023
+#'
 #' @description
 #' This function calculates relative log expression (RLE) of the assay(s) in a SummarizedExperiment object. In addition,
 #' the function returns the RLE medians and interquartile ranges (IQRs) of each sample for individual assay(s).
@@ -17,15 +24,6 @@
 #' potential sources of unwanted variation and individual gene expression levels in the datasets. In the absence of any
 #' influence of unwanted variation in the data, we should see no such associations.
 #'
-#' @references
-#' Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
-#'
-#' Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research,
-#' 2019.
-#'
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-#'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
 #' in the SummarizedExperiment object to calculate RLE data, medians, and interquartile ranges. The default is set to `all`,
@@ -36,7 +34,7 @@
 #' log transformation. This avoids `-Inf` for measurements equal to 0. The default is set to 1.
 #' @param outputs.to.return Character. Specifies the type of RLE computations to be performed and the data to be returned.
 #' Options include `all`, `rle`, `rle.med`, `rle.iqr`, and `rle.med.iqr`. Selecting `all` returns RLE data along with
-#' medians and interquartile ranges. Choosing "rle" returns only the RLE data for each assay. "rle.med" returns only the
+#' medians and interquartile ranges. Choosing "rle" returns only the RLE data for each assay. `rle.med` returns only the
 #' RLE  medians. `rle.iqr` returns only the interquartile ranges of the RLE data. `rle.med.iqr` returns both the
 #' RLE medians and interquartile ranges. The default is set to  `all`.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
