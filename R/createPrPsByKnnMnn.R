@@ -3,10 +3,12 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function uses the k and mutual nearest neighbors approaches to create PRPS in the RNA-seq data. This function
-#' can be used in situation that the biological variation are entirely unknown. The function applies the `findKnn` function
-#' to find similar samples per batch and then average them to create pseudo-samples. Then, function uses the `findMnn` to
-#' match up pseudo samples across batches to create pseudo-replicates.
+#' This function uses the k and mutual nearest neighbors approaches to create PRPS data for RUV-III normalization in
+#' RNA-seq data. This function can be used in situation where biological variation are entirely unknown.
+#'
+#' @details
+#' The function applies the `findKnn` function to find similar samples per batch and then average them to create
+#' pseudo-samples. Then, function uses the `findMnn` to match up pseudo samples across batches to create pseudo-replicates.
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character indicating the name of the data(assay) in the SummarizedExperiment
@@ -31,12 +33,12 @@
 #' unwanted variable specified in the `other.uv.variables`. The default is set to 3.
 #' @param min.sample.for.ps Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
 #' to 3.
-#' @param filter.prps.sets Logical. If `TRUE`, the number of PRPS sets across each pair of batches will be filtered if
-#' they are higher than the `max.prps.sets` value. A high number of PRPS sets will increase the computational time for
-#' the RUV-III normalization. The default is set to `TRUE`.
 #' @param select.extreme.groups Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
 #' clusters, when the `main.uv.variable` is a continuous variable. Default is set to `TRUE`. This will increase the
 #' variation between PR sets in order to better capture the unwanted variation.
+#' @param filter.prps.sets Logical. If `TRUE`, the number of PRPS sets across each pair of batches will be filtered if
+#' they are higher than the `max.prps.sets` value. A high number of PRPS sets will increase the computational time for
+#' the RUV-III normalization. The default is set to `TRUE`.
 #' @param max.prps.sets Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches(
 #' subgrouos of the `main.uv.variable`. The default is set to 10.
 #' @param min.batches.to.cover Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
@@ -122,8 +124,8 @@ createPrPsByKnnMnn <- function(
         other.uv.clustering.method = 'kmeans',
         nb.other.uv.clusters = 2,
         min.sample.for.ps = 3,
-        filter.prps.sets = TRUE,
         select.extreme.groups = FALSE,
+        filter.prps.sets = TRUE,
         max.prps.sets = 3,
         min.batches.to.cover = 'all',
         check.prps.connectedness = TRUE,
@@ -157,13 +159,113 @@ createPrPsByKnnMnn <- function(
     printColoredMessage(message = '------------The createPrPsByKnnMnn function starts:',
                         color = 'white',
                         verbose = verbose)
+    # Checking the function inputs ####
+    if (is.null(assay.name) | is.logical(assay.name)) {
+        stop('The "assay.name" cannot be empty or logical.')
+    }
+    if (length(assay.name) > 1 | assay.name == 'all') {
+        stop('The "assay.name" must be an assay name in the SummarizedExperiment object.')
+    }
+    if (isFALSE(check.se.obj)){
+        if (!assay.name %in% names(assays(se.obj))){
+            stop('The "assay.name" cannot be found in the SummarizedExperiment object.')
+        }
+    }
+    if (length(main.uv.variable) > 1) {
+        stop('The "main.uv.variable" must a categorical or continuous variable in the SummarizedExperiment object.')
+    }
+    if (is.null(main.uv.variable) | is.logical(main.uv.variable)) {
+        stop('The "main.uv.variable" cannot be empty or logical(TRUE or FALSE).')
+    }
+    if (isFALSE(check.se.obj)){
+        if (!main.uv.variable %in% colnames(colData(se.obj))){
+            stop('The "main.uv.variable" cannot be found in the SummarizedExperiment object.')
+        }
+    }
+    if (is.numeric(colData(se.obj)[[main.uv.variable]])){
+        if (var(colData(se.obj)[[main.uv.variable]]) == 0){
+            stop('The variance of the "main.uv.variable" is 0. No need to create PRPS for this variable.')
+        }
+    }
+    if (!is.null(other.uv.variables)){
+        if (main.uv.variable %in% other.uv.variables){
+            stop('The "main.uv.variable" must not be in the "other.uv.variables".')
+        }
+        if (isFALSE(check.se.obj)){
+            if (sum(other.uv.variables %in% colnames(colData(se.obj))) != length(other.uv.variables)){
+                stop('All or some of the "other.uv.variables" cannot be found in the SummarizedExperiment object.')
+            }
+        }
+    }
+    if (!is.logical(filter.prps.sets)){
+        stop('The "filter.prps.sets" must be logical (TRUE or FALSE)')
+    }
+    if (isTRUE(filter.prps.sets)){
+        if (!is.numeric(max.prps.sets) | max.prps.sets < 0){
+            stop('The "max.prps.sets" must be postive numeric value.')
+        }
+    }
+    if (min.sample.for.ps <= 1) {
+        stop('The minimum value for the "min.sample.for.ps" is 2.')
+    }
+    if (!is.logical(apply.log)){
+        stop('The "apply.log" must be logical (TRUE or FALSE).')
+    }
+    if (!is.logical(check.prps.connectedness)){
+        stop('The "check.prps.connectedness" must be logical.')
+    }
+    if (!is.logical(check.se.obj)){
+        stop('The "check.se.obj" must be logical (TRUE or FALSE).')
+    }
+    if (isTRUE(apply.log)){
+        if (pseudo.count < 0){
+            stop('The value for "pseudo.count" can not be negative.')
+        }
+    }
+    if (!is.null(regress.out.variables)){
+        if (isFALSE(check.se.obj)){
+            if (sum(regress.out.variables %in% colnames(colData(se.obj))) != length(regress.out.variables)){
+                stop('All or some of the "regress.out.variables" cannot be found in the SummarizedExperiment object.')
+            }
+        }
+        if (main.uv.variable %in% regress.out.variables){
+            stop('The "main.uv.variable" can not be in the "regress.out.variables" variables.')
+        }
+    }
+    if (!is.logical(plot.output)){
+        stop('The "plot.output" must be logical (TRUE or FALSE).')
+    }
+    if (!is.logical(save.se.obj)){
+        stop('The "save.se.obj" must be logical (TRUE or FALSE).')
+    }
+    if (is.logical(knn.group.name)){
+        stop('The "knn.group.name" must be a character or NULL.')
+    }
+    if (is.logical(knn.sets.name)){
+        stop('The "knn.sets.name" must be a character or NULL.')
+    }
+    if (is.logical(mnn.group.name)){
+        stop('The "mnn.group.name" must be a character or NULL.')
+    }
+    if (is.logical(mnn.sets.name)){
+        stop('The "mnn.sets.name" must be a character or NULL.')
+    }
+    if (is.logical(prps.group.name)){
+        stop('The "prps.group.name" must be a character or NULL.')
+    }
+    if (is.logical(prps.sets.name)){
+        stop('The "prps.sets.name" must be a character or NULL.')
+    }
+    if (!is.logical(verbose)){
+        stop('The "verbose" must be logical (TRUE or FALSE).')
+    }
 
     # Assessing the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
             assay.names = assay.name,
-            variables = c(main.uv.variable, other.uv.variables),
+            variables = c(main.uv.variable, other.uv.variables, regress.out.variables),
             remove.na = remove.na,
             verbose = verbose
         )

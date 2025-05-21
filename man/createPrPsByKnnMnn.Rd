@@ -14,8 +14,8 @@ createPrPsByKnnMnn(
   other.uv.clustering.method = "kmeans",
   nb.other.uv.clusters = 2,
   min.sample.for.ps = 3,
-  filter.prps.sets = TRUE,
   select.extreme.groups = FALSE,
+  filter.prps.sets = TRUE,
   max.prps.sets = 3,
   min.batches.to.cover = "all",
   check.prps.connectedness = TRUE,
@@ -80,13 +80,13 @@ unwanted variable specified in the \code{other.uv.variables}. The default is set
 \item{min.sample.for.ps}{Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
 to 3.}
 
-\item{filter.prps.sets}{Logical. If \code{TRUE}, the number of PRPS sets across each pair of batches will be filtered if
-they are higher than the \code{max.prps.sets} value. A high number of PRPS sets will increase the computational time for
-the RUV-III normalization. The default is set to \code{TRUE}.}
-
 \item{select.extreme.groups}{Logical. Indicates whether to select only the extreme groups e.g., highest and lowest
 clusters, when the \code{main.uv.variable} is a continuous variable. Default is set to \code{TRUE}. This will increase the
 variation between PR sets in order to better capture the unwanted variation.}
+
+\item{filter.prps.sets}{Logical. If \code{TRUE}, the number of PRPS sets across each pair of batches will be filtered if
+they are higher than the \code{max.prps.sets} value. A high number of PRPS sets will increase the computational time for
+the RUV-III normalization. The default is set to \code{TRUE}.}
 
 \item{max.prps.sets}{Numeric. A numeric value specifying the maximum number for PRPS sets across each pair of batches(
 subgrouos of the \code{main.uv.variable}. The default is set to 10.}
@@ -184,10 +184,12 @@ or to output the result as a list. By default, it is set to \code{TRUE}.}
 \item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-This function uses the k and mutual nearest neighbors approaches to create PRPS in the RNA-seq data. This function
-can be used in situation that the biological variation are entirely unknown. The function applies the \code{findKnn} function
-to find similar samples per batch and then average them to create pseudo-samples. Then, function uses the \code{findMnn} to
-match up pseudo samples across batches to create pseudo-replicates.
+This function uses the k and mutual nearest neighbors approaches to create PRPS data for RUV-III normalization in
+RNA-seq data. This function can be used in situation where biological variation are entirely unknown.
+}
+\details{
+The function applies the \code{findKnn} function to find similar samples per batch and then average them to create
+pseudo-samples. Then, function uses the \code{findMnn} to match up pseudo samples across batches to create pseudo-replicates.
 }
 \author{
 Ramyar Molania

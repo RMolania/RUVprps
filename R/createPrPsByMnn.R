@@ -196,6 +196,9 @@ createPrPsByMnn <- function(
                 stop('All or some of the "regress.out.variables" cannot be found in the SummarizedExperiment object.')
             }
         }
+        if (main.uv.variable %in% regress.out.variables){
+            stop('The "main.uv.variable" can not be in the "regress.out.variables" variables.')
+        }
     }
     if (!is.logical(plot.output)){
         stop('The "plot.output" must be logical (TRUE or FALSE).')
