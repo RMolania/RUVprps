@@ -417,6 +417,7 @@ createPrPsByMnn <- function(
             se.obj[[main.uv.variable]] <- factor(x = se.obj[[main.uv.variable]])
         }
     }
+    initial.variable3 <- se.obj[[main.uv.variable]]
 
     # Creating PRPS data ####
     ## Considering other unwanted variables ####
@@ -946,7 +947,7 @@ createPrPsByMnn <- function(
             set.name = rep(main.uv.variable, ncol(se.obj)),
             group.name = rep(main.uv.variable, ncol(se.obj)),
             prps.set = c(1:ncol(se.obj)),
-            rep = rep(main.uv.variable, ncol(se.obj)),
+            rep = initial.variable3,
             var = se.obj[[main.uv.variable]],
             new.g = rep('UV', ncol(se.obj)),
             new.group = rep('UV', ncol(se.obj))
@@ -957,11 +958,13 @@ createPrPsByMnn <- function(
             prps.map.plot <- ggplot(data = new, aes(x = var , y = new.g , color = rep)) +
                 geom_boxplot() +
                 geom_point() +
-                scale_color_manual(values = c('darkgreen', 'tomato', 'navy'), name = 'Groups') +
+                scale_color_manual(
+                    values = c('darkgreen', 'tomato', c(viridis(nb.clusters))),
+                    name = 'Groups') +
                 facet_grid(new.group~., scales = 'free', space = 'free') +
                 scale_x_discrete(expand = c(0, 0.5)) +
-                xlab('Homogeneous groups') +
-                ylab(main.uv.variable) +
+                xlab(main.uv.variable) +
+                ylab('Homogeneous groups') +
                 xlim(c(
                     min(se.obj[[main.uv.variable]]),
                     max(se.obj[[main.uv.variable]])
