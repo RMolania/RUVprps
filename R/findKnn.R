@@ -246,14 +246,14 @@ findKnn <- function(
         )
     if (length(sub.group.sample.size) == 0){
         stop(paste0(
-            'All subgroups of the specified unwanted variable have less than ',
+            'All subgroups of the unwanted variable have less than ',
              nb.knn + 1,
             ' samples. KNN cannot be found.')
             )
     } else if (length(sub.group.sample.size) != length(unique(se.obj[[uv.variable]])) ){
         printColoredMessage(
             message = paste0(
-                'All or some subgroups of the specified unwanted variable have less than ',
+                '- All or some subgroups of the unwanted variable have less than ',
                  nb.knn + 1,
                 ' (nb.knn + 1) samples. Then KNN for those sub-groups cannot be created.'),
             color = 'red',
@@ -262,7 +262,7 @@ findKnn <- function(
     } else {
         printColoredMessage(
             message = paste0(
-                '- All the sub-groups of the specified unwanted variable have at least ',
+                '- All the sub-groups of the unwanted variable have at least ',
                  nb.knn + 1,
                 ' (nb.knn + 1) samples.'),
             color = 'blue',
@@ -549,7 +549,6 @@ findKnn <- function(
             if (!unique(se.obj[[uv.variable]][as.vector(ovral.cell.no)]) == sub.group.sample.size[x] ){
                 stop('There are something wrong with the sample annotation.')
             }
-
             colnames(ovral.cell.no) <- paste0('overal.index', 1:c( nb.knn + 1))
             knn.index <- as.data.frame(cbind(ovral.cell.no , knn.index))
             # Computing distance between all knn ####
@@ -584,7 +583,7 @@ findKnn <- function(
                                 upper = FALSE
                             )
                         }))
-                    name <- paste0('dist',
+                    name <- paste0('distance',
                                all.comb.names[, z][1],
                                '_',
                                all.comb.names[, z][2])
@@ -603,9 +602,16 @@ findKnn <- function(
             message(' ')
             return(knn.index.dist)
         })
+
+    # Adding samples ids to KNN sets ####
+    printColoredMessage(
+        message = '- Adding sample ids to the KNN sets',
+        color = 'blue',
+        verbose = verbose
+        )
     all.knn <- do.call(rbind, all.knn)
     all.knn <- all.knn[order(all.knn$overal.index1) , ]
-    row.names(all.knn) <- c(1:ncol(se.obj))
+    row.names(all.knn) <- c(1:nrow(all.knn))
     sample.ids <- unlist(lapply(colnames(se.obj), function(x) sub("_[^_]*$", "", x)))
     all.knn$sample.ids.1 <- sample.ids[all.knn$overal.index1]
     samples.ids <- sapply(
@@ -618,6 +624,39 @@ findKnn <- function(
     se.obj[[uv.variable]] <- initial.variable
     colnames(se.obj) <- sample.ids
 
+    # Final Sanity check #####
+    printColoredMessage(
+        message = '- Applying a final sanity check on the the KNN sets',
+        color = 'blue',
+        verbose = verbose
+    )
+    dist.between.samples <- lapply(
+        1:nrow(all.knn),
+        function(x){
+            samples <- all.knn[x, grep('sample.ids', colnames(all.knn))]
+            sub.data <- all.data.input[[all.knn$group[x]]]
+            row.names(sub.data) <- sub("_[^_]*$", "", row.names(sub.data))
+            all.groups <- combn(unname(samples), 2)
+            sapply(
+                1:ncol(all.groups),
+                function(y){
+                    stats::dist(
+                        x = sub.data[unlist(c(all.groups[1, y], all.groups[2 , y])) , ],
+                        method = "euclidean",
+                        diag = FALSE,
+                        upper = FALSE)
+                })
+        })
+    dist.between.samples <- round(x = do.call(rbind , dist.between.samples), digits = 1)
+    dist.between.samples.b <- round(all.knn[, grep('distance', colnames(all.knn))], 1)
+    mout <- lapply(
+        1:ncol(dist.between.samples),
+        function(x){
+            if (!all.equal(dist.between.samples[ , x], dist.between.samples.b[ , x])){
+                stop('There are something wrong with the KNN sets.')
+            }
+        })
+
     # Saving the results ####
     ## Selecting knn group name ####
     if(is.null(knn.group.name)){
@@ -626,8 +665,21 @@ findKnn <- function(
     ## Selecting knn sets name ####
     if (is.null(knn.sets.name)){
         if (is.numeric(se.obj[[uv.variable]])){
-            knn.sets.name <- paste0(assay.name, '|', nb.clusters ,'groups|', nb.knn, 'knn')
-        } else knn.sets.name <- paste0(assay.name, '|', length(unique(se.obj[[uv.variable]])) ,'groups|', nb.knn, 'knn')
+            knn.sets.name <- paste0(
+                assay.name,
+                '|',
+                nb.clusters ,
+                'groups|',
+                nb.knn,
+                'knn'
+                )
+        } else knn.sets.name <- paste0(
+            assay.name, '|',
+            length(unique(se.obj[[uv.variable]])) ,
+            'groups|',
+            nb.knn,
+            'knn'
+            )
     }
     ## Saving the results in the SummarizedExperiment object ####
     message(' ')
@@ -661,7 +713,7 @@ findKnn <- function(
                             verbose = verbose)
         return(se.obj)
     }
-    ## Outputing the results as matrix  ####
+    ## Outputting the results as matrix  ####
     if (isFALSE(save.se.obj)) {
         printColoredMessage(message = '- All the knn results are outputed as matrix.',
                             color = 'blue',

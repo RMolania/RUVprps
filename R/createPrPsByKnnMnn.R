@@ -332,13 +332,13 @@ createPrPsByKnnMnn <- function(
     if (!is.null(other.uv.variables)){
         ## Considering other unwanted variables ####
         printColoredMessage(
-            message = '- Creating PRPS data by considering other specified variables.',
+            message = '- Creating PRPS data by considering other unwanted variables.',
             color = 'magenta',
             verbose = verbose
             )
         ## Grouping the other unwanted variables ####
         printColoredMessage(
-            message = '-- Assessing and grouping the other specified unwanted variable(s):',
+            message = '- Assessing and grouping the other unwanted variable(s):',
             color = 'blue',
             verbose = verbose
             )
@@ -444,9 +444,7 @@ createPrPsByKnnMnn <- function(
                     sum(selected.covered.batches == length(unique(all.uv.groups$main.uv))) ,
                     ' groups with respect to the other unwanted variables that have at least ',
                     min.sample.size,
-                    ' samples across all sub-groups of the ',
-                    main.uv.variable,
-                    ' variable.'),
+                    ' samples across all sub-groups of the main unwanted variable.'),
                 color = 'blue',
                 verbose = verbose
             )
