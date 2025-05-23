@@ -95,8 +95,11 @@
 #' @param knn.sets.name  Character. A character specifying the name of the knn set names to be saved in the metadata
 #' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
 #' `paste0(uv.variable, '|', assay.name)`.
-#' @param mnn.group.name TTTT
-#' @param mnn.sets.name TTTT
+#' @param mnn.group.name Character. A character specifying the name of the mnn to which the current MNN belong.
+#' If set to `NULL`, the function will automatically assign a name using  `main.uv.variable`.
+#' @param mnn.sets.name A character specifying the name of the mnn set names to be saved in the metadata of the
+#' SummarizedExperiment object. If set to `NULL`, the function will select a name based on
+#' `paste0(uv.variable, '|', assay.name)`.
 #' @param prps.group.name Character. A character specifying the name of the prps.group.name to which the current PRPS belong.
 #' If set to `NULL`, the function will automatically assign a name using  `main.uv.variable`.
 #' @param prps.sets.name Character. A character specifying the name of the output file to be saved in the metadata

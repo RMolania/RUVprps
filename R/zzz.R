@@ -46,6 +46,7 @@ utils::globalVariables(
       'Groups',
       'r.label',
       'mnn.sets',
-      'score'
+      'score',
+      'x'
       )
     )

@@ -1,4 +1,4 @@
-#' Creates unsupervised pseudo-replicates of pseudo samples (PRPS).
+#' Creates unsupervised PRPS data.
 #'
 #' @author Ramyar Molania
 #'
@@ -9,18 +9,17 @@
 #' @details
 #' Additional details...
 #'
-#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character. A character string indicating the assay name within the SummarizedExperiment object for
+#' @param assay.name Character. A character indicating the assay name within the SummarizedExperiment object for
 #' the creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.
-#' @param uv.variables Character. A character string or vector of strings specifying the name(s) of column(s) in the
+#' @param uv.variables Character. A character or vector of strings specifying the name(s) of column(s) in the
 #' sample annotation of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous
 #' variable is provided, this will be divided into groups using the clustering method.
 #' @param approach Character. Indicates which method to be used. The options are `anchor` and `mnn`.
 #' @param data.input Character. Indicates which data should be used as input for finding the k nearest neighbors. Options
 #' include: `expr` and `pcs`. If `pcs` is selected, the first PCs of the data will be used as input. If `expr` is selected,
 #' the data will be selected as input.
-#' @param clustering.method Character. A character string indicating the choice of clustering method for grouping the `uv.variable`
+#' @param clustering.method Character. A character indicating the choice of clustering method for grouping the `uv.variable`
 #' if a continuous variable is provided. Options include `kmeans`, `cut`, and `quantile`. The default is set to `kmeans`.
 #' @param nb.clusters Numeric. A numeric value indicating how many clusters should be found if the `uv.variable` is a
 #' continuous variable. The default is 3.
@@ -80,6 +79,15 @@
 #' @param mnn.nbparam Character. A `BiocParallelParam` object for nearest neighbor search. Default: `KmknnParam()`.
 #' @param check.se.obj Logical. Whether to assess the SummarizedExperiment object using `checkSeObj`.
 #' @param remove.na Character. Indicates whether to remove `NA` values. Options: `assays`, `none`. Default is `assays`.
+#' @param knn.group.name Character. A character specifying the name of the knn  to which the current KNN belong.
+#' If set to `NULL`, the function will automatically assign a name using  `main.uv.variable`.
+#' @param knn.sets.name  Character. A character specifying the name of the knn set names to be saved in the metadata
+#' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
+#' `paste0(uv.variable, '|', assay.name)`.
+#' @param mnn.group.name Character. A character specifying the name of the mnn to which the current MNN belong.
+#' If set to `NULL`, the function will automatically assign a name using  `main.uv.variable`.
+#' @param mnn.sets.name A character specifying the name of the mnn set names to be saved in the metadata of the
+#' SummarizedExperiment object. If set to `NULL`, the function will select a name based on
 #' @param prps.group.name Character. A character specifying the name of the prps.group.name to which the current KNN belong.
 #' If set to `NULL`, the function will automatically assign a name using  `main.uv.variable`.
 #' @param prps.sets.name Character. A character specifying the name of the output file to be saved in the metadata
@@ -121,7 +129,7 @@ createPrPsUnSupervised <- function(
         l2.norm = TRUE,
         dims = 1:10,
         k.anchor = 3,
-        k.filter = 20,
+        k.filter = 5,
         k.score = 5,
         max.features = 200,
         nn.method = "annoy",
@@ -141,31 +149,38 @@ createPrPsUnSupervised <- function(
         mnn.nbparam = KmknnParam(),
         check.se.obj = TRUE,
         remove.na = 'both',
-        prps.sets.name = NULL,
+        knn.group.name = NULL,
+        knn.sets.name = NULL,
+        mnn.group.name = NULL,
+        mnn.sets.name = NULL,
         prps.group.name = NULL,
+        prps.sets.name = NULL,
         plot.output = TRUE,
         save.se.obj = TRUE,
         verbose = TRUE
         ){
     if (approach == 'anchor') {
         for (i in uv.variables) {
+            if (!is.null(other.uv.variables)) {
+                other.uv.variables <- uv.variables[!uv.variables %in% i]
+            } else other.uv.variables <- NULL
             se.obj <- createPrPsByAnchors(
                 se.obj = se.obj,
                 assay.name = assay.name,
                 main.uv.variable = i,
                 clustering.method = clustering.method,
                 nb.clusters = nb.clusters,
-                filter.prps.sets = filter.prps.sets,
-                max.prps.sets = max.prps.sets,
-                min.sample.for.ps = min.sample.for.ps,
-                max.sample.for.ps = max.sample.for.ps,
-                select.extreme.groups = select.extreme.groups,
                 other.uv.variables = other.uv.variables,
                 other.uv.clustering.method = other.uv.clustering.method,
                 nb.other.uv.clusters = nb.other.uv.clusters,
+                min.sample.for.ps = min.sample.for.ps,
+                max.sample.for.ps = max.sample.for.ps,
+                filter.prps.sets = filter.prps.sets,
+                max.prps.sets = max.prps.sets,
+                min.batches.to.cover = min.batches.to.cover,
+                select.extreme.groups = select.extreme.groups,
                 check.prps.connectedness = check.prps.connectedness,
                 hvg = hvg,
-                min.batches.to.cover = min.batches.to.cover,
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 anchor.features = anchor.features,
@@ -182,31 +197,34 @@ createPrPsUnSupervised <- function(
                 nn.method = nn.method,
                 n.trees = n.trees,
                 eps = eps,
+                check.se.obj = check.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
-                prps.sets.name = prps.sets.name,
                 prps.group.name = prps.group.name,
-                check.se.obj = check.se.obj,
+                prps.sets.name = prps.sets.name,
                 save.se.obj = save.se.obj,
                 verbose = verbose
-            )
+                )
         }
     }
     if (approach == 'knn.mnn') {
         for (i in uv.variables) {
+            if (!is.null(other.uv.variables)) {
+                other.uv.variables <- uv.variables[!uv.variables %in% i]
+            } else other.uv.variables <- NULL
             se.obj <- createPrPsByKnnMnn (
                 se.obj = se.obj,
                 assay.name = assay.name,
                 main.uv.variable = i,
                 clustering.method = clustering.method,
                 nb.clusters = nb.clusters,
-                filter.prps.sets = filter.prps.sets,
-                max.prps.sets = max.prps.sets,
-                select.extreme.groups = select.extreme.groups,
                 other.uv.variables = other.uv.variables,
                 other.uv.clustering.method = other.uv.clustering.method,
                 nb.other.uv.clusters = nb.other.uv.clusters,
                 min.sample.for.ps = min.sample.for.ps,
+                select.extreme.groups = select.extreme.groups,
+                filter.prps.sets = filter.prps.sets,
+                max.prps.sets = max.prps.sets,
                 min.batches.to.cover = min.batches.to.cover,
                 check.prps.connectedness = check.prps.connectedness,
                 data.input = data.input,
@@ -227,35 +245,41 @@ createPrPsUnSupervised <- function(
                 check.se.obj = check.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
-                prps.sets.name = prps.sets.name,
+                knn.group.name = knn.group.name,
+                knn.sets.name = knn.sets.name,
+                mnn.group.name = mnn.group.name,
+                mnn.sets.name = mnn.sets.name,
                 prps.group.name = prps.group.name,
-                save.se.obj = save.se.obj,
-                verbose = verbose
-            )
+                prps.sets.name = prps.sets.name,
+                save.se.obj = save.se.obj
+                )
         }
     }
     if (approach == 'mnn') {
         for (i in uv.variables) {
+            if (!is.null(other.uv.variables)) {
+                other.uv.variables <- uv.variables[!uv.variables %in% i]
+            } else other.uv.variables <- NULL
             se.obj <- createPrPsByMnn(
                 se.obj = se.obj,
                 assay.name = assay.name,
                 main.uv.variable = i,
                 clustering.method = clustering.method,
                 nb.clusters = nb.clusters,
-                filter.prps.sets = filter.prps.sets,
-                max.prps.sets = max.prps.sets,
-                select.extreme.groups = select.extreme.groups,
                 other.uv.variables = other.uv.variables,
                 other.uv.clustering.method = other.uv.clustering.method,
                 nb.other.uv.clusters = nb.other.uv.clusters,
                 min.sample.for.ps = min.sample.for.ps,
-                nb.mnn = nb.mnn,
+                filter.prps.sets = filter.prps.sets,
+                select.extreme.groups = select.extreme.groups,
+                max.prps.sets = max.prps.sets,
                 min.batches.to.cover = min.batches.to.cover,
+                check.prps.connectedness = check.prps.connectedness,
+                nb.mnn = nb.mnn,
                 hvg = hvg,
                 normalization = normalization,
                 apply.cosine.norm = apply.cosine.norm,
                 regress.out.variables = regress.out.variables,
-                check.prps.connectedness = check.prps.connectedness,
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 mnn.bpparam = mnn.bpparam,
@@ -263,8 +287,8 @@ createPrPsUnSupervised <- function(
                 check.se.obj = check.se.obj,
                 remove.na = remove.na,
                 plot.output = plot.output,
-                prps.sets.name = prps.sets.name,
                 prps.group.name = prps.group.name,
+                prps.sets.name = prps.sets.name,
                 save.se.obj = save.se.obj,
                 verbose = verbose
             )

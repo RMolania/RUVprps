@@ -9,7 +9,7 @@ createPrPsByAnchors(
   assay.name,
   main.uv.variable,
   clustering.method = "kmeans",
-  nb.clusters = 3,
+  nb.clusters = 2,
   other.uv.variables = NULL,
   other.uv.clustering.method = "kmeans",
   nb.other.uv.clusters = 2,
@@ -29,10 +29,10 @@ createPrPsByAnchors(
   sct.clip.range = NULL,
   reduction = "cca",
   l2.norm = TRUE,
-  dims = 1:10,
+  dims = 1:5,
   k.anchor = 2,
-  k.filter = 5,
-  k.score = 30,
+  k.filter = 2,
+  k.score = 5,
   max.features = 200,
   nn.method = "annoy",
   n.trees = 50,
@@ -115,13 +115,14 @@ finding. The default is 2000. We refer to the \code{FindIntegrationAnchors()} R 
 the features you want to use for each object in the object.list.}
 
 \item{normalization}{Character. Indicate which normalization methods should be used before finding the anchors.
-The options are \code{LogNormalize} or \code{SCT}. The default is set to \code{LogNormalize}.}
+The options are \code{LogNormalize} , \code{RC} or \code{CLR}. The default is set to \code{LogNormalize}. The scale factor is set to 1e6.}
 
 \item{sct.clip.range}{Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
 clipped to. The default is set to \code{NULL}. We refer to the \code{FindIntegrationAnchors()} R function for more details.}
 
 \item{reduction}{Character. Indicates which dimensional reduction to perform when finding anchors. The options are
-"cca": canonical correlation analysis, \code{rpca}: reciprocal PCA, and \code{rlsi}: Reciprocal LSI. The default is set to \code{cca}.}
+\code{cca}: canonical correlation analysis, \code{rpca}: reciprocal PCA, \code{jpca}: Joint PCA, and \code{rlsi}: Reciprocal LSI. The
+default is set to \code{cca}.}
 
 \item{l2.norm}{Logical. Indicates whether to perform L2 normalization on the CCA sample embeddings after dimensional
 reduction or not. The default is set to \code{TRUE}.}
@@ -155,8 +156,8 @@ the \code{checkSeObj()} function for more details.}
 \item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches and PRPS sets
 across the 'main.uv.variable'.}
 
-\item{prps.group.name}{Character. A string specifying the name of the PRPS group. If it is \code{NULL}, the function will select
-a name based on "paste0('prps|anchor|', uv.variable)".}
+\item{prps.group.name}{Character. A string specifying the name of the PRPS group. If it is \code{NULL}, the function will
+select a name based on "paste0('prps|anchor|', uv.variable)".}
 
 \item{prps.sets.name}{Character. A string specifying the name of the output file. If it is \code{NULL}, the function will
 select a name based on "paste0(uv.variable, '|', 'anchor', '|', assay.name)".}

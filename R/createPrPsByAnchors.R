@@ -60,11 +60,12 @@
 #' @param scale Logical. Whether or not to scale the features provided. Only set to `FALSE` if you have previously scaled
 #' the features you want to use for each object in the object.list.
 #' @param normalization Character. Indicate which normalization methods should be used before finding the anchors.
-#' The options are `LogNormalize` or `SCT`. The default is set to `LogNormalize`.
+#' The options are `LogNormalize` , `RC` or `CLR`. The default is set to `LogNormalize`. The scale factor is set to 1e6.
 #' @param sct.clip.range Numeric. Numeric of length two specifying the min and max values the Pearson residual will be
 #' clipped to. The default is set to `NULL`. We refer to the `FindIntegrationAnchors()` R function for more details.
 #' @param reduction Character. Indicates which dimensional reduction to perform when finding anchors. The options are
-#' "cca": canonical correlation analysis, `rpca`: reciprocal PCA, and `rlsi`: Reciprocal LSI. The default is set to `cca`.
+#' `cca`: canonical correlation analysis, `rpca`: reciprocal PCA, `jpca`: Joint PCA, and `rlsi`: Reciprocal LSI. The
+#' default is set to `cca`.
 #' @param l2.norm Logical. Indicates whether to perform L2 normalization on the CCA sample embeddings after dimensional
 #' reduction or not. The default is set to `TRUE`.
 #' @param dims Numeric. Indicates which dimensions to use from the CCA to specify the neighbor search space. The default
@@ -85,8 +86,8 @@
 #' the `checkSeObj()` function for more details.
 #' @param plot.output Logical. If `TRUE`, the function plots the distribution of MNN across the batches and PRPS sets
 #' across the 'main.uv.variable'.
-#' @param prps.group.name Character. A string specifying the name of the PRPS group. If it is `NULL`, the function will select
-#' a name based on "paste0('prps|anchor|', uv.variable)".
+#' @param prps.group.name Character. A string specifying the name of the PRPS group. If it is `NULL`, the function will
+#' select a name based on "paste0('prps|anchor|', uv.variable)".
 #' @param prps.sets.name Character. A string specifying the name of the output file. If it is `NULL`, the function will
 #' select a name based on "paste0(uv.variable, '|', 'anchor', '|', assay.name)".
 #' @param save.se.obj Logical. Indicates whether to save the RLE results in the metadata of the SummarizedExperiment
@@ -109,7 +110,7 @@ createPrPsByAnchors <- function(
         assay.name,
         main.uv.variable,
         clustering.method = 'kmeans',
-        nb.clusters = 3,
+        nb.clusters = 2,
         other.uv.variables = NULL,
         other.uv.clustering.method = 'kmeans',
         nb.other.uv.clusters = 2,
@@ -129,10 +130,10 @@ createPrPsByAnchors <- function(
         sct.clip.range = NULL,
         reduction = "cca",
         l2.norm = TRUE,
-        dims = 1:10,
+        dims = 1:5,
         k.anchor = 2,
-        k.filter = 5,
-        k.score = 30,
+        k.filter = 2,
+        k.score = 5,
         max.features = 200,
         nn.method = "annoy",
         n.trees = 50,
@@ -255,7 +256,7 @@ createPrPsByAnchors <- function(
             message = '- Creating PRPS data with considering other unwanted variable(s):',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         ### Assessing and grouping the other unwanted variable ####
         printColoredMessage(
             message = '- Assessing and grouping the other specified unwanted variable(s):',
@@ -382,7 +383,13 @@ createPrPsByAnchors <- function(
             function(x){
                 subgroups.size <- findRepeatingPatterns(
                     vec = all.uv.groups$main.uv[all.uv.groups$other.uv == x],
-                    n.repeat = max(min.sample.for.ps, c(max(dims) + 1),  k.anchor, k.filter)
+                    n.repeat = max(
+                        min.sample.for.ps,
+                        c(max(dims) + 1),
+                        k.anchor,
+                        k.filter,
+                        k.score + k.anchor
+                        )
                 )
             })
         names(selected.covered.batches) <- unique(all.uv.groups$other.uv)
@@ -425,6 +432,7 @@ createPrPsByAnchors <- function(
                         seurat.obj <- Seurat::NormalizeData(
                             object = seurat.obj,
                             normalization.method = normalization,
+                            scale.factor = 1e6,
                             verbose = verbose
                             )
                         if (!is.null(hvg)){
@@ -479,6 +487,7 @@ createPrPsByAnchors <- function(
                 if (all.equal(half.data.1, half.data.2)){
                     all.anchors <- all.anchors[1:(nrow(all.anchors)/2), ]
                 }
+                # Rounding the anchors scores ####
                 all.anchors$score <- round(x = all.anchors$score, digits = 3)
                 all.anchors <- all.anchors[ , c(1,2,4,5,3)]
                 # Renaming the columns ####
@@ -535,9 +544,9 @@ createPrPsByAnchors <- function(
                     message = paste0(
                         '- ',
                         nrow(all.anchors),
-                        ' sample pairs (anchors) are found across all the sub-groups of the main unwanted variation withib "',
+                        ' sample pairs (anchors) are found across all the sub-groups of the main unwanted variation within "',
                         x,
-                        '" group.'),
+                        '" sub-group.'),
                     color = 'blue',
                     verbose = verbose
                     )
@@ -545,9 +554,18 @@ createPrPsByAnchors <- function(
             })
         names(all.anchors) <- names(all.seurat.objects)
         all.anchors <- do.call(rbind, all.anchors)
+        printColoredMessage(
+            message = paste0(
+                '- ',
+                nrow(all.anchors),
+                ' sample pairs (anchors) are found across all the sub-groups of the main unwanted variation within all',
+                ' the sub-groups of other unwanted variable.'),
+            color = 'blue',
+            verbose = verbose
+        )
         ## Applying a sanity check  ####
         printColoredMessage(
-            message = '- Sanity check on the anchors.',
+            message = '- Applying a sanity check on the anchors.',
             color = 'blue',
             verbose = verbose
             )
@@ -566,17 +584,35 @@ createPrPsByAnchors <- function(
             function(x){
                 a <- unique(all.anchors$other.uv[all.anchors$sample.ids.2 == x])
                 b <- all.uv.groups$other.uv[all.uv.groups$sample.ids == x]
-                if (a != b) stop('ffff')
+                if (a != b) stop('There something wrong with the anchors.')
                 a <- unique(all.anchors$dataset.name.2[all.anchors$sample.ids.2 == x])
                 b <- all.uv.groups$main.uv[all.uv.groups$sample.ids == x]
-                if (a != b) stop('ffff')
+                if (a != b) stop('There something wrong with the anchors.')
             })
+        m.out <- lapply(
+            unique(all.anchors$other.uv),
+            function(s){
+                temp.anchor.a = all.anchors[all.anchors$other.uv == s , ]
+                temp.anchor.b = all.anchors[all.anchors$other.uv != s, ]
+                common.samples <- intersect(
+                    c(temp.anchor.a$sample.ids.1, temp.anchor.a$sample.ids.2),
+                    c(temp.anchor.b$sample.ids.1, temp.anchor.b$sample.ids.2)
+                    )
+                if (length(common.samples) > 0){
+                    stop('There something wrong with the anchors.')
+                }
+            })
+        ## Creating all possible PRPS sets ####
+        printColoredMessage(
+            message = '-- Finding PRPS sets:',
+            color = 'magenta',
+            verbose = verbose
+            )
         all.prps.sets <- split(
             x = all.anchors,
             f = all.anchors$group
             )
         groups.sets <- names(all.prps.sets)
-        ## Creating all possible PRPS sets ####
         all.prps.sets <- lapply(
             groups.sets,
             function(i){
@@ -678,6 +714,9 @@ createPrPsByAnchors <- function(
             })
         names(all.prps.sets) <- groups.sets
         all.prps.sets <- Filter(Negate(is.null), all.prps.sets)
+        if (is.null(all.prps.sets)){
+            stop('Any PRPS sets cannot be found based on the current parameters. Possible solution is to increase the value of "k.anchor".' )
+        }
         printColoredMessage(
             message = paste0(
                 '- ',
@@ -687,19 +726,34 @@ createPrPsByAnchors <- function(
             verbose = verbose
             )
         ## Filtering number of PRPS sets ####
-        groups.sets <- names(all.prps.sets)
-        all.prps.sets <- lapply(
-            names(all.prps.sets),
-            function(x){
-                if (length(all.prps.sets[[x]]) > max.prps.sets){
-                    all.prps.sets[[x]][1:max.prps.sets]
-                } else all.prps.sets[[x]]
-            })
-        names(all.prps.sets) <- groups.sets
-        ## Checking initial coverage ####
+        if (isTRUE(filter.prps.sets)){
+            printColoredMessage(
+                message = '-- Filtering PRPS sets per each sub-groups with respect to other unwanted variables:',
+                color = 'magenta',
+                verbose = verbose
+            )
+            groups.sets <- names(all.prps.sets)
+            all.prps.sets <- lapply(
+                names(all.prps.sets),
+                function(x){
+                    if (length(all.prps.sets[[x]]) > max.prps.sets){
+                        all.prps.sets[[x]][1:max.prps.sets]
+                    } else all.prps.sets[[x]]
+                })
+            names(all.prps.sets) <- groups.sets
+            printColoredMessage(
+                message = paste0(
+                    '- ',
+                    sum(sapply(all.prps.sets, length)),
+                    ' possible PRPS stes are kept.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+        ## CChecking the coverage of the PRPS sets across all the sub-groups ####
         printColoredMessage(
-            message = '- Check the distribution of the PRPS sets across the batches.',
-            color = 'orange',
+            message = '-- Checking the coverage of the PRPS sets across all the sub-groups:',
+            color = 'magenta',
             verbose = verbose
             )
         prps.coverage <- lapply(
@@ -740,7 +794,6 @@ createPrPsByAnchors <- function(
                     verbose = verbose
                 )
             }
-
         }
         ## Creating PRPS data ####
         # Data transformation and normalization ####
@@ -748,12 +801,12 @@ createPrPsByAnchors <- function(
             message = '-- Applying data log transformation before creating PRPS data:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         ## Applying log transformation ####
         if (isTRUE(apply.log) & !is.null(pseudo.count)) {
             printColoredMessage(
                 message = paste0(
-                    '- Applying log2 the ',
+                    '- Applying log2 the on the ',
                     assay.name,
                     ' + ',
                     pseudo.count,
@@ -775,7 +828,7 @@ createPrPsByAnchors <- function(
         } else if (isFALSE(apply.log)) {
             printColoredMessage(
                 message = paste0(
-                    'The ',
+                    '- The ',
                     assay.name,
                     ' data will be used without any log transformation.'),
                 color = 'blue',
@@ -787,20 +840,23 @@ createPrPsByAnchors <- function(
         prps.data <- lapply(
             names(all.prps.sets),
             function(x) {
-                prps.sets <- all.prps.sets[[x]]$anchor.sets
-                temp.data <- lapply(
+                prps.sets <- all.prps.sets[[x]]
+                all.prps.data <- lapply(
                     1:length(prps.sets),
-                    function(y) {
-                        if (length(prps.sets[[y]]) >= min.sample.for.ps){
-                            rowMeans(expr.data[, prps.sets[[y]], drop = FALSE])
-                        }
+                    function(y){
+                        prps.set <- prps.sets[[y]]
+                        ps.data <- data.frame(
+                            ps1 = rowMeans(expr.data[ ,prps.set$anchor.sets[[1]] , drop = FALSE]),
+                            ps2 = rowMeans(expr.data[ ,prps.set$anchor.sets[[2]] , drop = FALSE])
+                        )
+                        colnames(ps.data) <- rep(
+                            x = paste0(x, '.set', y, '.unsup'),
+                            ncol(ps.data)
+                        )
+                        ps.data
                     })
-                temp.data <- do.call(cbind, temp.data)
-                colnames(temp.data) <- rep(
-                    x = paste0(main.uv.variable, '.unsu.', x),
-                    ncol(temp.data)
-                )
-                return(temp.data)
+                all.prps.data <- do.call(cbind, all.prps.data)
+                return(all.prps.data)
             })
         prps.data <- do.call(cbind, prps.data)
         if (sum(table(colnames(prps.data)) == 1)) {
@@ -831,7 +887,7 @@ createPrPsByAnchors <- function(
         )
         printColoredMessage(
             message = paste0(
-                '-- There are ',
+                '- There are ',
                 length(selected.covered.batches) ,
                 ' groups of other unwanted variables that have enough samples to find anchros.'),
             color = 'blue',
@@ -863,6 +919,7 @@ createPrPsByAnchors <- function(
                 seurat.obj <- Seurat::NormalizeData(
                     object = seurat.obj,
                     normalization.method = normalization,
+                    scale.factor = 1e6,
                     verbose = verbose
                 )
                 if (!is.null(hvg)){
@@ -919,7 +976,7 @@ createPrPsByAnchors <- function(
             'dataset.sample.2',
             'dataset.index.1',
             'dataset.index.2'
-        )
+            )
         # Applying a sanity check ####
         # this is to make sure sample index comes from the right data input
         sanity.a <- lapply(
@@ -973,30 +1030,11 @@ createPrPsByAnchors <- function(
             )
         ## Applying a sanity check  ####
         printColoredMessage(
-            message = '- Sanity check on the anchors.',
+            message = '- Applying a sanity check on the anchors.',
             color = 'blue',
             verbose = verbose
-            )
-        sanity.a <- lapply(
-            all.anchors$sample.ids.1,
-            function(x){
-                a <- unique(all.anchors$other.uv[all.anchors$sample.ids.1 == x])
-                b <- all.uv.groups$other.uv[all.uv.groups$sample.ids == x]
-                if (a != b)  stop('There something wrong with the anchors.')
-                a <- unique(all.anchors$dataset.name.1[all.anchors$sample.ids.1 == x])
-                b <- all.uv.groups$main.uv[all.uv.groups$sample.ids == x]
-                if (a != b)  stop('There something wrong with the anchors.')
-            })
-        sanity.b <- lapply(
-            all.anchors$sample.ids.2,
-            function(x){
-                a <- unique(all.anchors$other.uv[all.anchors$sample.ids.2 == x])
-                b <- all.uv.groups$other.uv[all.uv.groups$sample.ids == x]
-                if (a != b) stop('ffff')
-                a <- unique(all.anchors$dataset.name.2[all.anchors$sample.ids.2 == x])
-                b <- all.uv.groups$main.uv[all.uv.groups$sample.ids == x]
-                if (a != b) stop('ffff')
-            })
+        )
+
         all.prps.sets <- split(
             x = all.anchors,
             f = all.anchors$group
@@ -1213,20 +1251,23 @@ createPrPsByAnchors <- function(
         prps.data <- lapply(
             names(all.prps.sets),
             function(x) {
-                prps.sets <- all.prps.sets[[x]]$anchor.sets
-                temp.data <- lapply(
+                prps.sets <- all.prps.sets[[x]]
+                all.prps.data <- lapply(
                     1:length(prps.sets),
-                    function(y) {
-                        if (length(prps.sets[[y]]) >= min.sample.for.ps){
-                            rowMeans(expr.data[, prps.sets[[y]], drop = FALSE])
-                        }
+                    function(y){
+                        prps.set <- prps.sets[[y]]
+                        ps.data <- data.frame(
+                            ps1 = rowMeans(expr.data[ ,prps.set$anchor.sets[[1]] , drop = FALSE]),
+                            ps2 = rowMeans(expr.data[ ,prps.set$anchor.sets[[2]] , drop = FALSE])
+                        )
+                        colnames(ps.data) <- rep(
+                            x = paste0(x, '.set', y, '.unsup'),
+                            ncol(ps.data)
+                            )
+                        ps.data
                     })
-                temp.data <- do.call(cbind, temp.data)
-                colnames(temp.data) <- rep(
-                    x = paste0(main.uv.variable, '.unsu.', x),
-                    ncol(temp.data)
-                )
-                return(temp.data)
+                all.prps.data <- do.call(cbind, all.prps.data)
+                return(all.prps.data)
             })
         prps.data <- do.call(cbind, prps.data)
         if (sum(table(colnames(prps.data)) == 1)) {

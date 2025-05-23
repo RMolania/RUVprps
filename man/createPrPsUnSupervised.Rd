@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsUnSupervised.R
 \name{createPrPsUnSupervised}
 \alias{createPrPsUnSupervised}
-\title{Creates unsupervised pseudo-replicates of pseudo samples (PRPS).}
+\title{Creates unsupervised PRPS data.}
 \usage{
 createPrPsUnSupervised(
   se.obj,
@@ -30,7 +30,7 @@ createPrPsUnSupervised(
   l2.norm = TRUE,
   dims = 1:10,
   k.anchor = 3,
-  k.filter = 20,
+  k.filter = 5,
   k.score = 5,
   max.features = 200,
   nn.method = "annoy",
@@ -50,8 +50,12 @@ createPrPsUnSupervised(
   mnn.nbparam = KmknnParam(),
   check.se.obj = TRUE,
   remove.na = "both",
-  prps.sets.name = NULL,
+  knn.group.name = NULL,
+  knn.sets.name = NULL,
+  mnn.group.name = NULL,
+  mnn.sets.name = NULL,
   prps.group.name = NULL,
+  prps.sets.name = NULL,
   plot.output = TRUE,
   save.se.obj = TRUE,
   verbose = TRUE
@@ -60,10 +64,10 @@ createPrPsUnSupervised(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A character string indicating the assay name within the SummarizedExperiment object for
+\item{assay.name}{Character. A character indicating the assay name within the SummarizedExperiment object for
 the creation of PRPS data. The assay must be the one that will be used as data input for the RUV-III-PRPS normalization.}
 
-\item{uv.variables}{Character. A character string or vector of strings specifying the name(s) of column(s) in the
+\item{uv.variables}{Character. A character or vector of strings specifying the name(s) of column(s) in the
 sample annotation of the SummarizedExperiment object. This variable can be categorical or continuous. If a continuous
 variable is provided, this will be divided into groups using the clustering method.}
 
@@ -73,7 +77,7 @@ variable is provided, this will be divided into groups using the clustering meth
 include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first PCs of the data will be used as input. If \code{expr} is selected,
 the data will be selected as input.}
 
-\item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the \code{uv.variable}
+\item{clustering.method}{Character. A character indicating the choice of clustering method for grouping the \code{uv.variable}
 if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.}
 
 \item{nb.clusters}{Numeric. A numeric value indicating how many clusters should be found if the \code{uv.variable} is a
@@ -171,12 +175,25 @@ the function will give error.We refer to the checkPRPSconnectedness() function f
 
 \item{remove.na}{Character. Indicates whether to remove \code{NA} values. Options: \code{assays}, \code{none}. Default is \code{assays}.}
 
-\item{prps.sets.name}{Character. A character specifying the name of the output file to be saved in the metadata
+\item{knn.group.name}{Character. A character specifying the name of the knn  to which the current KNN belong.
+If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}
+
+\item{knn.sets.name}{Character. A character specifying the name of the knn set names to be saved in the metadata
 of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
 \code{paste0(uv.variable, '|', assay.name)}.}
 
+\item{mnn.group.name}{Character. A character specifying the name of the mnn to which the current MNN belong.
+If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}
+
+\item{mnn.sets.name}{A character specifying the name of the mnn set names to be saved in the metadata of the
+SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on}
+
 \item{prps.group.name}{Character. A character specifying the name of the prps.group.name to which the current KNN belong.
 If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}
+
+\item{prps.sets.name}{Character. A character specifying the name of the output file to be saved in the metadata
+of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
+\code{paste0(uv.variable, '|', assay.name)}.}
 
 \item{plot.output}{TTTT}
 

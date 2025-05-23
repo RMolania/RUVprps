@@ -167,9 +167,12 @@ If set to \code{NULL}, the function will automatically assign a name using  \cod
 of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
 \code{paste0(uv.variable, '|', assay.name)}.}
 
-\item{mnn.group.name}{TTTT}
+\item{mnn.group.name}{Character. A character specifying the name of the mnn to which the current MNN belong.
+If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}
 
-\item{mnn.sets.name}{TTTT}
+\item{mnn.sets.name}{A character specifying the name of the mnn set names to be saved in the metadata of the
+SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
+\code{paste0(uv.variable, '|', assay.name)}.}
 
 \item{prps.group.name}{Character. A character specifying the name of the prps.group.name to which the current PRPS belong.
 If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}
