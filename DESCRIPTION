@@ -1,5 +1,5 @@
-Package: RUVIIIPRPS
-Title: RUVIII-PRPS: Removing unwanted variation from large-scale RNA sequencing data with PRPS
+Package: RUVprps
+Title: RUVprps: Fast, accurate and scalable normalization for RNA sequencing data
 Version: 0.0.0.9000
 Authors@R: 
     person("Ramyar", "Molania", email="molania.r@wehi.edu.au", role = c("aut", "cre"))
