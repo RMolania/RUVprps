@@ -398,7 +398,7 @@ assessVariation <- function(
     # PCA ####
     ## compute pca ####
     if(sum(c('PCA', 'LRA', 'VCA', 'ARI', 'Silhouette')  %in% metrics.table$Metrics) > 0 ) {
-        se.obj <- RUVIIIPRPS::computePCA(
+        se.obj <- RUVprps::computePCA(
             se.obj = se.obj,
             assay.names = levels(assay.names),
             fast.pca = fast.pca,
@@ -419,7 +419,7 @@ assessVariation <- function(
         pca.scatter.vars <- metrics.table$Metrics == 'PCA' & metrics.table$PlotTypes == 'scatterPlot'
         pca.scatter.vars <- metrics.table$Variables[pca.scatter.vars]
         for(i in pca.scatter.vars){
-            se.obj <- RUVIIIPRPS::plotPCA(
+            se.obj <- RUVprps::plotPCA(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 variable = i,
@@ -444,7 +444,7 @@ assessVariation <- function(
         pca.boxplot.vars <- metrics.table$Metrics == 'PCA' & metrics.table$PlotTypes == 'boxPlot'
         pca.boxplot.vars <- metrics.table$Variables[pca.boxplot.vars]
         for(i in pca.boxplot.vars){
-            se.obj <- RUVIIIPRPS::plotPCA(
+            se.obj <- RUVprps::plotPCA(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 variable = i,
