@@ -1,0 +1,63 @@
+#' Computes ANOVA between individual gene expression and a categorical variable
+#'
+#' @author Ramyar Molania
+#'
+#' @description
+#' This function calculates the ANOVA between individual gene expression of the assay(s) in a SummarizedExperiment object
+#' and a categorical variable as factor.
+#'
+#' @details
+#' ANOVA enables us to assess the effects of a given qualitative variable (which we call a factor) on gene expression
+#' measurements across any set of groups (labeled by the levels of the factor) under study. We use ANOVA F-statistics
+#' to summarize the effects of a qualitative source of unwanted variation (for example, batches) on the expression levels
+#' of individual genes, where genes having large F-statistics are deemed to be affected by the unwanted variation.
+#' We also use ANOVA tests (the aov() function in R) to assign P values to the association between tumor purity and
+#' molecular subtypes.
+#'
+#' @param se.obj A SummarizedExperiment object.
+#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
+#' in the SummarizedExperiment object to compute the ANOVA. By default is set to 'all', which means all assays of the
+#' SummarizedExperiment object will be selected.
+#' @param bio.variables Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
+#' object that contains a categorical variable, such as experimental batches, etc.
+#' @param uv.variables Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
+#' object that contains a categorical variable, such as experimental batches, etc.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
+#' default is set to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
+#' the log transformation. The default is set to 1.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
+#' This means the function will apply the `checkSeObj()` function.
+#' @param remove.na Character. A character string specifying whether to eliminate missing values from `assays`, `sample.annotation`,
+#' `both`, or `none`. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
+#' samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.
+#' @param save.se.obj Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
+#' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to `TRUE`.
+#' @param override.check Logical. When set to TRUE, the function checks whether ANOVA has already been computed for the
+#' current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is
+#' set to `FALSE`.
+#' @param verbose Logical. If `TRUE`, displays the messages of different steps of the function.
+#'
+#' @return Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
+#' variable or a list of these results.
+#'
+#' @importFrom car Anova
+#' @importFrom SummarizedExperiment assays assay
+#' @importFrom tidyr pivot_longer %>%
+#' @importFrom dplyr mutate
+#' @import ggplot2
+#' @export
+
+obtainMetric <- function(
+        se.obj,
+        slot = 'Metrics',
+        metric.group = 'gene.level',
+        assay.name,
+        metric.name,
+        test.name,
+        variable,
+        show.path = TRUE
+        ){
+    m <- se.obj@'metadata'[[slot]][[assay.name]][[metric.group]][[metric.name]][[test.name]][[variable]][['fstatistics.pvalues']]
+    return(m)
+}
