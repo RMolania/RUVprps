@@ -65,9 +65,6 @@ plotSilhouette <- function(
     if (!is.character(variables)){
         stop('The "variables" must a character or a vector of characters.')
     }
-    if (!silhouette.method %in% c('single.plot', 'combined.plot')) {
-        stop('The "plot.type" must be one of the "single.plot" or "combined.plot".')
-    }
     if (!plot.type %in% c('single.plot', 'combined.plot')) {
         stop('The "plot.type" must be one of the "single.plot" or "combined.plot".')
     }
