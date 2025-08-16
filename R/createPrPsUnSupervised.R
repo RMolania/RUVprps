@@ -97,6 +97,8 @@
 #' @param save.se.obj Logical. If `TRUE`, saves results in `metadata` of the SummarizedExperiment object. Otherwise,
 #' returns results as a list. Default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, prints messages throughout function execution.
+#' @param bio.dims TTT
+#' @param sample.to.use TTT
 #'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
@@ -109,6 +111,7 @@ createPrPsUnSupervised <- function(
         uv.variables,
         approach = 'mnn',
         data.input = 'expr',
+        bio.dims = 50,
         clustering.method = 'kmeans',
         nb.clusters = 3,
         other.uv.variables = NULL,
@@ -138,6 +141,7 @@ createPrPsUnSupervised <- function(
         nb.pcs = 2,
         center = TRUE,
         scale = FALSE,
+        sample.to.use = 'all',
         svd.bsparam = bsparam(),
         normalization = 'CPM',
         apply.cosine.norm = FALSE,
@@ -263,6 +267,8 @@ createPrPsUnSupervised <- function(
             se.obj <- createPrPsByMnn(
                 se.obj = se.obj,
                 assay.name = assay.name,
+                bio.dims = bio.dims,
+                data.input = data.input,
                 main.uv.variable = i,
                 clustering.method = clustering.method,
                 nb.clusters = nb.clusters,
@@ -277,6 +283,7 @@ createPrPsUnSupervised <- function(
                 check.prps.connectedness = check.prps.connectedness,
                 nb.mnn = nb.mnn,
                 hvg = hvg,
+                sample.to.use = sample.to.use,
                 normalization = normalization,
                 apply.cosine.norm = apply.cosine.norm,
                 regress.out.variables = regress.out.variables,
