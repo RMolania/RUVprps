@@ -49,6 +49,8 @@
 #' @param estimate.tumor.purity Character. A method to estimate tumor purity. Options include: `estimate`, `singscore`,
 #' `both`, and `NULL`. If `estimate`, the ESTIMATE method will be used. If `singscore`, the `singscore` method will be
 #' applied. If `both`, both methods will be applied. The default is set to `NULL`.
+#' @param scale.singscore.values Logical. Indicating to change the range of the tumor purity estimated by the singscore
+#' method based on the  the one estimated by the ESTIMATE method. The default is set to `TRUE`.
 #' @param assay.name.to.estimate.purity Character. The name of an assay within the list of assays or expression data
 #' to be used for estimating tumor purity.
 #' @param create.sample.annotation Logical. If `TRUE`, a sample annotation will be generated, initially containing
@@ -61,6 +63,7 @@
 #' added to the gene annotation.
 #' @param gene.group Character. The name of a gene class from the row names of the assay(s). This must be one of the
 #' following: `entrezgene_id`, `hgnc_symbol`, or `ensembl_gene_id`.
+#' @param column.name TTTT
 #' @param gene.details Character or character vector. Indicates the gene details to be included in the gene annotation.
 #' @param add.housekeeping.genes Logical. If `TRUE`, publicly available ``housekeeping`` gene sets will be added to the gene
 #' annotation. These genes may be used as negative controls for RUV normalization.
@@ -93,12 +96,14 @@ prepareSeObj <- function(
         minimum.proportion = 0.5,
         calculate.library.size = FALSE,
         estimate.tumor.purity = NULL,
+        scale.singscore.values = TRUE,
         assay.name.to.estimate.purity = NULL,
         create.sample.annotation = FALSE,
         gene.annotation = NULL,
         create.gene.annotation = FALSE,
         add.gene.details = FALSE,
         gene.group = NULL,
+        column.name = NULL,
         gene.details = NULL,
         add.housekeeping.genes = FALSE,
         add.immun.stroma.genes = FALSE,
@@ -414,16 +419,18 @@ prepareSeObj <- function(
                 printColoredMessage(
                     message = 'The gene.details is not specified, some pre-set details will be added to the gene annotation.',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 printColoredMessage(
                     message = 'Obtain the pre-set gene details from the bioMart R package, this may take a few minutes.',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 ensembl <- useMart('ensembl') # 24 March 2022
                 ensembl <- useDataset(
                     mart = ensembl,
                     'hsapiens_gene_ensembl'
-                )
+                    )
                 bioMart.geneAnnot <- biomaRt::getBM(
                     attributes = c(
                         'entrezgene_id',
@@ -433,7 +440,7 @@ prepareSeObj <- function(
                         'description',
                         'chromosome_name'),
                     mart = ensembl
-                )
+                    )
                 bioMart.geneAnnot <- bioMart.geneAnnot[!duplicated(bioMart.geneAnnot[[gene.group]]), ]
                 gene.annotation <- dplyr::left_join(
                     x = gene.annotation,
@@ -714,11 +721,16 @@ prepareSeObj <- function(
         printColoredMessage(message = '------------The createSeObj function finished.',
                             color = 'white',
                             verbose = verbose)
+        return(se.obj)
 
     }
     # Data input is SummarizedExperiment ####
     if (class(data)[1] == 'SummarizedExperiment' | class(data)[1] == 'RangedSummarizedExperiment'){
-        ## checking and adding sample annotation ####
+        gene.annotation.a <- rowData(data)
+        gene.annotation.a[[gene.group]] <- gene.annotation.a[[column.name]]
+        rowData(data) <- gene.annotation.a
+
+        ## Checking and adding sample annotation ####
         if (is.logical(sample.annotation)){
             stop('The "sample.annotation" cannot be logical.')
         }
@@ -731,26 +743,53 @@ prepareSeObj <- function(
                 if (!all.equal(row.names(sample.annotation), colnames(data))){
                     stop(paste0(
                         'The row names of the provided sample annotation are not matched with',
-                        'the column annotation of the SummarizedExperiment'))
+                        'the column names of the SummarizedExperiment.'))
                 } else if (all.equal(row.names(sample.annotation), colnames(data))){
                     SummarizedExperiment::colData(data) <- DataFrame(sample.annotation)
+                    if (isTRUE(calculate.library.size) & !is.null(biological.group)){
+                        if (!is.character(biological.group)){
+                            stop('The "biological group" must be a name of a column that conatins biological variable.')
+                        }
+                        if (length(biological.group) > 1){
+                            stop('The "biological group" must be a single name of a column that conatins biological variable.')
+                        }
+                        if (!biological.group %in% colnames(SummarizedExperiment::colData(x = data))){
+                            stop('The "biological group" cannot be found in the SummarizedExperiment object.')
+                        }
+                    }
                 }
             } else {
                 printColoredMessage(
                     message = paste0(
-                        'The SummarizedExperiment already contains a sample annotation file.',
+                        '** The SummarizedExperiment already contains a sample annotation file.',
                         'The provided sample annotation will not be added.'
                         ),
                     color = 'red',
                     verbose = verbose
                 )
+                if (isTRUE(calculate.library.size) & !is.null(biological.group)){
+                    if (!is.character(biological.group)){
+                        stop('The "biological group" must be a name of a column that conatins biological variable.')
+                    }
+                    if (length(biological.group) > 1){
+                        stop('The "biological group" must be a single name of a column that conatins biological variable.')
+                    }
+                    if (!biological.group %in% colnames(SummarizedExperiment::colData(x = data))){
+                        stop('The "biological group" cannot be found in the SummarizedExperiment object.')
+                    }
+                }
+                sample.annotation <- as.data.frame(SummarizedExperiment::colData(data))
             }
-        } else if (is.null(sample.annotation)){
+        }
+        if (is.null(sample.annotation)){
+            if (isTRUE(calculate.library.size) & !is.null(biological.group)){
+                stop('A sample annotation wiht at least a column contating "biological.group" must be provided.')
+            }
             if (isTRUE(calculate.library.size) | isTRUE(estimate.tumor.purity)){
                 if (ncol(SummarizedExperiment::colData(x = data)) == 0){
                     printColoredMessage(
                         message = paste0(
-                            'The SummarizedExperiment does no contain sample annotation.',
+                            '- The SummarizedExperiment does no contain sample annotation.',
                             'A sample annotation will be created and added to the object.'),
                         color = 'blue',
                         verbose = verbose
@@ -759,7 +798,7 @@ prepareSeObj <- function(
                 }
             }
         }
-        ## checking and adding gene annotation ####
+        # Checking and adding gene annotation ####
         if (is.logical(gene.annotation)){
             stop('The "gene.annotation" canot be logical.')
         }
@@ -768,9 +807,9 @@ prepareSeObj <- function(
         }
         if (!is.null(gene.annotation)){
             if (ncol(SummarizedExperiment::rowData(x = data)) == 0){
-                if (nrow(.annotation) != ncol(data)){
-                    stop(paste('The number of rows in the provided "sample.annotation is not equal',
-                               'to the number of columns in the the SummarizedExperiment object.'))
+                if (nrow(gene.annotation) != nrow(data)){
+                    stop(paste('The number of rows in the provided "gene.annotation is not equal',
+                               'to the number of rows in the the SummarizedExperiment object.'))
                 }
                 if (!all.equal(row.names(gene.annotation), row.names(data))){
                     stop(paste0(
@@ -789,11 +828,12 @@ prepareSeObj <- function(
                     verbose = verbose
                 )
             }
-        } else if (is.null(gene.annotation) & isFALSE(create.gene.annotation)){
+        }
+        if (is.null(gene.annotation) & isFALSE(create.gene.annotation)){
             if (isTRUE(add.gene.details) | isTRUE(add.housekeeping.genes) | isTRUE(add.immun.stroma.genes)){
                 if (ncol(SummarizedExperiment::rowData(x = data)) == 0){
                     stop(paste0(
-                        'The SummarizedExperiment object dose not contain a sample annotation, then',
+                        'The SummarizedExperiment object dose not contain a gene annotation, then',
                         'The "gene.annotation" or "create.gene.annotation" must be specified if any of',
                         '"add.gene.details" or "add.housekeeping.genes" or "add.immun.stroma.genes" are specified.'))
                 }
@@ -810,7 +850,8 @@ prepareSeObj <- function(
                     stop('The "gene.group" cannot be found in the gene annotation file of the SummarizedExperiment object.')
                 }
             }
-        } else if (is.null(gene.annotation) & isTRUE(create.gene.annotation)){
+        }
+        if (is.null(gene.annotation) & isTRUE(create.gene.annotation)){
             if (ncol(SummarizedExperiment::rowData(data)) != 0){
                 stop(paste0('The SummarizedExperiment contains a gene annotation, so',
                             'the "create.gene.annotation" must be set to "FALSE".'))
@@ -837,7 +878,7 @@ prepareSeObj <- function(
             }
         }
 
-        ## checking estimating of tumor purity ####
+        # Checking estimating of tumor purity ####
         if (is.logical(estimate.tumor.purity)){
             stop('The "estimate.tumor.purity" must be one of the "estimate", "singscore", "both" or "NULL"')
         }
@@ -858,8 +899,11 @@ prepareSeObj <- function(
                 stop('The "assay.name.to.estimate.purity" cannot be found in the SummarizedExperiment object.')
             }
         }
-        ## checking raw count data ####
+        # Checking raw count data ####
         if (!is.null(raw.count.assay.name)){
+            if (is.logical(raw.count.assay.name)){
+                stop('The "raw.count.assay.name" cannot be logical.')
+            }
             if (length(raw.count.assay.name) > 1){
                 stop('The "raw.count.assay.name" must be a single assay name in the SummarizedExperiment object.')
             }
@@ -867,15 +911,24 @@ prepareSeObj <- function(
                 stop('The "raw.count.assay.name" canot be found in the SummarizedExperiment object.')
             }
         }
-        ## remove lowly expressed genes ####
+        # Removing lowly expressed genes ####
         if (isTRUE(remove.lowly.expressed.genes)){
             if (is.null(raw.count.assay.name)){
                 stop('To find and remove lowly expressed genes, the "raw.count.assay.name" must be provided.')
             }
             if (!is.null(biological.group)){
+                if (!is.character(biological.group)){
+                    stop('The "biological.group" must be a name of a column that conatins a biological variable.')
+                }
+                if (length(biological.group) > 1){
+                    stop('The "biological.group" must be single name of a column that conatins a biological variable.')
+                }
                 if (!biological.group %in% colnames(SummarizedExperiment::colData(data))){
                     stop('The "biological.group" cannot be found in the sample annotation of the SummarizedExperiment object.')
                 }
+            }
+            if (!is.numeric(minimum.proportion)){
+                stop('The "minimum.proportion" must be a numeric value between 0 to 1. ')
             }
             if (minimum.proportion > 1 | minimum.proportion < 0){
                 stop('The "minimum.proportion" must between 0 to 1.')
@@ -883,14 +936,17 @@ prepareSeObj <- function(
             if (is.null(count.cutoff)){
                 stop('The count.cutoff cannot be empty.')
             }
+            if (!is.numeric(count.cutoff)){
+                stop('The "count.cutoff" must be a postive numeric value. ')
+            }
             if (count.cutoff < 0){
                 stop('The value of the "count.cutoff" cannot be negative.')
             }
         }
 
-        ## gene annotation ####
+        # Adding gene details ####
         if (isTRUE(add.gene.details) & is.null(gene.group)){
-            stop('To add gene details, the "gene.group" must be specified (entrezgene_id, hgnc_symbol and ensembl_gene_id).')
+            stop('To add gene details, the "gene.group" must be specified as one of the "entrezgene_id", "hgnc_symbol" and "ensembl_gene_id".')
         }
         if (isTRUE(add.gene.details) & !is.null(gene.group)){
             if (!gene.group %in% c('entrezgene_id', 'hgnc_symbol', 'ensembl_gene_id')){
@@ -900,13 +956,13 @@ prepareSeObj <- function(
         if (isTRUE(add.housekeeping.genes) & is.null(gene.group)){
             stop('To add housekeeping genes, the "gene.group" must be specified.')
         }
-        ## remove lowly expressed genes ####
+        # Removing lowly expressed genes ####
         if (isTRUE(remove.lowly.expressed.genes)){
             printColoredMessage(
                 message = paste0(
                     '-- Removing lowly expressed genes from the ',
                     raw.count.assay.name,
-                    ' assay.'),
+                    ' data'),
                 color = 'magenta',
                 verbose = verbose
                 )
@@ -937,7 +993,7 @@ prepareSeObj <- function(
             keep.genes <- Matrix::rowSums(cpm.data >= cpm.cutoff) >= sample.size
             printColoredMessage(
                 message = paste0(
-                    '* ',
+                    '- ',
                     sum(keep.genes),
                     ' of ',
                     nrow(cpm.data),
@@ -952,18 +1008,18 @@ prepareSeObj <- function(
             data <- data[keep.genes , ]
             gene.annotation <- as.data.frame(SummarizedExperiment::rowData(data))
         }
-        ### calculate library size
+        # Calculating library size ####
         if (isTRUE(calculate.library.size)){
             printColoredMessage(
                 message = '-- Calculating library size (totall reads).',
                 color = 'magenta',
                 verbose = verbose
-            )
+                )
             printColoredMessage(
-                message = 'Note, to calculate library size, a raw count data without any transformation should be provided.',
+                message = '**Note, to calculate library size, a raw count data without any transformation should be provided.',
                 color = 'red',
                 verbose = verbose
-            )
+                )
             library.size <- Matrix::colSums(assay(x = data, i = raw.count.assay.name))
             printColoredMessage(
                 message = '* The library size is calculated, with summaries (in millions):',
@@ -976,7 +1032,7 @@ prepareSeObj <- function(
             } else data[['library.size']] <- log2(library.size)
 
         }
-        ## adding gene details ####
+        # Adding gene details ####
         if (isTRUE(add.gene.details)){
             printColoredMessage(
                 message = '-- Adding gene details:',
@@ -1071,7 +1127,7 @@ prepareSeObj <- function(
                 }
             }
         }
-        ## adding housekeeping genes list ####
+        # Adding housekeeping genes list ####
         if (isTRUE(add.housekeeping.genes)){
             printColoredMessage(
                 message = '-- Adding several lists of publicly avaiable housekeeping genes to the gene annotation:',
@@ -1111,7 +1167,7 @@ prepareSeObj <- function(
                       caption = 'Number of genes in each list of housekeeping genes:',
                       ol.names = 'nb.genes'))
         }
-        ## add immune and stroma genes signatures ####
+        # Adding immune and stroma genes signatures ####
         if (isTRUE(add.immun.stroma.genes)){
             printColoredMessage(
                 message = '-- Adding immune and stromal genes signature to the gene annotation:',
@@ -1154,7 +1210,7 @@ prepareSeObj <- function(
                       col.names = 'nb.genes')
                 )
         }
-        ## estimate tumor purity ####
+        # Estimating tumor purity ####
         if (!is.null(estimate.tumor.purity)){
             printColoredMessage(
                 message = '-- Estimating tumour purity (this is just for cancer RNAseq data):',
@@ -1163,7 +1219,7 @@ prepareSeObj <- function(
                 )
             if (estimate.tumor.purity == 'estimate'){
                 printColoredMessage(
-                    message = '* Estimating tumour purity using the ESTIMATE method:',
+                    message = '- Estimating tumour purity using the ESTIMATE method:',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -1179,8 +1235,9 @@ prepareSeObj <- function(
                     is_affymetrix = TRUE
                     )
                 tumour.purity <- tumour.purity$purity
-                sample.annotation[['tumour.purity']] <- tumour.purity
-            } else if (estimate.tumor.purity == 'singscore'){
+                sample.annotation[['tumour.purity.estimate']] <- tumour.purity
+            }
+            if (estimate.tumor.purity == 'singscore'){
                 printColoredMessage(
                     message = '* Estimating tumour purity using the singscore method:',
                     color = 'blue',
@@ -1199,17 +1256,18 @@ prepareSeObj <- function(
                      )
                 tumour.purity <- singscore::simpleScore(
                     rankData = tumour.purity,
-                    upSet = im.str.gene.sig)
+                    upSet = im.str.gene.sig
+                    )
                 tumour.purity <- tumour.purity$TotalScore
                 sample.annotation[['tumour.purity']] <- 1 - tumour.purity
             } else if (estimate.tumor.purity == 'both'){
                 printColoredMessage(
-                    message = '** Estimating tumour purity using both ESTIMATE and singscore methods:',
+                    message = '- Estimating tumour purity using both ESTIMATE and singscore methods:',
                     color = 'blue',
                     verbose = verbose
                     )
                 printColoredMessage(
-                    message = '* Estimating tumour purity using the ESTIMATE method:',
+                    message = '-- Estimating tumour purity using the ESTIMATE method:',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -1226,7 +1284,7 @@ prepareSeObj <- function(
                     )
                 tumour.purity.estimate <- tumour.purity$purity
                 printColoredMessage(
-                    message = '* Estimating tumour purity using the singscore method:',
+                    message = '- Estimating tumour purity using the singscore method:',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -1245,9 +1303,17 @@ prepareSeObj <- function(
                 tumour.purity.singscore <- tumour.purity$TotalScore
                 data[['tumour.purity.estimate']] <- tumour.purity.estimate
                 data[['tumour.purity.singscore']] <- 1 - tumour.purity.singscore
+                if (isTRUE(scale.singscore.values)){
+                    tps <- data[['tumour.purity.singscore']]
+                    tpe <- data[['tumour.purity.estimate']]
+                    rtps <- range(tps)
+                    rtpe <- range(tpe)
+                    stps <- (tps - min(rtps)) / (max(rtps) - min(rtps)) * (max(rtpe) - min(rtpe)) + min(rtpe)
+                    data[['tumour.purity.singscore.scaled']]<- stps
+                }
             }
         }
-        ## outputs ####
+        # Saving the outputs ####
         printColoredMessage(
             message = paste0('The SummarizedExperiment object:'),
             color = 'blue',
