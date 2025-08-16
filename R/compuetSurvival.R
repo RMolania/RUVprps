@@ -1,4 +1,4 @@
-#' Computes variable and gene-level survival analysis.
+#' Compute variable and gene-level survival analysis.
 #'
 #' @author Ramyar Molania
 #'
@@ -23,6 +23,7 @@
 #' @param return.p.value Logical. Indicates whether to calculate p-values in the survival analysis. The default is `TRUE`.
 #' @param return.survival.plot Logical. Indicates whether to generate survival plots. The default is set to `FALSE`.
 #' @param plot.output Logical. Indicates whether to plot variable-level survival analysis. The default is set to `TRUE`.
+#' @param color.palette TTTT
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the `checkSeObj`
 #' function will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove NA or missing values from the assays. Options are `assays`
@@ -33,7 +34,10 @@
 #' @param verbose Logical. If `TRUE`, displays messages for each step of the function.
 #'
 #' @importFrom survival survfit survdiff Surv
+#' @importFrom SummarizedExperiment assays
 #' @importFrom survminer ggsurvplot
+#' @importFrom stats quantile
+#' @importFrom ggpubr ggpar
 #' @import RColorBrewer
 #' @export
 
@@ -48,17 +52,17 @@ computeSurvival <- function(
         return.p.value = TRUE,
         return.survival.plot = FALSE,
         plot.output = TRUE,
+        color.palette = 'nrc',
         check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-
     printColoredMessage(message = '------------The computeSurvival function starts:',
                         color = 'white',
                         verbose = verbose)
 
-    # Checking inputs ####
+    # Checking function inputs ####
     if (!survival.time %in% colnames(colData(se.obj))){
         stop('The "survival.time" cannot be found in the SummarizedExperiment object.')
     }
@@ -98,7 +102,7 @@ computeSurvival <- function(
         stop('The "verbose" must be logical(TRUE or FALSE).')
     }
 
-    # Assays ####
+    # Assessing the data sets ####
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
@@ -106,7 +110,7 @@ computeSurvival <- function(
         stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
     }
 
-    # Assess the SummarizedExperiment object ####
+    # Assessing the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -118,15 +122,13 @@ computeSurvival <- function(
     }
 
     # Selecting colores ####
-    selected.colores <-  c(
-        c("#E7B800", "#2E9FDF", 'red4'),
-        RColorBrewer::brewer.pal(8, "Dark2")[-5],
-        RColorBrewer::brewer.pal(10, "Paired")
+    selected.colores <- selectColors(
+        nb.color = 1:20 ,
+        group = color.palette
         )
-
     # Gene level survival analysis ####
     if (!is.null(genes)){
-        ## assess provided genes ####
+        ## assessing provided genes ####
         if (length(genes) == 1 && genes == 'all')
             genes <- row.names(se.obj)
         if (!sum(genes %in% row.names(se.obj)) == length(genes)){
@@ -276,7 +278,8 @@ computeSurvival <- function(
         printColoredMessage(
             message = '- Saving all the survival p.values and plots to the "metadata" of the SummarizedExperiment object.',
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         ### for all assays
         if (!is.null(genes)){
             if (isTRUE(return.p.value)){
@@ -305,7 +308,6 @@ computeSurvival <- function(
                     results.data = all.genes.p.values
                 )
             }
-
         }
         if (!is.null(variable)){
             if(isTRUE(return.survival.plot)){
