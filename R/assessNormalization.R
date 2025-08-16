@@ -45,6 +45,7 @@
 #' (categorical or continuous) in the SummarizedExperiment object.
 #' @param uv.variables character or character vector. One or more column names indicating unwanted variables
 #' (categorical or continuous) in the SummarizedExperiment object.
+#' @param assessment.level TTT
 #' @param assessments.to.exclude character or character vector. Names of assessment metrics to exclude, as returned by
 #' the `getAssessmentMetrics()` function. Default is NULL.
 #' @param fast.pca Logical. Whether to use fast PCA. Default is TRUE.
@@ -97,12 +98,12 @@
 #' @importFrom qvalue qvalue
 #' @import RColorBrewer
 #' @export
-
 assessNormalization <- function(
         se.obj,
         assay.names = 'all',
         bio.variables,
         uv.variables,
+        assessment.level = 'L1',
         assessments.to.exclude = NULL,
         fast.pca = TRUE,
         sil.dist.measure = 'euclidian',
@@ -158,14 +159,67 @@ assessNormalization <- function(
         )
     se.obj <- getAssessmentMetrics(
         se.obj = se.obj,
-        variables = c(uv.variables, bio.variables),
+        uv.variables = uv.variables,
+        bio.variables = bio.variables,
         plot.output = FALSE,
         save.se.obj = TRUE
         )
     metrics.table <- se.obj@metadata$AssessmentMetrics$metrics.table
+    metrics.table$new.col <- paste0(metrics.table$Metrics, '_', metrics.table$Assessments)
+    if (assessment.level == 'L1'){
+        bio.metrics.table <- lapply(
+            bio.variables,
+            function(x){
+                if (is.numeric(se.obj[[x]])){
+                    bio.metrics.table <- metrics.table[metrics.table$Variables == x, ]
+                    keep <- bio.metrics.table$new.col %in% c('LRA_averageRseq', 'Correlation_corrCoeff', 'PartialCorrelation_corrCoeff')
+                    bio.metrics.table <- bio.metrics.table[keep , ]
+                } else {
+                    bio.metrics.table <- metrics.table[metrics.table$Variables == x, ]
+                    keep <- bio.metrics.table$new.col %in% c('VCA_averageCorr', 'ARI_ari', 'Silhouette_silhouetteCoeff')
+                    bio.metrics.table <- bio.metrics.table[keep , ]
+                }
+            })
+        bio.metrics.table <- do.call(rbind, bio.metrics.table)
+        uv.metrics.table <- lapply(
+            uv.variables,
+            function(x){
+                if (is.numeric(se.obj[[x]])){
+                    uv.metrics.table <- metrics.table[metrics.table$Variables == x, ]
+                    keep <- uv.metrics.table$new.col %in% c(
+                        'LRA_averageRseq',
+                        'Correlation_corrCoeff',
+                        'PartialCorrelation_corrCoeff'
+                        )
+                    uv.metrics.table <- uv.metrics.table[keep , ]
+                } else {
+                    uv.metrics.table <- metrics.table[metrics.table$Variables == x, ]
+                    keep <- uv.metrics.table$new.col %in% c(
+                        'VCA_averageCorr',
+                        'ARI_ari',
+                        'Silhouette_silhouetteCoeff',
+                        'DGE_pvalueNull',
+                        'ANOVA_pvalueNull',
+                        'ANOVA_fStat'
+                        )
+                    uv.metrics.table <- uv.metrics.table[keep , ]
+                }
+            })
+        uv.metrics.table <- do.call(rbind, uv.metrics.table)
+        metrics.table <- rbind(bio.metrics.table, uv.metrics.table, metrics.table[metrics.table$Variables == 'General' , ])
+    }
+    # if (assessment.level == 'L2'){
+    #
+    # }
+    # if (assessment.level == 'L3'){
+    #
+    # }
+
     printColoredMessage(
-        message = paste0('- The totall of ',  sum(metrics.table$Assessments!='DA'),
-                         ' assessment metrics will be used for normalization performance assessment.'),
+        message = paste0(
+            '- The totall of ',
+            sum(metrics.table$Assessments!='DA'),
+            ' assessment metrics will be used for normalization performance assessment.'),
         color = 'blue',
         verbose = verbose
         )
@@ -219,7 +273,7 @@ assessNormalization <- function(
             })
         ### compute rle medians scores ####
         printColoredMessage(
-            message = '* compute the RLE medians scores for each assay.',
+            message = '- compute the RLE medians scores for each assay.',
             color = 'blue',
             verbose = verbose
             )
@@ -309,7 +363,7 @@ assessNormalization <- function(
             message = '* check to see all the RLE medians are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         check.out <- lapply(
             levels(assay.names),
             function(x){
@@ -1527,7 +1581,7 @@ assessNormalization <- function(
               strip.text = element_text(size = c(12)),
               panel.border = element_rect(color = "grey90"),
               axis.line.y = element_line(colour = 'white', linewidth = 1),
-              axis.text.x = element_text(size = 10, angle = 65, hjust = 1),
+              axis.text.x = element_text(size = 10, angle = 35, hjust = 1),
               axis.text.y = element_text(size = 12),
               axis.ticks.x = element_blank(),
               axis.ticks.y = element_blank()) +
