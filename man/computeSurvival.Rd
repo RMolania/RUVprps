@@ -2,7 +2,7 @@
 % Please edit documentation in R/compuetSurvival.R
 \name{computeSurvival}
 \alias{computeSurvival}
-\title{Computes variable and gene-level survival analysis.}
+\title{Compute variable and gene-level survival analysis.}
 \usage{
 computeSurvival(
   se.obj,
@@ -15,6 +15,7 @@ computeSurvival(
   return.p.value = TRUE,
   return.survival.plot = FALSE,
   plot.output = TRUE,
+  color.palette = "nrc",
   check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
@@ -49,6 +50,8 @@ meaning the expression level of each specified gene will be divided into two gro
 \item{return.survival.plot}{Logical. Indicates whether to generate survival plots. The default is set to \code{FALSE}.}
 
 \item{plot.output}{Logical. Indicates whether to plot variable-level survival analysis. The default is set to \code{TRUE}.}
+
+\item{color.palette}{TTTT}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the \code{checkSeObj}
 function will be applied. The default is set to \code{TRUE}.}
