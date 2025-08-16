@@ -22,22 +22,27 @@
 #' object that contains a categorical variable, such as experimental batches, etc.
 #' @param uv.variables Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
 #' object that contains a categorical variable, such as experimental batches, etc.
+#' @param nb.bio.clusters TTT
+#' @param bio.clustering.method TTTT
+#' @param nb.uv.clusters TTT
+#' @param uv.clustering.method TTT
+#' @param samples.to.use TTT
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
 #' default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 #' the log transformation. The default is set to 1.
+#' @param nb.cores TTT
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
 #' This means the function will apply the `checkSeObj()` function.
 #' @param remove.na Character. A character string specifying whether to eliminate missing values from `assays`, `sample.annotation`,
 #' `both`, or `none`. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
 #' samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.
-#' @param save.se.obj Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
-#' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to `TRUE`.
 #' @param override.check Logical. When set to TRUE, the function checks whether ANOVA has already been computed for the
 #' current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is
 #' set to `FALSE`.
+#' @param save.se.obj Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
+#' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays the messages of different steps of the function.
-#'
 #' @return Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
 #' variable or a list of these results.
 #'
@@ -47,7 +52,6 @@
 #' @importFrom dplyr mutate
 #' @import ggplot2
 #' @export
-
 
 computeGenesVariableTwoWayAnova <- function(
         se.obj,
