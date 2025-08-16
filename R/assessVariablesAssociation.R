@@ -29,6 +29,7 @@
 #' @param uv.variables Character or character vector. Specifies the column names of unwanted variables in
 #' the sample annotation of the SummarizedExperiment object. These `uv.variables` can be either categorical or continuous
 #' variables.
+#' @param variables TTTT
 #' @param cat.cor.coef Numeric vector. A vector of two numerical values indicating the cut-off for the correlation coefficient
 #' between each pair of categorical variables. The first value applies to each pair of 'uv.variables' and the second value
 #' applies to each pair of `bio.variables`. The correlation is computed using the `ContCoef()`function from the **DescTools**
@@ -39,6 +40,7 @@
 #' second value applies to each pair of `bio.variables`. If the correlation of a pair of variables exceeds the cut-off,
 #' the variable with the highest variance will be kept, and the other will be excluded from the remaining analysis. By
 #' default, both values are set to 0.9.
+#' @param plot.output TTT
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the function
 #' `checkSeObj()` will be applied.
 #' @param remove.na Character. Indicates whether to remove missing values from the `bio.variables` and `uv.variables`. The
@@ -54,19 +56,23 @@
 #' @importFrom utils combn
 #' @export
 
+
 assessVariablesAssociation <- function(
         se.obj,
         bio.variables,
         uv.variables,
+        variables = NULL,
         cat.cor.coef = c(0.9, 0.9),
         cont.cor.coef = c(0.9, 0.9),
+        plot.output = TRUE,
         check.se.obj = TRUE,
         remove.na = 'sample.annotation',
         verbose = TRUE
         ){
     printColoredMessage(message = '------------The assessVariablesCorrelation function starts:',
                         color = 'white',
-                        verbose = verbose)
+                        verbose = verbose
+                        )
     # Checking the function inputs ####
     if (is.null(bio.variables) & is.null(uv.variables)) {
         stop('Both "bio.variables" and "uv.variables" cannot be empty.')
@@ -116,21 +122,24 @@ assessVariablesAssociation <- function(
             remove.na = remove.na,
             verbose = verbose)
     }
-    # Unwanted variables ####
-    printColoredMessage(message = '-- Assessing the unwanted variation variables:',
-                        color = 'magenta',
-                        verbose = verbose)
-    if (length(uv.variables) > 0) {
+    # Assessing the unwanted variables ####
+    if (!is.null(uv.variables) & length(uv.variables) > 0) {
+        printColoredMessage(
+            message = '-- Assessing the unwanted variables:',
+            color = 'magenta',
+            verbose = verbose
+        )
         ## finding classes of unwanted variation variables ####
         uv.var.class <- unlist(lapply(
             uv.variables,
-            function(x) class(colData(se.obj)[[x]])))
+            function(x) class(colData(se.obj)[[x]]))
+            )
         categorical.uv <- uv.variables[uv.var.class %in% c('factor', 'character')]
         continuous.uv <- uv.variables[uv.var.class %in% c('numeric', 'integer')]
         if (length(categorical.uv) > 0) {
             if (length(categorical.uv) == 1) {
-                a <- 'is a categorical variable'
-            } else a <- 'are categorical variables'
+                a <- ' is a categorical variable'
+            } else a <- ' are categorical variables'
             printColoredMessage(
                 message = paste0(
                     'The ',
@@ -142,12 +151,12 @@ assessVariablesAssociation <- function(
         }
         if (length(continuous.uv) > 0) {
             if (length(categorical.uv) == 1) {
-                a <- 'is a continuous variable'
-            } else a <- 'are continuous variables'
+                a <- ' is a continuous variable'
+            } else a <- ' are continuous variables'
             printColoredMessage(
                 message = paste0(
                     'The ',
-                    paste0(categorical.uv, collapse = ' & '),
+                    paste0(continuous.uv, collapse = ' & '),
                     a,
                     ' of unwanted variation.'),
                 color = 'blue',
@@ -155,7 +164,7 @@ assessVariablesAssociation <- function(
         }
         # variation in unwanted variables ####
         printColoredMessage(
-            message = '-Checking the levels and variance of categorical and continuous unwanted variation variables, respectively:',
+            message = '-- Checking the levels and variance of categorical and continuous unwanted variation variables, respectively:',
             color = 'magenta',
             verbose = verbose
             )
@@ -171,12 +180,18 @@ assessVariablesAssociation <- function(
                                 x,
                                 ' contains only one group:',
                                 unique(colData(se.obj)[[x]]),
-                                'Please remove this variable from "uv.variables" argument and re-run the function.'))
+                                'Please remove this variable from "uv.variables" argument and re-run the function.')
+                             )
                     } else
                         printColoredMessage(
-                            message = paste0('The ', x, ' contains ', length(unique(colData(se.obj)[[x]])), ' groups.'),
+                            message = paste0(
+                                '- The ',
+                                x,
+                                ' contains ',
+                                length(unique(colData(se.obj)[[x]])), ' groups.'),
                             color = 'blue',
-                            verbose = verbose)
+                            verbose = verbose
+                            )
                 }
                 if (class.type %in% c('numeric', 'integer')) {
                     if (var(colData(se.obj)[[x]]) == 0) {
@@ -190,11 +205,20 @@ assessVariablesAssociation <- function(
                         )
                     } else
                         printColoredMessage(
-                            message = paste0( 'The variance of ', x,' is ', round(var(colData(se.obj)[[x]]), digits = 4), '.'),
+                            message = paste0(
+                                '- The variance of ',
+                                x,
+                                ' is ',
+                                round(var(colData(se.obj)[[x]]), digits = 4),
+                                '.'),
                             color = 'blue',
                             verbose = verbose)
                 }
             })
+
+
+
+
         # assess the correlation between categorical UV ####
         printColoredMessage(message = '-- Assessing the correlation between categoricals variables:',
                             color = 'magenta',
@@ -334,21 +358,18 @@ assessVariablesAssociation <- function(
                 message = 'There is only one source of continuous variable.',
                 color = 'blue',
                 verbose = verbose)
-    } else
-        printColoredMessage(
-            message = 'Any unwanted variables are provided.',
-            color = 'blue',
-            verbose = verbose)
+    }
 
-    # Biological variables ####
-    printColoredMessage(message = '--Assess the biological variables:',
-                        color = 'magenta',
-                        verbose = verbose)
-    if (length(bio.variables) > 0) {
+    # Assessing biological variables ####
+    if (!is.null(bio.variables) & length(bio.variables) > 0) {
+        printColoredMessage(message = '-- Assessing  the biological variables:',
+                            color = 'magenta',
+                            verbose = verbose)
         ## classes of biological variables and variation
         bio.var.class <- unlist(lapply(
             bio.variables,
-            function(x) class(colData(se.obj)[[x]])))
+            function(x) class(colData(se.obj)[[x]]))
+            )
         categorical.bio <- bio.variables[bio.var.class %in% c('factor', 'character')]
         continuous.bio <- bio.variables[bio.var.class %in% c('numeric', 'integer')]
         if (length(categorical.bio) > 0) {
@@ -569,7 +590,10 @@ assessVariablesAssociation <- function(
 
         }
     }
-    # save the results ####
+    if (!is.null(variables) & length(variables) > 1){
+
+    }
+    # Saving the results ####
     if (length(uv.variables) != 0 & length(bio.variables) != 0) {
         all.res <- list(
             se.obj = se.obj,
