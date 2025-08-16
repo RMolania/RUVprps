@@ -221,7 +221,7 @@ createHomogeneousUVGroups <- function(
             continuous.uv.groups <- apply(
                 continuous.uv.groups,
                 1,
-                paste , collapse = "..")
+                paste , collapse = "_")
         }
         ## cut ####
         if (clustering.method == 'cut') {
@@ -239,7 +239,7 @@ createHomogeneousUVGroups <- function(
             continuous.uv.groups <- apply(
                 continuous.uv.groups,
                 1,
-                paste , collapse = "..")
+                paste , collapse = "_")
         }
         ## quantile ####
         if (clustering.method == 'quantile') {
@@ -261,7 +261,7 @@ createHomogeneousUVGroups <- function(
             continuous.uv.groups <- apply(
                 continuous.uv.groups,
                 1,
-                paste , collapse = "..")
+                paste , collapse = "_")
         }
     }
 
@@ -287,7 +287,7 @@ createHomogeneousUVGroups <- function(
         all.groups <- unname(apply(
             all.groups,
             1,
-            paste , collapse = ".."
+            paste , collapse = "_"
         ))
         printColoredMessage(
             message = paste0(
@@ -332,14 +332,16 @@ createHomogeneousUVGroups <- function(
         all.groups <- apply(
             categorical.uv.data,
             1,
-            paste , collapse = "..")
+            paste , collapse = "_"
+            )
         printColoredMessage(
             message = paste0(
-                '*in totall, ',
+                '- In totall, ',
                 length(unique(all.groups)),
                 ' homogeneous groups are created:'),
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         if(isTRUE(verbose))
             print(kable(table(all.groups), caption = 'homogeneous groups'))
         all.groups <- gsub('_', '-', all.groups)

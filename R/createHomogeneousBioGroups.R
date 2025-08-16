@@ -221,14 +221,14 @@ createHomogeneousBioGroups <- function(
                         x = colData(se.obj)[[x]],
                         centers = nb.clusters,
                         iter.max = 1000)
-                    paste0(x, '_group', bio.cont.clusters$cluster)
+                    paste0(x, '.group', bio.cont.clusters$cluster)
                 })
             names(continuous.bio.groups) <- continuous.bio.var
             continuous.bio.groups <- as.data.frame(do.call(cbind, continuous.bio.groups))
             continuous.bio.groups <- apply(
                 continuous.bio.groups,
                 1,
-                paste , collapse = "..")
+                paste , collapse = "_")
         }
         ## cut ####
         if (clustering.method == 'cut') {
@@ -239,14 +239,14 @@ createHomogeneousBioGroups <- function(
                         cut(x = colData(se.obj)[[x]],
                             breaks = nb.clusters,
                             include.lowest = TRUE))
-                    paste0(x, '_group', bio.cont.clusters)
+                    paste0(x, '.group', bio.cont.clusters)
                 })
             names(continuous.bio.groups) <- continuous.bio.var
             continuous.bio.groups <- as.data.frame(do.call(cbind, continuous.bio.groups))
             continuous.bio.groups <- apply(
                 continuous.bio.groups,
                 1,
-                paste , collapse = "..")
+                paste , collapse = "_")
         }
         ## quantile ####
         if (clustering.method == 'quantile') {
@@ -261,14 +261,14 @@ createHomogeneousBioGroups <- function(
                         cut(x = colData(se.obj)[[x]],
                             breaks = quantiles,
                             include.lowest = TRUE))
-                    paste0(x, '_group', bio.cont.clusters)
+                    paste0(x, '.group', bio.cont.clusters)
                 })
             names(continuous.bio.groups) <- continuous.bio.var
             continuous.bio.groups <- as.data.frame(do.call(cbind, continuous.bio.groups))
             continuous.bio.groups <- apply(
                 continuous.bio.groups,
                 1,
-                paste , collapse = "..")
+                paste , collapse = "_")
         }
     }
     # Create all possible homogeneous groups ####
@@ -289,7 +289,7 @@ createHomogeneousBioGroups <- function(
         all.groups <- unname(apply(
             all.groups,
             1,
-            paste , collapse = ".."
+            paste , collapse = "_"
         ))
         printColoredMessage(
             message = paste0(
@@ -334,7 +334,8 @@ createHomogeneousBioGroups <- function(
         all.groups <- apply(
             categorical.bio.data,
             1,
-            paste , collapse = "..")
+            paste , collapse = "_"
+            )
         printColoredMessage(
             message = paste0(
                 '*in totall, ',
