@@ -52,16 +52,21 @@ groupContinuousVariable <- function(
             x = colData(se.obj)[[variable]],
             centers = nb.clusters,
             iter.max = 1000
-        )
-        groups <- factor(x = paste0(variable, perfix, kmeans.clusters$cluster))
+            )
+        clusters <- kmeans.clusters$cluster
+        cluster.means <- tapply(colData(se.obj)[[variable]], clusters, mean)
+        ordered.clusters <- order(cluster.means)
+        ordered.labels <- match(clusters, ordered.clusters)
+        groups <- factor(x = paste0(variable, perfix, ordered.labels))
     }
     # cut
     if (clustering.method == 'cut') {
-        cut.clusters <- as.numeric(cut(
-            x = colData(se.obj)[[variable]],
-            breaks = nb.clusters,
-            include.lowest = TRUE
-        ))
+        cut.clusters <- as.numeric(
+            cut(
+                x = colData(se.obj)[[variable]],
+                breaks = nb.clusters,
+                include.lowest = TRUE)
+            )
         groups <- factor(x = paste0(variable, perfix, cut.clusters))
     }
     # quantile
@@ -69,13 +74,13 @@ groupContinuousVariable <- function(
         quantiles <- quantile(
             x = colData(se.obj)[[variable]],
             probs = seq(0, 1, 1 / nb.clusters)
-        )
-        quantiles.clusters <- as.numeric(cut(
-            x = colData(se.obj)[[variable]],
-            breaks = quantiles,
-            include.lowest = TRUE
-        )
-        )
+            )
+        quantiles.clusters <- as.numeric(
+            cut(
+                x = colData(se.obj)[[variable]],
+                breaks = quantiles,
+                include.lowest = TRUE)
+            )
         groups <- factor(x = paste0(variable, perfix, quantiles.clusters))
     }
 
@@ -97,9 +102,8 @@ groupContinuousVariable <- function(
             axis.title.y = element_text(size = 18),
             axis.text.x = element_text(size = 14),
             axis.text.y = element_text(size = 14),
-
         )
-    if(isTRUE(plot.output)) print(p.plot)
+    if (isTRUE(plot.output)) print(p.plot)
     return(groups)
 }
 
