@@ -80,6 +80,9 @@
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
+#' @param data.input TTT
+#' @param bio.dims TTT
+#' @param sample.to.use TTT
 #'
 #' @return The SummarizedExperiment object containing PRPS data and plot results in the metadata, or a list of
 #' these results.
@@ -87,6 +90,7 @@
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom BiocNeighbors findMutualNN
 #' @importFrom batchelor cosineNorm
+#' @importFrom irlba prcomp_irlba
 #' @importFrom RANN nn2
 #' @export
 
@@ -94,6 +98,8 @@ createPrPsByMnn <- function(
         se.obj,
         assay.name,
         main.uv.variable,
+        data.input = 'pcs',
+        bio.dims = 5,
         clustering.method = 'kmeans',
         nb.clusters = 3,
         other.uv.variables = NULL,
@@ -107,6 +113,7 @@ createPrPsByMnn <- function(
         check.prps.connectedness = TRUE,
         nb.mnn = 3,
         hvg = NULL,
+        sample.to.use = 'all',
         normalization = 'CPM',
         apply.cosine.norm = FALSE,
         regress.out.variables = NULL,
@@ -223,8 +230,12 @@ createPrPsByMnn <- function(
             assay.names = assay.name,
             variables = c(main.uv.variable, other.uv.variables, regress.out.variables),
             remove.na = remove.na,
-            verbose = verbose
-        )
+            verbose = verbose)
+    }
+    # Selecting a subset of specified samples ####
+    if (is.logical(sample.to.use)){
+        initial.se.obj.a <- se.obj
+        se.obj <- se.obj[ , sample.to.use]
     }
 
     # Applying data normalization and transformation and regression ####
@@ -252,9 +263,8 @@ createPrPsByMnn <- function(
             check.se.obj = FALSE,
             save.se.obj = FALSE,
             remove.na = 'none',
-            verbose = TRUE
-            )
-    }
+            verbose = TRUE)
+        }
     ## normalization and regression ####
     if (!is.null(normalization) & !is.null(regress.out.variables)) {
         printColoredMessage(
@@ -266,7 +276,7 @@ createPrPsByMnn <- function(
                 ' variable(s) from the data before finding MNN.'),
             color = 'blue',
             verbose = verbose
-        )
+            )
         ### normalization ####
         norm.data <- applyOtherNormalizations(
             se.obj = se.obj,
@@ -278,7 +288,7 @@ createPrPsByMnn <- function(
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = FALSE
-        )
+            )
         ## regression ####
         sample.info <- as.data.frame(colData(se.obj)[regress.out.variables])
         colnames(sample.info) <- paste0('variable', 1:ncol(sample.info))
@@ -314,7 +324,7 @@ createPrPsByMnn <- function(
         } else if (isFALSE(apply.log)){
             printColoredMessage(
                 message = paste0(
-                    '- regressing out the ',
+                    '- Regressing out the ',
                     paste0(regress.out.variables, collapse = '&'),
                     ' variable(s) from the data before finding MNN.'),
                 color = 'blue',
@@ -348,10 +358,7 @@ createPrPsByMnn <- function(
             )
             if (!is.null(pseudo.count)){
                 norm.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
-            } else {
-                norm.data <- log2(assay(x = se.obj, i = assay.name))
-            }
-
+            } else norm.data <- log2(assay(x = se.obj, i = assay.name))
         } else if (isFALSE(apply.log)){
             printColoredMessage(
                 message = paste0(
@@ -363,6 +370,118 @@ createPrPsByMnn <- function(
         }
     }
 
+    # Selecting the input data ####
+    printColoredMessage(
+        message = paste0(
+            '-- Selecting the data input for MNN identification:'),
+        color = 'magenta',
+        verbose = verbose
+        )
+    ## Selecting PCS ####
+    if (data.input == 'pcs'){
+        printColoredMessage(
+            message = paste0(
+                '- Performing PCA and using',
+                ' PCs as data input for MNN identification.'),
+            color = 'blue',
+            verbose = verbose
+            )
+        ### Using highly variable genes to perform PCS ####
+        if (!is.null(hvg)){
+            printColoredMessage(
+                message = paste0(
+                    '- Performing PCA using the provided highly variable genes:'),
+                color = 'blue',
+                verbose = verbose
+                )
+            norm.data <- irlba::prcomp_irlba(
+                x = t(norm.data[hvg , ]),
+                scale = FALSE,
+                center = TRUE
+                )
+            ### Using provided number of PCs ####
+            if (!is.null(bio.dims)){
+                printColoredMessage(
+                    message = paste0(
+                        '- Selection the first ',
+                        bio.dims,
+                        ' PCs as data input for MNN identification.'),
+                    color = 'blue',
+                    verbose = verbose
+                )
+                norm.data <- as.data.frame(t(norm.data$x[ , 1:bio.dims]))
+                ### Using all PCs ####
+            } else {
+                printColoredMessage(
+                    message = paste0(
+                        '- Using all PCs as data input for MNN identification:'),
+                    color = 'blue',
+                    verbose = verbose
+                )
+                norm.data <- as.data.frame(t(norm.data$x))
+                }
+        }
+        #### Using all genes to perform PCS ####
+        if (is.null(hvg)){
+            printColoredMessage(
+                message = paste0(
+                    '- Performing PCA using all genes:'),
+                color = 'blue',
+                verbose = verbose
+            )
+            norm.data <- irlba::prcomp_irlb(
+                x = t(norm.data),
+                scale = FALSE,
+                center = TRUE
+                )
+            ##### Using provided number of PCs ####
+            if (!is.null(bio.dims)){
+                printColoredMessage(
+                    message = paste0(
+                        '- Selection the first ',
+                        bio.dims,
+                        ' PCs as data input for MNN identification.'),
+                    color = 'blue',
+                    verbose = verbose
+                )
+                norm.data <- as.data.frame(t(norm.data$x[ , 1:bio.dims]))
+                ####Using all PCs ####
+            } else {
+                printColoredMessage(
+                    message = paste0(
+                        '- Using all PCs as data input for MNN identification:'),
+                    color = 'blue',
+                    verbose = verbose
+                )
+                norm.data <- as.data.frame(t(norm.data$x))
+            }
+        }
+    }
+    #### Selecting expression data #####
+    if (data.input == 'expr'){
+        printColoredMessage(
+            message = paste0(
+                '- Using gene expression matrix as data input fot MNN correction.'),
+            color = 'blue',
+            verbose = verbose
+        )
+        if (is.null(hvg)){
+            printColoredMessage(
+                message = paste0(
+                    '- Using all genes in gene expression matrix.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+        if (!is.null(hvg)){
+            printColoredMessage(
+                message = paste0(
+                    '- Using the provided highly variable genes in gene expression matrix.'),
+                color = 'blue',
+                verbose = verbose
+            )
+        }
+    }
     # Assessing and grouping the main unwanted variable ####
     printColoredMessage(
         message = '- Assessing and grouping the main unwanted variable:',
@@ -377,9 +496,9 @@ createPrPsByMnn <- function(
             variable = main.uv.variable,
             nb.clusters = nb.clusters,
             clustering.method = clustering.method,
-            perfix = '_',
+            perfix = '.',
             verbose = verbose
-        )
+            )
         if (isTRUE(select.extreme.groups)){
             printColoredMessage(
                 message = paste0(
@@ -403,7 +522,8 @@ createPrPsByMnn <- function(
         initial.se.obj <- se.obj
         if (length(unique(initial.variable)) == 1){
             stop('To create MNN, the "main.uv.variable" must have at least two groups/levels.')
-        } else if (length(unique(initial.variable)) > 1){
+        }
+        if (length(unique(initial.variable)) > 1){
             printColoredMessage(
                 message = paste0(
                     '- The "',
@@ -483,7 +603,7 @@ createPrPsByMnn <- function(
                 verbose = verbose
             )
         }
-        covered.batches.table$groups <- ifelse(covered.batches.table$groups =='TRUE', 'selected', 'unselected')
+        covered.batches.table$groups <- ifelse(covered.batches.table$groups == 'TRUE', 'selected', 'unselected')
         covered.batches.plot <- ggplot(covered.batches.table, aes(x = Var1, y = Var2, color = groups)) +
             geom_point(size = 6) +
             geom_text(aes(label = Freq , hjust = 0.5, vjust = 0.5), color = 'black') +
@@ -1084,40 +1204,34 @@ createPrPsByMnn <- function(
                         '" and "' ,
                         pairs.batch[2 , y],
                         '" subgroups."'),
-                    color = 'orange',
+                    color = 'blue',
                     verbose = verbose
-                )
+                    )
                 ## Obtaining sample annotation ####
                 sample.annot.a <- sample.annotation[sample.annotation[[main.uv.variable]] == pairs.batch[1 , y] , , drop = FALSE]
                 sample.annot.b <- sample.annotation[sample.annotation[[main.uv.variable]] == pairs.batch[2 , y] , , drop = FALSE]
 
                 ## Using highly variable genes ####
-                if (is.null(hvg)){
-                    printColoredMessage(
-                        message = '- highly variable genes are not specified, then all genes will be used.',
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    data.a <- norm.data[ , row.names(sample.annot.a)]
-                    data.b <- norm.data[ , row.names(sample.annot.b)]
+                if (data.input == 'pcs'){
+                    data.a <- norm.data[ , row.names(sample.annot.a), drop = FALSE]
+                    data.b <- norm.data[ , row.names(sample.annot.b), drop = FALSE]
                 }
-                if (!is.null(hvg)){
-                    printColoredMessage(
-                        message = '- using the specified highly variable genes.',
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    data.a <- norm.data[hvg , row.names(sample.annot.a)]
-                    data.b <- norm.data[hvg , row.names(sample.annot.b)]
+                if (!is.null(hvg) & data.input == 'expr'){
+                    data.a <- norm.data[hvg , row.names(sample.annot.a), drop = FALSE]
+                    data.b <- norm.data[hvg , row.names(sample.annot.b), drop = FALSE]
+                }
+                if (is.null(hvg) & data.input == 'expr'){
+                    data.a <- norm.data[ , row.names(sample.annot.a), drop = FALSE]
+                    data.b <- norm.data[ , row.names(sample.annot.b), drop = FALSE]
                 }
 
                 ## Applying cosine normalization ####
                 if (isTRUE(apply.cosine.norm)){
                     printColoredMessage(
-                        message = '- Applying cosine normalization on the data:',
+                        message = '- Applying cosine normalization on the data.',
                         color = 'blue',
                         verbose = verbose
-                    )
+                        )
                     data.a <- cosineNorm(x = data.a, mode = 'matrix')
                     data.b <- cosineNorm(x = data.b, mode = 'matrix')
                 }
@@ -1142,7 +1256,7 @@ createPrPsByMnn <- function(
                     )
                 ## obtaining knn index ####
                 printColoredMessage(
-                    message = ' -- obtaining the knn indexs.',
+                    message = ' - Obtaining the knn indexs.',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -1152,7 +1266,7 @@ createPrPsByMnn <- function(
 
                 ## Obtaining the distance ####
                 printColoredMessage(
-                    message = '-- obtaining the distances.',
+                    message = '- Obtaining the distances.',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -1180,7 +1294,7 @@ createPrPsByMnn <- function(
                     k = min.sample.for.ps
                     )
                 printColoredMessage(
-                    message = '-- Obtaining the knn indexs.',
+                    message = '- Obtaining the knn indexs.',
                     color = 'blue',
                     verbose = verbose
                     )
@@ -1218,7 +1332,7 @@ createPrPsByMnn <- function(
                     )
                 printColoredMessage(
                     message = paste0(
-                        '** ',
+                        '- Totall number of ',
                         length(all.mnn$first),
                         ' MNN are found.'),
                     color = 'blue',
@@ -1240,8 +1354,8 @@ createPrPsByMnn <- function(
                             set.b = sample.to.ave.b
                             )
                         samples.ids <- data.frame(
-                            set.a = row.names(sample.annot.a)[sample.to.ave.a],
-                            set.b = row.names(sample.annot.b)[sample.to.ave.b]
+                            set.a = row.names(sample.annot.a)[unname(sample.to.ave.a)],
+                            set.b = row.names(sample.annot.b)[unname(sample.to.ave.b)]
                             )
                         avre.dist.a <- knn.data.b.a.distance[all.mnn$first[z] , 'aver.dist' ]
                         avre.dist.b <- knn.data.a.b.distance[all.mnn$second[z] , 'aver.dist' ]
@@ -1252,16 +1366,50 @@ createPrPsByMnn <- function(
                             )
                     })
                 names(all.prps.index) <- paste0('prps.set', 1:length(all.mnn$first))
+                keep.prps.unique <- sapply(
+                    1:length(all.prps.index),
+                    function(x){
+                        target.set.a <- c(
+                            all.prps.index[[x]]$samples.ids$set.a,
+                            all.prps.index[[x]]$samples.ids$set.b
+                            )
+                        m <- sapply(
+                            1:length(all.prps.index),
+                            function(y){
+                                target.set.b <- c(
+                                    all.prps.index[[y]]$samples.ids$set.a,
+                                    all.prps.index[[y]]$samples.ids$set.b
+                                )
+                                length(intersect(x = target.set.b, target.set.a))
+                            })
+                        if (sum(m == 6)>1){
+                            rep.set <- which(m == 6)[!which(m == 6) %in% x]
+                            dist.diff <- sapply(
+                                c(x, rep.set),
+                                function(s){
+                                    all.prps.index[[s]]$aver.dist
+                                })
+                            c(x, rep.set)[which(dist.diff == min(dist.diff))]
+                        } else x
+                    })
+                keep.prps.unique <- unique(keep.prps.unique)
+                all.prps.index <- lapply(
+                    keep.prps.unique,
+                    function(x){
+                        all.prps.index[[x]]
+                    })
+                names(all.prps.index) <- paste0('prps.set', keep.prps.unique)
+
                 ## Filtering the number of PRPS sets ####
                 if (isTRUE(filter.prps.sets)){
                     printColoredMessage(
                         message = '- Filtering the number of PRPS sets.',
                         color = 'blue',
                         verbose = verbose
-                    )
+                        )
                     if (length(all.prps.index) >=  max.prps.sets){
                         printColoredMessage(
-                            message = '* The number of the PRPS set is larger than the specified "max.prps.sets", filtering PRPS sets.',
+                            message = '- The number of the PRPS set is larger than the specified "max.prps.sets", filtering PRPS sets.',
                             color = 'blue',
                             verbose = verbose
                             )
@@ -1294,7 +1442,10 @@ createPrPsByMnn <- function(
                 data.b <- prps.data[ , colnames(data.b)]
                 if (isTRUE(apply.log)){
                     printColoredMessage(
-                        message = '-- Applying log transformation on the data before averaging samples to create PS. ',
+                        message = paste0(
+                            '- Applying log transformation on the "',
+                            assay.name,
+                            '" data before averaging samples to create PS.'),
                         color = 'blue',
                         verbose = verbose
                     )
@@ -1302,7 +1453,10 @@ createPrPsByMnn <- function(
                     data.b <- log2(data.b + pseudo.count)
                 } else {
                     printColoredMessage(
-                        message = '-- the data will be used without any transformation for averaging samples to create PS. ',
+                        message = paste0(
+                        '- The "',
+                        assay.name,
+                        '" data will be used without any transformation before averaging samples to create PS.'),
                         color = 'blue',
                         verbose = verbose
                     )
@@ -1323,7 +1477,7 @@ createPrPsByMnn <- function(
                     pairs.batch[2 , y],
                     '||',
                     rep(1:c(ncol(all.prps.data)/2), each = 2)
-                )
+                    )
                 all.prps.sample.annot <- lapply(
                     1:length(all.prps.index),
                     function(f){
@@ -1332,15 +1486,15 @@ createPrPsByMnn <- function(
                 names(all.prps.sample.annot) <- rep(
                     paste0(pairs.batch[1 , y], '_' , pairs.batch[2 , y]),
                     length(all.prps.sample.annot)
-                )
+                    )
                 list(
                     all.prps.data = all.prps.data,
                     all.prps.sample.annot = all.prps.sample.annot
-                )
+                    )
             })
         ### Putting all the PRPS data together ####
         printColoredMessage(
-            message = '-- Putting all the PRPS data togather: ',
+            message = '- Putting all the PRPS data togather: ',
             color = 'blue',
             verbose = verbose
             )
@@ -1368,7 +1522,7 @@ createPrPsByMnn <- function(
                 sample.annot <- do.call(rbind, sample.annot)
                 sample.annot$group <- paste0(
                     unique(names(all.prps.data[[x]]$all.prps.sample.annot)),
-                    rep(paste0('||set', 1:possible.max.prps.sets), each = min.sample.for.ps)
+                    rep(paste0('-PRPS', 1:possible.max.prps.sets), each = min.sample.for.ps)
                     )
                 sample.annot <- sample.annot %>%
                     pivot_longer(-c(group), values_to = 'var', names_to = 'rep')
@@ -1380,7 +1534,9 @@ createPrPsByMnn <- function(
                 sample.annot
             })
         all.prps.sample.annot <- do.call(rbind, all.prps.sample.annot)
-        all.prps.sample.annot$rep <- ifelse(all.prps.sample.annot$rep == 'set.a', 'group1', 'group2')
+        all.prps.sample.annot$rep <- ifelse(
+            all.prps.sample.annot$rep == 'set.a', 'Set1', 'Set2'
+            )
         all.prps.sample.annot$new.group <- 'PRPS sets'
         all.uv <- data.frame(
             group = rep(main.uv.variable, ncol(initial.se.obj)),
@@ -1389,23 +1545,37 @@ createPrPsByMnn <- function(
             var.obj = initial.variable2,
             new.group = rep('UV', ncol(initial.se.obj))
             )
-        new <- rbind(all.uv , all.prps.sample.annot)
-        new$new.group <- factor(x = new$new.group, levels = c('UV', 'PRPS sets'))
-        new$rep <- factor(
-            x = new$rep,
-            levels = c('group1', 'group2', unique(as.character(initial.se.obj[[main.uv.variable]])))
+        all.uv <- rbind(all.uv , all.prps.sample.annot)
+        all.uv$new.group <- factor(
+            x = all.uv$new.group,
+            levels = c('UV', 'PRPS sets')
             )
+        all.uv$rep <- factor(
+            x = all.uv$rep,
+            levels = c('Set1', 'Set2', unique(as.character(initial.se.obj[[main.uv.variable]])))
+            )
+        if (is.numeric(initial.variable)){
+            prps.sets <- all.uv$group[which(!all.uv$group %in% main.uv.variable)]
+            for(i in prps.sets){
+                temp.data <- droplevels(all.uv[all.uv$group == i , , drop = FALSE])
+                g1 <- mean(temp.data$var.obj[temp.data$rep == 'Set1'])
+                g2 <- mean(temp.data$var.obj[temp.data$rep == 'Set2'])
+                if (g1 > g2 ){
+                    all.uv$rep[all.uv$group == i] <- ifelse (temp.data$rep == 'Set1', 'Set2', 'Set1')
+                }
+            }
+        }
         if (is.numeric(se.obj[[main.uv.variable]])){
-            prps.map.plot <- ggplot(data = new, aes(x = var.obj , y = group , color = rep)) +
+            prps.map.plot <- ggplot(data = all.uv, aes(x = var.obj , y = group , color = rep)) +
                 geom_boxplot() +
                 geom_point() +
                 scale_color_manual(
-                    values = c('darkgreen', 'tomato', viridis(n = nb.clusters)),
+                    values = c('orange', 'navy', viridis(n = nb.clusters)),
                     name = 'Groups') +
                 facet_grid(new.group~., scales = 'free', space = 'free') +
                 #scale_x_discrete(expand = c(0, 0.5)) +
                 xlab(main.uv.variable) +
-                ylab('Homogeneous groups') +
+                ylab('') +
                 xlim(c(
                     min(se.obj[[main.uv.variable]]),
                     max(se.obj[[main.uv.variable]])
@@ -1421,7 +1591,7 @@ createPrPsByMnn <- function(
                     axis.title.x = element_text(size = 16),
                     strip.text = element_text(size = 20),
                     axis.title.y = element_text(size = 16),
-                    axis.text.x = element_text(size = 12),
+                    axis.text.x = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
                     axis.text.y = element_text(size = 12),
                     legend.position = 'right') +
                 guides(color = guide_legend(title = "Groups"))
@@ -1435,7 +1605,7 @@ createPrPsByMnn <- function(
                 facet_grid(new.group~., scales = 'free', space = 'free') +
                 scale_x_discrete(expand = c(0, 0.5)) +
                 xlab(main.uv.variable) +
-                ylab('Homogeneous groups') +
+                ylab('') +
                 theme_bw() +
                 theme(
                     legend.key = element_blank(),
@@ -1466,7 +1636,13 @@ createPrPsByMnn <- function(
     # Saving the results ####
     ## Selecting names for the PRPS data ####
     if (is.null(prps.sets.name))
-        prps.sets.name <- paste0(main.uv.variable, '|', 'mnn', '|', assay.name)
+        prps.sets.name <- paste0(
+            main.uv.variable,
+            '|',
+            'mnn',
+            '|',
+            assay.name
+            )
     if (is.null(prps.group.name))
         prps.group.name <- main.uv.variable
     printColoredMessage(
@@ -1474,6 +1650,9 @@ createPrPsByMnn <- function(
         color = 'magenta',
         verbose = verbose
         )
+    se.obj <- initial.se.obj
+    # se.obj <- initial.se.obj.a
+    se.obj[[main.uv.variable]] <- initial.variable2
     ## Saving the PRPS data in the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)) {
         printColoredMessage(
@@ -1516,4 +1695,97 @@ createPrPsByMnn <- function(
         return(list(prps.data = all.prps.expr.data, prps.map.plot = prps.map.plot))
     }
 }
+
+
+# library(DESeq2)
+# library(ggplot2)
+# library(dplyr)
+# library(tibble)
+# library(tidyr)
+# library(purrr)
+#
+# expr_matrix <- assay(x = read.se.obj, 'RawCount')
+# batch_info <- colData(read.se.obj)[ , 'Time.interval', drop = FALSE]
+# colnames(batch_info) <- 'batch'
+# dds <- DESeqDataSetFromMatrix(countData = expr_matrix,
+#                               colData = batch_info,
+#                               design = ~1)
+# vst_data <- assay(vst(dds))
+# pca_res <- prcomp(t(vst_data), scale. = TRUE)
+# pca_coords <- as.data.frame(pca_res$x[, 1:10])  # use top 10 PCs
+# pca_coords$sample <- rownames(pca_coords)
+# pca_coords$batch <- batch_info$batch[match(pca_coords$sample, rownames(batch_info))]
+# batch1_coords <- pca_coords %>% filter(batch == "Batch1")
+# batch2_coords <- pca_coords %>% filter(batch == "Batch2")
+#
+# find_best_triplet <- function(data) {
+#     combos <- combn(data$sample, 3, simplify = FALSE)
+#     best_combo <- NULL
+#     best_total_dist <- Inf
+#     for (triplet in combos) {
+#         sub_coords <- data %>% filter(sample %in% triplet) %>% select(starts_with("PC"))
+#         dist_mat <- as.matrix(dist(sub_coords))
+#         total_dist <- sum(dist_mat[upper.tri(dist_mat)])
+#
+#         if (total_dist < best_total_dist) {
+#             best_total_dist <- total_dist
+#             best_combo <- triplet
+#         }
+#     }
+#     return(list(samples = best_combo, dist = best_total_dist))
+# }
+# find_best_triplet <- function(data) {
+#   combos <- combn(data$sample, 3, simplify = FALSE)
+#
+#   best_combo <- NULL
+#   best_total_dist <- Inf
+#
+#   for (triplet in combos) {
+#     sub_coords <- data %>% filter(sample %in% triplet) %>% select(starts_with("PC"))
+#     dist_mat <- as.matrix(dist(sub_coords))
+#     total_dist <- sum(dist_mat[upper.tri(dist_mat)])
+#
+#     if (total_dist < best_total_dist) {
+#       best_total_dist <- total_dist
+#       best_combo <- triplet
+#     }
+#   }
+#
+#   return(list(samples = best_combo, dist = best_total_dist))
+# }
+#
+# triplet1 <- find_best_triplet(batch1_coords)
+# triplet2 <- find_best_triplet(batch2_coords)
+#
+# find_triplet_centroid <- function(data, samples) {
+#     data %>%
+#         filter(sample %in% samples) %>%
+#         select(starts_with("PC")) %>%
+#         colMeans()
+# }
+# triplets1 <- combn(batch1_coords$sample, 3, simplify = FALSE)
+# triplets2 <- combn(batch2_coords$sample, 3, simplify = FALSE)
+# best_pair <- NULL
+# best_cross_dist <- Inf
+#
+# for (trip1 in triplets1) {
+#     centroid1 <- find_triplet_centroid(batch1_coords, trip1)
+#
+#     for (trip2 in triplets2) {
+#         centroid2 <- find_triplet_centroid(batch2_coords, trip2)
+#         dist <- sqrt(sum((centroid1 - centroid2)^2))
+#
+#         if (dist < best_cross_dist) {
+#             best_cross_dist <- dist
+#             best_pair <- list(batch1 = trip1, batch2 = trip2)
+#         }
+#     }
+# }
+#
+#
+#
+# cat("Best batch 1 triplet:", paste(best_pair$batch1, collapse = ", "), "\n")
+# cat("Best batch 2 triplet:", paste(best_pair$batch2, collapse = ", "), "\n")
+# cat("Cross-centroid distance:", best_cross_dist, "\n")
+
 
