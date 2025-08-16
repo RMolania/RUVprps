@@ -1,4 +1,4 @@
-#' Adds pre-selected sets of NCGs to SummarizedExperiment object.
+#' Add pre-selected sets of NCGs to SummarizedExperiment object.
 #'
 #' @author Ramyar Molania
 #'
@@ -23,9 +23,6 @@
 #' @return A SummarizedExperiment object with a metadata that contains the NCGs.
 #'
 #' @importFrom SummarizedExperiment colData
-#' @importFrom Matrix rowSums colSums
-#' @importFrom BiocSingular bsparam
-#' @importFrom ruv replicate.matrix
 #' @export
 
 addNCGs <- function(
@@ -65,7 +62,7 @@ addNCGs <- function(
         }
         ncg <- intersect(unique(ncg), row.names(se.obj))
         if (length(ncg) == 0){
-            stop('None of the genes specified in the "ncg" can be found in the SummarizedExperiment object. ')
+            stop('None of the genes specified in the "ncg" can be found in the SummarizedExperiment object.')
         }
         printColoredMessage(
             message = paste0(
@@ -97,7 +94,7 @@ addNCGs <- function(
     if (sum(ncg.log) < .01*nrow(se.obj)){
         printColoredMessage(
             message = '- The number of genes provided may be too few for RUV-III normalization.',
-            color = 'blue',
+            color = 'red',
             verbose = verbose
         )
     }
@@ -128,11 +125,11 @@ addNCGs <- function(
         message = 'The NCGs are saved to metadata of the SummarizedExperiment object.',
         color = 'blue',
         verbose = verbose
-    )
+        )
     printColoredMessage(
         message = '------------The addNCGs finished',
         color = 'white',
         verbose = verbose
-    )
+        )
     return(se.obj)
 }
