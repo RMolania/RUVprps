@@ -102,7 +102,7 @@ computeDGE <- function(
         if (length(unique(se.obj[[variable]])) < 2) {
             stop('The "variable" must have at least two levels (factors).')
         }
-        if (is.character(method) | length(method) > 1){
+        if (!is.character(method) | length(method) > 1){
             stop('The method must be a character.')
         }
         if (!method %in% c('limma', 'wilcoxon')){
@@ -143,6 +143,8 @@ computeDGE <- function(
                 verbose = verbose
                 )
         }
+        initial.variable <- se.obj[[variable]]
+        se.obj[[variable]] <- gsub(' ', '.', initial.variable)
 
         # Data log transformation ####
         if (isTRUE(apply.log)){
@@ -270,6 +272,7 @@ computeDGE <- function(
         }
 
         # Saving the results ####
+        se.obj[[variable]] <- initial.variable
         printColoredMessage(
             message = '-- Saving the DGE results:',
             color = 'magenta',
