@@ -5,7 +5,7 @@
 #' @param gene.type.col.name TTTT
 #' @param remove.duplicates.ids TTTT
 #' @param ids.col.name TTTT
-#' @param chaneg.row.names TTTT
+#' @param change.row.names TTTT
 #' @param new.row.names TTTT
 #'
 #' @importFrom SummarizedExperiment assays
