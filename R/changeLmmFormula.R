@@ -19,11 +19,10 @@ changeLmmFormula <- function(
         return(formula.chara)
     }
     if (out.put == 'sub.formula'){
-        terms <- unlist(strsplit(deparse(form), "\\s*\\+\\s*"))
+        terms <- unlist(strsplit(paste(deparse(form), collapse = ""), "\\s*\\+\\s*"))
         terms <- gsub("~", "", terms)
         keep.terms <- terms[sapply(terms, function(term) any(sapply(sub.set, grepl, term)))]
         new.form <- paste("~", paste(keep.terms, collapse = " + "))
         return(new.form)
     }
 }
-
