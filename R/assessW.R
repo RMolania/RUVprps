@@ -51,6 +51,9 @@ assessW <- function(
         verbose = TRUE
         ){
     # Checking the function inputs ####
+    if (isTRUE(compare.w)){
+        variables <- NULL
+    }
     if (!is.null(variables)){
         if (!is.character(variables)){
             stop('The "variables" must be a charachter or a vector of charachters.')
@@ -126,13 +129,27 @@ assessW <- function(
         all.w <- lapply(
             data.names,
             function(x) se.obj@metadata$RUVIII[['W']][[x]]
-        )
+            )
+
+        min.k <- unlist(lapply(
+            data.names,
+            function(x){
+                split.name <- strsplit(x, split = '_')
+                char.len <- length(split.name[[1]])
+                split.name[[1]][char.len]
+            }))
+        min.k <- min(as.numeric(min.k))
         data.names <- unlist(lapply(
             data.names,
             function(x){
                 split.name <- strsplit(x, split = '_')
                 char.len <- length(split.name[[1]])
-                paste(split.name[[1]][char.len-1], split.name[[1]][char.len], sep = ':')
+                if (split.name[[1]][char.len] == min.k){
+                    paste(split.name[[1]][char.len-1], split.name[[1]][char.len], sep = '_')
+                } else {
+                    paste0(split.name[[1]][char.len-1], "_", min.k, ":" ,split.name[[1]][char.len])
+                }
+
             }))
         names(all.w) <- data.names
 
@@ -151,7 +168,7 @@ assessW <- function(
         cont.vars <- names(class.all.vars[class.all.vars %in% c('numeric', 'integer')])
 
         # Performing linear regression analysis ####
-        if (length(cat.vars) > 1){
+        if (length(cont.vars) > 0){
             cont.vars.r.squareds <- lapply(
                 names(all.w),
                 function(x) {
@@ -170,7 +187,7 @@ assessW <- function(
         } else cont.vars.r.squareds <- NULL
 
         # Performing vector correlation analysis ####
-        if (length(cont.vars) > 1){
+        if (length(cat.vars) > 0){
             cat.vars.vec.corr <- lapply(
                 names(all.w),
                 function(x) {
@@ -195,10 +212,16 @@ assessW <- function(
             round(digits = 3)
         all.a <- mutate(.data = all, var = row.names(all)) %>%
             pivot_longer(cols = -var, values_to = 'corr', names_to = 'data') %>%
-            mutate(data = factor(data, levels = gsub(':', '.', names(all.w))) )
-        p.w.1 <- ggplot(data = all.a, aes(x = data, y = corr, color = var)) +
-            geom_point(size = 3) +
-            xlab('W') +
+            mutate(data =  gsub('\\.', ':', data)) %>%
+            mutate(data = factor(data, levels = names(all.w)))
+
+        p.w.1 <- ggplot(data = all.a, aes(x = data, y = corr, group = var)) +
+            geom_line(aes(color = var), linewidth = 1) +
+            geom_point(aes(color = var), size = 3) +
+            scale_color_manual(
+                values = selectColors(nb.color = 1:length(all.vars), group = "pan.selection.a"),
+                name = 'Variables') +
+            xlab('W (estimated unwanted factors)') +
             ylab('Correlations') +
             ylim(c(0,1)) +
             theme(
@@ -207,10 +230,12 @@ assessW <- function(
                 axis.title.x = element_text(size = 18),
                 axis.title.y = element_text(size = 18),
                 plot.title = element_text(size = 15),
-                axis.text.x = element_text(size = 12, angle = 25, hjust = 1),
-                axis.text.y = element_text(size = 12)
-                ) +
-            guides(color = guide_legend(title = "Variables"))
+                axis.text.x = element_text(size = 13, angle = 25, hjust = 1),
+                axis.text.y = element_text(size = 13),
+                legend.title = element_text(size = 18),
+                legend.text  = element_text(size = 14),
+                legend.key.size = unit(1.5, "lines")
+                )
         all <- mutate(.data = all, var = row.names(all)) %>%
             pivot_longer(cols = -var, values_to = 'corr', names_to = 'data') %>%
             mutate(groups = 'unwanted') %>%
@@ -219,11 +244,12 @@ assessW <- function(
             group_by(data, groups) %>%
             summarise(corr = mean(corr)) %>%
             summarise(assess = corr[groups == 'wanted']/2 + corr[groups == 'unwanted']/2) %>%
-            mutate(data = factor(data, levels = gsub(':', '.', names(all.w))) )
+            mutate(data =  gsub('\\.', ':', data)) %>%
+            mutate(data = factor(data, levels = names(all.w)))
         p.w.2 <- ggplot(all, aes(x = data, y = assess)) +
             geom_bar(stat = 'identity', fill = 'grey') +
-            xlab('W') +
-            ylab('Correlations') +
+            xlab('W (estimated unwanted factors)') +
+            ylab('Summarized correlations') +
             ylim(c(0,1)) +
             theme(
                 panel.background = element_blank(),
@@ -231,8 +257,8 @@ assessW <- function(
                 axis.title.x = element_text(size = 18),
                 axis.title.y = element_text(size = 18),
                 plot.title = element_text(size = 15),
-                axis.text.x = element_text(size = 12, angle = 25, hjust = 1),
-                axis.text.y = element_text(size = 12)
+                axis.text.x = element_text(size = 13, angle = 25, hjust = 1),
+                axis.text.y = element_text(size = 13)
                 )
         p.w <- ggarrange(p.w.1, p.w.2 , ncol = 2)
         if (isTRUE(plot.output)) print(p.w)
@@ -267,7 +293,7 @@ assessW <- function(
         cont.vars <- names(class.all.vars[class.all.vars %in% c('numeric', 'integer')])
 
         # Peforming linear regression ####
-        if (length(cat.vars) > 1){
+        if (length(cont.vars) > 0){
             cont.vars.r.squareds <- lapply(
                 names(all.w),
                 function(x) {
@@ -285,8 +311,8 @@ assessW <- function(
             cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
         } else cont.vars.r.squareds <- NULL
 
-        # Peforming vector correlation ####
-        if (length(cont.vars) > 1){
+        # Performing vector correlation analysis ####
+        if (length(cat.vars) > 0){
             cat.vars.vec.corr <- lapply(
                 names(all.w),
                 function(x) {
@@ -304,7 +330,8 @@ assessW <- function(
                 })
             names(cat.vars.vec.corr) <- names(all.w)
             cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
-        } else cont.vars <- NULL
+        } else cat.vars.vec.corr <- NULL
+
         # Putting all together ####
         all.corrs <- bind_rows(cont.vars.r.squareds, cat.vars.vec.corr) %>%
             round(digits = 3)
