@@ -64,7 +64,7 @@ plotGenesVariableCorrelation <- function(
         ))
     }
 
-    # Check the assays ####
+    # Checking the assays ####
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else  assay.names <- factor(x = assay.names , levels = assay.names)
@@ -225,7 +225,7 @@ plotGenesVariableCorrelation <- function(
             pvalues <- all.corr.coeff.pvalues[[x]]
             p.pvalues <- ggplot(pvalues, aes(x = pvalues[,1])) +
                 geom_histogram(binwidth = 0.1) +
-                ggtitle(variable) +
+                ggtitle(x) +
                 xlab('p-values') +
                 ylab(expression('Frequency'~10^3)) +
                 scale_y_continuous(labels = function(x) format(x /1000, scientific = F), limits = c(0, ylim.pvalue)) +
@@ -262,13 +262,13 @@ plotGenesVariableCorrelation <- function(
                         p = overall.pvalue.hist.plot[[x]],
                         top = text_grob(
                             label = "Correlation analysis",
-                            color = "orange",
+                            color = "black",
                             face = "bold",
                             size = 18),
                         bottom = text_grob(
                             label = paste0(
                                 'Analysis: ',
-                                'Correlation analysis between individaul gen expression an the  ',
+                                'Correlation analysis between individaul gen expression an the ',
                                 variable,
                                 ' variable.'),
                             color = "black",
