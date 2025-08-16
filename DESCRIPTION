@@ -67,7 +67,14 @@ Imports:
     S4Vectors,
     patchwork,
     batchelor,
-    biomaRt
+    biomaRt,
+    genefu,
+    ggVennDiagram,
+    irlba,
+    lsa,
+    ggsci,
+    Biobase,
+    Polychrome
 URL: https://github.com/RMolania/RUVIIIPRPS
 BugReports: https://github.com/RMolania/RUVIIIPRPS/issues
 Suggests: 
