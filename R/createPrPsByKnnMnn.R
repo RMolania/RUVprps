@@ -108,6 +108,7 @@
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. By default, it is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
+#' @param sample.to.use TTT
 #'
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom BiocNeighbors findMutualNN KmknnParam
@@ -147,6 +148,7 @@ createPrPsByKnnMnn <- function(
         pseudo.count = 1,
         mnn.bpparam = SerialParam(),
         mnn.nbparam = KmknnParam(),
+        sample.to.use = 'all',
         check.se.obj = TRUE,
         remove.na = 'both',
         plot.output = TRUE,
@@ -273,6 +275,12 @@ createPrPsByKnnMnn <- function(
             verbose = verbose
         )
     }
+    #
+    if (is.logical(sample.to.use)){
+        initial.se.obj.a <- se.obj
+        se.obj <- se.obj[ , sample.to.use]
+    }
+
     # Assessing and grouping the main unwanted variable ####
     printColoredMessage(
         message = '- Assessing and grouping the unwanted variable:',
@@ -1395,6 +1403,8 @@ createPrPsByKnnMnn <- function(
     printColoredMessage(message = '-- Saving the PRPS data',
                         color = 'magenta',
                         verbose = verbose)
+    se.obj <- initial.se.obj
+    # se.obj <- initial.se.obj.a
     ## Saving the PRPS data in the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)) {
         printColoredMessage(
@@ -1438,3 +1448,6 @@ createPrPsByKnnMnn <- function(
         return(list(prps.data = prps.data, mnn.data = all.mnn, knn.data = all.knn, prps.map.plot = prps.map.plot))
     }
 }
+
+
+
