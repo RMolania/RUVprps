@@ -126,7 +126,6 @@ computeGenesVariableAnova <- function(
             if (pseudo.count < 0 )
                 stop('The value of "pseudo.count" cannot be negative.')
         }
-
         if (!is.logical(plot.top.genes)){
             stop('The "plot.top.genes" must be logical (TRUE or FALSE)')
         }
@@ -175,7 +174,7 @@ computeGenesVariableAnova <- function(
         }
         if (isFALSE(apply.log)){
             printColoredMessage(
-                message = '-- The specified assay(s) will be used for ANOVA, without applying log transformation.',
+                message = '-- The specified dataset(s) will be used for ANOVA, without applying log transformation.',
                 color = 'blue',
                 verbose = verbose
             )
@@ -193,7 +192,7 @@ computeGenesVariableAnova <- function(
                 '" variable.'),
             color = 'magenta',
             verbose = verbose
-        )
+            )
         all.aov <- lapply(
             levels(assay.names),
             function(x) {
@@ -206,11 +205,11 @@ computeGenesVariableAnova <- function(
                             '" data.'),
                         color = 'blue',
                         verbose = verbose
-                    )
+                        )
                     anova.genes.var <- row_oneway_equalvar(
                         x = all.assays[[x]],
                         g = se.obj@colData[[variable]]
-                    )
+                        )
                 } else if (method == 'welch') {
                     printColoredMessage(
                         message = paste0(
@@ -218,26 +217,27 @@ computeGenesVariableAnova <- function(
                             x,
                             '" data.'),
                         color = 'blue',
-                        verbose = verbose)
+                        verbose = verbose
+                        )
                     anova.genes.var <- row_oneway_welch(
                         x =  all.assays[[x]],
                         g = se.obj@colData[[variable]]
-                    )
+                        )
                 }
                 row.names(anova.genes.var) <- row.names(se.obj)
 
                 # Rounding the obtained anova statistic  to 2 digits ####
                 if (isTRUE(apply.round)) {
                     printColoredMessage(
-                        message = '-- Rounding the obtained anova statistic to 2 digits',
+                        message = '-- Rounding the obtained anova statistics to 2 digits',
                         color = 'magenta',
                         verbose = verbose
-                    )
+                        )
                     anova.genes.var <- cbind(
                         round(anova.genes.var[, 1:9], digits = 3),
-                        anova.genes.var[, 10, drop = FALSE])
+                        anova.genes.var[, 10, drop = FALSE]
+                        )
                 }
-                pvalue <- NULL
                 anova.genes.var <- anova.genes.var[ , c('pvalue', 'statistic')]
                 # Plotting top genes ####
                 if (isTRUE(plot.top.genes)) {
@@ -249,7 +249,8 @@ computeGenesVariableAnova <- function(
                         data = p.high,
                         cols =  -var,
                         names_to = 'genes',
-                        values_to = 'expr')
+                        values_to = 'expr'
+                        )
                     p.high <- ggplot(p.high, aes(x = var, y = expr)) +
                         geom_boxplot() +
                         ylab(expression(Log[2] ~ 'gene expression')) +
@@ -300,7 +301,7 @@ computeGenesVariableAnova <- function(
                 variables = variable,
                 file.name = 'fstatistics.pvalues',
                 results.data = all.aov
-            )
+                )
             printColoredMessage(
                 message = paste0(
                     '- The ANOVA results of all the assays are saved to the ',
@@ -308,10 +309,12 @@ computeGenesVariableAnova <- function(
                     method,
                     ' in the SummarizedExperiment object.'),
                 color = 'blue',
-                verbose = verbose)
-            printColoredMessage(message = '------------The computeGenesVariableAnova function finished.',
-                                color = 'white',
-                                verbose = verbose
+                verbose = verbose
+                )
+            printColoredMessage(
+                message = '------------The computeGenesVariableAnova function finished.',
+                color = 'white',
+                verbose = verbose
             )
             return(se.obj = se.obj)
         }
@@ -320,18 +323,21 @@ computeGenesVariableAnova <- function(
             printColoredMessage(
                 message = '- The ANOVA results for indiviaul assay are saved as list.',
                 color = 'blue',
-                verbose = verbose)
-            printColoredMessage(message = '------------The computeGenesVariableAnova function finished.',
-                                color = 'white',
-                                verbose = verbose
-                                )
+                verbose = verbose
+                )
+            printColoredMessage(
+                message = '------------The computeGenesVariableAnova function finished.',
+                color = 'white',
+                verbose = verbose
+                )
             return(genes.var.anova = all.aov)
         }
     } else {
-        printColoredMessage(message = '------------The computeGenesVariableAnova function finished.',
-                            color = 'white',
-                            verbose = verbose
-        )
+        printColoredMessage(
+            message = '------------The computeGenesVariableAnova function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj = se.obj)
     }
 }
