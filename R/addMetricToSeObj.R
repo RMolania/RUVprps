@@ -1,4 +1,4 @@
-#' Adds results and plots of a metric to SummarizedExperiment object.
+#' Add results and plots of a metric to SummarizedExperiment object.
 
 #' @author Ramyar Molania
 
