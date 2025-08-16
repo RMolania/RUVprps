@@ -43,7 +43,7 @@ computeGenesVarianceComposition <- function(
         form,
         adjust.data = FALSE,
         adjustment.form = NULL,
-        adjustment.method = 'lmm',
+        adjustment.method = 'lm',
         samples.to.use = 'all',
         apply.log = TRUE,
         pseudo.count = 1,
@@ -138,8 +138,8 @@ computeGenesVarianceComposition <- function(
     # Assessing the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)) {
         variables <- c(
-            convertFormulaToCharacter(form),
-            convertFormulaToCharacter(adjustment.form)
+            changeLmmFormula(form),
+            changeLmmFormula(adjustment.form)
             )
         se.obj <- checkSeObj(
             se.obj = se.obj,
@@ -188,9 +188,9 @@ computeGenesVarianceComposition <- function(
         function(x){
             printColoredMessage(
                 message = paste0(
-                    '- Performing linear mixed model on the ',
+                    '- Performing linear mixed model on the "',
                     x,
-                    ' data.'),
+                    '" data.'),
                 color = 'blue',
                 verbose = verbose
                 )
@@ -208,11 +208,11 @@ computeGenesVarianceComposition <- function(
                         paste0(
                             gsub("\\(1 \\| ([^)]+)\\)", "\\1", adjustment.form),
                             collapse = '')
-                    )
+                        )
                     lm.fit <- limma::lmFit(
                         object = all.assays[[x]],
                         design =  model.matrix(adjustment.form, sample.info)
-                    )
+                        )
                     res.data <- residuals(object = lm.fit, all.assays[[x]])
                     printColoredMessage(
                         message = paste0(
@@ -221,12 +221,12 @@ computeGenesVarianceComposition <- function(
                             ' to obtain gene level variance composition.'),
                         color = 'blue',
                         verbose = verbose
-                    )
+                        )
                     gene.var.decomposition <- fitExtractVarPartModel(
                         exprObj = res.data,
                         formula = form,
                         data = sample.info,
-                        bpparam = MulticoreParam(workers = nb.cores)
+                        BPPARAM = MulticoreParam(workers = nb.cores)
                         )
                 }
                 if (adjustment.method == 'lmm'){
@@ -260,7 +260,6 @@ computeGenesVarianceComposition <- function(
                         BPPARAM = MulticoreParam(workers = nb.cores)
                         )
                     row.names(gene.var.decomposition) <- row.names(se.obj)
-                    return(gene.var.decomposition)
                 }
             }
             if (isFALSE(adjust.data)){
@@ -278,7 +277,9 @@ computeGenesVarianceComposition <- function(
                     data = sample.info,
                     BPPARAM = MulticoreParam(workers = nb.cores)
                 )
+                gene.var.decomposition
             }
+            return(gene.var.decomposition)
         })
     names(all.gene.var.decop) <- levels(assay.names)
 
@@ -309,7 +310,7 @@ computeGenesVarianceComposition <- function(
         }
         if (isTRUE(adjust.data)){
             form <- paste0(
-                    gsub("\\(1 \\| ([^)]+)\\)", "\\1", adjustment.form),
+                    gsub("\\(1 \\| ([^)]+)\\)", "\\1", form),
                     collapse = ''
                     )
             se.obj <- addMetricToSeObj(
