@@ -1,4 +1,4 @@
-#' Renames variables in SummarizedExperiment
+#' Renames variable in SummarizedExperiment
 #'
 #'
 #' @param se.obj description
