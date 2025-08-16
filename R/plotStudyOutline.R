@@ -16,6 +16,8 @@
 #' @param variables Character or character vector. The label(s) of variable(s) within the SummarizedExperiment
 #' object. This can include a vector containing categorical, continuous, or a combination of both types of variables. This
 #' cannot be empty or `NULL`.
+#' @param assess.variables.association Logical. Whether to assess association between all the specified variables or not. The default
+#' is set to `TRUE`,
 #' @param variable.to.sort Character. The label of the variable used to sort the sample information. The default is `NULL`.
 #' This means the samples will be plotted as they are.
 #' @param plot.output Logical. Determines whether to plot the study outline. The default is set to `TRUE`.
@@ -36,10 +38,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the study outline plot in the metadata of the SummarizedExperiment
 #' object or output the result as a plot. The default is set to `TRUE`. The plot will be saved in `se.obj->metadata->StudyOutline`.
 #' @param verbose Logical. If `TRUE`, shows the messages for different steps of the function.
-
+#'
 #' @return Either a SummarizedExperiment object containing a study outline plot or just the plot.
-
-
+#'
+#' @importFrom variancePartition canCorPairs plotCorrMatrix
 #' @importFrom ComplexHeatmap Heatmap draw ht_opt
 #' @importFrom grDevices colorRampPalette
 #' @importFrom dplyr arrange pick
@@ -50,6 +52,7 @@
 plotStudyOutline <- function(
         se.obj,
         variables,
+        assess.variables.association = TRUE,
         variable.to.sort = NULL,
         plot.output = TRUE,
         legend.font.size = 14,
@@ -208,12 +211,32 @@ plotStudyOutline <- function(
                 )
         }
     }
-    if(isTRUE(plot.output))
+    if(isTRUE(plot.output)){
         ht_opt$message = FALSE
         print(draw(
             object = ht.list,
             heatmap_legend_side = heatmap.legend.side,
             auto_adjust = TRUE))
+    }
+    if (isTRUE(assess.variables.association)){
+        sample.annotation <- colData(se.obj)
+        variables <- gsub(' ', '.', variables)
+        form <- as.formula(paste0(
+            '~',
+            paste0(variables, collapse = '+')
+            ))
+        var.association <- canCorPairs(
+            formula = form,
+            data = sample.annotation,
+            showWarnings = FALSE
+            )
+        ht.vars <- ComplexHeatmap::Heatmap(
+            matrix = var.association,
+            col = c('grey', 'darkgreen'),
+            heatmap_legend_param = list(title = 'Correlation')
+            )
+        if (isTRUE(plot.output)) print(ht.vars)
+    }
     # Save the data ####
     ## add results to the SummarizedExperiment object ####
     printColoredMessage(
@@ -228,8 +251,16 @@ plotStudyOutline <- function(
         se.obj@metadata[['StudyOutline']] <- draw(
             object = ht.list,
             heatmap_legend_side = heatmap.legend.side,
-            auto_adjust = TRUE)
-        printColoredMessage(message = '------------The plotStudyOutline function finished.:',
+            auto_adjust = TRUE
+            )
+
+        if (isTRUE(assess.variables.association)){
+            if (!'VariablesAssociation' %in% names(se.obj@metadata)) {
+                se.obj@metadata[['VariablesAssociation']] <- list()
+            }
+            se.obj@metadata[['VariablesAssociation']] <- draw(ht.vars)
+        }
+        printColoredMessage(message = '------------The plotStudyOutline function finished.',
                             color = 'white',
                             verbose = verbose)
         return(se.obj)
