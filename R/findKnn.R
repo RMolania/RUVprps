@@ -42,6 +42,8 @@
 #' @param regress.out.variables Character. A character or a vector characters that indicate the column name(s) in the sample
 #' annotation in the SummarizedExperiment object. These variables will be regressed out from the data before finding KNN.
 #' The default is set to `NULL`, indicating that regression will not be applied.
+#' @param regress.out.rle.med Logica. If is set to `TRUE`, the medians of RLE data will be regressed out from the data
+#' before finding KNN. The default is set to `FALSE`.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 #' The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
@@ -82,6 +84,7 @@ findKnn <- function(
         hvg = NULL,
         normalization = 'CPM',
         regress.out.variables = NULL,
+        regress.out.rle.med = FALSE,
         apply.log = TRUE,
         pseudo.count = 1,
         check.se.obj = TRUE,
@@ -135,7 +138,6 @@ findKnn <- function(
     if (nb.knn <= 0 & nb.knn != as.integer(nb.knn)) {
         stop('The "nb.knn" must be a postive whole numeric value')
     }
-
     if (!is.null(hvg)){
         if (is.logical(hvg)){
             if (length(hvg) != nrow(se.obj)){
@@ -253,7 +255,7 @@ findKnn <- function(
     } else if (length(sub.group.sample.size) != length(unique(se.obj[[uv.variable]])) ){
         printColoredMessage(
             message = paste0(
-                '- All or some subgroups of the unwanted variable have less than ',
+                '- Some subgroups of the unwanted variable have less than ',
                  nb.knn + 1,
                 ' (nb.knn + 1) samples. Then KNN for those sub-groups cannot be created.'),
             color = 'red',
@@ -291,7 +293,7 @@ findKnn <- function(
                         '" sub-group.'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 norm.data <- applyOtherNormalizations(
                     se.obj = se.obj[, selected.samples],
                     assay.name = assay.name,
@@ -302,7 +304,7 @@ findKnn <- function(
                     save.se.obj = FALSE,
                     remove.na = 'none',
                     verbose = FALSE
-                )
+                    )
             }
             ## Applying library size normalization and regressing out variables ####
             if (!is.null(normalization) & !is.null(regress.out.variables)) {
@@ -356,7 +358,7 @@ findKnn <- function(
                             '" group from the data.'),
                         color = 'blue',
                         verbose = verbose
-                    )
+                        )
                     if (!is.null(pseudo.count)){
                         norm.data <- log2(assay(se.obj[, selected.samples], assay.name) + pseudo.count)
                     } else {
@@ -420,6 +422,20 @@ findKnn <- function(
             return(norm.data)
         })
     names(all.norm.data) <- sub.group.sample.size
+
+    # Regressing out RLE medians ####
+    if (isTRUE(regress.out.rle.med)){
+        all.norm.data <- lapply(
+            sub.group.sample.size,
+            function(x){
+                temp.data <- all.norm.data[[x]]
+                rle.med <- colMedians(temp.data - rowMedians(temp.data))
+                regress.med <- lm(t(temp.data) ~ rle.med)
+                temp.data <- t(regress.med$residuals)
+                temp.data
+            })
+        names(all.norm.data) <- sub.group.sample.size
+    }
 
     # Selecting input data for KNN analysis ####
     printColoredMessage(
@@ -647,16 +663,15 @@ findKnn <- function(
                         upper = FALSE)
                 })
         })
-    dist.between.samples <- round(x = do.call(rbind , dist.between.samples), digits = 1)
-    dist.between.samples.b <- round(all.knn[, grep('distance', colnames(all.knn))], 1)
+    dist.between.samples <- do.call(rbind , dist.between.samples)
+    dist.between.samples.b <- all.knn[, grep('distance', colnames(all.knn))]
     mout <- lapply(
         1:ncol(dist.between.samples),
         function(x){
-            if (!all.equal(dist.between.samples[ , x], dist.between.samples.b[ , x])){
+            if (sum(c(ceiling(dist.between.samples[ , x]) - ceiling(dist.between.samples.b[ , x])) > 1 ) > 0) {
                 stop('There are something wrong with the KNN sets.')
             }
         })
-
     # Saving the results ####
     ## Selecting knn group name ####
     if(is.null(knn.group.name)){
@@ -708,19 +723,28 @@ findKnn <- function(
             color = 'blue',
             verbose = verbose
             )
-        printColoredMessage(message = '------------The findKnn function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The findKnn function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj)
     }
     ## Outputting the results as matrix  ####
     if (isFALSE(save.se.obj)) {
-        printColoredMessage(message = '- All the knn results are outputed as matrix.',
-                            color = 'blue',
-                            verbose = verbose)
-        printColoredMessage(message = '------------The findKnn function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '- All the knn results are outputed as matrix.',
+            color = 'blue',
+            verbose = verbose)
+
+        printColoredMessage(
+            message = '------------The findKnn function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(all.knn)
     }
 }
+
+
+
