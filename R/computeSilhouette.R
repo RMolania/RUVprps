@@ -137,7 +137,7 @@ computeSilhouette <- function(
         sub.file.name = 'svd',
         required.function = 'computePCA',
         message.to.print = 'PCs'
-    )
+        )
     ## computing average silhouette coefficients for all assay(s)  ####
     all.sil.coef <- lapply(
         levels(assay.names),
@@ -152,7 +152,7 @@ computeSilhouette <- function(
                 )
             printColoredMessage(
                 message = paste0(
-                    '* obtaining the first ',
+                    '- Otaining the first ',
                     nb.pcs,
                     ' computed PCs.'),
                 color = 'blue',
@@ -161,9 +161,15 @@ computeSilhouette <- function(
             pca.data <- all.pca.data[[x]]$u
             if (ncol(pca.data) < nb.pcs){
                 printColoredMessage(
-                    message = paste0('The number of PCs of the assay', x, 'are ', ncol(pca.data), '.'),
+                    message = paste0(
+                        'The number of PCs of the assay',
+                        x,
+                        'are ',
+                        ncol(pca.data),
+                        '.'),
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 stop(paste0(
                     'The number of PCs of the assay ',
                     x,
@@ -179,13 +185,13 @@ computeSilhouette <- function(
                 stop('The column names of the SummarizedExperiment object is not the same as row names of the PCA data.')
             }
             printColoredMessage(
-                message = '* calculating the distance matrix on the PCs.',
+                message = '- Calculating the distance matrix on the PCs.',
                 color = 'blue',
                 verbose = verbose
                 )
             d.matrix <- as.matrix(dist(pca.data[, seq_len(nb.pcs)], method = dist.measure))
             printColoredMessage(
-                message = '* calculating the average Silhouette coefficient.',
+                message = '- Calculating the average Silhouette coefficient.',
                 color = 'blue',
                 verbose = verbose
                 )
