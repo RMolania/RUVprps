@@ -46,6 +46,7 @@
 #' We refer to the `createHomogeneousUVGroups()` function for more details.
 #' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
 #' unwanted variable. The default is set to 3.
+#' @param samples.to.use TTTT
 #' @param check.prps.connectedness Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
 #' The default is set to `TRUE`. See the details for more information.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
@@ -84,6 +85,7 @@ createPrPsSupervised <- function(
         apply.other.uv.variables = TRUE,
         other.uv.clustering.method = 'kmeans',
         nb.other.uv.clusters = 2,
+        samples.to.use = 'all',
         min.sample.for.ps = 3,
         bio.clustering.method = 'kmeans',
         nb.bio.clusters = 2,
@@ -135,6 +137,7 @@ createPrPsSupervised <- function(
                         bio.variables = bio.variables,
                         main.uv.variable = x,
                         other.uv.variables = other.uv.variables,
+                        samples.to.use = samples.to.use,
                         min.sample.for.ps = min.sample.for.ps,
                         bio.clustering.method = bio.clustering.method,
                         nb.bio.clusters = nb.bio.clusters,
@@ -164,6 +167,7 @@ createPrPsSupervised <- function(
                     bio.variables = bio.variables,
                     main.uv.variable = x,
                     other.uv.variables = other.uv.variables,
+                    samples.to.use = samples.to.use,
                     min.sample.for.ps = min.sample.for.ps,
                     bio.clustering.method = bio.clustering.method,
                     nb.bio.clusters = nb.bio.clusters,
@@ -201,6 +205,7 @@ createPrPsSupervised <- function(
                         assay.name = assay.name,
                         bio.variables = bio.variables,
                         main.uv.variable = x,
+                        samples.to.use = samples.to.use,
                         other.uv.variables = other.uv.variables,
                         min.sample.for.ps = min.sample.for.ps,
                         bio.clustering.method = bio.clustering.method,
@@ -231,6 +236,7 @@ createPrPsSupervised <- function(
                     main.uv.variable = x,
                     other.uv.variables = other.uv.variables,
                     min.sample.for.ps = min.sample.for.ps,
+                    samples.to.use = samples.to.use,
                     bio.clustering.method = bio.clustering.method,
                     nb.bio.clusters = nb.bio.clusters,
                     other.uv.clustering.method = other.uv.clustering.method,
