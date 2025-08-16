@@ -1,4 +1,4 @@
-#' Creates all possible assessment plots and metrics for the variables.
+#' Create all possible assessment plots and metrics for variables.
 #'
 #' @author Ramyar Molania
 #'
@@ -7,7 +7,9 @@
 #' can be used in the `assessVariation` and `assessNormalization` functions.
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param variables Character string or vector. Specifies the column name(s) of variables in the sample annotation
+#' @param bio.variables Character string or vector. Specifies the column name(s) of variables in the sample annotation
+#' of the SummarizedExperiment object. The `variables` can be either categorical or continuous.
+#' @param uv.variables Character string or vector. Specifies the column name(s) of variables in the sample annotation
 #' of the SummarizedExperiment object. The `variables` can be either categorical or continuous.
 #' @param plot.output Logical. Whether to display the plot of all possible assessment plots. Default is `TRUE`.
 #' @param save.se.obj Logical. Whether to save the results into the SummarizedExperiment object. Default is `TRUE`.
@@ -19,17 +21,16 @@
 #' @importFrom SummarizedExperiment colData
 #' @importFrom tibble tibble
 #' @export
-
 getAssessmentMetrics <- function(
         se.obj ,
-        variables,
+        bio.variables,
+        uv.variables,
         plot.output = TRUE,
-        save.se.obj = TRUE) {
-    categorical.var <- continuous.var <- NULL
-
+        save.se.obj = TRUE
+        ){
+    variables <- c(bio.variables, uv.variables)
     if(sum(variables %in% colnames(colData(se.obj))) != length(variables))
         stop('All or some "variables" cannot be found in the SummarizedExperiment object.')
-
     if (!is.null(variables)) {
         var.class <- sapply(
             variables,
@@ -231,11 +232,22 @@ getAssessmentMetrics <- function(
         metrics.for.cont.var.list,
         metrics.for.cat.var.list,
         metrics.for.two.cat.var.list,
-        'GeneralRLEplot')
+        'GeneralRLEplot'
+        )
     final.metrics.table <- as.data.frame(rbind(
         metrics.for.cont.var.table,
         metrics.for.cat.var.table,
-        metrics.for.two.cat.var.table))
+        metrics.for.two.cat.var.table)
+        )
+    cont.bio <- sapply(
+        uv.variables,
+        function(x) is.numeric(se.obj[[x]])
+        )
+    uv.variables <- uv.variables[cont.bio]
+    if (length(uv.variables) > 0){
+        keep.rows <- final.metrics.table$Variables== uv.variables & final.metrics.table$Metrics == "GeneSetScore"
+        final.metrics.table <- final.metrics.table[!keep.rows , ]
+    }
     final.metrics.table$Variables <- as.character(final.metrics.table$Variables)
     rownames(final.metrics.table) <- c(1:nrow(final.metrics.table))
     for(i in names(all.var.char)){
@@ -259,11 +271,12 @@ getAssessmentMetrics <- function(
         general.rle.iqr
         )
     final.metrics.table$Code <- paste0('PA', 1:nrow(final.metrics.table))
+    all.variables <- unique(final.metrics.table$Variables)
 
+    all.variables <- all.variables[all.variables %in% variables]
     # plot ####
-    steps <- y <- label <- xmin <- xmax <- type <- s_e <- ymin <- ymax <- id <- NULL
     plot.metrics <- lapply(
-        variables,
+        all.variables,
         function(x){
             sub.final.metrics.table.toplot <- final.metrics.table[final.metrics.table$Variables == x, ]
             new.order <- mixedorder(x = sub.final.metrics.table.toplot$Code, decreasing = TRUE)
@@ -326,14 +339,12 @@ getAssessmentMetrics <- function(
                     alpha = 0.5,
                     fill = 'grey80'
                 )
-            x2 <- y2 <- NULL
             plot.nodes$y2 <- c(plot.nodes$ymin + plot.nodes$ymax)/2
             plot.nodes$x2 <- c(plot.nodes$xmin + plot.nodes$xmax)/2
             p <- p + geom_text(
                 data = plot.nodes[-1,],
                 mapping = aes(x = x2, y = y2, label = label),
-                color = "black", size = 3, stat = "identity", hjust = 0.5, vjust = 0.5
-            ) +
+                color = "black", size = 3, stat = "identity", hjust = 0.5, vjust = 0.5) +
                 theme(
                     panel.background = element_blank(),
                     axis.text = element_blank(),
@@ -347,13 +358,12 @@ getAssessmentMetrics <- function(
                         xmin = min(plot.nodes$xmin),
                         xmax = max(plot.nodes$xmax),
                         ymin = min(plot.nodes$y),
-                        ymax = 0.5
-                    ),
+                        ymax = 0.5),
                     alpha = 0.005,
                     fill = 'grey',
                     color = 'black',
-                    size = 1,
-                ) + geom_text(
+                    linewidth = 1) +
+                geom_text(
                     data = plot.nodes[1,],
                     mapping = aes(x = 0, y = 0.45, label = label),
                     hjust = 0.5,
