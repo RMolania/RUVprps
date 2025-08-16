@@ -25,9 +25,9 @@ tidyGenes(
 
 \item{ids.col.name}{TTTT}
 
-\item{new.row.names}{TTTT}
+\item{change.row.names}{TTTT}
 
-\item{chaneg.row.names}{TTTT}
+\item{new.row.names}{TTTT}
 }
 \description{
 Remove assays from a SummarizedExperiment object

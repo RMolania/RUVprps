@@ -2,14 +2,23 @@
 % Please edit documentation in R/getAssessmentMetrics.R
 \name{getAssessmentMetrics}
 \alias{getAssessmentMetrics}
-\title{Creates all possible assessment plots and metrics for the variables.}
+\title{Create all possible assessment plots and metrics for variables.}
 \usage{
-getAssessmentMetrics(se.obj, variables, plot.output = TRUE, save.se.obj = TRUE)
+getAssessmentMetrics(
+  se.obj,
+  bio.variables,
+  uv.variables,
+  plot.output = TRUE,
+  save.se.obj = TRUE
+)
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{variables}{Character string or vector. Specifies the column name(s) of variables in the sample annotation
+\item{bio.variables}{Character string or vector. Specifies the column name(s) of variables in the sample annotation
+of the SummarizedExperiment object. The \code{variables} can be either categorical or continuous.}
+
+\item{uv.variables}{Character string or vector. Specifies the column name(s) of variables in the sample annotation
 of the SummarizedExperiment object. The \code{variables} can be either categorical or continuous.}
 
 \item{plot.output}{Logical. Whether to display the plot of all possible assessment plots. Default is \code{TRUE}.}

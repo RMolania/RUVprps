@@ -34,6 +34,7 @@ createPrPsByKnnMnn(
   pseudo.count = 1,
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
+  sample.to.use = "all",
   check.se.obj = TRUE,
   remove.na = "both",
   plot.output = TRUE,
@@ -149,6 +150,8 @@ The default is SerialParam(). We refer to the \strong{\code{findMutualNN()}} fun
 
 \item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 The default is KmknnParam(). We refer to the \code{findMutualNN()} function from the \strong{BiocNeighbors} R package.}
+
+\item{sample.to.use}{TTT}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to TRUE. See the checkSeObj() function for more details.}

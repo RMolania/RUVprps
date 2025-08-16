@@ -2,7 +2,7 @@
 % Please edit documentation in R/addMetricToSeObj.R
 \name{addMetricToSeObj}
 \alias{addMetricToSeObj}
-\title{Adds results and plots of a metric to SummarizedExperiment object.}
+\title{Add results and plots of a metric to SummarizedExperiment object.}
 \usage{
 addMetricToSeObj(
   se.obj,
@@ -37,7 +37,7 @@ The default is set to 'all'.}
 \item{results.data}{Character. The name of the object or file containing the metric results.}
 }
 \description{
-Adds results and plots of a metric to SummarizedExperiment object.
+Add results and plots of a metric to SummarizedExperiment object.
 }
 \author{
 Ramyar Molania

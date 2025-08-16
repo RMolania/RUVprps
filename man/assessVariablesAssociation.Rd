@@ -8,8 +8,10 @@ assessVariablesAssociation(
   se.obj,
   bio.variables,
   uv.variables,
+  variables = NULL,
   cat.cor.coef = c(0.9, 0.9),
   cont.cor.coef = c(0.9, 0.9),
+  plot.output = TRUE,
   check.se.obj = TRUE,
   remove.na = "sample.annotation",
   verbose = TRUE
@@ -26,6 +28,8 @@ variables.}
 the sample annotation of the SummarizedExperiment object. These \code{uv.variables} can be either categorical or continuous
 variables.}
 
+\item{variables}{TTTT}
+
 \item{cat.cor.coef}{Numeric vector. A vector of two numerical values indicating the cut-off for the correlation coefficient
 between each pair of categorical variables. The first value applies to each pair of 'uv.variables' and the second value
 applies to each pair of \code{bio.variables}. The correlation is computed using the \code{ContCoef()}function from the \strong{DescTools}
@@ -37,6 +41,8 @@ coefficient between each pair of continuous variables. The first value applies t
 second value applies to each pair of \code{bio.variables}. If the correlation of a pair of variables exceeds the cut-off,
 the variable with the highest variance will be kept, and the other will be excluded from the remaining analysis. By
 default, both values are set to 0.9.}
+
+\item{plot.output}{TTT}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the function
 \code{checkSeObj()} will be applied.}

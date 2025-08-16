@@ -2,12 +2,14 @@
 % Please edit documentation in R/assessVariation.R
 \name{assessVariation}
 \alias{assessVariation}
-\title{Assesses the variation in variables.}
+\title{Assess the variation in variables.}
 \usage{
 assessVariation(
   se.obj,
   assay.names = "all",
-  variables,
+  bio.variables,
+  uv.variables,
+  assessment.level = "L3",
   plots.to.exclude = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
@@ -19,7 +21,7 @@ assessVariation(
   rle.plot.ncol = 2,
   rle.plot.nrow = 3,
   rle.var.plot.ncol = 3,
-  rle.var.plot.nrow = 2,
+  rle.var.plot.nrow = 3,
   rle.colors = NULL,
   fast.pca = TRUE,
   compute.nb.pcs = 10,
@@ -30,25 +32,30 @@ assessVariation(
   pca.variables.colors = NULL,
   pca.plot.nrow = 2,
   pca.plot.ncol = 3,
+  pca.var.plot.ncol = 1,
+  pca.var.plot.nrow = 3,
   pca.stroke.size = 0.05,
   pca.stroke.color = "grey",
   pca.points.alpha = 0.5,
   pca.densities.alpha = 0.5,
+  pca.legend.position = "bottom",
   sil.dist.measure = "euclidian",
   sli.nb.pcs = 3,
   ari.clustering.method = "hclust",
   ari.hclust.method = "complete",
   ari.hclust.dist.measure = "euclidian",
   ari.nb.pcs = 3,
-  vca.nb.pcs = 10,
-  lra.nb.pcs = 10,
+  vca.nb.pcs = 3,
+  lra.nb.pcs = 3,
+  vca.nb.pcs.to.plot = 10,
+  lra.nb.pcs.to.plot = 10,
   corr.method = "spearman",
   a = 0.05,
   rho = 0,
-  correlation.plot.ncol = 1,
+  correlation.plot.ncol = 3,
   correlation.plot.nrow = 3,
   anova.method = "aov",
-  anova.plot.ncol = 1,
+  anova.plot.ncol = 3,
   anova.plot.nrow = 3,
   pcorr.method = "spearman",
   pcorr.genes = NULL,
@@ -66,8 +73,6 @@ assessVariation(
   gene.set.score.regress.out.variables = NULL,
   gene.set.score.list,
   gene.set.score.normalization = NULL,
-  gene.set.score.assessment = FALSE,
-  gene.set.score.variables.to.assess = NULL,
   check.se.obj = TRUE,
   remove.na = "none",
   override.check = FALSE,
@@ -79,7 +84,11 @@ assessVariation(
 
 \item{assay.names}{Character. A character string or vector for selecting assay name(s) in the SummarizedExperiment object. The default is set to \code{all}.}
 
-\item{variables}{Character. Column names containing variables to assess for variation. Can be categorical or continuous.}
+\item{bio.variables}{Character. Column names containing variables to assess for variation. Can be categorical or continuous.}
+
+\item{uv.variables}{Character. Column names containing variables to assess for variation. Can be categorical or continuous.}
+
+\item{assessment.level}{TTTT}
 
 \item{plots.to.exclude}{Character. A character string or vector indicating which metrics to exclude. Use \code{getAssessmentMetrics()} to view options. The default is set to \code{NULL}.}
 
@@ -125,6 +134,10 @@ assessVariation(
 
 \item{pca.plot.ncol}{Numeric. Number of columns in PCA plot grid. The default is set to 3.}
 
+\item{pca.var.plot.ncol}{TTT}
+
+\item{pca.var.plot.nrow}{TTT}
+
 \item{pca.stroke.size}{Numeric. Stroke size in PCA plots. The default is set to 0.1.}
 
 \item{pca.stroke.color}{Character. Color of stroke in PCA plots. The default is set to \code{gray}.}
@@ -132,6 +145,8 @@ assessVariation(
 \item{pca.points.alpha}{Numeric. Transparency of PCA points. The default is set to 0.5.}
 
 \item{pca.densities.alpha}{Numeric. Transparency of densities in PCA plots. The default is set to 0.5.}
+
+\item{pca.legend.position}{TTT}
 
 \item{sil.dist.measure}{Character. Distance measure for silhouette: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra},
 \code{binary}, or \code{minkowski}. The default is set to \code{euclidean}.}
@@ -151,6 +166,10 @@ assessVariation(
 \item{vca.nb.pcs}{Numeric. Number of PCs for vector correlation. The default is set to 3.}
 
 \item{lra.nb.pcs}{Numeric. Number of PCs for linear regression. The default is set to 3.}
+
+\item{vca.nb.pcs.to.plot}{TTT}
+
+\item{lra.nb.pcs.to.plot}{TTT}
 
 \item{corr.method}{Character. Correlation method: \code{pearson}, \code{kendall}, \code{spearman}. The default is set to \code{spearman}.}
 
@@ -199,10 +218,6 @@ assessVariation(
 \item{gene.set.score.list}{List. Gene sets used for enrichment analysis.}
 
 \item{gene.set.score.normalization}{Character. Normalization method for gene set scoring. The default is set to \code{NULL}.}
-
-\item{gene.set.score.assessment}{TTT}
-
-\item{gene.set.score.variables.to.assess}{TTT}
 
 \item{check.se.obj}{Logical. Whether to check the SummarizedExperiment object.}
 

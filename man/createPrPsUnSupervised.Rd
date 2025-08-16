@@ -10,6 +10,7 @@ createPrPsUnSupervised(
   uv.variables,
   approach = "mnn",
   data.input = "expr",
+  bio.dims = 50,
   clustering.method = "kmeans",
   nb.clusters = 3,
   other.uv.variables = NULL,
@@ -39,6 +40,7 @@ createPrPsUnSupervised(
   nb.pcs = 2,
   center = TRUE,
   scale = FALSE,
+  sample.to.use = "all",
   svd.bsparam = bsparam(),
   normalization = "CPM",
   apply.cosine.norm = FALSE,
@@ -76,6 +78,8 @@ variable is provided, this will be divided into groups using the clustering meth
 \item{data.input}{Character. Indicates which data should be used as input for finding the k nearest neighbors. Options
 include: \code{expr} and \code{pcs}. If \code{pcs} is selected, the first PCs of the data will be used as input. If \code{expr} is selected,
 the data will be selected as input.}
+
+\item{bio.dims}{TTT}
 
 \item{clustering.method}{Character. A character indicating the choice of clustering method for grouping the \code{uv.variable}
 if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.}
@@ -146,6 +150,8 @@ reduction. Default is \code{TRUE}.}
 \item{center}{Logical. Whether to center the data (subtract column means). Default is \code{TRUE}.}
 
 \item{scale}{Logical. Whether to scale the data before applying SVD. Default is \code{FALSE}.}
+
+\item{sample.to.use}{TTT}
 
 \item{svd.bsparam}{A \code{BiocParallelParam} object defining parallelization for SVD. Default: \code{bsparam()}. See \code{runSVD}
 from the BiocSingular package.}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotVariables.R
 \name{plotVariables}
 \alias{plotVariables}
-\title{Plots variables in a SummarizedExperiment object.}
+\title{Plot variables in a SummarizedExperiment object.}
 \usage{
 plotVariables(
   se.obj,
@@ -11,7 +11,14 @@ plotVariables(
   cat.test = "anova",
   cont.test = "spearman",
   generate.heatmap = FALSE,
-  check.se.object = TRUE,
+  legend.title = NULL,
+  legend.labels = NULL,
+  nb.ncol = 4,
+  x.lab = NULL,
+  y.lab = NULL,
+  plot.out.put = TRUE,
+  color.palette = "nrc",
+  check.se.object = FALSE,
   remove.na = "sample.annotation",
   verbose = TRUE
 )
@@ -28,6 +35,20 @@ plotVariables(
 \item{cont.test}{TTTT}
 
 \item{generate.heatmap}{TTTT}
+
+\item{legend.title}{TTTT}
+
+\item{legend.labels}{TTTT}
+
+\item{nb.ncol}{TTTT}
+
+\item{x.lab}{TTTT}
+
+\item{y.lab}{TTTTT}
+
+\item{plot.out.put}{TTTTT}
+
+\item{color.palette}{TTTTT}
 
 \item{check.se.object}{TTTTT}
 

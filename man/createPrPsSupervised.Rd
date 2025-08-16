@@ -12,6 +12,7 @@ createPrPsSupervised(
   apply.other.uv.variables = TRUE,
   other.uv.clustering.method = "kmeans",
   nb.other.uv.clusters = 2,
+  samples.to.use = "all",
   min.sample.for.ps = 3,
   bio.clustering.method = "kmeans",
   nb.bio.clusters = 2,
@@ -50,6 +51,8 @@ We refer to the \code{createHomogeneousUVGroups()} function for more details.}
 
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
 unwanted variable. The default is set to 3.}
+
+\item{samples.to.use}{TTTT}
 
 \item{min.sample.for.ps}{Numeric. Indicates the minimum number of biologically homogeneous samples to be averaged
 to create one pseudo-sample. The default is set to 3.}

@@ -19,6 +19,7 @@ findKnn(
   hvg = NULL,
   normalization = "CPM",
   regress.out.variables = NULL,
+  regress.out.rle.med = FALSE,
   apply.log = TRUE,
   pseudo.count = 1,
   check.se.obj = TRUE,
@@ -78,6 +79,9 @@ If set to \code{NULL}, no normalization will be applied. See the \code{applyOthe
 \item{regress.out.variables}{Character. A character or a vector characters that indicate the column name(s) in the sample
 annotation in the SummarizedExperiment object. These variables will be regressed out from the data before finding KNN.
 The default is set to \code{NULL}, indicating that regression will not be applied.}
+
+\item{regress.out.rle.med}{Logica. If is set to \code{TRUE}, the medians of RLE data will be regressed out from the data
+before finding KNN. The default is set to \code{FALSE}.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 The default is set to \code{TRUE}.}

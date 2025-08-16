@@ -10,6 +10,7 @@ createPrPsForCategoricalUV(
   bio.variables,
   main.uv.variable,
   other.uv.variables = NULL,
+  samples.to.use = "all",
   min.sample.for.ps = 3,
   bio.clustering.method = "kmeans",
   nb.bio.clusters = 2,
@@ -47,6 +48,8 @@ variable(s), such as library size, etc., within the sample annotation (colData) 
 This can comprise a vector containing either categorical, continuous, or a combination of both variables. These variables
 will be considered when generating PRPS sets for the \code{main.uv.variable}. This can help avoid potential contamination
 from the \code{other.uv.variables} in the PRPS data of the \code{main.uv.variable}. The default is set to \code{NULL}.}
+
+\item{samples.to.use}{TTTT}
 
 \item{min.sample.for.ps}{Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
 to be averaged to create one pseudo-sample (PS). The default is set to 3.}

@@ -9,20 +9,29 @@ identifyUnknownUV(
   assay.name,
   approach = "rle",
   rle.comp = "median",
+  uv.gene.sets = NULL,
+  chronological.detection = FALSE,
+  changepoint.type = "meanvar",
+  clustering.methods = "nbClust",
+  ncg = NULL,
   regress.out.bio.variables = NULL,
   regress.out.bio.gene.sets = NULL,
-  uv.gene.sets = NULL,
-  ncg = NULL,
-  clustering.methods = "nbClust",
   nbClust.diss = NULL,
   nbClust.distance = "euclidean",
-  nbClust.min.nc = 2,
-  nbClust.max.nc = 5,
+  nbClust.min.nc = 3,
+  nbClust.max.nc = 30,
   nbClust.method = "kmeans",
   nbClust.index = "silhouette",
   nbClust.alphaBeale = 0.1,
   max.samples.per.batch = NULL,
+  mclust.max.clusters = 20,
   nb.clusters = 3,
+  cpt.penalty = "MBIC",
+  cpt.pen.value = 0,
+  cpt.method = "PELT",
+  cpt.q = 5,
+  cpt.test.stat = "Normal",
+  cpt.minseglen = 1,
   apply.log = TRUE,
   pseudo.count = 1,
   nb.pcs = 2,
@@ -30,95 +39,191 @@ identifyUnknownUV(
   scale = FALSE,
   svd.bsparam = bsparam(),
   remove.current.estimates = FALSE,
+  assess.bio.association = FALSE,
+  bio.variables = NULL,
+  nb.bio.clusters = 3,
+  bio.clustering.method = "kmeans",
+  assess.uv.association = FALSE,
+  uv.variables = NULL,
+  nb.uv.clusters = 3,
+  uv.clustering.method = "kmeans",
+  generate.association.plot = FALSE,
+  plot.output = TRUE,
+  color.palette = "pan.selection.a",
+  order.batches = FALSE,
+  add.to.sample.annotation = TRUE,
+  col.name = "Estimated.batches",
   output.name = NULL,
   check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
-  plot.output = TRUE,
-  order.batches = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character string. Specifies the assay name to be used for identifying potential sources of unwanted
-variation.}
+\item{assay.name}{Character. A character that specifies a data (assay) name to be used for identifying potential
+sources of unwanted variation.}
 
-\item{approach}{Character string. One of \code{rle}, \code{pca}, or \code{sample.scoring}, specifying the method to detect unknown variation.}
+\item{approach}{Character. A character that specifies which approach should be used to estimate unwanted variation in the
+data. Options are \code{rle}, \code{pca}, or \code{sample.scoring}. The default is set to \code{rle}.}
 
-\item{rle.comp}{Character string. One of \code{median}, \code{iqr}, or \code{both}. Specifies which RLE summary statistic to use.
-The default is set to \code{median}.}
+\item{rle.comp}{Character.  A character that specifies which RLE summary statistic to be used when the  \code{approach = rle}.
+The options are \code{median}, \code{iqr}, or \code{both}. The default is set to \code{median}.}
 
-\item{regress.out.bio.variables}{Character string or vector. Column name(s) of biological variables in the sample
-annotation.The default is set to \code{NULL}.}
+\item{uv.gene.sets}{List. A list of genes sets that capture unwanted variation and to used when  \code{approach = sample.scoring}
+.The default is set to \code{NULL}. This must be specified when \code{approach = sample.scoring}.}
 
-\item{regress.out.bio.gene.sets}{List. Biological gene signatures to regress out before identifying unwanted variation.
-The default is set to \code{NULL}.}
+\item{chronological.detection}{Logical. If samples are ordered based on a chronological e.g. time or sequencing, ...,
+Then a chronological analysis can find any patterns in the data. If this information is not available, this argument
+mus be set to \code{FALSE}. The default is set to \code{FALSE}. Refer to the details for more information.}
 
-\item{uv.gene.sets}{List. Gene sets related to unwanted variation for use in \code{sample.scoring}.The default is set to \code{NULL}.}
+\item{changepoint.type}{Character. A character that spefies which chronological test should be used. The options are
+\code{mean} and \code{meanvar}. If \code{mean} selected, the function will apply the \code{cpt.mean} function, and if \code{meanvar} selected
+the function will apply \code{cpt.meanvar} function. Refer to the \code{changepoint} package for more information.}
 
-\item{ncg}{Vector. Negative control genes. If not \code{NULL}, analysis will be restricted to these genes.The default is
-set to \code{NULL}.}
+\item{clustering.methods}{Character. A character that indicates which clustering method should be used to estimate
+unwanted variation. The options are  \code{kmeans}, \code{cut}, \code{quantile}, or \code{nbClust}. The default is set to \code{nbClust}.}
 
-\item{clustering.methods}{Character string. Clustering method: one of \code{kmeans}, \code{cut}, \code{quantile}, or \code{nbClust}.
-The default is set to \code{nbClust}.}
+\item{ncg}{Vector. A vector of negative control genes that are assumed to be affected by unwanted variation. If it is
+specified, the \code{rle} and \code{pca} approaches will be performed using only these genes. he default is et to \code{NULL}.}
+
+\item{regress.out.bio.variables}{Character. A character or a vector of characters that indifcates name(s) of the column(s)
+in the SummarizedExperiment that contains biological variable(s). These variable (s) will be regressed out before applying
+any data stigmatization process. The default is set to \code{NULL}.}
+
+\item{regress.out.bio.gene.sets}{List. A list of biological gene signatures to be used to score all samples. Then the
+score(s) wuill be regress out from the data before any data stigmatization process. The default is set to \code{NULL}.}
 
 \item{nbClust.diss}{Dissimilarity matrix. If provided, \code{nbClust.distance} must be \code{NULL}.The default is set to \code{NULL}.}
 
-\item{nbClust.distance}{Character string. Distance measure: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary},
+\item{nbClust.distance}{Character. Distance measure: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary},
 \code{minkowski}, or \code{NULL}.The default is set to \code{euclidean}.}
 
 \item{nbClust.min.nc}{Numeric. Minimum number of clusters. Must be between 1 and (n - 1).}
 
 \item{nbClust.max.nc}{Numeric. Maximum number of clusters. Must be ≥ \code{nbClust.min.nc}.The default is set to 15.}
 
-\item{nbClust.method}{Character string. Clustering method: \code{ward.D}, \code{ward.D2}, \code{single}, \code{complete}, \code{average},
+\item{nbClust.method}{Character. Clustering method: \code{ward.D}, \code{ward.D2}, \code{single}, \code{complete}, \code{average},
 \code{mcquitty}, \code{median}, \code{centroid}, or \code{kmeans}.}
 
-\item{nbClust.index}{Character string. Clustering index to evaluate: e.g., \code{silhouette}, \code{gap}, \code{ch}, \code{db}, \code{all}, etc.}
+\item{nbClust.index}{Character. Clustering index to evaluate: e.g., \code{silhouette}, \code{gap}, \code{ch}, \code{db}, \code{all}, etc.}
 
 \item{nbClust.alphaBeale}{Numeric. Significance threshold for Beale's index.}
 
 \item{max.samples.per.batch}{Numeric. Max proportion of samples per cluster (only applies to \code{nbClust}).The default
-is set to 0.1.}
+is set to \code{NULL}.}
 
-\item{nb.clusters}{Numeric. Number of clusters when using \code{kmeans}, \code{cut}, or \code{quantile}.The default is set to 3.}
+\item{mclust.max.clusters}{Numeric. A numeric value that specified the maximum number of mixture components (clusters)
+for which the BIC is to be calculated by the \code{Mclust} function. The default is set to 20. Refer to the \code{mclust} package
+for more details.}
 
-\item{apply.log}{Logical. Apply log-transformation before analysis.The default is set to \code{TRUE}.}
+\item{nb.clusters}{Numeric. A numeric value that species the number of clusters when using the \code{approach} is set to one
+of the \code{kmeans}, \code{cut}, or \code{quantile}.The default is set to 3.}
 
-\item{pseudo.count}{Numeric. Pseudo count added before log-transforming data.The default is set to 1.}
+\item{cpt.penalty}{Character. A character that specifies the penalty approach for the \code{cpt.mean} and \code{cpt.meanvar}
+functions. The options are \code{None}, \code{SIC}, \code{BIC}, \code{MBIC}, \code{AIC}, \code{Hannan-Quinn}, \code{Asymptotic}, \code{Manual} and \code{CROPS}. The
+default is set to \code{MBIC}. Refer to the \code{changepoint} package for more information.}
 
-\item{nb.pcs}{Numeric. Number of principal components to use in \code{pca} approach.The default is set to 2.}
+\item{cpt.pen.value}{Numeric. from the the \code{changepoint} package: The theoretical type I error e.g.0.05 when using
+the Asymptotic penalty. A vector of length 2 (min,max) if using the CROPS penalty. The value of the penalty when using
+the Manual penalty option - this can be a numeric value or text giving the formula to use. Available variables are,
+n=length of original data, null=null likelihood, alt=alternative likelihood, tau=proposed changepoint,
+diffparam=difference in number of alternatve and null parameters. The defualt is set to 0.}
 
-\item{center}{Logical. Whether to center data before PCA.The default is set to \code{TRUE}.}
+\item{cpt.method}{Character. The options are \code{AMOC}, \code{PELT}, \code{SegNeigh}, or \code{BinSeg}. Default is set to \code{PELT}.}
 
-\item{scale}{Logical. Whether to scale data before PCA.The default is set to \code{FALSE}.}
+\item{cpt.q}{Numeric. From the \code{changepoint} package: the maximum number of changepoints to search for using the
+"BinSeg" method. The maximum number of segments (number of changepoints + 1) to search for using the "SegNeigh" method.}
 
-\item{svd.bsparam}{A \code{BiocParallelParam} object. Controls parallelization for SVD computation.The default is set to
-\code{bsparam()}.}
+\item{cpt.test.stat}{Character. The assumed test statistic / distribution of the data. The options are \code{Normal} and
+\code{CUSUM}. The default is set to \code{Normal}.}
 
-\item{remove.current.estimates}{Character string. Whether to remove current estimates of unknown batches.The default
-is set to \code{TRUE}.}
+\item{cpt.minseglen}{Numeric. Positive integer giving the minimum segment length (no. of observations between changes),
+default is the minimum allowed by theory.}
 
-\item{output.name}{Character string. Output file name. If \code{NULL}, a name is automatically generated.}
+\item{apply.log}{Logical. Indicating whether to apply log-transformation before analysis.The default is set to \code{TRUE}.}
 
-\item{check.se.obj}{Logical. If \code{TRUE}, the \code{checkSeobj} function is applied to validate the object.The default is set to
-\code{TRUE}.}
+\item{pseudo.count}{Numeric. A numeric value that indicates a pseudo count to be added to all the genes expression
+before log-transforming data.The default is set to 1.}
 
-\item{remove.na}{Character string. Where to remove \code{NA} values: \code{assays}, \code{sample.annotation}, \code{both}, or \code{none}.
-The default is set to \code{both}.}
+\item{nb.pcs}{Numeric. A uumberical value that indicates the number of principal components to be calculated when the
+approach is set to \code{pca}. The default is set to 2.}
 
-\item{save.se.obj}{Logical. If \code{TRUE}, results are saved in the metadata under \code{metadata$UV$Unknown}.The default is set to \code{TRUE}.}
+\item{center}{Logical. Indicates whether to center the data before applying SVD. If center is \code{TRUE}, centering is
+performed by subtracting the column means of the data from their corresponding columns. The default is set to \code{TRUE}.}
 
-\item{plot.output}{Logical. If \code{TRUE}, generates clustering input plots colored by identified groups.The default is set to \code{TRUE}.}
+\item{scale}{Logical. Indicates whether to scale the data before applying SVD. If scale is set to \code{TRUE}, scaling is
+done by dividing the (centered) columns of the assays by their standard deviations,  if center is \code{TRUE}, and the root
+mean square otherwise. The default is set to \code{FALSE}.}
 
-\item{order.batches}{Logical. If \code{TRUE}, orders estimated batches in the plot.The default is set to \code{TRUE}.}
+\item{svd.bsparam}{A \code{BiocParallelParam} object specifying how parallelization should be performed. The default is set
+to \code{bsparam()}. See the \code{runSVD()} function from the BiocSingular R package for more details.}
 
-\item{verbose}{Logical. If \code{TRUE}, displays messages throughout function execution.}
+\item{remove.current.estimates}{Logical. Indicating whether to remove current estimates of unknown batches in the
+SummarizedExperiment object.The default is set to \code{TRUE}.}
+
+\item{assess.bio.association}{Logical. Indicating whether to assess the assocatio of the estimated batch effects with
+any known biological variables. The default is set to \code{FALSE}.}
+
+\item{bio.variables}{Character. A Character or a vector of characters specifying the column names of biological
+variables in the sample annotation of the 'SummarizedExperiment  object. These 'bio.variables' can be either categorical
+or continuous variables. The default is set to \code{NULL}.}
+
+\item{nb.bio.clusters}{Numeric. A value indicating the number of groups for continuous sources of biological variation.
+The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
+\code{clustering.method}.}
+
+\item{bio.clustering.method}{Character. A Character specifying the clustering method to be applied for grouping each
+continuous biological variable. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans} clustering.}
+
+\item{assess.uv.association}{Logical. Indicating whether to assess the association of the estimated batch effects with
+any known unwanted variables. The default is set to \code{FALSE}.}
+
+\item{uv.variables}{Character. A character or a vector of characters specifying the column names of unwanted variation
+variables in the sample annotation of the 'SummarizedExperiment  object. These 'uv.variables' can be either categorical
+or continuous variables.}
+
+\item{nb.uv.clusters}{Numeric. A numeric value value indicating the number of groups for continuous sources of unwanted
+variation variables. The default is set to 3. This implies that each continuous variable will be split into 3 groups
+using the specified \code{uv.clustering.method}.}
+
+\item{uv.clustering.method}{Character. A character specifying the clustering method to be applied for grouping each
+continuous unwanted variation variable. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}
+clustering.}
+
+\item{generate.association.plot}{Logical. Indicating whether to generate a heatmap of the estimated unwanted variation
+across any specified \code{bio.variables} and \code{uv.variables}. The default is set to \code{FALSE}}
+
+\item{plot.output}{Logical. Indicating whether to plot the outputs. The default is set to \code{TRUE}. Individual plots are
+stored in the SummarizedExperiment by default.}
+
+\item{color.palette}{TTT}
+
+\item{order.batches}{Logical. If \code{TRUE}, orders estimated batches in the plot. This can better visualize the patterns
+of the estimated unwanted variation. The default is set to \code{TRUE}.}
+
+\item{add.to.sample.annotation}{TTT}
+
+\item{col.name}{TTT}
+
+\item{output.name}{Character. A character that specifies the name of the out files in the SummarizedExperiment object.
+If \code{NULL}, a name is automatically generated base on: \code{paste0(length(unique(uv.sources)),'batches|',input.data.name)}.}
+
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
+See the \code{checkSeObj()} function for more details.}
+
+\item{remove.na}{Character. A character that specifies whether to remove NA or missing values from the data sets (assays).
+The options are \code{assays}, \code{sample.annotation} and \code{none}. The default is set to \code{assays}.}
+
+\item{save.se.obj}{Logical. If \code{TRUE}, results are saved in the metadata under \code{metadata$UV$Unknown}.The default is set
+to \code{TRUE}.}
+
+\item{verbose}{Logical. If \code{TRUE}, displays messages for the different steps of the function.}
 }
 \description{
-This function identifies unknown sources of unwanted variation in RNA-seq data using different robust statistical
+This function estimates unknown sources of unwanted variation in RNA-seq data using different robust statistical
 approaches.
 }
 \details{

@@ -7,6 +7,7 @@
 plotStudyOutline(
   se.obj,
   variables,
+  assess.variables.association = TRUE,
   variable.to.sort = NULL,
   plot.output = TRUE,
   legend.font.size = 14,
@@ -26,6 +27,9 @@ plotStudyOutline(
 \item{variables}{Character or character vector. The label(s) of variable(s) within the SummarizedExperiment
 object. This can include a vector containing categorical, continuous, or a combination of both types of variables. This
 cannot be empty or \code{NULL}.}
+
+\item{assess.variables.association}{Logical. Whether to assess association between all the specified variables or not. The default
+is set to \code{TRUE},}
 
 \item{variable.to.sort}{Character. The label of the variable used to sort the sample information. The default is \code{NULL}.
 This means the samples will be plotted as they are.}

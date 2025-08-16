@@ -2,7 +2,7 @@
 % Please edit documentation in R/renameVariables.R
 \name{renameVariables}
 \alias{renameVariables}
-\title{Renames variables in SummarizedExperiment}
+\title{Renames variable in SummarizedExperiment}
 \usage{
 renameVariables(se.obj, current.names, new.names, keep.old.names = FALSE)
 }
@@ -16,5 +16,5 @@ renameVariables(se.obj, current.names, new.names, keep.old.names = FALSE)
 \item{keep.old.names}{description}
 }
 \description{
-Renames variables in SummarizedExperiment
+Renames variable in SummarizedExperiment
 }

@@ -9,6 +9,7 @@ assessNormalization(
   assay.names = "all",
   bio.variables,
   uv.variables,
+  assessment.level = "L1",
   assessments.to.exclude = NULL,
   fast.pca = TRUE,
   sil.dist.measure = "euclidian",
@@ -45,6 +46,8 @@ The default is 'all', which selects all assays in the object.}
 
 \item{uv.variables}{character or character vector. One or more column names indicating unwanted variables
 (categorical or continuous) in the SummarizedExperiment object.}
+
+\item{assessment.level}{TTT}
 
 \item{assessments.to.exclude}{character or character vector. Names of assessment metrics to exclude, as returned by
 the \code{getAssessmentMetrics()} function. Default is NULL.}

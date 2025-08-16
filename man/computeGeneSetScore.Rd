@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeGeneSetScore.R
 \name{computeGeneSetScore}
 \alias{computeGeneSetScore}
-\title{Computes sample level enrichment score of a gene set.}
+\title{Compute sample level enrichment score of a gene set.}
 \usage{
 computeGeneSetScore(
   se.obj,
@@ -11,13 +11,10 @@ computeGeneSetScore(
   downset.genes = NULL,
   normalization = NULL,
   regress.out.variables = NULL,
+  regress.out.rle.med = FALSE,
   apply.log = TRUE,
   pseudo.count = 1,
-  assess.score = FALSE,
-  variables.to.assess = NULL,
-  corr.method = "spearman",
   gene.set.name = NULL,
-  plot.output = TRUE,
   check.se.obj = TRUE,
   save.se.obj = TRUE,
   verbose = TRUE
@@ -43,28 +40,16 @@ Refer to the \code{applyOtherNormalizations()} function for more details.}
 the SummarizedExperiment object to be regressed out from the data before computing the scores. The default is set
 to \code{NULL}.}
 
+\item{regress.out.rle.med}{TTTT}
+
 \item{apply.log}{Logical. Indicates whether to apply a log transformation to the data. The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value as pseudo-count to be added to all measurements of the data set(s) before
 applying log transformation to avoid \code{-Inf} for measurements equal to 0. The default is set to 1.}
 
-\item{assess.score}{Logical. If \code{TRUE}, the association between the computed scores and specified variables will be
-assessed. The default is set to \code{FALSE}. See the details for more information.}
-
-\item{variables.to.assess}{Character. A character string or vector of strings indicating the name(s) of the column(s)
-in the SummarizedExperiment object to be used for assessing the computed scores. These can be continuous or categorical
-variables. The default is set to \code{NULL}.}
-
-\item{corr.method}{Character. A character string indicating which correlation method should be used for the correlation
-analysis of the computed scores with the specified continuous variable(s). Options include \code{pearson}, \code{kendall} amd
-\code{spearman}. The default is set to \code{spearman}.}
-
 \item{gene.set.name}{Character. A character string indicating the name to be used to save the score in the metadata of
 the SummarizedExperiment object. If \code{NULL}, the function will select a name as follows:
 gene.set.name <- paste0('singscore|', length(c(upset.genes, downset.genes)), 'genes')}
-
-\item{plot.output}{Logical. If \code{TRUE}, the assessment plot will be printed while running the function. The default is
-se to \code{TRUE}.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is se to \code{TRUE}.
 Refer to the \code{checkSeObj()} function for more details.}

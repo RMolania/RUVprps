@@ -11,7 +11,7 @@ assessNCGs(
   bio.variables = NULL,
   uv.variables = NULL,
   ncg.type,
-  ncg.group,
+  ncg.group.name,
   ncg.set.names = "all",
   nb.pcs = 5,
   center = TRUE,
@@ -46,11 +46,11 @@ variable types. The default is set to \code{NULL}. This must be specified if the
 \item{ncg.type}{Character. A character that specifies the type of NCGs to be selected and assessed their performnce.
 Options are \code{'supervised'}, \code{'un.supervised'}, \code{pre.selected} and \code{all.genes}.}
 
-\item{ncg.group}{Character. A character that specifies the name of the group of NCGs stored under the 'supervised' or
+\item{ncg.group.name}{Character. A character that specifies the name of the group of NCGs stored under the 'supervised' or
 'un.supervised' slots in the SummarizedExperiment object. Refer to supervised and unsupervised functions for finding
 NCGS for more details.}
 
-\item{ncg.set.names}{Character. Specifies the exact name of an NCG set under the given \code{ncg.group} in either the
+\item{ncg.set.names}{Character. Specifies the exact name of an NCG set under the given \code{ ncg.group.name} in either the
 'supervised' or 'un.supervised' slot or in the \code{pre.selected} slot. The default is se to \code{'all'}, which selects all
 available NCG sets.}
 

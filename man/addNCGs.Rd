@@ -2,7 +2,7 @@
 % Please edit documentation in R/addNCGs.R
 \name{addNCGs}
 \alias{addNCGs}
-\title{Adds pre-selected sets of NCGs to SummarizedExperiment object.}
+\title{Add pre-selected sets of NCGs to SummarizedExperiment object.}
 \usage{
 addNCGs(se.obj, ncg, subset.name = NULL, verbose = TRUE)
 }

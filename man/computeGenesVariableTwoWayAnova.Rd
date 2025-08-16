@@ -37,11 +37,23 @@ object that contains a categorical variable, such as experimental batches, etc.}
 \item{uv.variables}{Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
 object that contains a categorical variable, such as experimental batches, etc.}
 
+\item{nb.bio.clusters}{TTT}
+
+\item{bio.clustering.method}{TTTT}
+
+\item{nb.uv.clusters}{TTT}
+
+\item{uv.clustering.method}{TTT}
+
+\item{samples.to.use}{TTT}
+
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
 default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 the log transformation. The default is set to 1.}
+
+\item{nb.cores}{TTT}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
 This means the function will apply the \code{checkSeObj()} function.}

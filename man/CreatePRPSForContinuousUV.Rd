@@ -10,6 +10,7 @@ createPrPsForContinuousUV(
   bio.variables,
   main.uv.variable,
   other.uv.variables,
+  samples.to.use = "all",
   min.sample.for.ps = 3,
   bio.clustering.method = "kmeans",
   nb.bio.clusters = 2,
@@ -45,6 +46,8 @@ such as batch effects, etc., within the sample annotation (colData) of the Summa
 comprise a vector containing either categorical, continuous, or a combination of both variables. These variables will
 be considered when generating PRPS data for the \code{main.uv.variable}. The default is set to \code{NULL}. Refer to the function
 details for more information.}
+
+\item{samples.to.use}{TTTT}
 
 \item{min.sample.for.ps}{Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
 to be averaged to create one pseudo-sample (PS). The default is set to 3.}

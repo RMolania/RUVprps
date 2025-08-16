@@ -14,12 +14,14 @@ prepareSeObj(
   minimum.proportion = 0.5,
   calculate.library.size = FALSE,
   estimate.tumor.purity = NULL,
+  scale.singscore.values = TRUE,
   assay.name.to.estimate.purity = NULL,
   create.sample.annotation = FALSE,
   gene.annotation = NULL,
   create.gene.annotation = FALSE,
   add.gene.details = FALSE,
   gene.group = NULL,
+  column.name = NULL,
   gene.details = NULL,
   add.housekeeping.genes = FALSE,
   add.immun.stroma.genes = FALSE,
@@ -60,6 +62,9 @@ provided in \code{raw.count.assay.name}. Library size will be computed after rem
 \code{both}, and \code{NULL}. If \code{estimate}, the ESTIMATE method will be used. If \code{singscore}, the \code{singscore} method will be
 applied. If \code{both}, both methods will be applied. The default is set to \code{NULL}.}
 
+\item{scale.singscore.values}{Logical. Indicating to change the range of the tumor purity estimated by the singscore
+method based on the  the one estimated by the ESTIMATE method. The default is set to \code{TRUE}.}
+
 \item{assay.name.to.estimate.purity}{Character. The name of an assay within the list of assays or expression data
 to be used for estimating tumor purity.}
 
@@ -77,6 +82,8 @@ added to the gene annotation.}
 
 \item{gene.group}{Character. The name of a gene class from the row names of the assay(s). This must be one of the
 following: \code{entrezgene_id}, \code{hgnc_symbol}, or \code{ensembl_gene_id}.}
+
+\item{column.name}{TTTT}
 
 \item{gene.details}{Character or character vector. Indicates the gene details to be included in the gene annotation.}
 

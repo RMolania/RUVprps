@@ -10,7 +10,7 @@ computeGenesVarianceComposition(
   form,
   adjust.data = FALSE,
   adjustment.form = NULL,
-  adjustment.method = "lmm",
+  adjustment.method = "lm",
   samples.to.use = "all",
   apply.log = TRUE,
   pseudo.count = 1,

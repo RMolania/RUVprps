@@ -6,26 +6,23 @@
 \usage{
 addTcgaBatchInfo(
   se.obj,
-  use.lables = FALSE,
   batch.info = "all",
   cancer.type = NULL,
-  order.se.obj = TRUE,
-  factors.to.order = batch.info,
+  keep.all.samples = TRUE,
+  use.lables = FALSE,
   missing.samples.name = "DF"
 )
 }
 \arguments{
 \item{se.obj}{TTT}
 
-\item{use.lables}{TTT}
-
 \item{batch.info}{TTTT}
 
-\item{cancer.type}{TTTTsss}
+\item{cancer.type}{TTTT}
 
-\item{order.se.obj}{TTTT}
+\item{keep.all.samples}{TTTT}
 
-\item{factors.to.order}{TTTT}
+\item{use.lables}{TTTT}
 
 \item{missing.samples.name}{TTTTT}
 }
