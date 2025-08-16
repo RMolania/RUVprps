@@ -5,45 +5,47 @@
 #' @description
 #' This function adds the TCGA RNA-seq batch information to the a SummarizedExperiment object.
 #' @param se.obj TTT
-#' @param use.lables TTT
 #' @param batch.info TTTT
-#' @param cancer.type TTTTsss
-#' @param order.se.obj TTTT
-#' @param factors.to.order TTTT
+#' @param cancer.type TTTT
+#' @param keep.all.samples TTTT
+#' @param use.lables TTTT
 #' @param missing.samples.name TTTTT
 #'
-#' @importFrom purrr map_int
 #' @importFrom stringr str_split
 #' @importFrom tidyr separate
+#' @importFrom purrr map_int
+#'
+#' @export
+
 
 addTcgaBatchInfo <- function(
         se.obj,
-        use.lables = FALSE,
         batch.info = 'all',
         cancer.type = NULL,
-        order.se.obj = TRUE,
-        factors.to.order = batch.info,
+        keep.all.samples = TRUE,
+        use.lables = FALSE,
         missing.samples.name = 'DF'
         ){
     tcga.batch.info <- read.csv('TCGA.PanCancer.RNAseq.BatchInformation.csv')
     colnames(tcga.batch.info)[12:14] <- c('Years', 'Months', 'Days')
-    tcga.batch.info <- tcga.batch.info[tcga.batch.info$Cancer.type  == 'READ' , ]
-
     tcga.batchs <- c('Years','Months','Days','Plates','TSS','Center')
-    if (length(batch.info) > 1 ){
-        if (sum(batch.info %in% c(tcga.batchs, colnames(colData(se.obj)))) != length(batch.info)){
-            stop('All or some of the "batch.info" cannot be found in the SummarizedExperiment object.')
+
+    # Checking batch information ####
+    if (length(batch.info) > 1){
+        if (sum(batch.info %in% tcga.batchs) != length(batch.info)){
+            stop('All or some of the "batch.info" cannot be found in the TCGA batch information.')
         }
-        if (sum(batch.info %in% colnames(colData(se.obj))) > 0){
-            include.sample.info <- TRUE
-            sample.info <- batch.info[batch.info %in% colnames(colData(se.obj))]
-        }
-    } else include.sample.info <- FALSE
+    }
     if (identical(x = batch.info, 'all')){
         batch.info = tcga.batchs
     }
+    # Selecting cancer type ####
+    if (!is.null(cancer.type)){
+        tcga.batch.info <- tcga.batch.info[tcga.batch.info$Cancer.type == cancer.type , , drop = FALSE]
+    }
 
-    # Checking sample barcodes
+
+    # Checking sample bar codes ####
     ## TCGA id
     samples.barcode <- colnames(se.obj)
     tcga.id <- substr(x = samples.barcode, start = 1, stop = 4)
@@ -57,39 +59,39 @@ addTcgaBatchInfo <- function(
         stop('The sample ids do not have the consistent TCGA information, please check.')
     }
     ## plot an example
-    df <- tibble(barcode = tcga.batch.info$Sample.ids.full.a[1]) %>%
-        separate(
-            barcode,
-            into = c("Project", "TSS", "Participant", "SampleType", "Portion", "Plates", "Center"), sep = "-") %>%
-        mutate(ID = row_number())
-    df.long <- df %>%
-        pivot_longer(cols = -c(ID), names_to = "Component", values_to = "Value") %>%
-        group_by(ID) %>%
-        mutate(Position = row_number())
-    separator.positions <- data.frame(
-        Position = seq(1.5, max(df.long$Position) - 0.5, by = 1),
-        ID = 1,
-        sep = "-"
-    )
-    p1 <- ggplot(df.long, aes(x = Position, y = factor(ID))) +
-        geom_text(aes(label = Value), size = 6, color = "black") +
-        geom_text(data = separator.positions, aes(x = Position, y = factor(ID), label = sep),
-                  size = 8, inherit.aes = FALSE) +
-        scale_x_continuous(breaks = df.long$Position, labels = df.long$Component) +
-        scale_y_discrete(expand = expansion(mult = c(0., 0.))) +  # reduces vertical padding
-        guides(fill = "none") +
-        xlab('-------------------Common TCGA barcode -------------------') +
-        theme_minimal() +
-        theme(
-            axis.title.y = element_blank(),
-            axis.text.y = element_blank(),
-            axis.ticks = element_blank(),
-            panel.grid = element_blank(),
-            plot.title = element_text(size = 20),
-            axis.title.x = element_text(size = 20),
-            axis.text.x = element_text(margin = margin(t = 1, b = 25), size = 18)
-        )
-    ggarrange(p1, p1, ncol = 1)
+    # df <- tibble(barcode = tcga.batch.info$Sample.ids.full.a[1]) %>%
+    #     separate(
+    #         barcode,
+    #         into = c("Project", "TSS", "Participant", "SampleType", "Portion", "Plates", "Center"), sep = "-") %>%
+    #     mutate(ID = row_number())
+    # df.long <- df %>%
+    #     pivot_longer(cols = -c(ID), names_to = "Component", values_to = "Value") %>%
+    #     group_by(ID) %>%
+    #     mutate(Position = row_number())
+    # separator.positions <- data.frame(
+    #     Position = seq(1.5, max(df.long$Position) - 0.5, by = 1),
+    #     ID = 1,
+    #     sep = "-"
+    # )
+    # p1 <- ggplot(df.long, aes(x = Position, y = factor(ID))) +
+    #     geom_text(aes(label = Value), size = 6, color = "black") +
+    #     geom_text(data = separator.positions, aes(x = Position, y = factor(ID), label = sep),
+    #               size = 8, inherit.aes = FALSE) +
+    #     scale_x_continuous(breaks = df.long$Position, labels = df.long$Component) +
+    #     scale_y_discrete(expand = expansion(mult = c(0., 0.))) +  # reduces vertical padding
+    #     guides(fill = "none") +
+    #     xlab('-------------------Common TCGA barcode -------------------') +
+    #     theme_minimal() +
+    #     theme(
+    #         axis.title.y = element_blank(),
+    #         axis.text.y = element_blank(),
+    #         axis.ticks = element_blank(),
+    #         panel.grid = element_blank(),
+    #         plot.title = element_text(size = 20),
+    #         axis.title.x = element_text(size = 20),
+    #         axis.text.x = element_text(margin = margin(t = 1, b = 25), size = 18)
+    #     )
+    # ggarrange(p1, p1, ncol = 1)
 
     ## Checking the provided information
     a.barcode <- length.barcodes[1]
@@ -121,28 +123,16 @@ addTcgaBatchInfo <- function(
             tcga.batch.info <- tcga.batch.info[tcga.batch.info$Sample.ids.full.a %in% common.samples, ]
             match.samples <- match(colnames(se.obj), tcga.batch.info$Sample.ids.full.a)
             tcga.batch.info <- tcga.batch.info[match.samples , ]
-            if (isTRUE(include.sample.info)){
-                for(i in sample.info) tcga.batch.info[i] <- se.obj[[i]]
-            }
-            if (isTRUE(order.se.obj)){
-                if (isTRUE(order.se.obj)){
-                    tcga.batch.info <- arrange(tcga.batch.info, !!!syms(batch.info))
-                    se.obj <- se.obj[, tcga.batch.info$Sample.ids.full.a]
-                }
-            }
+            # if (isTRUE(include.sample.info)){
+            #     for(i in sample.info) tcga.batch.info[i] <- se.obj[[i]]
+            # }
             for(i in batch.info) se.obj[[i]] <- tcga.batch.info[[i]]
         }
         if (length(common.samples) < ncol(se.obj)){
             tcga.batch.info <- tcga.batch.info[tcga.batch.info$Sample.ids.full.a %in% common.samples, ]
             match.samples <- match(colnames(se.obj), tcga.batch.info$Sample.ids.full.a)
             tcga.batch.info <- tcga.batch.info[match.samples , ]
-            if (isTRUE(include.sample.info)){
-                for(i in sample.info) tcga.batch.info[[i]] <- se.obj[[i]]
-            }
-            if (isTRUE(order.se.obj)){
-                if (isTRUE(order.se.obj))
-                    tcga.batch.info <- arrange(tcga.batch.info, !!!syms(batch.info))
-            }
+            tcga.batch.info$New.ids <- colnames(se.obj)
             for(i in batch.info) se.obj[[i]] <- tcga.batch.info[[i]]
         }
     }
