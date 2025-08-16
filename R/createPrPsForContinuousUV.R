@@ -36,6 +36,7 @@
 #' comprise a vector containing either categorical, continuous, or a combination of both variables. These variables will
 #' be considered when generating PRPS data for the `main.uv.variable`. The default is set to `NULL`. Refer to the function
 #' details for more information.
+#' @param samples.to.use TTTT
 #' @param min.sample.for.ps Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
 #' to be averaged to create one pseudo-sample (PS). The default is set to 3.
 #' @param bio.clustering.method Character. A character string indicating which clustering method should be used to group
@@ -83,6 +84,7 @@ createPrPsForContinuousUV <- function(
         bio.variables,
         main.uv.variable,
         other.uv.variables,
+        samples.to.use = 'all',
         min.sample.for.ps = 3,
         bio.clustering.method = 'kmeans',
         nb.bio.clusters = 2,
@@ -157,12 +159,17 @@ createPrPsForContinuousUV <- function(
             assay.names = assay.name,
             variables = c(main.uv.variable, other.uv.variables, bio.variables),
             remove.na = remove.na,
-            verbose = verbose
-            )
+            verbose = verbose)
     }
-    # Data transformation ####
+    # Selecting the current specified samples ####
+    if (is.logical(samples.to.use)){
+        se.obj.all <- se.obj
+        se.obj <- se.obj[ , samples.to.use]
+    }
+
+    # Applying data transformation ####
     printColoredMessage(
-        message = '-- Data transformation:',
+        message = '-- Applying log transformation on the data:',
         color = 'magenta',
         verbose = verbose
         )
@@ -170,7 +177,8 @@ createPrPsForContinuousUV <- function(
         printColoredMessage(
             message = paste0(
                 'Applying log2 + ',
-                pseudo.count, ' (pseudo.count) on the ',
+                pseudo.count,
+                ' (pseudo.count) on the ',
                 assay.name,
                 ' data.'),
             color = 'blue',
@@ -222,7 +230,7 @@ createPrPsForContinuousUV <- function(
             save.se.obj = FALSE,
             remove.na = 'none',
             verbose = verbose
-        )
+            )
         ## Creating homogeneous groups of samples with respect to unwanted variation ####
         printColoredMessage(
             message = paste0(
@@ -408,10 +416,10 @@ createPrPsForContinuousUV <- function(
         )
         printColoredMessage(
             message = paste0(
-                '-- Finding homogeneous biological groups with at least ',
+                '- Finding homogeneous biological groups with at least ',
                 2 * min.sample.for.ps,
                 ' (2* min.sample.for.ps) samples.'),
-            color = 'magenta',
+            color = 'blue',
             verbose = verbose
             )
         bio.groups <- findRepeatingPatterns(
@@ -492,7 +500,7 @@ createPrPsForContinuousUV <- function(
                     bot.samples <- se.obj[[main.uv.variable]][index.bot]
                     c(top.samples, bot.samples)
                 }) %>%
-                data.frame(.) %>%
+                data.frame(., check.names = FALSE) %>%
                 pivot_longer(everything(), values_to = 'uv.var', names_to = 'bio.variable') %>%
                 arrange(bio.variable, uv.var) %>%
                 mutate(groups = rep(rep(c('bottom', 'top'), each = min.sample.for.ps), length(selected.groups)))
@@ -507,9 +515,8 @@ createPrPsForContinuousUV <- function(
             prps.map.plot <- ggplot(data = prps.map.plot, aes(x = uv.var , y = bio.variable , color = groups)) +
                 geom_boxplot() +
                 geom_point() +
-                scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
+                scale_color_manual(values = c('darkgreen', 'orange', 'navy'), name = 'Groups') +
                 facet_grid(new.g~., scales = 'free', space = 'free') +
-                scale_x_discrete(expand = c(0, 0.5)) +
                 xlab(main.uv.variable) +
                 ylab('Homogeneous groups') +
                 xlim(c(
@@ -525,8 +532,8 @@ createPrPsForContinuousUV <- function(
                     axis.line = element_line(colour = 'black', linewidth = 1),
                     axis.title.x = element_text(size = 16),
                     axis.title.y = element_text(size = 16),
-                    axis.text.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 14),
+                    axis.text.y = element_text(size = 12),
+                    axis.text.x = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
                     legend.text = element_text(size = 14),
                     legend.title = element_text(size = 18),
                     strip.text.y = element_text(size = 15)
@@ -558,6 +565,10 @@ createPrPsForContinuousUV <- function(
         prps.group.name <- main.uv.variable
     }
     ## Saving the output in the SummarizedExperiment object ####
+    if (is.logical(samples.to.use)){
+        se.obj <- se.obj.all
+    }
+
     if (isTRUE(save.se.obj)) {
         ## check
         if (!'PRPS' %in% names(se.obj@metadata)) {
