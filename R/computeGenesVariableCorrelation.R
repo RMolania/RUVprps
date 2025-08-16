@@ -177,7 +177,7 @@ computeGenesVariableCorrelation <- function(
         # Computing correlation analyses ####
         printColoredMessage(
             message = paste0(
-                'Performing ' ,
+                '-- Performing ' ,
                 method,
                 ' correlation between individual genes expression of the assay(s) and the "',
                 variable,
@@ -229,7 +229,8 @@ computeGenesVariableCorrelation <- function(
                         pivot_longer(
                             -variable,
                             names_to = 'genes',
-                            values_to = 'expr')
+                            values_to = 'expr'
+                            )
                     p.pos <- ggplot(p.pos, aes(x = variable, y = expr)) +
                         geom_point() +
                         ylab(expression(Log[2] ~ 'gene expression')) +
