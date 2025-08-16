@@ -31,6 +31,7 @@
 #' This can comprise a vector containing either categorical, continuous, or a combination of both variables. These variables
 #' will be considered when generating PRPS sets for the `main.uv.variable`. This can help avoid potential contamination
 #' from the `other.uv.variables` in the PRPS data of the `main.uv.variable`. The default is set to `NULL`.
+#' @param samples.to.use TTTT
 #' @param min.sample.for.ps Numeric. A numeric value that indicates the minimum number of biologically homogeneous samples
 #' to be averaged to create one pseudo-sample (PS). The default is set to 3.
 #' @param bio.clustering.method Character. A character indicating which clustering method should be used to group
@@ -82,6 +83,7 @@ createPrPsForCategoricalUV <- function(
         bio.variables,
         main.uv.variable,
         other.uv.variables = NULL,
+        samples.to.use = 'all',
         min.sample.for.ps = 3,
         bio.clustering.method = 'kmeans',
         nb.bio.clusters = 2,
@@ -165,9 +167,14 @@ createPrPsForCategoricalUV <- function(
             )
     }
 
+    if (is.logical(samples.to.use)){
+        se.obj.all <- se.obj
+        se.obj <- se.obj[ , samples.to.use]
+    }
+
     # Data transformation ####
     printColoredMessage(
-        message = '-- Data transformation:',
+        message = '-- Applying log transformation on the data:',
         color = 'magenta',
         verbose = verbose
         )
@@ -203,7 +210,7 @@ createPrPsForCategoricalUV <- function(
 
     # Creating PRPS data sets ####
     printColoredMessage(
-        message = '-- Creating PRPS sets:',
+        message = '-- Creating PRPS data sets:',
         color = 'magenta',
         verbose = verbose
         )
@@ -232,10 +239,10 @@ createPrPsForCategoricalUV <- function(
             )
         if (sum(table(homo.bio.groups) >=  2*min.sample.for.ps) == 0)
             stop(paste0(
-            'All the homogeneous biological groups of samples have less than ',
-            2*min.sample.for.ps,
-            ' samples. Then, PRPS cannot be created.')
-            )
+                'All the homogeneous biological groups of samples have less than ',
+                2*min.sample.for.ps,
+                ' samples. Then, PRPS cannot be created.')
+                )
 
         ## Creating homogeneous sample groups with respect to unwanted variables ####
         printColoredMessage(
@@ -259,7 +266,6 @@ createPrPsForCategoricalUV <- function(
             homo.uv.groups = homo.uv.groups,
             homo.bio.groups = homo.bio.groups
             )
-        bio.batch <- uv.group <- NULL
         all.groups$bio.batch <- paste(
             all.groups$homo.uv.groups,
             all.groups$homo.bio.groups,
@@ -519,14 +525,14 @@ createPrPsForCategoricalUV <- function(
                 axis.line = element_line(colour = 'black', linewidth = .85),
                 axis.title.x = element_text(size = 16),
                 axis.title.y = element_text(size = 16),
-                axis.text.x = element_text(size = 12, angle = 90, hjust = 0.5 , vjust = 0.5),
+                axis.text.x = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
                 axis.text.y = element_text(size = 12),
                 legend.position = 'right') +
             guides(color = guide_legend(title = "PS"))
         if (isTRUE(verbose)) print(prps.map.plot)
     }
     # Saving the results ####
-    ## Selecting  output name ####
+    ## Selecting output name ####
     if (!is.null(other.uv.variables)) {
         prps.sets.name <- paste0(
             main.uv.variable,
@@ -548,6 +554,9 @@ createPrPsForCategoricalUV <- function(
         prps.group.name <- main.uv.variable
     }
     ## Saving the output in the SummarizedExperiment object ####
+    if (is.logical(samples.to.use)){
+        se.obj <- se.obj.all
+    }
     if (isTRUE(save.se.obj)) {
         ## check
         if (!'PRPS' %in% names(se.obj@metadata)) {
