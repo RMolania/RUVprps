@@ -189,7 +189,7 @@ plotGenesVariableAnova <- function(
         color = 'magenta',
         verbose = verbose
         )
-    ## specified ylim ####
+    ## Specifying ylim of the plots####
     breaks <- seq(from = 0, to = 1, by = .1)
     ylim.pvalue <- sapply(
         levels(assay.names),
@@ -202,19 +202,22 @@ plotGenesVariableAnova <- function(
         })
     ylim.pvalue <- ceiling(x = max(ylim.pvalue))
 
-    ## generating histograms ####
+    ## Generating histograms ####
     all.aov.pvalues.histograms <- lapply(
         levels(assay.names),
         function(x){
             printColoredMessage(
-                message = paste0('- Generating boxplot for the "', x, '" data.'),
+                message = paste0(
+                    '- Generating boxplot for the "',
+                    x,
+                    '" data.'),
                 color = 'blue',
                 verbose = verbose
-            )
+                )
             aov.all <- all.aov.fvals.pvalues[[x]]
             p.values.hist <- ggplot(data = aov.all, aes(x = pvalue)) +
                 geom_histogram(binwidth = 0.1) +
-                ggtitle(variable) +
+                ggtitle(x) +
                 xlab('p-values') +
                 ylab(expression('Frequency'~10^3)) +
                 scale_y_continuous(labels = function(x) format(x /1000, scientific = F), limits = c(0, ylim.pvalue)) +
@@ -229,7 +232,7 @@ plotGenesVariableAnova <- function(
         })
     names(all.aov.pvalues.histograms) <- levels(assay.names)
 
-    ## put all histograms together ####
+    ## Putting all histograms together ####
     if (length(assay.names) > 1){
         printColoredMessage(
             message = '-- Putting all the p-values histograms of the ANOVA together.',
