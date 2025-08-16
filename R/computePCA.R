@@ -47,6 +47,7 @@
 #'
 #' @importFrom SummarizedExperiment assay
 #' @importFrom BiocSingular runSVD bsparam
+#' @importFrom matrixStats colVars
 #' @import ggplot2
 #' @export
 
@@ -139,9 +140,9 @@ computePCA <- function(
         if (!remove.na %in% c('assays','none')){
             stop('The "remove.na" must be on of the "assays" or "none"')
         }
-        if (!is.logical(override.check)){
-            stop('The "override.check" must be logical.')
-        }
+        # if (!is.logical(override.check)){
+        #     stop('The "override.check" must be logical.')
+        # }
         if (!is.logical(save.se.obj)){
             stop('The "save.se.obj" must be logical.')
         }
@@ -176,6 +177,7 @@ computePCA <- function(
                 se.obj = se.obj,
                 assay.names = levels(assay.names),
                 pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
                 verbose = verbose
             )
         }
@@ -196,7 +198,7 @@ computePCA <- function(
             message = '-- Computing PCA usibg singular value decomposition (SVD):',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         ## compute fast SVD ####
         if (isTRUE(fast.pca)) {
             printColoredMessage(
@@ -214,7 +216,10 @@ computePCA <- function(
                 levels(assay.names),
                 function(x) {
                     printColoredMessage(
-                        message = paste0('- Performing fast SVD on the "', x , '" data.'),
+                        message = paste0(
+                            '- Performing fast SVD on the "',
+                            x ,
+                            '" data.'),
                         color = 'blue',
                         verbose = verbose
                         )
@@ -227,18 +232,18 @@ computePCA <- function(
                         )
                     rownames(sv.dec$u) <- colnames(se.obj)
                     rownames(sv.dec$v) <- row.names(se.obj)
-                    percentage <- sv.dec$d ^ 2 / sum(sv.dec$d ^ 2) * 100
-                    percentage <- sapply(
-                        seq_along(percentage),
-                        function(i) round(percentage [i], 1))
+                    d <- sv.dec$d
+                    n <- ncol(all.assays[[x]])  # number of samples (after transpose)
+                    pc.var <- (d^2) / (n - 1)
+                    centered.data <- scale(
+                        t(all.assays[[x]]),
+                        center = center,
+                        scale = scale
+                        )
+                    total.var <- sum(colVars(centered.data))
+                    percentage <- round(x = c(pc.var / total.var)*100, digits = 1)
                     return(list(svd = sv.dec, percentage.variation = percentage))
                 })
-            printColoredMessage(
-                message = paste0(
-                    '- Note: in the fast svd analysis, the percentage of variation of PCs will be ',
-                    'computed proportional to the highest selected number of PCs (left singular vectors), not on all the PCs.'),
-                color = 'red',
-                verbose = verbose)
             names(all.sv.decomposition) <- levels(assay.names)
         }
         ## compute ordinary SVD ####
@@ -268,7 +273,7 @@ computePCA <- function(
                         x = t(all.assays[[x]]),
                         center = center,
                         scale = scale)
-                    )
+                        )
                     rownames(sv.dec$u) <- colnames(se.obj)
                     rownames(sv.dec$v) <- row.names(se.obj)
                     percentage <- sv.dec$d ^ 2 / sum(sv.dec$d ^ 2) * 100
@@ -292,7 +297,7 @@ computePCA <- function(
                 message = '- Saving all the SVD results to the "metadata" of the SummarizedExperiment object.',
                 color = 'blue',
                 verbose = verbose
-            )
+                )
             if(isTRUE(fast.pca)){
                 method <- 'fast.svd'
             } else method <- 'ordinary.svd'
@@ -306,7 +311,7 @@ computePCA <- function(
                 file.name = 'data',
                 variables = 'general',
                 results.data = all.sv.decomposition
-            )
+                )
             printColoredMessage(
                 message = paste0(
                     '- The SVD results of individual assay (s) are saved to the',
@@ -316,9 +321,11 @@ computePCA <- function(
                 color = 'blue',
                 verbose = verbose
                 )
-            printColoredMessage(message = '------------The computePCA function finished.',
-                                color = 'white',
-                                verbose = verbose)
+            printColoredMessage(
+                message = '------------The computePCA function finished.',
+                color = 'white',
+                verbose = verbose
+                )
             return(se.obj)
         }
 
@@ -328,16 +335,20 @@ computePCA <- function(
                 message = '- The SVD results of individual assays are outputed as a list.',
                 color = 'blue',
                 verbose = verbose
-            )
-            printColoredMessage(message = '------------The computePCA function finished.',
-                                color = 'white',
-                                verbose = verbose)
+                )
+            printColoredMessage(
+                message = '------------The computePCA function finished.',
+                color = 'white',
+                verbose = verbose
+                )
             return(all.sv.decompositions = all.sv.decomposition)
         }
     } else {
-        printColoredMessage(message = '------------The computePCA function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The computePCA function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj)
 
     }
