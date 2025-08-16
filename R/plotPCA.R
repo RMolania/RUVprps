@@ -109,11 +109,19 @@ plotPCA <- function(
     }
 
     # Selecting colors ####
+    # if (!is.null(variable)){
+    #     if (is.null(variable.colors)){
+    #         n.colors <- length(unique(colData(se.obj)[[variable]]))
+    #         pca.plot.colors <- scales::hue_pal()(n.colors*2)
+    #         pca.plot.colors <- pca.plot.colors[seq(1, n.colors*2, 2)]
+    #     } else if (!is.null(variable.colors)){
+    #         pca.plot.colors <- variable.colors
+    #     }
+    # }
     if (!is.null(variable)){
         if (is.null(variable.colors)){
             n.colors <- length(unique(colData(se.obj)[[variable]]))
-            pca.plot.colors <- scales::hue_pal()(n.colors*2)
-            pca.plot.colors <- pca.plot.colors[seq(1, n.colors*2, 2)]
+            pca.plot.colors <- selectColors(nb.color = 1:n.colors)
         } else if (!is.null(variable.colors)){
             pca.plot.colors <- variable.colors
         }
