@@ -37,7 +37,7 @@ addTcgaClinicalInfo <- function(
             stop('The cancer type must be a character string of a TCGA cacncer types.')
         }
         if (!cancer.type %in% unique(tcga.clinic.info$type)){
-            stop('The "cancer.type" cannot be found in the TCGA clinical information dat')
+            stop('The "cancer.type" cannot be found in the TCGA clinical information data')
         }
         tcga.clinic.info <- tcga.clinic.info[tcga.clinic.info$type == cancer.type , ]
         printColoredMessage(
@@ -116,8 +116,7 @@ addTcgaClinicalInfo <- function(
         )
     se.obj[['OS']] <- -1
     se.obj[['OS.time']] <- -1
-
-    for(i in common.samples){
+    for (i in common.samples){
         index <- tcga.clinic.info$bcr_patient_barcode == i
         se.obj$OS[samples.barcode == i & se.obj[[tissue.type]] == 'Tumor'] <-  tcga.clinic.info$OS[index]
         se.obj$OS.time[samples.barcode == i & se.obj[[tissue.type]] == 'Tumor'] <- tcga.clinic.info$OS.time[index]
