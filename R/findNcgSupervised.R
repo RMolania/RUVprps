@@ -16,18 +16,25 @@
 #' @param uv.variables Character. A character string or vector of strings indicating the column name(s) of the unwanted
 #' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
 #'  argument cannot be `NULL`.
-#' @param use.rank TTTT
 #' @param approach Character. A character that indicates which NCG approaches should be used. The options are :
 #' `AnovaCorr.PerBatchPerBiology`, `AnovaCorr.AcrossAllSamples` and  `TwoWayAnova`. The default is set to `AnovaCorr.AcrossAllSamples`.
 #' See the details for mroe information.
-#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
-#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
-#' The default is set to `non.overlap`. For more information, refer to the details of the function.
-#' @param samples.to.use TTTT
-#' @param form TTTT
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param samples.to.use TTTT
+#' @param use.rank TTTT
+#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
+#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' @param form TTTT
+#' @param ratio.variable TTTT
+#' @param rank.variable TTTT
+#' @param rank.continuous.var TTTTT
+#' @param rank.categorical.var TTTT
+#' @param adjust.data TTT
+#' @param adjustment.method TTT
+#' @param adjustment.variables TTT
 #' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
 #' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
 #' or `non.overlap`. The default is set to 0.2.
@@ -131,12 +138,6 @@
 #' @param nb.cores TTT
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
-#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
-#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
-#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
-#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
-#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
 #' @param ncg.group.name Character. A character to be used as name of the group of NCG. The default is set to `NULL`, then
 #' the function create a names as following: `paste0('ncg|unsupervised')`. We refer to the details of the function for
 #' more details.
@@ -150,19 +151,15 @@
 #' re-calculated. The default is set to `FALSE`.
 #' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to `FALSE`.
 #' @param imf.name Character string. A name to save the intermediate file. If `NULL`, the function generates a name.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
+#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
+#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
+#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
+#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
+#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the
 #' SummarizedExperiment object or output the result. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-#' @param approach TTT
-#' @param ncg.idenfitication.approach TTT
-#' @param form TTT
-#' @param nb.bio.pcs TTT
-#' @param nb.uv.pcs TTT
-#' @param use.rank TTT
-#' @param samples.to.use TTT
-#' @param svd.bsparam TTT
-#' @param regress.out.rle.med TTT
-#'
 #'
 #' @return Either the SummarizedExperiment object containing a set of negative control genes in the metadata or a
 #' logical vector of the selected negative control genes.
@@ -175,12 +172,19 @@ findNcgSupervised <- function(
         assay.name,
         bio.variables,
         uv.variables,
-        use.rank = FALSE,
         approach = 'AnovaCorr.AcrossAllSamples',
-        ncg.selection.method = 'non.overlap',
-        samples.to.use = 'all',
-        form = NULL,
         nb.ncg = 0.1,
+        samples.to.use = 'all',
+        use.rank = FALSE,
+        ncg.selection.method = 'non.overlap',
+        form = NULL,
+        ratio.variable = 'eta.squared',
+        rank.variable = "fvalue",
+        rank.continuous.var = "correlation",
+        rank.categorical.var = "fvalue",
+        adjust.data = FALSE,
+        adjustment.method = 'lm',
+        adjustment.variables = NULL,
         top.rank.bio.genes = 0.5,
         top.rank.uv.genes = 0.5,
         bio.percentile = 0.2,
@@ -218,13 +222,13 @@ findNcgSupervised <- function(
         scale = FALSE,
         nb.cores = 1,
         plot.ncg.assessment = TRUE,
-        check.se.obj = TRUE,
-        remove.na = 'none',
         ncg.group.name = NULL,
         ncg.set.name = NULL,
         save.imf = FALSE,
         use.imf = FALSE,
         imf.name = NULL,
+        check.se.obj = TRUE,
+        remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -236,7 +240,7 @@ findNcgSupervised <- function(
         stop('The approach must be one of the "AnovaCorr.PerBatchPerBiology", "AnovaCorr.AcrossAllSamples", "TwoWayAnova" or "LinearMixedModel".')
     }
 
-    # find NCGs ####
+    # Finding NCGs ####
     ## find NCGs using AnovaCorr.PerBatchPerBio approach ####
     if (approach == 'AnovaCorr.PerBatchPerBiology'){
         se.obj <- findNcgSupervisedByAnovaCorr(
@@ -244,11 +248,13 @@ findNcgSupervised <- function(
             assay.name = assay.name,
             bio.variables = bio.variables,
             uv.variables = uv.variables,
-            use.rank = use.rank,
             approach = approach,
-            ncg.selection.method = ncg.selection.method,
             nb.ncg = nb.ncg,
+            use.rank = use.rank,
             samples.to.use = samples.to.use,
+            rank.continuous.var = rank.continuous.var,
+            rank.categorical.var = rank.categorical.var,
+            ncg.selection.method = ncg.selection.method,
             top.rank.bio.genes = top.rank.bio.genes,
             top.rank.uv.genes = top.rank.uv.genes,
             bio.percentile = bio.percentile,
@@ -284,29 +290,31 @@ findNcgSupervised <- function(
             center = center,
             scale = scale,
             plot.ncg.assessment = plot.ncg.assessment,
-            check.se.obj = check.se.obj,
-            remove.na = remove.na,
             ncg.group.name = ncg.group.name,
             ncg.set.name = ncg.set.name,
             save.imf = save.imf,
             imf.name = imf.name,
             use.imf = use.imf,
+            check.se.obj = check.se.obj,
+            remove.na = remove.na,
             save.se.obj = save.se.obj,
             verbose = verbose
             )
     }
-    ## find NCGs using AnovaCorr.AcrossAllSamples approach ####
+    ## Finding NCGs using AnovaCorr.AcrossAllSamples approach ####
     if (approach == 'AnovaCorr.AcrossAllSamples'){
         se.obj <- findNcgSupervisedByAnovaCorr(
             se.obj = se.obj,
             assay.name = assay.name,
             bio.variables = bio.variables,
             uv.variables = uv.variables,
-            use.rank = use.rank,
             approach = approach,
-            ncg.selection.method = ncg.selection.method,
             nb.ncg = nb.ncg,
+            use.rank = use.rank,
             samples.to.use = samples.to.use,
+            rank.continuous.var = rank.continuous.var,
+            rank.categorical.var = rank.categorical.var,
+            ncg.selection.method = ncg.selection.method,
             top.rank.bio.genes = top.rank.bio.genes,
             top.rank.uv.genes = top.rank.uv.genes,
             bio.percentile = bio.percentile,
@@ -342,28 +350,30 @@ findNcgSupervised <- function(
             center = center,
             scale = scale,
             plot.ncg.assessment = plot.ncg.assessment,
-            check.se.obj = check.se.obj,
-            remove.na = remove.na,
             ncg.group.name = ncg.group.name,
             ncg.set.name = ncg.set.name,
             save.imf = save.imf,
             imf.name = imf.name,
             use.imf = use.imf,
+            check.se.obj = check.se.obj,
+            remove.na = remove.na,
             save.se.obj = save.se.obj,
             verbose = verbose
         )
     }
-    ## find NCGs using TwoWayAnova approach ####
+    ## Finding NCGs using two way anova approach ####
     if (approach == 'TwoWayAnova'){
         se.obj <- findNcgSupervisedByTwoWayAnova(
             se.obj = se.obj,
             assay.name = assay.name,
             bio.variables = bio.variables,
             uv.variables = uv.variables,
-            use.rank = use.rank,
-            ncg.selection.method = ncg.selection.method,
-            samples.to.use = samples.to.use,
             nb.ncg = nb.ncg,
+            use.rank = use.rank,
+            ratio.variable = ratio.variable,
+            ncg.selection.method = ncg.selection.method,
+            rank.variable = rank.variable,
+            samples.to.use = samples.to.use,
             top.rank.bio.genes = top.rank.bio.genes,
             top.rank.uv.genes = top.rank.uv.genes,
             bio.percentile = bio.percentile,
@@ -374,6 +384,7 @@ findNcgSupervised <- function(
             filter.ncgs = filter.ncgs,
             common.hk = common.hk,
             nb.stable.genes = nb.stable.genes,
+            hk.group = hk.group,
             create.ncg.rank.plot = create.ncg.rank.plot,
             plot.ncg.rank = plot.ncg.rank,
             bio.clustering.method = bio.clustering.method,
@@ -400,29 +411,37 @@ findNcgSupervised <- function(
             verbose = verbose
             )
     }
+    ## Finding NCGs using linear mixed model approach ####
     if (approach == 'LinearMixedModel'){
         se.obj <- findNcgSupervisedByLinearMixedModel(
             se.obj = se.obj,
-            assay.name = assay.name, adjust.data = TRUE,
-            form = form,
-            ncg.selection.method = ncg.selection.method,
+            assay.name = assay.name,
             bio.variables = bio.variables,
             uv.variables = uv.variables,
+            form = form,
+            use.rank = use.rank,
+            ncg.selection.method = ncg.selection.method,
+            adjust.data = adjust.data,
+            adjustment.method = adjustment.method,
+            adjustment.variables = adjustment.variables,
             samples.to.use = samples.to.use,
             nb.ncg = nb.ncg,
             top.rank.bio.genes = top.rank.bio.genes,
             top.rank.uv.genes = top.rank.uv.genes,
             bio.percentile = bio.percentile,
             uv.percentile = uv.percentile,
-            assess.ncg = assess.ncg,
+            grid.group = grid.group,
+            grid.direction = grid.direction,
+            grid.nb = grid.nb,
             apply.log = apply.log,
             pseudo.count = pseudo.count,
+            assess.ncg = assess.ncg,
             variables.to.assess.ncg = variables.to.assess.ncg,
             nb.pcs = nb.pcs,
             center = center,
             scale = scale,
-            grid.direction = grid.direction,
             plot.ncg.assessment = plot.ncg.assessment,
+            create.ncg.rank.plot = create.ncg.rank.plot,
             nb.cores = nb.cores,
             check.se.obj = check.se.obj,
             remove.na = remove.na,
