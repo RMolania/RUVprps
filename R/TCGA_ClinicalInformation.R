@@ -1,0 +1,43 @@
+#' My Data Example
+#'
+#' This is a sample dataset for demonstration purposes.
+#'
+#' @format A data frame with 5 rows and 2 variables:
+#' \describe{
+#'   \item{bcr_patient_barcode}{An integer ID}
+#'   \item{type}{A character name}
+#'   \item{age_at_initial_pathologic_diagnosis}{An integer ID}
+#'   \item{gender}{A character name}
+#'   \item{race}{An integer ID}
+#'   \item{ajcc_pathologic_tumor_stage}{A character name}
+#'   \item{clinical_stage}{An integer ID}
+#'   \item{histological_type}{A character name}
+#'   \item{histological_grade}{An integer ID}
+#'   \item{initial_pathologic_dx_year}{A character name}
+#'   \item{menopause_status}{An integer ID}
+#'   \item{birth_days_to}{A character name}
+#'   \item{vital_status}{An integer ID}
+#'   \item{tumor_status}{A character name}
+#'   \item{last_contact_days_to}{An integer ID}
+#'   \item{death_days_to}{A character name}
+#'   \item{cause_of_death}{An integer ID}
+#'   \item{new_tumor_event_type}{A character name}
+#'   \item{new_tumor_event_site}{A character name}
+#'   \item{new_tumor_event_site_other}{A character name}
+#'   \item{new_tumor_event_dx_days_to}{A character name}
+#'   \item{treatment_outcome_first_course}{A character name}
+#'   \item{margin_status}{A character name}
+#'   \item{residual_tumor}{A character name}
+#'   \item{OS}{A character name}
+#'   \item{OS.time}{A character name}
+#'   \item{DSS}{A character name}
+#'   \item{DSS.time}{A character name}
+#'   \item{DFI}{A character name}
+#'   \item{DFI.time}{A character name}
+#'   \item{PFI}{A character name}
+#'   \item{PFI.time}{A character name}
+#'   \item{Redaction}{A character name}
+#' }
+#'
+#' @source Simulated
+"tcga.clinic.info"
