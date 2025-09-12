@@ -87,7 +87,8 @@ getAssessmentMetrics <- function(
             'corrCoeff||scatterPlot||PartialCorrelation_DA||geneLevel',
             'corrCoeff||barPlot||PartialCorrelation_corrCoeffDiff||geneLevel',
             'corrCoeff||histogram||PartialCorrelation_corrCoeff||geneLevel',
-            'corrCoeff||scatterPlot||GeneSetScore_corrCoeff||globalLevel'
+            'corrCoeff||scatterPlot||GeneSetScore_corrCoeff||globalLevel',
+            'scores||boxPlot||LISI_meanScore||globalLevel'
             )
         metrics.for.cont.var <- expand.grid(
             continuous.var,
@@ -146,10 +147,14 @@ getAssessmentMetrics <- function(
             'fStat||pvalHist||ANOVA_pvalueDis||geneLevel',
             'fStat||pvalHist||ANOVA_pvalueNull||geneLevel',
             'pValue||pvalHist||DGE_pvalueNull||geneLevel',
-            'pValue||pvalHist||DGE_pvalueDis||geneLevel')
+            'pValue||pvalHist||DGE_pvalueDis||geneLevel',
+            'scores||boxPlot||KBET_meanScore||globalLevel',
+            'scores||boxPlot||LISI_meanScore||globalLevel'
+            )
         metrics.for.cat.var <- expand.grid(
             categorical.var,
-            metrics.for.cat.var)
+            metrics.for.cat.var
+            )
         colnames(metrics.for.cat.var) <- c('Variables', 'MetricsPlotsAssessments')
         metrics.for.cat.var <- metrics.for.cat.var[order(metrics.for.cat.var$Variables), ]
         # Metrics
@@ -245,7 +250,11 @@ getAssessmentMetrics <- function(
         )
     uv.variables <- uv.variables[cont.bio]
     if (length(uv.variables) > 0){
-        keep.rows <- final.metrics.table$Variables== uv.variables & final.metrics.table$Metrics == "GeneSetScore"
+        keep.rows <- final.metrics.table$Variables %in% uv.variables & final.metrics.table$Metrics == "GeneSetScore"
+        final.metrics.table <- final.metrics.table[!keep.rows , ]
+    }
+    if (length(bio.variables) > 0){
+        keep.rows <- final.metrics.table$Variables %in% bio.variables & final.metrics.table$Metrics == "KBET"
         final.metrics.table <- final.metrics.table[!keep.rows , ]
     }
     final.metrics.table$Variables <- as.character(final.metrics.table$Variables)
@@ -272,7 +281,6 @@ getAssessmentMetrics <- function(
         )
     final.metrics.table$Code <- paste0('PA', 1:nrow(final.metrics.table))
     all.variables <- unique(final.metrics.table$Variables)
-
     all.variables <- all.variables[all.variables %in% variables]
     # plot ####
     plot.metrics <- lapply(
