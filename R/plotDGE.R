@@ -1,4 +1,4 @@
-#' Plots p-values histograms of DGE analysis.
+#' Plot p-values histograms of DGE analysis.
 #'
 #' @author Ramyar Molania
 #'
