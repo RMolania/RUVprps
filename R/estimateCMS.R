@@ -27,7 +27,7 @@
 #' @param seed description
 #' @param verbose description
 #'
-#' @importFrom SummarizedExperiment assays colData
+#' @importFrom SummarizedExperiment assays colData colData<-
 #' @importFrom CMScaller CMScaller
 #' @importFrom parallel mclapply
 #' @export
@@ -93,7 +93,7 @@ estimateCMS <- function(
         if (length(tissue.type) > 1){
             stop('The "tissue.type" must be a single name of a column in the SummarizedExperiment object.')
         }
-        if (!tissue.type %in% colnames(colData(se.obj))){
+        if (!tissue.type %in% colnames(SummarizedExperiment::colData(se.obj))){
             stop('The "tissue.type" cannot be found in the SummarizedExperiment object.')
         }
         tissue.type <- factor(x = se.obj[[tissue.type]], levels = unique(se.obj[[tissue.type]]))
@@ -150,12 +150,12 @@ estimateCMS <- function(
                 col.name <- paste0(i, '.CMS.', out.put.name)
             } else col.name <- paste0(i, '.CMS')
             col.name <- paste0(i, '.CMS')
-            colData(se.obj)[ , col.name] <- 'Normal'
+            SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
             index <- match(row.names(cms.calls[[col.name]]), colnames(se.obj))
-            colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[col.name]]$prediction)
-            colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-            colData(se.obj)[ , col.name] <- factor(
-                x = colData(se.obj)[ , col.name],
+            SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[col.name]]$prediction)
+            SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+            SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                x = SummarizedExperiment::colData(se.obj)[ , col.name],
                 levels = c('CMS1','CMS2','CMS3','CMS4','Not.classified'))
         }
     }
@@ -195,12 +195,12 @@ estimateCMS <- function(
                 if (!is.null(out.put.name)){
                     col.name <- paste0(i, '.CMS.', out.put.name)
                 } else col.name <- paste0(i, '.CMS')
-                colData(se.obj)[ , col.name] <- 'Normal'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
                 index <- match(row.names(cms.calls[[i]]), colnames(se.obj))
-                colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[i]]$prediction)
-                colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-                colData(se.obj)[ , col.name] <- factor(
-                    x = colData(se.obj)[ , col.name],
+                SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[i]]$prediction)
+                SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                    x = SummarizedExperiment::colData(se.obj)[ , col.name],
                     levels = c('CMS1','CMS2','CMS3','CMS4', 'Normal', 'Not.classified'))
             }
         }
@@ -209,12 +209,12 @@ estimateCMS <- function(
                 if (!is.null(out.put.name)){
                     col.name <- paste0(i, '.MSI.', out.put.name)
                 } else col.name <- paste0(i, '.MSI')
-                colData(se.obj)[ , col.name] <- 'Normal'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
                 index <- match(row.names(cms.calls[[i]]), colnames(se.obj))
-                colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[i]]$prediction)
-                colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-                colData(se.obj)[ , col.name] <- factor(
-                    x = colData(se.obj)[ , col.name],
+                SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[i]]$prediction)
+                SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                    x = SummarizedExperiment::colData(se.obj)[ , col.name],
                     levels = c('MSS','MSI', 'Normal', 'Not.classified'))
             }
         }
@@ -225,10 +225,10 @@ estimateCMS <- function(
                 } else col.name <- paste0(i, '.CRIS')
                 colData(se.obj)[ , col.name] <- 'Normal'
                 index <- match(row.names(cms.calls[[i]]), colnames(se.obj))
-                colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[i]]$prediction)
-                colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-                colData(se.obj)[ , col.name] <- factor(
-                    x = colData(se.obj)[ , col.name],
+                SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls[[i]]$prediction)
+                SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                    x = SummarizedExperiment::colData(se.obj)[ , col.name],
                     levels = c('CRISA','CRISB', 'CRISC', 'CRISD', 'CRISE', 'Normal', 'Not.classified'))
             }
         }
@@ -275,12 +275,12 @@ estimateCMS <- function(
                 if (!is.null(out.put.name)){
                     col.name <- paste0(i, '.CMS.', out.put.name)
                 } else col.name <- paste0(i, '.CMS')
-                colData(se.obj)[ , col.name] <- 'Normal'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
                 index <- match(row.names(cms.calls.per.group[[i]]), colnames(se.obj))
-                colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
-                colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-                colData(se.obj)[ , col.name] <- factor(
-                    x = colData(se.obj)[ , col.name],
+                SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
+                SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                    x = SummarizedExperiment::colData(se.obj)[ , col.name],
                     levels = c('CMS1','CMS2','CMS3','CMS4','Normal','Not.classified'))
             }
         }
@@ -289,12 +289,12 @@ estimateCMS <- function(
                 if (!is.null(out.put.name)){
                     col.name <- paste0(i, '.MSI.', out.put.name)
                 } else col.name <- paste0(i, '.MSI')
-                colData(se.obj)[ , col.name] <- 'Normal'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
                 index <- match(row.names(cms.calls.per.group[[i]]), colnames(se.obj))
-                colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
-                colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-                colData(se.obj)[ , col.name] <- factor(
-                    x = colData(se.obj)[ , col.name],
+                SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
+                SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                    x = SummarizedExperiment::colData(se.obj)[ , col.name],
                     levels = c('MSS','MSI','Normal','Not.classified'))
             }
         }
@@ -303,12 +303,12 @@ estimateCMS <- function(
                 if (!is.null(out.put.name)){
                     col.name <- paste0(i, '.CRIS.', out.put.name)
                 } else col.name <- paste0(i, '.CRIS')
-                colData(se.obj)[ , col.name] <- 'Normal'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
                 index <- match(row.names(cms.calls.per.group[[i]]), colnames(se.obj))
-                colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
-                colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-                colData(se.obj)[ , col.name] <- factor(
-                    x = colData(se.obj)[ , col.name],
+                SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
+                SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+                SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                    x = SummarizedExperiment::colData(se.obj)[ , col.name],
                     levels = c('CRISA','CRISB', 'CRISC', 'CRISD', 'CRISE', 'Normal', 'Not.classified'))
             }
         }
@@ -349,12 +349,12 @@ estimateCMS <- function(
             if (!is.null(out.put.name)){
                 col.name <- paste0(i, '.CMS.', out.put.name)
             } else col.name <- paste0(i, '.CMS')
-            colData(se.obj)[ , col.name] <- 'Normal'
+            SummarizedExperiment::colData(se.obj)[ , col.name] <- 'Normal'
             index <- match(row.names(cms.calls.per.group[[i]]), colnames(se.obj))
-            colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
-            colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
-            colData(se.obj)[ , col.name] <- factor(
-                x = colData(se.obj)[ , col.name],
+            SummarizedExperiment::colData(se.obj)[ , col.name][index] <- as.character(cms.calls.per.group[[i]]$prediction)
+            SummarizedExperiment::colData(se.obj)[ , col.name][is.na(colData(se.obj)[ , col.name])] <- 'Not.classified'
+            SummarizedExperiment::colData(se.obj)[ , col.name] <- factor(
+                x = SummarizedExperiment::colData(se.obj)[ , col.name],
                 levels = c('CMS1','CMS2','CMS3','CMS4','Normal','Not.classified'))
         }
     }
