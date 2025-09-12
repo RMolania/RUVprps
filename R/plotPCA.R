@@ -26,6 +26,7 @@
 #' The default is set to `scatter`. Note that `plot.type` cannot be set to `scatter` if a categorical variable is provided.
 #' @param variable.colors Character vector. Specifies the colors to be used in scatter plots of PCs when a categorical
 #' variable is provided. If `NULL`, the function will use the default color scheme.
+#' @param color.palette TTT
 #' @param points.size Numeric. A numeric value specifying the size of the points in the scatter PCA plots. The default
 #' is set to 1.
 #' @param stroke.color Character. Specifies the color of the stroke around the points in the scatter PCA plots. The default
@@ -65,6 +66,7 @@ plotPCA <- function(
         nb.pcs = 3,
         plot.type = 'scatter',
         variable.colors = NULL,
+        color.palette = 'nrc',
         points.size = 1,
         stroke.color = 'gray',
         stroke.size = 0.1,
@@ -109,19 +111,10 @@ plotPCA <- function(
     }
 
     # Selecting colors ####
-    # if (!is.null(variable)){
-    #     if (is.null(variable.colors)){
-    #         n.colors <- length(unique(colData(se.obj)[[variable]]))
-    #         pca.plot.colors <- scales::hue_pal()(n.colors*2)
-    #         pca.plot.colors <- pca.plot.colors[seq(1, n.colors*2, 2)]
-    #     } else if (!is.null(variable.colors)){
-    #         pca.plot.colors <- variable.colors
-    #     }
-    # }
     if (!is.null(variable)){
         if (is.null(variable.colors)){
             n.colors <- length(unique(colData(se.obj)[[variable]]))
-            pca.plot.colors <- selectColors(nb.color = 1:n.colors)
+            pca.plot.colors <- selectColors(nb.color = 1:n.colors, group = color.palette)
         } else if (!is.null(variable.colors)){
             pca.plot.colors <- variable.colors
         }
@@ -164,7 +157,7 @@ plotPCA <- function(
         sub.file.name = 'percentage.variation',
         required.function = 'computePCA',
         message.to.print = 'PC percentage variation'
-    )
+        )
 
     # Plot different PCA plots ####
     ## categorical variable ####
@@ -371,9 +364,12 @@ plotPCA <- function(
                         message = paste0(
                             '- Creating all possible boxplots using the first ',
                             nb.pcs,
-                            ' PCs for the ', x, ' data'),
+                            ' PCs for the ',
+                            x,
+                            ' data'),
                         color = 'blue',
-                        verbose = verbose)
+                        verbose = verbose
+                        )
                     pca.data <- tidyr::pivot_longer(
                         data = pca.data,
                         -var,
@@ -421,13 +417,16 @@ plotPCA <- function(
                                 p = overall.boxplot.pca.plot[[x]],
                                 top = text_grob(
                                     label = "Principal component plots",
-                                    color = "orange",
+                                    color = "black",
                                     face = "bold",
                                     size = 18),
                                 bottom = text_grob(
                                     label = paste0(
-                                        'Analysis: ', 'boxplots of the principal components.\n',
-                                        'Variable ', variable, '.'),
+                                        'Analysis: ',
+                                        'boxplots of the principal components.\n',
+                                        'Variable ',
+                                        variable,
+                                        '.'),
                                     color = "black",
                                     hjust = 1,
                                     x = 1,
@@ -460,7 +459,8 @@ plotPCA <- function(
                 printColoredMessage(
                     message = '- The individual assay boxplot of PCs are combined into one.',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 if (isTRUE(plot.output))
                     suppressMessages(print(overall.boxplot.pca.plot))
             }
@@ -644,9 +644,11 @@ plotPCA <- function(
                 plot.data = results.data
                 )
         }
-        printColoredMessage(message = '------------The plotPCA function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The plotPCA function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj)
     }
     ## return a list ####
@@ -654,10 +656,13 @@ plotPCA <- function(
         printColoredMessage(
             message = '- The PCA plots are outputed as a list.',
             color = 'blue',
-            verbose = verbose)
-        printColoredMessage(message = '------------The plotPCA function finished.',
-                            color = 'white',
-                            verbose = verbose)
+            verbose = verbose
+            )
+        printColoredMessage(
+            message = '------------The plotPCA function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         if (length(assay.names) == 1){
             if (plot.type == 'scatter'){
                 return(all.scat.pca.plots = all.scat.pca.plots)
@@ -666,7 +671,7 @@ plotPCA <- function(
             if (plot.type == 'scatter'){
                 return(pca.plots = list(
                     all.scat.pca.plots = all.scat.pca.plots.assays,
-                    overall.scat.pca.plots = overall.scat.pca.plots))
+                    overall.scat.pca.plots = overall.scat.pca.plot))
             } else return(pca.plots = list(
                 all.boxplot.pca.plots = all.boxplot.pca.plots,
                 overall.boxplot.pca.plot = overall.boxplot.pca.plot))
