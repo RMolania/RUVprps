@@ -56,6 +56,7 @@
 #' @param scale Logical. Whether to scale data before SVD. The default is set to `FALSE`.
 #' @param svd.bsparam A `BiocParallelParam` object for parallelization. The default is set to `bsparam()`. See `runSVD()` in BiocSingular.
 #' @param pca.variables.colors List. List of colors for categorical variables in PCA plots. The default is set to `NULL`.
+#' @param color.palette TTTT
 #' @param pca.plot.ncol Numeric. Number of columns in PCA plot grid. The default is set to 3.
 #' @param pca.plot.nrow Numeric. Number of rows in PCA plot grid. The default is set to 3.
 #' @param pca.stroke.size Numeric. Stroke size in PCA plots. The default is set to 0.1.
@@ -106,7 +107,12 @@
 #' @param pca.legend.position TTT
 #' @param vca.nb.pcs.to.plot TTT
 #' @param lra.nb.pcs.to.plot TTT
-
+#' @param kbet.nb.pcs TTT
+#' @param k0 TTT
+#' @param knn TTT
+#' @param lisi.nb.pcs TTT
+#' @param perplexity TTT
+#' @param nn.eps TTT
 #' @return A SummarizedExperiment object containing assessment metrics and plots. Optionally saves a PDF of results.
 #'
 #' @importFrom grDevices colorRampPalette dev.off pdf
@@ -142,6 +148,7 @@ assessVariation <- function(
         scale = FALSE,
         svd.bsparam = bsparam(),
         pca.variables.colors = NULL,
+        color.palette = 'nrc',
         pca.plot.nrow = 2,
         pca.plot.ncol = 3,
         pca.var.plot.ncol = 1,
@@ -161,6 +168,12 @@ assessVariation <- function(
         lra.nb.pcs = 3,
         vca.nb.pcs.to.plot = 10,
         lra.nb.pcs.to.plot = 10,
+        kbet.nb.pcs = 3,
+        k0 = NULL,
+        knn = NULL,
+        lisi.nb.pcs = 3,
+        perplexity = 10,
+        nn.eps = 0,
         corr.method = 'spearman',
         a = 0.05,
         rho = 0,
@@ -298,11 +311,21 @@ assessVariation <- function(
             function(x){
                 if (is.numeric(se.obj[[x]])){
                     bio.metrics.table <- metrics.table[metrics.table$Variables == x, ]
-                    keep <- bio.metrics.table$new.col %in% c('LRA_averageRseq', 'Correlation_corrCoeff', 'PartialCorrelation_corrCoeff')
+                    keep <- bio.metrics.table$new.col %in% c(
+                        'LRA_averageRseq',
+                        'Correlation_corrCoeff',
+                        'PartialCorrelation_corrCoeff',
+                        'LISI_meanScore'
+                        )
                     bio.metrics.table <- bio.metrics.table[keep , ]
                 } else {
                     bio.metrics.table <- metrics.table[metrics.table$Variables == x, ]
-                    keep <- bio.metrics.table$new.col %in% c('VCA_averageCorr', 'ARI_ari', 'Silhouette_silhouetteCoeff')
+                    keep <- bio.metrics.table$new.col %in% c(
+                        'VCA_averageCorr',
+                        'ARI_ari',
+                        'Silhouette_silhouetteCoeff',
+                        'LISI_meanScore'
+                        )
                     bio.metrics.table <- bio.metrics.table[keep , ]
                 }
             })
@@ -315,7 +338,8 @@ assessVariation <- function(
                     keep <- uv.metrics.table$new.col %in% c(
                         'LRA_averageRseq',
                         'Correlation_corrCoeff',
-                        'PartialCorrelation_corrCoeff'
+                        'PartialCorrelation_corrCoeff',
+                        'LISI_meanScore'
                     )
                     uv.metrics.table <- uv.metrics.table[keep , ]
                 } else {
@@ -326,7 +350,9 @@ assessVariation <- function(
                         'Silhouette_silhouetteCoeff',
                         'DGE_pvalueNull',
                         'ANOVA_pvalueNull',
-                        'ANOVA_fStat'
+                        'ANOVA_fStat',
+                        'LISI_meanScore',
+                        'KBET_meanScore'
                     )
                     uv.metrics.table <- uv.metrics.table[keep , ]
                 }
@@ -506,6 +532,7 @@ assessVariation <- function(
                 nb.pcs = nb.pcs.toplot.pca,
                 plot.type = "scatter",
                 variable.colors = pca.variables.colors,
+                color.palette = color.palette,
                 points.size = general.points.size,
                 stroke.color = pca.stroke.color,
                 stroke.size = pca.stroke.size,
@@ -751,7 +778,7 @@ assessVariation <- function(
                 save.se.obj = TRUE,
                 verbose = verbose)
         }
-    }
+     }
     ## combined adjusted rand index  ####
      if ('ARI' %in% metrics.table$Metrics & 'combinedPlot' %in% metrics.table$PlotTypes){
         index <- metrics.table$Metrics == 'ARI' & metrics.table$PlotTypes == 'combinedPlot'
@@ -770,7 +797,80 @@ assessVariation <- function(
                 save.se.obj = TRUE,
                 verbose = verbose)
         }
+     }
+
+    # LISI ####
+    ## compute local inverse Simpson's index  ####
+    if ('LISI' %in% metrics.table$Metrics){
+        index <- metrics.table$Metrics == 'LISI'
+        lisi.vars <- unique(metrics.table$Variables[index])
+        for (i in lisi.vars){
+            se.obj <- computeLisi(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                variable = i,
+                perplexity = perplexity,
+                nn.eps = nn.eps,
+                fast.pca = fast.pca,
+                nb.pcs = lisi.nb.pcs,
+                save.se.obj = TRUE,
+                verbose = verbose)
+        }
     }
+    ## plot local inverse Simpson's index  ####
+    if ('LISI' %in% metrics.table$Metrics){
+        index <- metrics.table$Metrics == 'LISI'
+        lisi.vars <- unique(metrics.table$Variables[index])
+        for (i in lisi.vars){
+            se.obj <- plotLisi(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                variable = i,
+                fast.pca = fast.pca,
+                plot.output = FALSE,
+                save.se.obj = TRUE,
+                verbose = verbose
+                )
+        }
+    }
+
+    # kBET ####
+    ## k-nearest neighbor batch effect test ####
+    if ('KBET' %in% metrics.table$Metrics){
+        index <- metrics.table$Metrics == 'KBET'
+        kebt.vars <- unique(metrics.table$Variables[index])
+        for (i in kebt.vars){
+            se.obj <- computeKbet(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                variable = i,
+                k0 = k0,
+                knn = knn,
+                fast.pca = fast.pca,
+                nb.pcs = kbet.nb.pcs,
+                save.se.obj = TRUE,
+                verbose = verbose
+                )
+        }
+    }
+    ## plot k-nearest neighbor batch effect test ####
+    if ('KBET' %in% metrics.table$Metrics){
+        index <- metrics.table$Metrics == 'KBET'
+        kebt.vars <- unique(metrics.table$Variables[index])
+        for (i in kebt.vars){
+            se.obj <- plotKbet(
+                se.obj = se.obj,
+                assay.names = levels(assay.names),
+                variable = i,
+                fast.pca = fast.pca,
+                plot.output = FALSE,
+                save.se.obj = TRUE,
+                verbose = verbose
+                )
+        }
+    }
+
+
     # Gene variable correlation ####
     ## compute gene variable correlations ####
      if ('Correlation' %in% metrics.table$Metrics){
@@ -992,7 +1092,7 @@ assessVariation <- function(
         }
     }
 
-    ## plot partial correlation ####
+    ## plot gene set scores ####
      if ('GeneSetScore' %in% metrics.table$Metrics){
         index <- metrics.table$Metrics == 'GeneSetScore'
         gene.set.vars <- unique(metrics.table$Variables[index])
