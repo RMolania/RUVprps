@@ -11,6 +11,7 @@ assessNormalization(
   uv.variables,
   assessment.level = "L1",
   assessments.to.exclude = NULL,
+  select.top.ruv = TRUE,
   fast.pca = TRUE,
   sil.dist.measure = "euclidian",
   sli.nb.pcs = 3,
@@ -52,7 +53,9 @@ The default is 'all', which selects all assays in the object.}
 \item{assessments.to.exclude}{character or character vector. Names of assessment metrics to exclude, as returned by
 the \code{getAssessmentMetrics()} function. Default is NULL.}
 
-\item{fast.pca}{Logical. Whether to use fast PCA. Default is TRUE.}
+\item{select.top.ruv}{TTTT}
+
+\item{fast.pca}{Logical. Whether to use fast PCA. The default is to \code{TRUE}.}
 
 \item{sil.dist.measure}{character. Distance measure to use for silhouette analysis. Options: 'euclidean', 'maximum',
 'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.}

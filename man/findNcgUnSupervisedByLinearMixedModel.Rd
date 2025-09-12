@@ -38,6 +38,7 @@ findNcgUnSupervisedByLinearMixedModel(
   scale = FALSE,
   svd.bsparam = bsparam(),
   plot.ncg.assessment = TRUE,
+  use.fvalues = TRUE,
   nb.cores = 1,
   check.se.obj = TRUE,
   remove.na = "none",
@@ -152,6 +153,8 @@ otherwise. The default is set to \code{FALSE}.}
 
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
+
+\item{use.fvalues}{TTTT}
 
 \item{nb.cores}{TTTT}
 

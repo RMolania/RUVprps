@@ -21,7 +21,7 @@ countNCG(
 
 \item{create.venn.diagram}{TTTT}
 
-\item{check.all}{}
+\item{check.all}{TTT}
 }
 \value{
 A SummarizedExperiment object with a metadata that contains the NCGs.

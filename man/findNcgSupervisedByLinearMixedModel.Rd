@@ -2,7 +2,7 @@
 % Please edit documentation in R/findNcgSupervisedByLinearMixedModel.R
 \name{findNcgSupervisedByLinearMixedModel}
 \alias{findNcgSupervisedByLinearMixedModel}
-\title{Finds NCGs using two-way ANOVA.}
+\title{Find NCGs using linear mixed model}
 \usage{
 findNcgSupervisedByLinearMixedModel(
   se.obj,
@@ -24,16 +24,17 @@ findNcgSupervisedByLinearMixedModel(
   grid.group = "uv",
   grid.direction = "increase",
   grid.nb = 20,
-  assess.ncg = TRUE,
   apply.log = TRUE,
   pseudo.count = 1,
+  assess.ncg = TRUE,
   variables.to.assess.ncg = NULL,
   nb.pcs = 10,
   center = TRUE,
   scale = FALSE,
+  svd.bsparam = bsparam(),
   plot.ncg.assessment = TRUE,
   create.ncg.rank.plot = FALSE,
-  nb.cores = 1,
+  nb.cores = NULL,
   check.se.obj = TRUE,
   remove.na = "none",
   ncg.group.name = NULL,
@@ -108,16 +109,16 @@ is set to \code{auto}. In the \code{auto} approach, the grid search starts with 
 \code{top.rank.bio.genes} values and adds or drops the \code{grid.nb} in each loop to find \code{nb.ncg} of genes as negative control
 genes. The default is set to 20.}
 
-\item{assess.ncg}{Logical. Indicates whether to assess the performance of selected genes as negative control or not.
-This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
-correlation between the first \code{nb.pcs} principal components and the biological and unwanted variables. The default is
-set to \code{TRUE}.}
-
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing any statistical
 analysis. The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value to be added as a pseudo count to all measurements before log transformation
 .The default is se to 1.}
+
+\item{assess.ncg}{Logical. Indicates whether to assess the performance of selected genes as negative control or not.
+This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
+correlation between the first \code{nb.pcs} principal components and the biological and unwanted variables. The default is
+set to \code{TRUE}.}
 
 \item{variables.to.assess.ncg}{Character. A character string or vector of strings indicating the column names in sample
 annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
@@ -134,13 +135,15 @@ the column means of the assay from their corresponding columns. The default is s
 the(centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square
 otherwise. The default is set to \code{FALSE}.}
 
+\item{svd.bsparam}{TTTT}
+
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
 
 \item{create.ncg.rank.plot}{Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
 with respect to their biological and unwanted variation effects. The default is set to \code{FALSE}.}
 
-\item{nb.cores}{TTTT}
+\item{nb.cores}{Numeric.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
 the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}

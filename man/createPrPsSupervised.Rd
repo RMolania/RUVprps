@@ -19,11 +19,11 @@ createPrPsSupervised(
   check.prps.connectedness = TRUE,
   apply.log = TRUE,
   pseudo.count = 1,
-  check.se.obj = TRUE,
-  remove.na = "both",
   plot.output = TRUE,
   prps.group.name = NULL,
   prps.sets.name = NULL,
+  check.se.obj = TRUE,
+  remove.na = "both",
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -72,14 +72,6 @@ The default is set to \code{TRUE}. See the details for more information.}
 \item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 The default is set to 1.}
 
-\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
-function will be applied inside the function. The default is set to \code{TRUE}.}
-
-\item{remove.na}{Character. A character indicating whether to remove NA or missing values from either the 'assays',
-the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, the genes that contain NA or missing values will
-be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any \code{bio.variables}
-and \code{uv.variables} will be excluded. The default is set to \code{both}.}
-
 \item{plot.output}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
 The default is se to \code{TRUE}.}
 
@@ -89,6 +81,14 @@ The default is set to \code{NULL}.}
 \item{prps.sets.name}{Character. A character to specify the name of all PRPS sets that will be created for all
 specified source(s) of unwanted variation. The default is set to \code{NULL}. If not specified, the function creates a
 name based on \code{paste0('prps_', uv.variable)}.}
+
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
+function will be applied inside the function. The default is set to \code{TRUE}.}
+
+\item{remove.na}{Character. A character indicating whether to remove NA or missing values from either the 'assays',
+the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, the genes that contain NA or missing values will
+be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any \code{bio.variables}
+and \code{uv.variables} will be excluded. The default is set to \code{both}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
 or to output the result as a list. The default is set to \code{TRUE}.}

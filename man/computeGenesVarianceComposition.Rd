@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeGenesVarianceComposition.R
 \name{computeGenesVarianceComposition}
 \alias{computeGenesVarianceComposition}
-\title{Computes gene-level variance composition across variables in RNA-seq.}
+\title{Compute gene-level variance composition across variables in RNA-seq.}
 \usage{
 computeGenesVarianceComposition(
   se.obj,
@@ -14,7 +14,7 @@ computeGenesVarianceComposition(
   samples.to.use = "all",
   apply.log = TRUE,
   pseudo.count = 1,
-  nb.cores = 10,
+  nb.cores = 1,
   plot.output = TRUE,
   output.name = NULL,
   check.se.obj = TRUE,
@@ -46,9 +46,9 @@ default is set to \code{TRUE}.}
 \item{pseudo.count}{Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 the log transformation. The default is set to 1.}
 
-\item{nb.cores}{TTTT}
+\item{nb.cores}{Numeric.}
 
-\item{plot.output}{TTTT}
+\item{plot.output}{Logical.}
 
 \item{output.name}{TTT}
 
@@ -65,8 +65,7 @@ of the SummarizedExperiment object or to output these results as a list or vecto
 \item{verbose}{Logical. If \code{TRUE}, displays the messages of different steps of the function.}
 }
 \value{
-Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
-variable or a list of these results.
+Either a SummarizedExperiment object containing TTTT
 }
 \description{
 TTTT

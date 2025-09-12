@@ -10,19 +10,19 @@ findNcgSupervisedByAnovaCorr(
   bio.variables,
   uv.variables,
   approach = "AnovaCorr.AcrossAllSamples",
-  use.rank = FALSE,
-  ncg.selection.method = "non.overlap",
-  samples.to.use = "all",
   nb.ncg = 0.1,
+  samples.to.use = "all",
+  use.rank = FALSE,
+  rank.continuous.var = "correlation",
+  rank.categorical.var = "fvalue",
+  ncg.selection.method = "non.overlap",
   top.rank.bio.genes = 0.5,
   top.rank.uv.genes = 0.5,
   bio.percentile = 0.2,
-  uv.percentile = 0.2,
+  uv.percentile = 0.8,
   grid.group = "uv",
   grid.direction = "decrease",
   grid.nb = 20,
-  rank.continuous.var = "correlation",
-  rank.categorical.var = "fvalue",
   filter.ncgs = FALSE,
   common.hk = "cancer",
   nb.stable.genes = 2000,
@@ -51,14 +51,15 @@ findNcgSupervisedByAnovaCorr(
   nb.pcs = 10,
   center = TRUE,
   scale = FALSE,
+  svd.bsparam = bsparam(),
   plot.ncg.assessment = TRUE,
-  check.se.obj = TRUE,
-  remove.na = "none",
   ncg.group.name = NULL,
   ncg.set.name = NULL,
   save.imf = FALSE,
   imf.name = NULL,
   use.imf = FALSE,
+  check.se.obj = TRUE,
+  remove.na = "none",
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -79,17 +80,21 @@ argument cannot be \code{NULL}.}
 
 \item{approach}{TTT}
 
+\item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
+when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
+genes in the SummarizedExperiment object. The default is set to 0.1.}
+
+\item{samples.to.use}{TTTT}
+
 \item{use.rank}{TTT}
+
+\item{rank.continuous.var}{TTTT}
+
+\item{rank.categorical.var}{TTTT}
 
 \item{ncg.selection.method}{Character. A character that indicates how to summarize different statistics and select a
 set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
 The default is set to \code{non.overlap}. For more information, refer to the details of the function.}
-
-\item{samples.to.use}{TTTT}
-
-\item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
-when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
-genes in the SummarizedExperiment object. The default is set to 0.1.}
 
 \item{top.rank.bio.genes}{Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
 affected by biological variation. This is required to be specified when the \code{ncg.selection.method} is either \code{auto}
@@ -119,10 +124,6 @@ default is set to \code{decrease}.}
 is set to \code{auto}. In the \code{auto} approach, the grid search starts with the initial \code{top.rank.uv.genes} and
 \code{top.rank.bio.genes} values and adds or drops the \code{grid.nb} in each loop to find \code{nb.ncg} of genes as negative control
 genes. The default is set to 20.}
-
-\item{rank.continuous.var}{TTTT}
-
-\item{rank.categorical.var}{TTTT}
 
 \item{filter.ncgs}{Logical. Whether to filter selected NCGs based on public human housekeeping gene sets. The default
 is set to \code{FALSE}.}
@@ -217,16 +218,10 @@ the column means of the assay from their corresponding columns. The default is s
 (centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square otherwise.
 The default is set to \code{FALSE}.}
 
+\item{svd.bsparam}{TTTT}
+
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
-
-\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
-the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}
-
-\item{remove.na}{Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
-The options are: \code{assays}, the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, genes containing NA or
-missing values will be excluded. If \code{sample.annotation} is selected, the samples containing NA or missing values for
-any \code{bio.variables} or \code{uv.variables} will be excluded. The default is set to \code{none}.}
 
 \item{ncg.group.name}{Character. A character to be used as name of the group of NCG. The default is set to \code{NULL}, then
 the function create a names as following: \code{paste0('ncg|unsupervised')}. We refer to the details of the function for
@@ -244,6 +239,14 @@ re-calculated. The default is set to \code{FALSE}.}
 \item{imf.name}{Character string. A name to save the intermediate file. If \code{NULL}, the function generates a name.}
 
 \item{use.imf}{Logical. Indicates whether to use the intermediate file. The default is set to \code{FALSE}.}
+
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
+the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}
+
+\item{remove.na}{Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
+The options are: \code{assays}, the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, genes containing NA or
+missing values will be excluded. If \code{sample.annotation} is selected, the samples containing NA or missing values for
+any \code{bio.variables} or \code{uv.variables} will be excluded. The default is set to \code{none}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the result of the function in the metadata of the SummarizedExperiment
 object or output the result. The default is \code{TRUE}.}

@@ -11,7 +11,7 @@ findKnn(
   nb.knn = 3,
   clustering.method = "kmeans",
   nb.clusters = 3,
-  data.input = "expr",
+  data.input = "pcs",
   nb.pcs = 2,
   center = TRUE,
   scale = FALSE,

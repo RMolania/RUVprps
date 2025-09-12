@@ -53,6 +53,7 @@ findNcgUnSupervised(
   normalization = "CPM",
   apply.log = TRUE,
   pseudo.count = 1,
+  nb.cores = 1,
   check.se.obj = TRUE,
   remove.na = "both",
   ncg.group.name = NULL,
@@ -75,11 +76,23 @@ SummarizedExperiment object that contain unwanted variables. These variables can
 a combination of these. If all unwanted variation is unknown, use the  \code{identifyUnknownUV()} function to estimate them
 first, then run \code{findNcgsUnSupervised()}.}
 
+\item{approach}{TTT}
+
 \item{clustering.method}{Character. The clustering method that should be used to group any continuous unwanted variable.
 The options are: \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.}
 
 \item{nb.clusters}{Numeric. A numeric value that indicates the number of clusters for grouping continuous unwanted
 variation. The default is set to 3.}
+
+\item{ncg.idenfitication.approach}{TTT}
+
+\item{form}{TTT}
+
+\item{nb.bio.pcs}{TTT}
+
+\item{nb.uv.pcs}{TTT}
+
+\item{use.rank}{TTT}
 
 \item{ncg.selection.method}{Character. A character that indicates how to summarize different statistics and select a
 set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
@@ -88,6 +101,8 @@ The default is set to \code{non.overlap}. For more information, refer to the det
 \item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
 genes in the SummarizedExperiment object. The default is set to 0.1.}
+
+\item{samples.to.use}{TTT}
 
 \item{hvg.method}{Character. A character indicating the method to select highly variable genes. The options are: \code{var}
 and \code{mad}. \code{var} models gene variance based on a mean-variance trend. \code{mad} uses the median absolute deviation. The
@@ -186,12 +201,16 @@ the column means of the assay from their corresponding columns. The default is s
 (centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square otherwise.
 The default is set to \code{FALSE}.}
 
+\item{svd.bsparam}{TTT}
+
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
 
 \item{regress.out.variables}{Character. A character or a vector of character indicating the names of the columns in
 the SummarizedExperiment object that contain variables to be regressed out from the data before identifying biologically
 variable genes. The default is set to \code{NULL}.}
+
+\item{regress.out.rle.med}{TTT}
 
 \item{normalization}{Character. A character that indicates which normalization method should be use to mitigate the
 variation in library size before finding genes that are highly affected by biological variation. The options are :
@@ -203,6 +222,8 @@ The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value to be added as a pseudo count to all measurements before applying log
 transformation. The default is set to 1.}
+
+\item{nb.cores}{TTT}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
 the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}

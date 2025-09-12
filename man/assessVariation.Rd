@@ -30,6 +30,7 @@ assessVariation(
   scale = FALSE,
   svd.bsparam = bsparam(),
   pca.variables.colors = NULL,
+  color.palette = "nrc",
   pca.plot.nrow = 2,
   pca.plot.ncol = 3,
   pca.var.plot.ncol = 1,
@@ -49,6 +50,12 @@ assessVariation(
   lra.nb.pcs = 3,
   vca.nb.pcs.to.plot = 10,
   lra.nb.pcs.to.plot = 10,
+  kbet.nb.pcs = 3,
+  k0 = NULL,
+  knn = NULL,
+  lisi.nb.pcs = 3,
+  perplexity = 10,
+  nn.eps = 0,
   corr.method = "spearman",
   a = 0.05,
   rho = 0,
@@ -130,6 +137,8 @@ assessVariation(
 
 \item{pca.variables.colors}{List. List of colors for categorical variables in PCA plots. The default is set to \code{NULL}.}
 
+\item{color.palette}{TTTT}
+
 \item{pca.plot.nrow}{Numeric. Number of rows in PCA plot grid. The default is set to 3.}
 
 \item{pca.plot.ncol}{Numeric. Number of columns in PCA plot grid. The default is set to 3.}
@@ -170,6 +179,18 @@ assessVariation(
 \item{vca.nb.pcs.to.plot}{TTT}
 
 \item{lra.nb.pcs.to.plot}{TTT}
+
+\item{kbet.nb.pcs}{TTT}
+
+\item{k0}{TTT}
+
+\item{knn}{TTT}
+
+\item{lisi.nb.pcs}{TTT}
+
+\item{perplexity}{TTT}
+
+\item{nn.eps}{TTT}
 
 \item{corr.method}{Character. Correlation method: \code{pearson}, \code{kendall}, \code{spearman}. The default is set to \code{spearman}.}
 
