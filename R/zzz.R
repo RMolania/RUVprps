@@ -79,6 +79,21 @@ utils::globalVariables(
       'bio.fvalue',
       'uv.fvalue',
       'ncg',
-      'bio'
+      'bio',
+      'kebt',
+      'lisi',
+      'measurements',
+      'group.test.variable',
+      'continuous.vars',
+      'categorical.vars',
+      'test',
+      'bio.batch',
+      'val',
+      'batch',
+      'dominant.set',
+      'mean.group.set1',
+      'mean.group.set2',
+      'Topmatchid',
+      'Topmatch'
       )
     )
