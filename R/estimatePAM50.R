@@ -11,6 +11,7 @@
 #' @param groups description
 #' @param apply.log description
 #' @param pseudo.count description
+#' @param normalization description
 #' @param regress.out.variables description
 #' @param regress.out.rle.med description
 #' @param out.put.name description
@@ -18,6 +19,7 @@
 #' @param remove.na description
 #' @param verbose description
 #'
+#' @importFrom SummarizedExperiment colData
 #' @import genefu
 
 estimatePAM50 <- function(
@@ -29,6 +31,7 @@ estimatePAM50 <- function(
         groups = NULL,
         apply.log = TRUE,
         pseudo.count = 1,
+        normalization = 'CPM',
         regress.out.variables = NULL,
         regress.out.rle.med = FALSE,
         out.put.name = NULL,
@@ -41,7 +44,6 @@ estimatePAM50 <- function(
     colnames(gene.annot)[egi] <- 'EntrezGene.ID'
     probe.col <- which(colnames(gene.annot) == probe)
     colnames(gene.annot)[probe.col] <- 'probe'
-    data(pam50.robust)
     pam50.genfu <- lapply(
         names(assays(se.obj)),
         function(x){
@@ -71,20 +73,25 @@ estimatePAM50 <- function(
         })
     names(pam50.genfu) <- paste0(names(assays(se.obj)), '.PAM50')
     for(i in names(pam50.genfu)){
-        colData(se.obj)[i] <- as.character(pam50.genfu[[i]]$subtype)
-        index <- colData(se.obj)[[i]] == 'Normal'
-        colData(se.obj)[[i]][index] <- 'Normal.like'
+        SummarizedExperiment::colData(se.obj)[i] <- as.character(pam50.genfu[[i]]$subtype)
+        index <- SummarizedExperiment::colData(se.obj)[[i]] == 'Normal'
+        SummarizedExperiment::colData(se.obj)[[i]][index] <- 'Normal.like'
         if (!is.null(tissue.type)){
-            index.normal <- colData(se.obj)[[tissue.type]] == 'Normal'
-            colData(se.obj)[[i]][index.normal] <- 'Normal'
-            colData(se.obj)[[i]] <- factor(
-                x = colData(se.obj)[ , i],
+            index.normal <- SummarizedExperiment::colData(se.obj)[[tissue.type]] == 'Normal'
+            SummarizedExperiment::colData(se.obj)[[i]][index.normal] <- 'Normal'
+            SummarizedExperiment::colData(se.obj)[[i]] <- factor(
+                x = SummarizedExperiment::colData(se.obj)[ , i],
                 levels = c('Basal','Her2','LumA','LumB', 'Normal.like', 'Normal'))
         } else {
-            colData(se.obj)[[i]] <- factor(
-                x = colData(se.obj)[ , i],
+            SummarizedExperiment::colData(se.obj)[[i]] <- factor(
+                x = SummarizedExperiment::colData(se.obj)[ , i],
                 levels = c('Basal','Her2','LumA','LumB', 'Normal.like'))
         }
     }
     return(se.obj)
 }
+
+
+# usethis::use_data(pam50.robust, overwrite = TRUE)
+# usethis::use_r("pam50.robust.R")
+# data(pam50.robust)
