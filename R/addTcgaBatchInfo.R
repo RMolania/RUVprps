@@ -26,8 +26,9 @@ addTcgaBatchInfo <- function(
         use.lables = FALSE,
         missing.samples.name = 'DF'
         ){
-    tcga.batch.info <- read.csv('TCGA.PanCancer.RNAseq.BatchInformation.csv')
-    colnames(tcga.batch.info)[12:14] <- c('Years', 'Months', 'Days')
+    # tcga.batch.info <- read.csv('../RequiredData_Temp/TCGA.PanCancer.RNAseq.BatchInformation.csv', row.names = 1)
+    # usethis::use_data(tcga.batch.info, overwrite = TRUE)
+    colnames(tcga.batch.info)[11:13] <- c('Years', 'Months', 'Days')
     tcga.batchs <- c('Years','Months','Days','Plates','TSS','Center')
 
     # Checking batch information ####
