@@ -18,7 +18,7 @@ groupContinuousVariable <- function(
         se.obj,
         variable,
         nb.clusters = 3,
-        clustering.method = 'kmeans',
+        clustering.method = 'cut',
         perfix = '_group',
         plot.output = TRUE,
         verbose = TRUE
