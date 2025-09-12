@@ -964,11 +964,11 @@ RUVIIIprps <- function(
             })
         all.ruv[[length(k.vals)]] <- newY.max
         if (control.sample.types == 'prps'){
-            names(all.ruv) <- paste0('RUVIIIprps_K_', k.vals)
+            names(all.ruv) <- paste0('RUVIIIprps_k_', k.vals)
         } else if (control.sample.types == 'tr'){
-            names(all.ruv) <- paste0('RUVIIItr_K_', k.vals)
+            names(all.ruv) <- paste0('RUVIIItr_k_', k.vals)
         } else if (control.sample.types == 'both'){
-            names(all.ruv) <- paste0('RUVIIIprpstr_K_', k.vals)
+            names(all.ruv) <- paste0('RUVIIIprpstr_k_', k.vals)
         }
     }
     ## k == 1 ####
@@ -1043,7 +1043,7 @@ RUVIIIprps <- function(
             BSPARAM = bsparam(),
             center = FALSE,
             scale = FALSE
-        )$u
+            )$u
         alpha <- t(left.sing.value[, 1:k.vals, drop = FALSE]) %*% Y
         ac <- alpha[, ncg.set, drop = FALSE]
         ## obtaining  W ####
@@ -1058,11 +1058,11 @@ RUVIIIprps <- function(
             message = '- Obtaining RUV-III normalized data:',
             color = 'blue',
             verbose = verbose
-        )
+            )
         newY <- Y - W %*% alpha
         newY <- t(newY[1:ncol(se.obj) ,])
         all.ruv <- list(newY = newY, W = W[1:ncol(se.obj) , , drop = FALSE])
-        if (is.null(output.name))  output.name <- paste0('RUV-III-PRPS_K_', k.vals)
+        if (is.null(output.name))  output.name <- paste0('RUVIIIprps_k_', k.vals)
     }
 
     # Saving data sets and W ####
