@@ -11,14 +11,6 @@
 #' @param missing.samples.name TTTTT
 #' @param verbose TTTTT
 
-
-# sheets <- readxl::excel_sheets('../mmc1.xlsx')
-# liu.clinical.data <- as.data.frame(readxl::read_excel('../mmc1.xlsx', sheet = "TCGA-CDR"))
-# liu.clinical.data <- liu.clinical.data[ , -1]
-# write.csv(x = liu.clinical.data, file = 'TCGA.Liuetal.ClinicalData.PanCancer.csv', row.names = F)
-#
-# read.se.obj$sampl.ids.short <- substr(x = colnames(read.se.obj), start = 1, stop = 12)
-
 addTcgaClinicalInfo <- function(
         se.obj,
         tissue.type,
@@ -27,7 +19,8 @@ addTcgaClinicalInfo <- function(
         missing.samples.name = 'DF',
         verbose = TRUE
         ){
-    tcga.clinic.info <- read.csv('TCGA.Liuetal.ClinicalData.PanCancer.csv')
+    # tcga.clinic.info <- read.csv('../RequiredData_Temp/TCGA.Liuetal.ClinicalData.PanCancer.csv')
+    # usethis::use_data(tcga.clinic.info)
     all.tcga.clinic <- colnames(tcga.clinic.info)
     if (sum(factors %in% colnames(tcga.clinic.info)) != length(factors)){
         stop('All or some of the "factors" cannot be found in the TCGA clinical information data.')
