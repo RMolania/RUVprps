@@ -74,7 +74,9 @@ Imports:
     lsa,
     ggsci,
     Biobase,
-    Polychrome
+    Polychrome,
+    kBET,
+    lisi
 URL: https://github.com/RMolania/RUVIIIPRPS
 BugReports: https://github.com/RMolania/RUVIIIPRPS/issues
 Suggests: 
@@ -83,5 +85,5 @@ Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5)
 LazyData: true
