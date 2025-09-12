@@ -76,7 +76,7 @@ findKnn <- function(
         nb.knn = 3,
         clustering.method = 'kmeans',
         nb.clusters = 3,
-        data.input = 'expr',
+        data.input = 'pcs',
         nb.pcs = 2,
         center = TRUE,
         scale = FALSE,
@@ -282,160 +282,20 @@ findKnn <- function(
         sub.group.sample.size,
         function(x) {
             selected.samples <- colData(se.obj)[[uv.variable]] == x
-            ## Applying library size normalization ####
-            if (!is.null(normalization) & is.null(regress.out.variables)) {
-                printColoredMessage(
-                    message = paste0(
-                        '- Applying the ',
-                        normalization,
-                        ' on the samples from the "',
-                        x,
-                        '" sub-group.'),
-                    color = 'blue',
-                    verbose = verbose
-                    )
-                norm.data <- applyOtherNormalizations(
-                    se.obj = se.obj[, selected.samples],
-                    assay.name = assay.name,
-                    method = normalization,
-                    apply.log = apply.log,
-                    pseudo.count = pseudo.count,
-                    check.se.obj = FALSE,
-                    save.se.obj = FALSE,
-                    remove.na = 'none',
-                    verbose = FALSE
-                    )
-            }
-            ## Applying library size normalization and regressing out variables ####
-            if (!is.null(normalization) & !is.null(regress.out.variables)) {
-                printColoredMessage(
-                    message = paste0(
-                        '- Applying the ',
-                        normalization,
-                        ' on the samples from "',
-                        x,
-                        '" group and then regressing out the ',
-                        paste0(regress.out.variables, collapse = '&'),
-                        ' variable(s) from the data.'),
-                    color = 'blue',
-                    verbose = verbose
+            preProcessData(
+                se.obj = se.obj[ , selected.samples],
+                assay.name = assay.name,
+                normalization = normalization,
+                regress.out.variables = regress.out.variables,
+                regress.out.rle.med = regress.out.rle.med,
+                apply.log = apply.log,
+                pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
+                remove.na = 'none',
+                verbose = verbose
                 )
-                ### normalization ####
-                norm.data <- applyOtherNormalizations(
-                    se.obj = se.obj[, selected.samples],
-                    assay.name = assay.name,
-                    method = normalization,
-                    apply.log = apply.log,
-                    pseudo.count = pseudo.count,
-                    check.se.obj = FALSE,
-                    save.se.obj = FALSE,
-                    remove.na = 'none',
-                    verbose = FALSE
-                )
-                ## regression ####
-                sample.info <- as.data.frame(colData(se.obj[, selected.samples]))
-                norm.data <- t(norm.data)
-                lm.formua <- paste('sample.info', regress.out.variables, sep = '$')
-                norm.data <- lm(as.formula(paste(
-                    'norm.data',
-                    paste0(lm.formua, collapse = '+') ,
-                    sep = '~'
-                )))
-                norm.data <- t(norm.data$residuals)
-                colnames(norm.data) <- colnames(norm.data)
-                row.names(norm.data) <- row.names(norm.data)
-
-            }
-            ## Regressing out variables ####
-            if (is.null(normalization) & !is.null(regress.out.variables)){
-                if (isTRUE(apply.log)){
-                    printColoredMessage(
-                        message = paste0(
-                            '- Applying log transformation and then regressing out the ',
-                            paste0(regress.out.variables, collapse = '&'),
-                            ' variable(s) on the samples ',
-                            x,
-                            '" group from the data.'),
-                        color = 'blue',
-                        verbose = verbose
-                        )
-                    if (!is.null(pseudo.count)){
-                        norm.data <- log2(assay(se.obj[, selected.samples], assay.name) + pseudo.count)
-                    } else {
-                        norm.data <- log2(assay(se.obj[, selected.samples], i = assay.name))
-                    }
-
-                } else if (isFALSE(apply.log)){
-                    printColoredMessage(
-                        message = paste0(
-                            '- Regressing out ',
-                            paste0(regress.out.variables, collapse = '&'),
-                            x,
-                            '" group from the data.'),
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    norm.data <- assay(se.obj[, selected.samples], assay)
-                }
-                ### regression ####
-                sample.info <- as.data.frame(colData(se.obj[, selected.samples]))
-                norm.data <- t(norm.data)
-                lm.formua <- paste('sample.info', regress.out.variables, sep = '$')
-                norm.data <- lm(as.formula(paste(
-                    'norm.data',
-                    paste0(lm.formua, collapse = '+') ,
-                    sep = '~'
-                )))
-                norm.data <- t(norm.data$residuals)
-                colnames(norm.data) <- colnames(norm.data)
-                row.names(norm.data) <- row.names(norm.data)
-            }
-            ## Applying log transformation ####
-            if (is.null(normalization) & is.null(regress.out.variables)) {
-                if (isTRUE(apply.log)){
-                    printColoredMessage(
-                        message = paste0(
-                            '- Applying the log2 within the samples from "',
-                            x,
-                            '" group data.'),
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    if(!is.null(pseudo.count)){
-                        norm.data <- log2(assay(x = se.obj[, selected.samples], i = assay.name) + pseudo.count)
-                    } else {
-                        norm.data <- log2(assay(se.obj[, selected.samples], i = assay.name))
-                    }
-
-                } else if (isFALSE(apply.log)){
-                    printColoredMessage(
-                        message = paste0(
-                            '- No library size normalization and transformation is applied on data from ',
-                            x,
-                            '" group data.'),
-                        color = 'blue',
-                        verbose = verbose
-                    )
-                    norm.data <- assay(se.obj[, selected.samples], assay)
-                }
-            }
-            return(norm.data)
         })
     names(all.norm.data) <- sub.group.sample.size
-
-    # Regressing out RLE medians ####
-    if (isTRUE(regress.out.rle.med)){
-        all.norm.data <- lapply(
-            sub.group.sample.size,
-            function(x){
-                temp.data <- all.norm.data[[x]]
-                rle.med <- colMedians(temp.data - rowMedians(temp.data))
-                regress.med <- lm(t(temp.data) ~ rle.med)
-                temp.data <- t(regress.med$residuals)
-                temp.data
-            })
-        names(all.norm.data) <- sub.group.sample.size
-    }
 
     # Selecting input data for KNN analysis ####
     printColoredMessage(
@@ -479,14 +339,20 @@ findKnn <- function(
                     color = 'blue',
                     verbose = verbose
                     )
-                sv.dec <- BiocSingular::runSVD(
+                sv.dec <- irlba::prcomp_irlba(
                     x = t(norm.data[hvg,]),
-                    k = nb.pcs,
-                    BSPARAM = svd.bsparam,
+                    n = nb.pcs,
                     center = center,
-                    scale = scale
+                    scale. = scale
                     )
-                norm.data <- sv.dec$u
+                # sv.dec <- BiocSingular::runSVD(
+                #     x = t(norm.data[hvg,]),
+                #     k = nb.pcs,
+                #     BSPARAM = svd.bsparam,
+                #     center = center,
+                #     scale = scale
+                #     )
+                norm.data <- sv.dec$x
             }
             ## Using PCA with all genes #####
             if (data.input == 'pcs' & is.null(hvg)) {
@@ -495,14 +361,20 @@ findKnn <- function(
                     color = 'blue',
                     verbose = verbose
                     )
-                sv.dec <- BiocSingular::runSVD(
+                # sv.dec <- BiocSingular::runSVD(
+                #     x = t(norm.data),
+                #     k = nb.pcs,
+                #     BSPARAM = svd.bsparam,
+                #     center = center,
+                #     scale = scale
+                #     )
+                sv.dec <- irlba::prcomp_irlba(
                     x = t(norm.data),
-                    k = nb.pcs,
-                    BSPARAM = svd.bsparam,
+                    n = nb.pcs,
                     center = center,
-                    scale = scale
+                    scale. = scale
                     )
-                norm.data <- sv.dec$u
+                norm.data <- sv.dec$x
             }
             return(norm.data)
         })
@@ -640,12 +512,12 @@ findKnn <- function(
     se.obj[[uv.variable]] <- initial.variable
     colnames(se.obj) <- sample.ids
 
-    # Final Sanity check #####
+    # Final sanity check #####
     printColoredMessage(
         message = '- Applying a final sanity check on the the KNN sets',
         color = 'blue',
         verbose = verbose
-    )
+        )
     dist.between.samples <- lapply(
         1:nrow(all.knn),
         function(x){
