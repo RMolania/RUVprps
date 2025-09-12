@@ -13,7 +13,7 @@
 #' @param regress.out.variables TTTTT
 #' @param regress.out.rle.med TTTTT
 #' @param cosine.norm TTTTT
-#' @param sample.to.use TTTTT
+#' @param samples.to.use TTTTT
 #' @param apply.log TTTTT
 #' @param pseudo.count TTTTT
 #' @param check.se.obj TTTTT
@@ -36,7 +36,7 @@ computeCCA <- function(
         regress.out.variables = NULL,
         regress.out.rle.med = FALSE,
         cosine.norm = FALSE,
-        sample.to.use = 'all',
+        samples.to.use = 'all',
         apply.log = TRUE,
         pseudo.count = 1,
         check.se.obj = TRUE,
@@ -46,9 +46,14 @@ computeCCA <- function(
         verbose = TRUE
         ){
     # Specifying the number of sample to use ####
-    if (is.logical(sample.to.use)){
+    if (is.logical(samples.to.use)){
+        if (length(samples.to.use) != ncol(se.obj)){
+            stop('The "samples.to.use" must be the same length as the sample numbers in the SummarizedExperiment object.')
+        }
+    }
+    if (is.logical(samples.to.use)){
         initial.se.obj <- se.obj
-        se.obj <- se.obj[ , sample.to.use]
+        se.obj <- se.obj[ , samples.to.use]
     }
 
     # Specifying highly variable genes ####
@@ -57,7 +62,7 @@ computeCCA <- function(
     }
 
     # Specifying reference data ####
-    variable.names <- unique(se.obj[[variable]])
+    variable.names <- as.character(unique(se.obj[[variable]]))
     if (is.null(reference.group)){
         all.combinations <- combn(x = variable.names, m = 2)
     }
@@ -82,122 +87,24 @@ computeCCA <- function(
     }
     # Applying data normalization
     all.norm.data <- lapply(
-        unique(se.obj[[variable]]),
+        variable.names,
         function(x){
             index.samples <- se.obj[[variable]] == x
-            if (!is.null(normalization) & is.null(regress.out.variables)){
-                norm.data <- applyOtherNormalizations(
-                    se.obj = se.obj[ , index.samples],
-                    assay.name = assay.name,
-                    method = normalization,
-                    apply.log = apply.log,
-                    pseudo.count = pseudo.count,
-                    check.se.obj = FALSE,
-                    remove.na = 'none',
-                    new.assay.name = NULL,
-                    save.se.obj = FALSE,
-                    verbose = verbose
-                    )
-            }
-            if (!is.null(normalization) & !is.null(regress.out.variables)){
-                norm.data <- applyOtherNormalizations(
-                    se.obj = se.obj[ , index.samples],
-                    assay.name = assay.name,
-                    method = normalization,
-                    apply.log = apply.log,
-                    pseudo.count = pseudo.count,
-                    check.se.obj = FALSE,
-                    remove.na = 'none',
-                    new.assay.name = NULL,
-                    save.se.obj = FALSE,
-                    verbose = verbose
-                    )
-                temp.sample.annot <- as.data.frame(colData(se.obj[ , index.samples]))
-                norm.data <- t(norm.data)
-                uv.variables.all <- paste('temp.sample.annot', regress.out.variables, sep = '$')
-                norm.data <- lm(as.formula(paste(
-                    'norm.data',
-                    paste0(uv.variables.all, collapse = '+') ,
-                    sep = '~'
-                )))
-                norm.data <- t(norm.data$residuals)
-                colnames(norm.data) <- colnames(se.obj)[index.samples]
-                row.names(norm.data) <- row.names(se.obj)
-                }
-            if (is.null(normalization) & !is.null(regress.out.variables)){
-                printColoredMessage(
-                    message = paste0(
-                        '- Note: we do not recommend regressing out ',
-                        paste0(regress.out.variables, collapse = ' & '),
-                        'if they are largely associated with the ',
-                        paste0(bio.variables, collapse = ' & '), '.'),
-                    color = 'red',
-                    verbose = verbose
-                    )
-                if (isTRUE(apply.log)){
-                    norm.data <- applyLog(
-                        se.obj = se.obj[ , index.samples],
-                        assay.names = assay.name,
-                        pseudo.count = pseudo.count,
-                        check.se.obj = FALSE,
-                        remove.na = 'none',
-                        verbose = verbose
-                    )
-                }
-                if (isFALSE(apply.log)){
-                    norm.data <- assay(x = se.obj[ , index.samples], i = assay.name)
-                }
-                temp.sample.annot <- as.data.frame(colData(se.obj[ , index.samples]))
-                norm.data <- t(norm.data)
-                uv.variables.all <- paste('temp.sample.annot', regress.out.variables, sep = '$')
-                norm.data <- lm(as.formula(paste(
-                    'norm.data',
-                    paste0(uv.variables.all, collapse = '+') ,
-                    sep = '~'
-                )))
-                norm.data <- t(norm.data$residuals)
-                colnames(norm.data) <- colnames(se.obj)[index.samples]
-                row.names(norm.data) <- row.names(se.obj)
-                }
-
-            if (is.null(normalization) & is.null(regress.out.variables)){
-                if (isTRUE(apply.log)){
-                    norm.data <- applyLog(
-                        se.obj = se.obj[ , index.samples],
-                        assay.names = assay.name,
-                        pseudo.count = pseudo.count,
-                        check.se.obj = FALSE,
-                        remove.na = 'none',
-                        verbose = verbose
-                    )
-                }
-                if (isFALSE(apply.log)){
-                    norm.data <- assay(
-                        x = se.obj[ , index.samples],
-                        i = assay.name
-                        )
-                }
-            }
+            norm.data <- preProcessData(
+                se.obj = se.obj[ , index.samples],
+                assay.name = assay.name,
+                normalization = normalization,
+                regress.out.variables = regress.out.variables,
+                regress.out.rle.med = regress.out.rle.med,
+                apply.log = apply.log,
+                pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
+                remove.na = 'none',
+                verbose = verbose
+                )
             norm.data
         })
-    names(all.norm.data) <- unique(se.obj[[variable]])
-
-    # Regressing out RLE medians ####
-    if (isTRUE(regress.out.variables)){
-        all.norm.data <- lapply(
-            unique(se.obj[[variable]]),
-            function(x){
-                norm.data <- all.norm.data[[x]]
-                rle.med <- colMedians(norm.data - rowMedians(norm.data))
-                lm.fit.data <- lmFit(
-                    object = norm.data,
-                    design = model.matrix(~rle.med)
-                )
-                norm.data <- residuals(lm.fit.data, norm.data)
-                norm.data
-            })
-        names(all.norm.data) <- unique(se.obj[[variable]])
-    }
+    names(all.norm.data) <- variable.names
 
     # Applying cosine normalization ####
     if (isTRUE(cosine.norm)){
@@ -208,7 +115,6 @@ computeCCA <- function(
             })
         names(all.norm.data) <- unique(se.obj[[variable]])
     }
-
     # Computing all CCA ####
     nb.cca.initial <- nb.cca
     all.cca <- lapply(
@@ -286,7 +192,7 @@ computeCCA <- function(
     }
 
     # Specifying the number of sample to use ####
-    if (is.logical(sample.to.use)){
+    if (is.logical(samples.to.use)){
         se.obj <- initial.se.obj
     }
     #### Saving all the results ####
