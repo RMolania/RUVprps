@@ -27,17 +27,18 @@
 #' @param scale TTT
 #' @param svd.bsparam TTT
 #' @param nb.cores TTT
-#' @param check.se.obj TTT
-#' @param remove.na description
 #' @param hvg.group.name description
 #' @param hvg.set.name description
+#' @param check.se.obj TTT
+#' @param remove.na description
 #' @param save.se.obj description
 #' @param verbose description
 #'
 #' @importFrom SummarizedExperiment assays colData
 #' @importFrom matrixStats rowVars
-#' @importFrom stats loess
 #' @importFrom parallel mclapply
+#' @importFrom stats loess
+#' @importFrom limma lmFit
 #' @export
 
 findHVG <- function(
@@ -64,12 +65,12 @@ findHVG <- function(
         scale = FALSE,
         svd.bsparam = bsparam(),
         apply.log = TRUE,
-        pseudo.count  = 1,
+        pseudo.count = 1,
         nb.cores = 1,
-        check.se.obj = TRUE,
-        remove.na = 'none',
         hvg.group.name = NULL,
         hvg.set.name = NULL,
+        check.se.obj = TRUE,
+        remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -168,116 +169,19 @@ findHVG <- function(
         color = 'magenta',
         verbose = verbose
         )
+    expr.data <- preProcessData(
+        se.obj = se.obj,
+        assay.name = assay.name,
+        normalization = normalization,
+        regress.out.variables = regress.out.variables,
+        regress.out.rle.med = FALSE,
+        apply.log = apply.log,
+        pseudo.count = pseudo.count,
+        check.se.obj = FALSE,
+        remove.na = 'none',
+        verbose = verbose
+        )
     ## Applying library size normalization ####
-    if (!is.null(normalization)){
-        expr.data <- applyOtherNormalizations(
-            se.obj = se.obj,
-            assay.name = assay.name,
-            method = normalization,
-            pseudo.count = pseudo.count,
-            apply.log = apply.log,
-            check.se.obj = FALSE,
-            save.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
-        )
-    }
-    ## Regressing out unwanted variables ####
-    if (!is.null(regress.out.variables) & !is.null(normalization)){
-        printColoredMessage(
-            message = paste0(
-                'The ',
-                paste0(regress.out.variables, collapse = ' & '),
-                ' will be regressed out from the data,',
-                ' please make sure your data is log transformed.'),
-            color = 'blue',
-            verbose = verbose
-            )
-        printColoredMessage(
-            message = paste0(
-                '- Note, we do not recommend regressing out the ',
-                paste0(regress.out.variables, collapse = ' & '),
-                ' if they are largely associated with the ',
-                paste0(bio.variables, collapse = ' & '),
-                '.'),
-            color = 'red',
-            verbose = verbose
-        )
-        expr.data <- t(expr.data)
-        uv.variables.all <- paste('se.obj', regress.out.variables, sep = '$')
-        expr.data <- lm(as.formula(paste(
-            'expr.data',
-            paste0(uv.variables.all, collapse = '+') ,
-            sep = '~')))
-        expr.data <- t(expr.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
-        row.names(expr.data) <- row.names(se.obj)
-    }
-    if (!is.null(regress.out.variables) & is.null(normalization)){
-        if (isTRUE(apply.log)){
-            expr.data <- applyLog(
-                se.obj = se.obj,
-                assay.names = assay.name,
-                pseudo.count = pseudo.count,
-                check.se.obj = FALSE,
-                remove.na = 'none',
-                verbose = verbose
-                )[[assay.name]]
-        }
-        if (isFALSE(apply.log)){
-            expr.data <- assay(
-                x = se.obj,
-                i = assay.name
-                )
-        }
-        printColoredMessage(
-            message = paste0(
-                'The',
-                paste0(regress.out.variables, collapse = ' & '),
-                ' will be regressed out from the data,',
-                ' please make sure your data is log transformed.'),
-            color = 'blue',
-            verbose = verbose
-            )
-        printColoredMessage(
-            message = paste0(
-                '- Note: we do not recommend regressing out ',
-                paste0(regress.out.variables, collapse = ' & '),
-                'if they are largely associated with the ',
-                paste0(bio.variables, collapse = ' & '), '.'),
-            color = 'red',
-            verbose = verbose
-            )
-        expr.data <- t(expr.data)
-        uv.variables.all <- paste('se.obj', regress.out.variables, sep = '$')
-        expr.data <- lm(as.formula(paste(
-            'expr.data',
-            paste0(uv.variables.all, collapse = '+') ,
-            sep = '~'
-        )))
-        expr.data <- t(expr.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
-        row.names(expr.data) <- row.names(se.obj)
-    }
-    if (is.null(regress.out.variables) & is.null(normalization)){
-        if (isTRUE(apply.log)){
-            expr.data <- applyLog(
-                se.obj = se.obj,
-                assay.names = assay.name,
-                pseudo.count = pseudo.count,
-                check.se.obj = FALSE,
-                remove.na = 'none',
-                verbose = verbose
-            )[[assay.name]]
-        }
-        if (isFALSE(apply.log)){
-            expr.data <- assay(
-                x = se.obj,
-                i = assay.name
-            )
-        }
-    }
-
     ## Applying MAD approach
     if (approach == 'mad'){
         if (is.null(group.name)){
@@ -594,15 +498,15 @@ findHVG <- function(
                 variance.standardized = numeric(nfeatures),
                 variable = logical(nfeatures),
                 rank = rep(NA_integer_, nfeatures)
-            )
+                )
             hvf.info$mean <- rowMeans(expr.data)
             hvf.info$variance <- rowVars(expr.data)
             not.const <- hvf.info$variance > 0
-            fit <- loess(
+            fit <- stats::loess(
                 log10(variance) ~ log10(mean),
                 data = hvf.info[not.const, , drop = TRUE],
                 span = span
-            )
+                )
             hvf.info$variance.expected[not.const] <- 10^fit$fitted
             feature.mean <- hvf.info$mean
             feature.mean[feature.mean == 0] <- 0.1
@@ -611,10 +515,7 @@ findHVG <- function(
             expr.data <- pmin(expr.data, matrix(rep(cap, times = ncol(expr.data)), nrow = nfeatures))
             data.standard <- (expr.data - feature.mean) / feature.sd
             hvf.info$variance.standardized <- rowVars(data.standard)
-            vf <- head(
-                x = order(hvf.info$variance.standardized, decreasing = TRUE),
-                n = nrow(se.obj) * nb.hvg
-            )
+            vf <- order(hvf.info$variance.standardized, decreasing = TRUE)[1:c(nrow(se.obj) * nb.hvg)]
             hvf.info$variable[vf] <- TRUE
             hvf.info$rank[vf] <- seq_along(vf)
             if (!is.null(rownames(data))) {
@@ -656,10 +557,7 @@ findHVG <- function(
                         )
                     data.standard <- (temp.expr - feature.mean) / feature.sd
                     hvf.info$variance.standardized <- rowVars(data.standard)
-                    vf <- head(
-                        x = order(hvf.info$variance.standardized, decreasing = TRUE),
-                        n = nrow(se.obj) * nb.hvg
-                        )
+                    vf <- order(hvf.info$variance.standardized, decreasing = TRUE)[1:c(nrow(se.obj) * nb.hvg)]
                     hvf.info$variable[vf] <- TRUE
                     hvf.info$rank[vf] <- seq_along(vf)
                     if (!is.null(rownames(data))) {
@@ -689,7 +587,7 @@ findHVG <- function(
                 check.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = TRUE
-            )[[assay.name]]
+                )[[assay.name]]
             sample.annotation <- as.data.frame(colData(se.obj))
             gene.var.part <- fitExtractVarPartModel(
                 exprObj = expr.data,
@@ -896,7 +794,7 @@ findHVG <- function(
             verbose = verbose
             )
         printColoredMessage(
-            message = '------------The findNcgByTwoWayAnova function finished.',
+            message = '------------The findHVG function finished.',
             color = 'white',
             verbose = verbose
             )
