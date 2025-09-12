@@ -65,14 +65,14 @@ computeSilhouette <- function(
     if (length(variable) > 1){
         stop('The "variable" must be a categorical variable.')
     }
-    if (!variable %in% colnames(se.obj@colData)){
+    if (!variable %in% colnames(colData(se.obj))){
         stop('The "variable" cannot be found in the SummarizedExperiment object.')
     }
-    if (class(se.obj@colData[[variable]]) %in% c('numeric', 'integer')) {
+    if (class(se.obj[[variable]]) %in% c('numeric', 'integer')) {
         stop('The "variable" must be a categorical variable.')
     }
-    if (length(unique(se.obj@colData[, variable])) < 2) {
-        stop('The "variable" must have at least two levels.')
+    if (length(unique(se.obj[[variable]])) < 2) {
+        stop('The "variable" must have at least two levels. Silhouette analysis requires at least two clusters.')
     }
     if (!is.logical(fast.pca)){
         stop('The "fast.pca" must be logical(TRUE or FALSE)')
@@ -185,17 +185,17 @@ computeSilhouette <- function(
                 stop('The column names of the SummarizedExperiment object is not the same as row names of the PCA data.')
             }
             printColoredMessage(
-                message = '- Calculating the distance matrix on the PCs.',
+                message = '- Calculating the distance matrix using the PCs.',
                 color = 'blue',
                 verbose = verbose
                 )
-            d.matrix <- as.matrix(dist(pca.data[, seq_len(nb.pcs)], method = dist.measure))
+            d.matrix <- as.matrix(dist(pca.data, method = dist.measure))
             printColoredMessage(
-                message = '- Calculating the average Silhouette coefficient.',
+                message = '- Calculating the Silhouette coefficient and obtaning the average.',
                 color = 'blue',
                 verbose = verbose
                 )
-            avg.width <- summary(silhouette(as.numeric(as.factor(se.obj@colData[, variable])), d.matrix))$avg.width
+            avg.width <- summary(silhouette(as.numeric(as.factor(se.obj[[variable]])), d.matrix))$avg.width
             return(avg.width)
         })
     names(all.sil.coef) <- levels(assay.names)
@@ -223,7 +223,7 @@ computeSilhouette <- function(
             variables = variable,
             file.name = 'silhouette.coeff',
             results.data = all.sil.coef
-        )
+            )
         printColoredMessage(
             message = paste0(
                 '* The silhouette coefficients of the induvial assay(s) is saved to the .',
