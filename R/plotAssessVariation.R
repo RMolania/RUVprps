@@ -33,6 +33,23 @@
 #' @param verbose Logical. If `TRUE`, displays messages describing different steps of the function.
 
 
+# se.obj = read.se.obj
+# assay.names = 'all'
+# fast.pca = TRUE
+# anova.method = 'aov'
+# corr.method = 'spearman'
+# pcorr.method = 'spearman'
+# sil.dist.measure = 'euclidian'
+# ari.clustering.method = "hclust"
+# ari.hclust.method = "complete"
+# ari.hclust.dist.measure = "euclidian"
+# output.file.name = NULL
+# pdf.width = 12
+# pdf.height = 12
+# verbose = TRUE
+# variables =  c('CMS','Library.size','Tumour.purity','Time.interval')
+# output.file.name = paste0('../MS/Main_Figures/TCGA_READ_RNAseq/Scenario0/AssessVariation/', "TCGA_READ_AssessVariation")
+
 plotAssessVariation <- function(
         se.obj,
         assay.names = 'all',
@@ -62,7 +79,6 @@ plotAssessVariation <- function(
 
     # Put all plots together ####
     ## find classes of different variables ####
-    categorical.vars <- continuous.vars <- NULL
     if (!is.null(variables)) {
         vars.class <- sapply(
             variables,
@@ -77,7 +93,7 @@ plotAssessVariation <- function(
     pdf(paste0(output.file.name, '.pdf'),
         width = pdf.width,
         height = pdf.height
-    )
+        )
     plot.new()
     text(.5, .7, "Assess variation", font = 2, cex = 2.5)
     text(.5, .6, "variables:", font = 2, cex = 2.5)
@@ -191,12 +207,22 @@ plotAssessVariation <- function(
             )
         }
         ## histogram of gene variable partial correlation coefficients ####
-        if ('GeneSetScore' %in% paste0(metrics.table.var$Metrics)){
+        if ('GeneSetScore' %in% metrics.table.var$Metrics){
             if (length(assay.names) > 1){
                 print(
                     se.obj@metadata$Plots$global.level$GeneSetSocore$singscore[[i]]$general
                 )
             }
+        }
+
+        if ('LISI' %in% metrics.table.var$Metrics){
+            if (length(assay.names) > 1){
+                print(
+                    se.obj@metadata$Plots$global.level$LISI[[svd.method]][[i]]$boxplot
+                )
+            } else print(
+                se.obj@metadata$Metrics[[assay.names]]$global.level$LISI[[svd.method]][[i]]$boxplot
+            )
         }
     }
 
@@ -320,6 +346,24 @@ plotAssessVariation <- function(
                 )
             } else print(
                 se.obj@metadata$Metrics[[assay.names]]$gene.level$DGE$Wilcoxon$time.interval$plot
+            )
+        }
+        if ('LISI' %in% metrics.table.var$Metrics){
+            if (length(assay.names) > 1){
+                print(
+                    se.obj@metadata$Plots$global.level$LISI[[svd.method]][[i]]$boxplot
+                )
+            } else print(
+                se.obj@metadata$Metrics[[assay.names]]$global.level$LISI[[svd.method]][[i]]$boxplot
+            )
+        }
+        if ('KBET' %in% metrics.table.var$Metrics){
+            if (length(assay.names) > 1){
+                print(
+                    se.obj@metadata$Plots$global.level$KBET[[svd.method]][[i]]$boxplot
+                )
+            } else print(
+                se.obj@metadata$Metrics[[assay.names]]$global.level$KBET[[svd.method]][[i]]$boxplot
             )
         }
     }
