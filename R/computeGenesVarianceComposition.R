@@ -1,4 +1,4 @@
-#' Computes gene-level variance composition across variables in RNA-seq.
+#' Compute gene-level variance composition across variables in RNA-seq.
 #'
 #' @author Ramyar Molania
 #'
@@ -17,8 +17,8 @@
 #' default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
 #' the log transformation. The default is set to 1.
-#' @param nb.cores TTTT
-#' @param plot.output TTTT
+#' @param nb.cores Numeric.
+#' @param plot.output Logical.
 #' @param output.name TTT
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
 #' This means the function will apply the `checkSeObj()` function.
@@ -29,13 +29,37 @@
 #' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays the messages of different steps of the function.
 #'
-#' @return Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
-#' variable or a list of these results.
+#' @return Either a SummarizedExperiment object containing TTTT
 #'
 #' @importFrom variancePartition fitExtractVarPartModel
 #' @importFrom variancePartition fitVarPartModel
 #' @importFrom BiocParallel MulticoreParam
 #' @importFrom limma lmFit
+
+
+# se.obj = read.se.obj
+# assay.names = 'RawCount'
+# form =  ~ (1|Estimated.batches) + Library.size + (1|CMS) + Tumour.purity
+# adjust.data = FALSE
+# adjustment.form = NULL
+# adjustment.method = 'lm'
+# samples.to.use = !read.se.obj$CMS %in% c('Not.classified')
+# apply.log = TRUE
+# pseudo.count = 1
+# nb.cores = 1
+# plot.output = TRUE
+# output.name = NULL
+# check.se.obj = TRUE
+# remove.na = 'both'
+# save.se.obj = TRUE
+# verbose = TRUE
+#
+# mm <- computeGenesVarianceComposition(
+#     se.obj = read.se.obj,
+#     assay.names = 'RawCount',
+#     form =  ~ (1|Estimated.batches) + Library.size + (1|CMS) + Tumour.purity,
+#     samples.to.use = !read.se.obj$CMS %in% c('Not.classified'), nb.cores =
+#     )
 
 computeGenesVarianceComposition <- function(
         se.obj,
@@ -47,7 +71,7 @@ computeGenesVarianceComposition <- function(
         samples.to.use = 'all',
         apply.log = TRUE,
         pseudo.count = 1,
-        nb.cores = 10,
+        nb.cores = 1,
         plot.output = TRUE,
         output.name = NULL,
         check.se.obj = TRUE,
@@ -162,6 +186,8 @@ computeGenesVarianceComposition <- function(
             se.obj = se.obj,
             assay.names = levels(assay.names),
             pseudo.count = pseudo.count,
+            check.se.obj = FALSE,
+            remove.na = 'none',
             verbose = verbose
             )
     }
@@ -252,7 +278,7 @@ computeGenesVarianceComposition <- function(
                             ' to obtain gene level variance decomposition.'),
                         color = 'blue',
                         verbose = verbose
-                    )
+                        )
                     gene.var.decomposition <- fitExtractVarPartModel(
                         exprObj = res.data,
                         formula = form,
@@ -270,18 +296,20 @@ computeGenesVarianceComposition <- function(
                         ' to obtain gene level variance composition.'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 gene.var.decomposition <- fitExtractVarPartModel(
                     exprObj = all.assays[[x]],
                     formula = form,
                     data = sample.info,
                     BPPARAM = MulticoreParam(workers = nb.cores)
-                )
+                    )
                 gene.var.decomposition
             }
             return(gene.var.decomposition)
         })
     names(all.gene.var.decop) <- levels(assay.names)
+    # Selecting samples to use ####
+    if (is.logical(samples.to.use)) se.obj <- se.obj.initial
 
     # Saving the results
     ## add results to the SummarizedExperiment object ####
@@ -306,7 +334,7 @@ computeGenesVarianceComposition <- function(
                 variables = form,
                 file.name = 'gene.variance',
                 results.data = all.gene.var.decop
-            )
+                )
         }
         if (isTRUE(adjust.data)){
             form <- paste0(
