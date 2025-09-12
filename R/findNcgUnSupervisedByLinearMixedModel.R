@@ -159,6 +159,7 @@
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
 #' @param ncg.idenfitication.approach TTTT
 #' @param samples.to.use TTTT
+#' @param use.fvalues TTTT
 #'
 #' @importFrom variancePartition fitExtractVarPartModel
 #' @importFrom SummarizedExperiment assay colData
@@ -202,6 +203,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         scale = FALSE,
         svd.bsparam = bsparam(),
         plot.ncg.assessment = TRUE,
+        use.fvalues = TRUE,
         nb.cores = 1,
         check.se.obj = TRUE,
         remove.na = 'none',
@@ -213,9 +215,11 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The findNcgUnSupervisedByLinearMixedModel function starts:',
-                        color = 'white',
-                        verbose = verbose)
+    printColoredMessage(
+        message = '------------The findNcgUnSupervisedByLinearMixedModel function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # Checking the  functions inputs ####
     if (length(assay.name) > 1 | !is.character(assay.name)){
         stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
@@ -256,10 +260,10 @@ findNcgUnSupervisedByLinearMixedModel <- function(
     if (isFALSE(is.logical(assess.ncg))){
         stop('The "assess.ncg" must be "TRUE" or "FALSE.')
     }
-    if (length(nb.bio.pcs) > 1 | nb.pcs < 0){
+    if (length(nb.bio.pcs) > 1 | nb.bio.pcs < 0){
         stop('The "nb.bio.pcs" must be a postive integer value.')
     }
-    if (length(nb.uv.pcs) > 1 | nb.pcs < 0){
+    if (length(nb.uv.pcs) > 1 | nb.uv.pcs < 0){
         stop('The "nb.uv.pcs" must be a postive integer value.')
     }
     if (length(nb.pcs) > 1 | nb.pcs < 0){
@@ -300,6 +304,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         if (uv.percentile > 1 | uv.percentile < 0)
             stop('The "uv.percentile" must be a postive value between 0 and 1.')
     }
+    # Selecting samples to use for down-stream analysis ####
     if (is.logical(samples.to.use)){
         if (length(samples.to.use) != ncol(se.obj)){
             stop('The length of the "samples.to.use" must be the same as the number of columns in the SummarizedExperiment object.')
@@ -308,20 +313,23 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         se.obj <- se.obj[ , samples.to.use]
     }
     if (ncg.idenfitication.approach == 'LMM'){
-        expr.data <- applyLog(
-            se.obj = se.obj,
-            assay.names = assay.name,
-            pseudo.count = pseudo.count,
-            check.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = TRUE
+        if (isTRUE(apply.log)){
+            expr.data <- applyLog(
+                se.obj = se.obj,
+                assay.names = assay.name,
+                pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
+                remove.na = 'none',
+                verbose = TRUE
             )[[assay.name]]
+        } else expr.data <- assay(x = se.obj, i = assay.name)
+
         sample.annotation <- as.data.frame(colData(se.obj))
         gene.var.part <- fitExtractVarPartModel(
             exprObj = expr.data,
             formula = form,
             data = sample.annotation,
-            BPPARAM = MulticoreParam(workers = 14)
+            BPPARAM = MulticoreParam(workers = nb.cores)
             )
         new.form <- changeLmmFormula(
             form = form,
@@ -342,14 +350,16 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         all.lmm$bio.rank <- rank(x = all.lmm$bio, ties.method = 'random')
     }
     if (ncg.idenfitication.approach == 'LMM.UvAdjustment'){
-        expr.data <- applyLog(
-            se.obj = se.obj,
-            assay.names = assay.name,
-            pseudo.count = pseudo.count,
-            check.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = TRUE
+        if (isTRUE(apply.log)){
+            expr.data <- applyLog(
+                se.obj = se.obj,
+                assay.names = assay.name,
+                pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
+                remove.na = 'none',
+                verbose = TRUE
             )[[assay.name]]
+        } else expr.data <- assay(x = se.obj, i = assay.name)
         sample.annotation <- as.data.frame(colData(se.obj))
         new.form <- changeLmmFormula(
             form = form,
@@ -373,7 +383,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         }
         sv.dec <- BiocSingular::runSVD(
             x = t(adjusted.data),
-            k = nb.pcs,
+            k = nb.bio.pcs,
             BSPARAM = svd.bsparam,
             center = center,
             scale = scale
@@ -383,7 +393,8 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         percentage <- sv.dec$d ^ 2 / sum(sv.dec$d ^ 2) * 100
         percentage <- sapply(
             seq_along(percentage),
-            function(i) round(percentage [i], 1))
+            function(i) round(percentage [i], 1)
+            )
         bio.variables <- c()
         for(i in 1:nb.bio.pcs){
             col.nam <- paste0('Bio.pc', i)
@@ -399,7 +410,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
             exprObj = expr.data,
             formula = new.form,
             data = sample.annotation,
-            BPPARAM = MulticoreParam(workers = 14)
+            BPPARAM = MulticoreParam(workers = nb.cores)
             )
         uv.var <- changeLmmFormula(
             form = form,
@@ -420,14 +431,16 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         all.lmm$bio.rank <- rank(x = all.lmm$bio, ties.method = 'random')
     }
     if (ncg.idenfitication.approach == 'LMM.BioUvAdjustment'){
-        expr.data <- applyLog(
-            se.obj = se.obj,
-            assay.names = assay.name,
-            pseudo.count = pseudo.count,
-            check.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = TRUE
-        )[[assay.name]]
+        if (isTRUE(apply.log)){
+            expr.data <- applyLog(
+                se.obj = se.obj,
+                assay.names = assay.name,
+                pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
+                remove.na = 'none',
+                verbose = TRUE
+            )[[assay.name]]
+        } else expr.data <- assay(x = se.obj, i = assay.name)
         sample.annotation <- as.data.frame(colData(se.obj))
         new.form <- changeLmmFormula(
             form = form,
@@ -451,7 +464,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         }
         sv.dec <- BiocSingular::runSVD(
             x = t(adjusted.data),
-            k = nb.pcs,
+            k = nb.bio.pcs,
             BSPARAM = svd.bsparam,
             center = center,
             scale = scale
@@ -461,7 +474,8 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         percentage <- sv.dec$d ^ 2 / sum(sv.dec$d ^ 2) * 100
         percentage <- sapply(
             seq_along(percentage),
-            function(i) round(percentage [i], 1))
+            function(i) round(percentage [i], 1)
+            )
         bio.variables <- c()
         for(i in 1:nb.bio.pcs){
             col.nam <- paste0('Bio.pc', i)
@@ -472,18 +486,18 @@ findNcgUnSupervisedByLinearMixedModel <- function(
             paste0(form, collapse = ''),
             '+',
             paste0(bio.variables, collapse = ' + ')
-        )
+            )
         gene.var.part <- fitExtractVarPartModel(
             exprObj = expr.data,
             formula = new.form,
             data = sample.annotation,
             BPPARAM = MulticoreParam(workers = nb.cores)
-        )
+            )
         uv.var <- changeLmmFormula(
             form = form,
             out.put = "character",
             sub.set = uv.variables
-        )
+            )
         uv.var <- rowSums(gene.var.part[, uv.var, drop = FALSE])
         bio.var <- rowSums(gene.var.part[, bio.variables, drop = FALSE])
         all.var.result <- data.frame(
@@ -491,7 +505,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
             uv.var = uv.var,
             bio.var = bio.var,
             ratio = uv.var / (bio.var + 1e-6)  # Avoid divide-by-zero
-        )
+            )
         all.var.result <- all.var.result[order(-all.var.result$ratio), ]
         all.var.result <- all.var.result[all.var.result$uv.var > .7 , ]
         nb.ncg.a <- round(x = nrow(se.obj) * nb.ncg, digits = 0)
@@ -499,11 +513,11 @@ findNcgUnSupervisedByLinearMixedModel <- function(
 
         sv.dec <- BiocSingular::runSVD(
             x = t(expr.data[selected.ncg, ]),
-            k = nb.pcs,
+            k = nb.bio.pcs,
             BSPARAM = svd.bsparam,
             center = center,
             scale = scale
-        )
+            )
         rownames(sv.dec$u) <- colnames(se.obj)
         rownames(sv.dec$v) <- row.names(se.obj)[selected.ncg]
         percentage <- sv.dec$d ^ 2 / sum(sv.dec$d ^ 2) * 100
@@ -1095,7 +1109,8 @@ findNcgUnSupervisedByLinearMixedModel <- function(
                 verbose = verbose
                 )
             expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
-        } else if (isTRUE(apply.log) & is.null(pseudo.count)){
+        }
+        if (isTRUE(apply.log) & is.null(pseudo.count)){
             printColoredMessage(
                 message = paste0(
                     '- Applying log2 on the ',
@@ -1105,7 +1120,8 @@ findNcgUnSupervisedByLinearMixedModel <- function(
                 verbose = verbose
                 )
             expr.data <- log2(assay(x = se.obj, i = assay.name))
-        } else if (isFALSE(apply.log)) {
+        }
+        if (isFALSE(apply.log)) {
             printColoredMessage(
                 message = paste0(
                     '- The ',
