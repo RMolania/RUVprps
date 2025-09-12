@@ -32,6 +32,11 @@ preProcessData <- function(
         remove.na = 'assay',
         verbose = TRUE
         ){
+    printColoredMessage(
+        message =  '------------The preProcessData function starts:',
+        color = 'white',
+        verbose = verbose
+        )
 
     # checking the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)){
@@ -67,17 +72,15 @@ preProcessData <- function(
                 ' please make sure your data is log transformed.'),
             color = 'blue',
             verbose = verbose
-        )
+            )
         printColoredMessage(
             message = paste0(
                 '- Note, we do not recommend regressing out the ',
                 paste0(regress.out.variables, collapse = ' & '),
-                ' if they are largely associated with the ',
-                paste0(bio.variables, collapse = ' & '),
-                '.'),
+                ' if they are largely associated with the biological variables.'),
             color = 'red',
             verbose = verbose
-        )
+            )
         expr.data <- t(expr.data)
         uv.variables.all <- paste('se.obj', regress.out.variables, sep = '$')
         expr.data <- lm(as.formula(paste(
@@ -97,17 +100,14 @@ preProcessData <- function(
                 check.se.obj = FALSE,
                 remove.na = 'none',
                 verbose = verbose
-            )[[assay.name]]
+                )[[assay.name]]
         }
         if (isFALSE(apply.log)){
-            expr.data <- assay(
-                x = se.obj,
-                i = assay.name
-            )
+            expr.data <- assay(x = se.obj, i = assay.name)
         }
         printColoredMessage(
             message = paste0(
-                'The',
+                '- The',
                 paste0(regress.out.variables, collapse = ' & '),
                 ' will be regressed out from the data,',
                 ' please make sure your data is log transformed.'),
@@ -116,10 +116,9 @@ preProcessData <- function(
             )
         printColoredMessage(
             message = paste0(
-                '- Note: we do not recommend regressing out ',
+                '- Note, we do not recommend regressing out the ',
                 paste0(regress.out.variables, collapse = ' & '),
-                'if they are largely associated with the ',
-                paste0(bio.variables, collapse = ' & '), '.'),
+                ' if they are largely associated with the biological variables.'),
             color = 'red',
             verbose = verbose
             )
@@ -146,10 +145,7 @@ preProcessData <- function(
                 )[[assay.name]]
         }
         if (isFALSE(apply.log)){
-            expr.data <- assay(
-                x = se.obj,
-                i = assay.name
-                )
+            expr.data <- assay(x = se.obj, i = assay.name)
         }
     }
     if (isTRUE(regress.out.rle.med)){
@@ -159,6 +155,11 @@ preProcessData <- function(
         colnames(expr.data) <- colnames(se.obj)
         row.names(expr.data) <- row.names(se.obj)
     }
+    printColoredMessage(
+        message =  '------------The preProcessData function finished.',
+        color = 'white',
+        verbose = verbose
+    )
     return(expr.data)
 }
 
