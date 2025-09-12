@@ -16,7 +16,7 @@ computeCCA(
   regress.out.variables = NULL,
   regress.out.rle.med = FALSE,
   cosine.norm = FALSE,
-  sample.to.use = "all",
+  samples.to.use = "all",
   apply.log = TRUE,
   pseudo.count = 1,
   check.se.obj = TRUE,
@@ -49,7 +49,7 @@ computeCCA(
 
 \item{cosine.norm}{TTTTT}
 
-\item{sample.to.use}{TTTTT}
+\item{samples.to.use}{TTTTT}
 
 \item{apply.log}{TTTTT}
 
