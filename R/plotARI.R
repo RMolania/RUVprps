@@ -1,4 +1,4 @@
-#' Generates barplot or scatter plot the Adjusted Rand Index (ARI).
+#' Generate barplot or scatter plot the Adjusted Rand Index (ARI).
 #'
 #' @author Ramyar Molania
 #'
@@ -247,7 +247,7 @@ plotARI <- function(
                         ' data.'),
                     color = 'blue',
                     verbose = verbose
-                )
+                    )
                 all.aris <- as.data.frame(t(as.data.frame(all.ari[[x]])))
                 row.names(all.aris) <- x
                 colnames(all.aris) <- variables
@@ -277,10 +277,10 @@ plotARI <- function(
         datasets <- NULL
         if (length(assay.names) > 1) {
             printColoredMessage(
-                message = paste0('-- Generating the combined ARI plot for all the data stes:'),
+                message = '-- Generating the combined ARI plot for all the data stes:',
                 color = 'magenta',
                 verbose = verbose
-            )
+                )
             all.ari <- as.data.frame(t(as.data.frame(all.ari)))
             colnames(all.ari) <- variables
             all.ari$datasets <- row.names(all.ari)
@@ -318,7 +318,7 @@ plotARI <- function(
                     hjust = 1,
                     x = 1,
                     size = 10)
-            )
+                )
         }
     }
 
@@ -333,7 +333,8 @@ plotARI <- function(
         printColoredMessage(
             message = '-- Save all the ARI barplots to the "metadata" in the SummarizedExperiment object:',
             color = 'blue',
-            verbose = verbose)
+            verbose = verbose
+            )
         if(plot.type == 'single.plot'){
             se.obj <- addMetricToSeObj(
                 se.obj = se.obj,
@@ -345,7 +346,7 @@ plotARI <- function(
                 variables = variables,
                 file.name = 'single.plot',
                 results.data = all.single.ari.plots
-            )
+                )
         } else if (plot.type == 'combined.plot'){
             se.obj <- addMetricToSeObj(
                 se.obj = se.obj,
@@ -357,15 +358,15 @@ plotARI <- function(
                 variables = paste0(variables, collapse = '&'),
                 file.name = 'combined.plot',
                 results.data = all.combined.ari.plots
-            )
+                )
         }
         printColoredMessage(
             message = paste0(
                 '- The ARI barplot of the individual assay(s) is saved to the ',
                 ' "se.obj@metadata$metric$AssayName$ARI" in the SummarizedExperiment object.'),
             color = 'blue',
-            verbose = verbose)
-
+            verbose = verbose
+            )
         if (length(assay.names) > 1) {
             if(plot.type == 'single.plot'){
                 se.obj <- addOverallPlotToSeObj(
@@ -377,7 +378,7 @@ plotARI <- function(
                     variables = variables,
                     file.name = 'single.plot',
                     plot.data = overall.single.ari.plot
-                )
+                    )
             } else if (plot.type == 'combined.plot'){
                 se.obj <- addOverallPlotToSeObj(
                     se.obj = se.obj,
@@ -388,7 +389,7 @@ plotARI <- function(
                     variables = paste0(variables, collapse = '&'),
                     file.name = 'combined.plot',
                     plot.data = overall.combined.ari.plot
-                )
+                    )
             }
             printColoredMessage(
                 message = paste0(
@@ -409,10 +410,13 @@ plotARI <- function(
         printColoredMessage(
             message = paste0('- All the ARI plots re saved as list.'),
             color = 'blue',
-            verbose = verbose)
-        printColoredMessage(message = '------------The plotARI function finished.',
-                            color = 'white',
-                            verbose = verbose)
+            verbose = verbose
+            )
+        printColoredMessage(
+            message = '------------The plotARI function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         if (plot.type == 'single.plot') {
             if(length(assay.names) == 1){
                 if(length(assay.names) > 1){
