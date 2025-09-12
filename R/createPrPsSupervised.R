@@ -52,12 +52,6 @@
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
-#' function will be applied inside the function. The default is set to `TRUE`.
-#' @param remove.na Character. A character indicating whether to remove NA or missing values from either the 'assays',
-#' the `sample.annotation`, `both`, or `none`. If `assays` is selected, the genes that contain NA or missing values will
-#' be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any `bio.variables`
-#' and `uv.variables` will be excluded. The default is set to `both`.
 #' @param plot.output Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
 #' The default is se to `TRUE`.
 #' @param prps.group.name Character. A character specifying a name for the PRPS data sets created for a specific group.
@@ -65,6 +59,12 @@
 #' @param prps.sets.name Character. A character to specify the name of all PRPS sets that will be created for all
 #' specified source(s) of unwanted variation. The default is set to `NULL`. If not specified, the function creates a
 #' name based on `paste0('prps_', uv.variable)`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
+#' function will be applied inside the function. The default is set to `TRUE`.
+#' @param remove.na Character. A character indicating whether to remove NA or missing values from either the 'assays',
+#' the `sample.annotation`, `both`, or `none`. If `assays` is selected, the genes that contain NA or missing values will
+#' be excluded. If 'sample.annotation' is selected, the samples that contain NA or missing values for any `bio.variables`
+#' and `uv.variables` will be excluded. The default is set to `both`.
 #' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
@@ -92,11 +92,11 @@ createPrPsSupervised <- function(
         check.prps.connectedness = TRUE,
         apply.log = TRUE,
         pseudo.count = 1,
-        check.se.obj = TRUE,
-        remove.na = 'both',
         plot.output = TRUE,
         prps.group.name = NULL,
         prps.sets.name = NULL,
+        check.se.obj = TRUE,
+        remove.na = 'both',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -108,6 +108,9 @@ createPrPsSupervised <- function(
     # Checking the function input ####
     if (length(uv.variables) == 1 & isTRUE(apply.other.uv.variables)){
         stop('The "apply.other.uv.variables" must be set to FALSE as ony one unwnted variable is provided.')
+    }
+    if (!is.logical(apply.other.uv.variables)){
+        stop('The "apply.other.uv.variables" must be logical.')
     }
     # Finding categorical and continuous variables ####
     uv.class <- sapply(
@@ -128,10 +131,10 @@ createPrPsSupervised <- function(
             categorical.uv.prps <- lapply(
                 categorical.uv,
                 function(x) {
-                    if (apply.other.uv.variables) {
+                    if (isTRUE(apply.other.uv.variables)) {
                         other.uv.variables <- uv.variables[!uv.variables %in% x]
                     } else other.uv.variables <- NULL
-                    createPrPsForCategoricalUV(
+                    createPrPsSupervisedForCategoricalUV(
                         se.obj = se.obj,
                         assay.name = assay.name,
                         bio.variables = bio.variables,
@@ -158,10 +161,10 @@ createPrPsSupervised <- function(
             categorical.uv.prps.all <- do.call(cbind, categorical.uv.prps)
         } else {
             for (x in categorical.uv) {
-                if (apply.other.uv.variables) {
+                if (isTRUE(apply.other.uv.variables)) {
                     other.uv.variables <- uv.variables[!uv.variables %in% x]
                 } else other.uv.variables <- NULL
-                se.obj <- createPrPsForCategoricalUV(
+                se.obj <- createPrPsSupervisedForCategoricalUV(
                     se.obj = se.obj,
                     assay.name = assay.name,
                     bio.variables = bio.variables,
@@ -197,10 +200,10 @@ createPrPsSupervised <- function(
             continuous.uv.prps <- lapply(
                 continuous.uv,
                 function(x) {
-                    if (apply.other.uv.variables) {
+                    if (isTRUE(apply.other.uv.variables)) {
                         other.uv.variables <- uv.variables[!uv.variables %in% x]
                     } else other.uv.variables <- NULL
-                    createPrPsForContinuousUV(
+                    createPrPsSupervisedForContinuousUV(
                         se.obj = se.obj,
                         assay.name = assay.name,
                         bio.variables = bio.variables,
@@ -226,10 +229,10 @@ createPrPsSupervised <- function(
             continuous.uv.prps.all <- do.call(cbind, continuous.uv.prps)
         } else{
             for (x in continuous.uv) {
-                if (apply.other.uv.variables) {
+                if (isTRUE(apply.other.uv.variables)) {
                     other.uv.variables <- uv.variables[!uv.variables %in% x]
                 } else other.uv.variables <- NULL
-                se.obj <- createPrPsForContinuousUV(
+                se.obj <- createPrPsSupervisedForContinuousUV(
                     se.obj = se.obj,
                     assay.name = assay.name,
                     bio.variables = bio.variables,
