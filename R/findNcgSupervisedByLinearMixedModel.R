@@ -1,4 +1,4 @@
-#' Finds NCGs using two-way ANOVA.
+#' Find NCGs using linear mixed model
 #'
 #' @author Ramyar Molania
 #'
@@ -110,14 +110,14 @@
 #' is set to `auto`. In the `auto` approach, the grid search starts with the initial `top.rank.uv.genes` and
 #' `top.rank.bio.genes` values and adds or drops the `grid.nb` in each loop to find `nb.ncg` of genes as negative control
 #' genes. The default is set to 20.
-#' @param assess.ncg Logical. Indicates whether to assess the performance of selected genes as negative control or not.
-#' This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
-#' correlation between the first `nb.pcs` principal components and the biological and unwanted variables. The default is
-#' set to `TRUE`.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing any statistical
 #' analysis. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before log transformation
 #' .The default is se to 1.
+#' @param assess.ncg Logical. Indicates whether to assess the performance of selected genes as negative control or not.
+#' This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
+#' correlation between the first `nb.pcs` principal components and the biological and unwanted variables. The default is
+#' set to `TRUE`.
 #' @param variables.to.assess.ncg Character. A character string or vector of strings indicating the column names in sample
 #' annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
 #' NCG needs to be evaluated. The default is set to `NULL`. This means all the variables specified in the `bio.variables`
@@ -129,11 +129,12 @@
 #' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing
 #' the(centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square
 #' otherwise. The default is set to `FALSE`.
+#' @param svd.bsparam TTTT
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
 #' @param create.ncg.rank.plot Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
 #' with respect to their biological and unwanted variation effects. The default is set to `FALSE`.
-#' @param nb.cores TTTT
+#' @param nb.cores Numeric.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
 #'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
 #' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
@@ -185,16 +186,17 @@ findNcgSupervisedByLinearMixedModel <- function(
         grid.group = 'uv',
         grid.direction = 'increase',
         grid.nb = 20,
-        assess.ncg = TRUE,
         apply.log = TRUE,
         pseudo.count = 1,
+        assess.ncg = TRUE,
         variables.to.assess.ncg = NULL,
         nb.pcs = 10,
         center = TRUE,
         scale = FALSE,
+        svd.bsparam = bsparam(),
         plot.ncg.assessment = TRUE,
         create.ncg.rank.plot = FALSE,
-        nb.cores = 1,
+        nb.cores = NULL,
         check.se.obj = TRUE,
         remove.na = 'none',
         ncg.group.name = NULL,
@@ -205,11 +207,15 @@ findNcgSupervisedByLinearMixedModel <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-
-    # Selecting samples ####
-    if (is.logical(samples.to.use)){
-        se.obj.all <- se.obj
-        se.obj <- se.obj[ , samples.to.use]
+    # Selecting cores ####
+    if (is.null(nb.cores)){
+        nb.cores <- parallel::detectCores()
+        if (nb.cores > 2) {
+            nb.cores <- nb.cores - 1
+        } else nb.cores <- 1
+        if (is.null(nb.cores) | nb.cores == 0){
+            nb.cores = 1
+        }
     }
     if (isFALSE(adjust.data)){
         all.lmm <- computeGenesVarianceComposition(
@@ -219,7 +225,7 @@ findNcgSupervisedByLinearMixedModel <- function(
             adjust.data = FALSE,
             adjustment.form = NULL,
             adjustment.method = adjustment.method,
-            samples.to.use = 'all',
+            samples.to.use = samples.to.use,
             apply.log = apply.log,
             pseudo.count = pseudo.count,
             nb.cores = nb.cores,
@@ -240,7 +246,7 @@ findNcgSupervisedByLinearMixedModel <- function(
                 adjust.data = FALSE,
                 adjustment.form = NULL,
                 adjustment.method = adjustment.method,
-                samples.to.use = 'all',
+                samples.to.use = samples.to.use,
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 nb.cores = nb.cores,
@@ -268,7 +274,7 @@ findNcgSupervisedByLinearMixedModel <- function(
                 adjust.data = adjust.data,
                 adjustment.form = adjustment.form,
                 adjustment.method = adjustment.method,
-                samples.to.use = 'all',
+                samples.to.use = samples.to.use,
                 apply.log = apply.log,
                 pseudo.count = pseudo.count,
                 nb.cores = nb.cores,
@@ -794,231 +800,109 @@ findNcgSupervisedByLinearMixedModel <- function(
             ' genes are selected as negative control genes.'),
         color = 'blue',
         verbose = verbose
-    )
+        )
 
     # Plotting the F-statistics ####
-    if (isTRUE(create.ncg.rank.plot)){
-        if (isTRUE(use.fvalues)){
-            all.lmm$ncg <- factor(x = ncg.selected, levels = c('TRUE', 'FALSE'))
-            p.fvalues <- ggplot(all.lmm, aes(x = log2(bio.fvalue), y = log2(uv.fvalue), color =  ncg)) +
-                geom_point(alpha = .1) +
-                scale_color_manual(values = c('darkgreen', 'grey10')) +
-                xlab('Biology (log2 of F-values)') +
-                ylab('Unwanted variation (log2 of F-values)') +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 14),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 10),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 14),
-                    plot.title = element_text(size = 16))
-            p.fvalues.rank <- ggplot(all.lmm, aes(x = bio.rank, y = uv.rank.plot , color =  ncg)) +
-                geom_point(alpha = .1) +
-                scale_color_manual(values = c('darkgreen', 'grey10')) +
-                xlab('Biology (rank of F-values)') +
-                ylab('Unwanted variation (rank of F-values)') +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 14),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 10),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 14),
-                    plot.title = element_text(size = 16))
-            all.plots <- ggarrange(p.fvalues + p.fvalues.rank)
-            print(all.plots)
-            rm(p.fvalues, p.fvalues.rank)
-        }
-        if (isFALSE(use.fvalues)){
-            all.lmm$ncg <- factor(x = ncg.selected, levels = c('TRUE', 'FALSE'))
-            p.fvalues <- ggplot(all.lmm, aes(x = bio.pct, y = uv.pct, color =  ncg)) +
-                geom_point(alpha = .1) +
-                scale_color_manual(values = c('darkgreen', 'grey10')) +
-                xlab('Biology (percentage of variation)') +
-                ylab('Unwanted variation (percentage of variation)') +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 14),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 10),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 14),
-                    plot.title = element_text(size = 16))
-            p.fvalues.rank <- ggplot(all.lmm, aes(x = bio.rank, y = uv.rank.plot, color =  ncg)) +
-                geom_point(alpha = .1) +
-                scale_color_manual(values = c('darkgreen', 'grey10')) +
-                xlab('Biology (rank of percentage of variation') +
-                ylab('Unwanted variation (rank of percentage of variation)') +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 14),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 10),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 14),
-                    plot.title = element_text(size = 16))
-            all.plots <- ggarrange(p.fvalues + p.fvalues.rank)
-            print(all.plots)
-            rm(p.fvalues, p.fvalues.rank)
-        }
-    } else all.plots = NULL
+    # if (isTRUE(create.ncg.rank.plot)){
+    #     if (isTRUE(use.fvalues)){
+    #         all.lmm$ncg <- factor(x = ncg.selected, levels = c('TRUE', 'FALSE'))
+    #         p.fvalues <- ggplot(all.lmm, aes(x = log2(bio.fvalue), y = log2(uv.fvalue), color =  ncg)) +
+    #             geom_point(alpha = .1) +
+    #             scale_color_manual(values = c('darkgreen', 'grey10')) +
+    #             xlab('Biology (log2 of F-values)') +
+    #             ylab('Unwanted variation (log2 of F-values)') +
+    #             theme(
+    #                 panel.background = element_blank(),
+    #                 axis.line = element_line(colour = 'black', linewidth = 1),
+    #                 axis.title.x = element_text(size = 14),
+    #                 axis.title.y = element_text(size = 14),
+    #                 axis.text.x = element_text(size = 10),
+    #                 axis.text.y = element_text(size = 12),
+    #                 legend.text = element_text(size = 10),
+    #                 legend.title = element_text(size = 14),
+    #                 plot.title = element_text(size = 16))
+    #         p.fvalues.rank <- ggplot(all.lmm, aes(x = bio.rank, y = uv.rank.plot , color =  ncg)) +
+    #             geom_point(alpha = .1) +
+    #             scale_color_manual(values = c('darkgreen', 'grey10')) +
+    #             xlab('Biology (rank of F-values)') +
+    #             ylab('Unwanted variation (rank of F-values)') +
+    #             theme(
+    #                 panel.background = element_blank(),
+    #                 axis.line = element_line(colour = 'black', linewidth = 1),
+    #                 axis.title.x = element_text(size = 14),
+    #                 axis.title.y = element_text(size = 14),
+    #                 axis.text.x = element_text(size = 10),
+    #                 axis.text.y = element_text(size = 12),
+    #                 legend.text = element_text(size = 10),
+    #                 legend.title = element_text(size = 14),
+    #                 plot.title = element_text(size = 16))
+    #         all.plots <- ggarrange(p.fvalues + p.fvalues.rank)
+    #         print(all.plots)
+    #         rm(p.fvalues, p.fvalues.rank)
+    #     }
+    #     if (isFALSE(use.fvalues)){
+    #         all.lmm$ncg <- factor(x = ncg.selected, levels = c('TRUE', 'FALSE'))
+    #         p.fvalues <- ggplot(all.lmm, aes(x = bio.pct, y = uv.pct, color =  ncg)) +
+    #             geom_point(alpha = .1) +
+    #             scale_color_manual(values = c('darkgreen', 'grey10')) +
+    #             xlab('Biology (percentage of variation)') +
+    #             ylab('Unwanted variation (percentage of variation)') +
+    #             theme(
+    #                 panel.background = element_blank(),
+    #                 axis.line = element_line(colour = 'black', linewidth = 1),
+    #                 axis.title.x = element_text(size = 14),
+    #                 axis.title.y = element_text(size = 14),
+    #                 axis.text.x = element_text(size = 10),
+    #                 axis.text.y = element_text(size = 12),
+    #                 legend.text = element_text(size = 10),
+    #                 legend.title = element_text(size = 14),
+    #                 plot.title = element_text(size = 16))
+    #         p.fvalues.rank <- ggplot(all.lmm, aes(x = bio.rank, y = uv.rank.plot, color =  ncg)) +
+    #             geom_point(alpha = .1) +
+    #             scale_color_manual(values = c('darkgreen', 'grey10')) +
+    #             xlab('Biology (rank of percentage of variation') +
+    #             ylab('Unwanted variation (rank of percentage of variation)') +
+    #             theme(
+    #                 panel.background = element_blank(),
+    #                 axis.line = element_line(colour = 'black', linewidth = 1),
+    #                 axis.title.x = element_text(size = 14),
+    #                 axis.title.y = element_text(size = 14),
+    #                 axis.text.x = element_text(size = 10),
+    #                 axis.text.y = element_text(size = 12),
+    #                 legend.text = element_text(size = 10),
+    #                 legend.title = element_text(size = 14),
+    #                 plot.title = element_text(size = 16))
+    #         all.plots <- ggarrange(p.fvalues + p.fvalues.rank)
+    #         print(all.plots)
+    #         rm(p.fvalues, p.fvalues.rank)
+    #     }
+    # } else all.plots = NULL
     # Plot variance explained (optional, can be toggled if needed)
-    # Assessment of selected set of NCG  ####
-    ## pca ####
-    if (isTRUE(assess.ncg)) {
-        printColoredMessage(
-            message = '-- Assessing the performance of selected NCG set:',
-            color = 'magenta',
-            verbose = verbose
-        )
-        if (is.null(variables.to.assess.ncg)) {
-            all.variables <- c(bio.variables, uv.variables)
-        } else all.variables <- variables.to.assess.ncg
-        printColoredMessage(
-            message = '- Performing PCA using only the selected genes as NCGs.',
-            color = 'blue',
-            verbose = verbose
-        )
-        ### Applying log2 + pseudo count transformation ####
-        if (isTRUE(apply.log) & !is.null(pseudo.count)){
-            printColoredMessage(
-                message = paste0(
-                    '- Applying log2 + ',
-                    pseudo.count,
-                    ' (pseudo.count) on the ',
-                    assay.name,
-                    ' data.'),
-                color = 'blue',
-                verbose = verbose
-            )
-            expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
-        } else if (isTRUE(apply.log) & is.null(pseudo.count)){
-            printColoredMessage(
-                message = paste0(
-                    '- Applying log2 on the ',
-                    assay.name,
-                    ' data.'),
-                color = 'blue',
-                verbose = verbose
-            )
-            expr.data <- log2(assay(x = se.obj, i = assay.name))
-        } else if (isFALSE(apply.log)) {
-            printColoredMessage(
-                message = paste0(
-                    '- The ',
-                    assay.name,
-                    ' data will be used without any log transformation.'),
-                color = 'blue',
-                verbose = verbose
-            )
-            expr.data <- assay(x = se.obj, i = assay.name)
-        }
 
-        pca.data <- BiocSingular::runSVD(
-            x = t(expr.data[ncg.selected, ]),
-            k = nb.pcs,
-            BSPARAM =  bsparam(),
+    # Assessment of selected set of NCG  ####
+    if (isTRUE(assess.ncg)){
+        if (is.null(variables.to.assess.ncg)){
+            variables.to.assess.ncg <- c(bio.variables, uv.variables)
+        }
+        assess.ncg.plot <- assessNCGs(
+            se.obj = se.obj,
+            assay.name = assay.name,
+            variables.to.assess.ncg = variables.to.assess.ncg,
+            ncg = ncg.selected,
+            apply.log = apply.log,
+            pseudo.count = pseudo.count,
+            nb.pcs = nb.pcs,
+            svd.bsparam = svd.bsparam,
             center = center,
-            scale = scale
-            )
-        d <- pca.data$d
-        n <- ncol(expr.data)  # number of samples (after transpose)
-        pc.var <- (d^2) / (n - 1)
-        centered.data <- scale(t(expr.data[ncg.selected , ]), center = center, scale = scale)
-        total.var <- sum(colVars(centered.data))
-        percentage <- round(x = c(pc.var / total.var) * 100, digits = 2)
-        ## regression and vector correlations ####
-        printColoredMessage(
-            message = paste0(
-                '- Exploring the association of the first ',
-                nb.pcs,
-                '  PCs with the ',
-                paste0(variables.to.assess.ncg, collapse = ' & '),
-                ' variables.'),
-            color = 'blue',
+            scale = scale,
+            plot.output = plot.ncg.assessment,
+            check.se.obj = FALSE,
+            remove.na = 'none',
             verbose = verbose
-        )
-        all.corr <- lapply(
-            all.variables,
-            function(x) {
-                if (class(se.obj[[x]]) %in% c('numeric', 'integer')) {
-                    rSquared <- sapply(
-                        1:nb.pcs,
-                        function(y) summary(lm(se.obj[[x]] ~ pca.data$u[, 1:y]))$r.squared)
-                } else if (class(se.obj[[x]]) %in% c('factor', 'character')) {
-                    catvar.dummies <- dummy_cols(se.obj[[x]])
-                    catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                    cca.pcs <- sapply(
-                        1:nb.pcs,
-                        function(y) {
-                            cca <- cancor(x = pca.data$u[, 1:y, drop = FALSE], y = catvar.dummies)
-                            1 - prod(1 - cca$cor ^ 2)
-                        })
-                }
-            })
-        names(all.corr) <- all.variables
-        pca.ncg <- as.data.frame(do.call(cbind, all.corr))
-        pca.ncg['pcs'] <- c(1:nb.pcs)
-        pca.ncg <- tidyr::pivot_longer(
-            data = pca.ncg, -pcs,
-            names_to = 'Groups',
-            values_to = 'ls'
             )
-        assess.ncg.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
-            geom_line(aes(color = Groups), size = 1) +
-            geom_point(aes(color = Groups), size = 2) +
-            xlab('PCs') +
-            ylab (expression("Correlations")) +
-            ggtitle('Assessment of the NCGs') +
-            scale_x_continuous(breaks = (1:nb.pcs),labels = c('PC1', paste0('PC1:', 2:nb.pcs))) +
-            scale_y_continuous(breaks = scales::pretty_breaks(n = 5), limits = c(0, 1)) +
-            theme(
-                panel.background = element_blank(),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.title.x = element_text(size = 14),
-                axis.title.y = element_text(size = 14),
-                axis.text.x = element_text(
-                    size = 10,
-                    angle = 25,
-                    hjust = 1),
-                axis.text.y = element_text(size = 12),
-                legend.text = element_text(size = 10),
-                legend.title = element_text(size = 14),
-                strip.text.x = element_text(size = 10),
-                plot.title = element_text(size = 16)
-            )
-        p.pca.percentage <- data.frame(var = percentage, no = 1:nb.pcs) %>%
-            ggplot(., aes(x = no, y = percentage)) +
-            geom_point(size = 3) +
-            ylab('Variation(%)') +
-            ylim(c(0,100)) +
-            geom_line() +
-            theme(
-                panel.background = element_blank(),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.line.x  = element_blank(),
-                axis.title.x = element_blank(),
-                axis.ticks.x = element_blank(),
-                axis.title.y = element_text(size = 14),
-                axis.text.x = element_blank(),
-                axis.text.y = element_text(size = 12),
-                legend.text = element_text(size = 10),
-                legend.title = element_text(size = 14),
-                plot.title = element_text(size = 16),
-                plot.margin = unit(c(0, 0, 3, 0), "pt")
-            )
-        assess.ncg.plot <- assess.ncg.plot / p.pca.percentage + plot_layout(heights = c(3, 1))
-        if (isTRUE(plot.ncg.assessment)) print(assess.ncg.plot)
     }
+    # Selecting names for the out out files ####
+    ## Selecting names for NCG set ####
     if (is.null(ncg.set.name)){
         ncg.set.name <- paste0(
             sum(ncg.selected),
@@ -1030,13 +914,11 @@ findNcgSupervisedByLinearMixedModel <- function(
             '|',
             assay.name)
     }
+    ## Selecting names for NCG gorup name ####
     if (is.null(ncg.group.name)){
         ncg.group.name <- 'LinearMixedModel'
     }
-    ### Adding the results to the SummarizedExperiment object ####
-    if (is.logical(samples.to.use)){
-        se.obj <- se.obj.all
-    }
+    # Saving the results to the SummarizedExperiment object ####
     if (isTRUE(save.se.obj)){
         ## Check if metadata NCG already exists
         if (length(se.obj@metadata$NCG) == 0 ) {

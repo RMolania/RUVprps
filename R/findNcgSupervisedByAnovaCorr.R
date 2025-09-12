@@ -187,6 +187,7 @@
 #' @param uv.groups TTTT
 #' @param uv.clustering.method TTTT
 #' @param nb.uv.clusters TTTT
+#' @param svd.bsparam TTTT
 #'
 #' @return Either the SummarizedExperiment object containing a set of negative control genes in the metadata or a
 #' logical vector of the selected negative control genes.
@@ -209,19 +210,19 @@ findNcgSupervisedByAnovaCorr <- function(
         bio.variables,
         uv.variables,
         approach = 'AnovaCorr.AcrossAllSamples',
-        use.rank = FALSE,
-        ncg.selection.method = 'non.overlap',
-        samples.to.use = 'all',
         nb.ncg = 0.1,
+        samples.to.use = 'all',
+        use.rank = FALSE,
+        rank.continuous.var = 'correlation',
+        rank.categorical.var = 'fvalue',
+        ncg.selection.method = 'non.overlap',
         top.rank.bio.genes = 0.5,
         top.rank.uv.genes = 0.5,
         bio.percentile = 0.2,
-        uv.percentile = 0.2,
+        uv.percentile = 0.8,
         grid.group = 'uv',
         grid.direction = 'decrease',
         grid.nb = 20,
-        rank.continuous.var = 'correlation',
-        rank.categorical.var = 'fvalue',
         filter.ncgs = FALSE,
         common.hk = 'cancer',
         nb.stable.genes = 2000,
@@ -250,14 +251,15 @@ findNcgSupervisedByAnovaCorr <- function(
         nb.pcs = 10,
         center = TRUE,
         scale = FALSE,
+        svd.bsparam = bsparam(),
         plot.ncg.assessment = TRUE,
-        check.se.obj = TRUE,
-        remove.na = 'none',
         ncg.group.name = NULL,
         ncg.set.name = NULL,
         save.imf = FALSE,
         imf.name = NULL,
         use.imf = FALSE,
+        check.se.obj = TRUE,
+        remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -1638,105 +1640,25 @@ findNcgSupervisedByAnovaCorr <- function(
                 color = 'magenta',
                 verbose = verbose
             )
-            printColoredMessage(
-                message = '- Performing PCA on only selected genes as NCG.',
-                color = 'blue',
+            if (is.null(variables.to.assess.ncg)){
+                variables.to.assess.ncg <- c(bio.variables, uv.variables)
+            }
+            assess.ncg.plot <- assessNCGs(
+                se.obj = se.obj,
+                assay.name = assay.name,
+                variables.to.assess.ncg = variables.to.assess.ncg,
+                ncg = ncg.selected,
+                apply.log = apply.log,
+                pseudo.count = pseudo.count,
+                nb.pcs = nb.pcs,
+                svd.bsparam = svd.bsparam,
+                center = center,
+                scale = scale,
+                plot.output = plot.ncg.assessment,
+                check.se.obj = FALSE,
+                remove.na = 'none',
                 verbose = verbose
             )
-            if (is.null(variables.to.assess.ncg))
-                variables.to.assess.ncg <- c(bio.variables, uv.variables)
-            printColoredMessage(
-                message = paste0(
-                    '- Exploring the association of the first ',
-                    nb.pcs,
-                    '  PCs with the ',
-                    paste0(variables.to.assess.ncg, collapse = ' & '),
-                    ' variables.'),
-                color = 'blue',
-                verbose = verbose
-                )
-            pca.data <- BiocSingular::runSVD(
-                x = t(expr.data[ncg.selected, ]),
-                k = nb.pcs,
-                BSPARAM = bsparam(),
-                center = center,
-                scale = scale
-                )
-            d <- pca.data$d
-            n <- ncol(expr.data)  # number of samples (after transpose)
-            pc.var <- (d^2) / (n - 1)
-            centered.data <- scale(t(expr.data[ncg.selected , ]), center = center, scale = scale)
-            total.var <- sum(colVars(centered.data))
-            percentage <- round(x = c(pc.var / total.var) * 100, digits = 2)
-            ### Applying regression and vector correlations analysis ####
-            all.corr <- lapply(
-                variables.to.assess.ncg,
-                function(x){
-                    if (class(se.obj[[x]]) %in% c('numeric', 'integer')){
-                        rSquared <- sapply(
-                            1:nb.pcs,
-                            function(y) summary(lm(se.obj[[x]] ~ pca.data$u[, 1:y]))$r.squared)
-                    } else if (class(se.obj[[x]]) %in% c('factor', 'character')){
-                        catvar.dummies <- dummy_cols(se.obj[[x]])
-                        catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                        cca.pcs <- sapply(
-                            1:nb.pcs,
-                            function(y){ cca <- cancor(
-                                x = pca.data$u[, 1:y, drop = FALSE],
-                                y = catvar.dummies)
-                            1 - prod(1 - cca$cor^2)})
-                    }
-                })
-            names(all.corr) <- variables.to.assess.ncg
-            pcs <- Groups <- NULL
-            pca.ncg <- as.data.frame(do.call(cbind, all.corr)) %>%
-                dplyr::mutate(pcs = c(1:nb.pcs)) %>%
-                tidyr::pivot_longer(
-                    -pcs,
-                    names_to = 'Groups',
-                    values_to = 'ls')
-            assess.ncg.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
-                geom_line(aes(color = Groups), size = 1) +
-                geom_point(aes(color = Groups), size = 2) +
-                xlab('PCs') +
-                ylab (expression("Correlations")) +
-                ggtitle('') +
-                scale_x_continuous(breaks = (1:nb.pcs), labels = c('PC1', paste0('PC1:', 2:nb.pcs)) ) +
-                scale_y_continuous(breaks = scales::pretty_breaks(n = 5), limits = c(0,1)) +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', size = 1),
-                    axis.title.x = element_text(size = 14),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 10, angle = 25, hjust = 1),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 14),
-                    legend.title = element_text(size = 16),
-                    strip.text.x = element_text(size = 10),
-                    plot.title = element_text(size = 16)
-                )
-            p.pca.percentage <- data.frame(var = percentage, no = 1:nb.pcs) %>%
-                ggplot(., aes(x = no, y = percentage)) +
-                geom_point(size = 3) +
-                ylab('Variation(%)') +
-                ylim(c(0,100)) +
-                geom_line() +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.line.x  = element_blank(),
-                    axis.title.x = element_blank(),
-                    axis.ticks.x = element_blank(),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_blank(),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 14),
-                    plot.title = element_text(size = 16),
-                    plot.margin = unit(c(0, 0, 3, 0), "pt")
-                )
-            assess.ncg.plot <- assess.ncg.plot / p.pca.percentage + plot_layout(heights = c(3, 1))
-            if (isTRUE(plot.ncg.assessment)) print(assess.ncg.plot)
         }
         ### Saving the results ####
         printColoredMessage(
@@ -3256,116 +3178,25 @@ findNcgSupervisedByAnovaCorr <- function(
                 color = 'magenta',
                 verbose = verbose
             )
-            if (is.null(variables.to.assess.ncg)) {
-                all.variables <- c(bio.variables, uv.variables)
-            } else all.variables <- variables.to.assess.ncg
-            printColoredMessage(
-                message = '- Performing PCA using only the selected genes as NCGs.',
-                color = 'blue',
-                verbose = verbose
-            )
-            if (isTRUE(apply.log)) {
-                temp.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
-            } else temp.data <- assay(x = se.obj, i = assay.name)
-
-            pca.data <- BiocSingular::runSVD(
-                x = t(temp.data[ncg.selected, ]),
-                k = nb.pcs,
-                BSPARAM =  bsparam(),
+            if (is.null(variables.to.assess.ncg)){
+                variables.to.assess.ncg <- c(bio.variables, uv.variables)
+            }
+            assess.ncg.plot <- assessNCGs(
+                se.obj = se.obj,
+                assay.name = assay.name,
+                variables.to.assess.ncg = variables.to.assess.ncg,
+                ncg = ncg.selected,
+                apply.log = apply.log,
+                pseudo.count = pseudo.count,
+                nb.pcs = nb.pcs,
+                svd.bsparam = svd.bsparam,
                 center = center,
-                scale = scale
-                )
-            d <- pca.data$d
-            n <- ncol(expr.data)  # number of samples (after transpose)
-            pc.var <- (d^2) / (n - 1)
-            centered.data <- scale(t(temp.data[ncg.selected , ]), center = center, scale = scale)
-            total.var <- sum(colVars(centered.data))
-            percentage <- round(x = c(pc.var / total.var) * 100, digits = 2)
-
-            ## Applying regression and vector correlations analysis ####
-            printColoredMessage(
-                message = paste0(
-                    '- Exploring the association of the first ',
-                    nb.pcs,
-                    '  PCs with the ',
-                    paste0(variables.to.assess.ncg, collapse = ' & '),
-                    ' variables.'),
-                color = 'blue',
+                scale = scale,
+                plot.output = plot.ncg.assessment,
+                check.se.obj = FALSE,
+                remove.na = 'none',
                 verbose = verbose
             )
-            all.corr <- lapply(
-                all.variables,
-                function(x) {
-                    if (class(se.obj[[x]]) %in% c('numeric', 'integer')) {
-                        corr.result <- sapply(
-                            1:nb.pcs,
-                            function(y) summary(lm(se.obj[[x]] ~ pca.data$u[, 1:y]))$r.squared)
-                    }
-                    if (class(se.obj[[x]]) %in% c('factor', 'character')) {
-                        catvar.dummies <- dummy_cols(se.obj[[x]])
-                        catvar.dummies <-catvar.dummies[, c(2:ncol(catvar.dummies))]
-                        corr.result <- sapply(
-                            1:nb.pcs,
-                            function(y) {
-                                cca <- cancor(x = pca.data$u[, 1:y, drop = FALSE], y = catvar.dummies)
-                                1 - prod(1 - cca$cor ^ 2)
-                            })
-                    }
-                    return(corr.result)
-                })
-            names(all.corr) <- all.variables
-            pca.ncg <- as.data.frame(do.call(cbind, all.corr))
-            pca.ncg['pcs'] <- c(1:nb.pcs)
-            pca.ncg <- tidyr::pivot_longer(
-                data = pca.ncg, -pcs,
-                names_to = 'Groups',
-                values_to = 'ls'
-                )
-            assess.ncg.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
-                geom_line(aes(color = Groups), size = 1) +
-                geom_point(aes(color = Groups), size = 2) +
-                xlab('PCs') +
-                ylab (expression("Correlations")) +
-                ggtitle('') +
-                scale_x_continuous(breaks = (1:nb.pcs),labels = c('PC1', paste0('PC1:', 2:nb.pcs))) +
-                scale_y_continuous(breaks = scales::pretty_breaks(n = 5), limits = c(0, 1)) +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 14),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_text(
-                        size = 10,
-                        angle = 25,
-                        hjust = 1),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 16),
-                    strip.text.x = element_text(size = 14),
-                    plot.title = element_text(size = 16)
-                )
-            p.pca.percentage <- data.frame(var = percentage, no = 1:nb.pcs) %>%
-                ggplot(., aes(x = no, y = percentage)) +
-                geom_point(size = 3) +
-                ylab('Variation(%)') +
-                ylim(c(0,100)) +
-                geom_line() +
-                theme(
-                    panel.background = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.line.x  = element_blank(),
-                    axis.title.x = element_blank(),
-                    axis.ticks.x = element_blank(),
-                    axis.title.y = element_text(size = 14),
-                    axis.text.x = element_blank(),
-                    axis.text.y = element_text(size = 12),
-                    legend.text = element_text(size = 10),
-                    legend.title = element_text(size = 14),
-                    plot.title = element_text(size = 16),
-                    plot.margin = unit(c(0, 0, 3, 0), "pt")
-                )
-            assess.ncg.plot <- assess.ncg.plot / p.pca.percentage + plot_layout(heights = c(3, 1))
-            if (isTRUE(plot.ncg.assessment)) print(assess.ncg.plot)
         }
         # Saving results ####
         ## Adding results to the SummarizedExperiment object ####
@@ -3440,9 +3271,3 @@ findNcgSupervisedByAnovaCorr <- function(
         }
     }
 }
-
-
-
-
-
-
