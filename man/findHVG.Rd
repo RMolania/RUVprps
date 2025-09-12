@@ -30,10 +30,10 @@ findHVG(
   apply.log = TRUE,
   pseudo.count = 1,
   nb.cores = 1,
-  check.se.obj = TRUE,
-  remove.na = "none",
   hvg.group.name = NULL,
   hvg.set.name = NULL,
+  check.se.obj = TRUE,
+  remove.na = "none",
   save.se.obj = TRUE,
   verbose = TRUE
 )
@@ -89,13 +89,13 @@ findHVG(
 
 \item{nb.cores}{TTT}
 
-\item{check.se.obj}{TTT}
-
-\item{remove.na}{description}
-
 \item{hvg.group.name}{description}
 
 \item{hvg.set.name}{description}
+
+\item{check.se.obj}{TTT}
+
+\item{remove.na}{description}
 
 \item{save.se.obj}{description}
 

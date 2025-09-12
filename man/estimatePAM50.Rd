@@ -13,6 +13,7 @@ estimatePAM50(
   groups = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
+  normalization = "CPM",
   regress.out.variables = NULL,
   regress.out.rle.med = FALSE,
   out.put.name = NULL,
@@ -38,6 +39,8 @@ The default is set to 'all'.}
 \item{apply.log}{description}
 
 \item{pseudo.count}{description}
+
+\item{normalization}{description}
 
 \item{regress.out.variables}{description}
 
