@@ -1,4 +1,4 @@
-#' Computes Adjusted Rand Index (ARI).
+#' Compute Adjusted Rand Index (ARI).
 #'
 #' @author Ramyar Molania
 #'
@@ -200,7 +200,7 @@ computeARI <- function(
             if (ncol(pca.data) < nb.pcs){
                 printColoredMessage(
                     message = paste0(
-                        'The number of PCs of the assay',
+                        '- The number of PCs of the assay',
                         x,
                         'are
                         ', ncol(pca.data),
