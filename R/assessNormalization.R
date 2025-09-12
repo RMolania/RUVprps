@@ -48,7 +48,8 @@
 #' @param assessment.level TTT
 #' @param assessments.to.exclude character or character vector. Names of assessment metrics to exclude, as returned by
 #' the `getAssessmentMetrics()` function. Default is NULL.
-#' @param fast.pca Logical. Whether to use fast PCA. Default is TRUE.
+#' @param fast.pca Logical. Whether to use fast PCA. The default is to `TRUE`.
+#' @param select.top.ruv TTTT
 #' @param sil.dist.measure character. Distance measure to use for silhouette analysis. Options: 'euclidean', 'maximum',
 #' 'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.
 #' @param ari.clustering.method character. Clustering method for ARI computation. Options: 'mclust' or 'hclust'. Default
@@ -90,14 +91,15 @@
 #' @importFrom dplyr summarise_at case_match row_number
 #' @importFrom grDevices colorRampPalette dev.off pdf
 #' @importFrom SummarizedExperiment assays colData
+#' @importFrom stats ks.test IQR fligner.test coef
 #' @importFrom gridExtra grid.arrange grid.table
-#' @importFrom stats ks.test IQR fligner.test
 #' @importFrom ggforestplot geom_stripes
 #' @importFrom graphics plot.new text
 #' @importFrom stats kruskal.test
 #' @importFrom qvalue qvalue
 #' @import RColorBrewer
 #' @export
+
 assessNormalization <- function(
         se.obj,
         assay.names = 'all',
@@ -105,6 +107,7 @@ assessNormalization <- function(
         uv.variables,
         assessment.level = 'L1',
         assessments.to.exclude = NULL,
+        select.top.ruv = TRUE,
         fast.pca = TRUE,
         sil.dist.measure = 'euclidian',
         sli.nb.pcs = 3,
@@ -142,6 +145,11 @@ assessNormalization <- function(
     if (is.null(bio.variables) | is.null(uv.variables)){
         stop('To performe "overall.performance" both "uv.variables" and "bio.variables" must be provided.')
     }
+    if (!is.null(corr.cutoff)){
+        if (!is.list(corr.cutoff)){
+            stop('The "corr.cutoff" must be a list of correlation cutoff for each continuous variables.')
+        }
+    }
 
     # Checking the assays ####
     if (length(assay.names) == 1 && assay.names == 'all') {
@@ -152,8 +160,9 @@ assessNormalization <- function(
     }
 
     # Get all possible metrics for each variable #####
+    # Getting all possible metrics for each variable #####
     printColoredMessage(
-        message = '-- Find all possible assessment metrics:',
+        message = '-- Finding all possible assessment metrics:',
         color = 'magenta',
         verbose = verbose
         )
@@ -165,18 +174,32 @@ assessNormalization <- function(
         save.se.obj = TRUE
         )
     metrics.table <- se.obj@metadata$AssessmentMetrics$metrics.table
-    metrics.table$new.col <- paste0(metrics.table$Metrics, '_', metrics.table$Assessments)
+    metrics.table$new.col <- paste0(
+        metrics.table$Metrics,
+        '_',
+        metrics.table$Assessments
+        )
     if (assessment.level == 'L1'){
         bio.metrics.table <- lapply(
             bio.variables,
             function(x){
                 if (is.numeric(se.obj[[x]])){
                     bio.metrics.table <- metrics.table[metrics.table$Variables == x, ]
-                    keep <- bio.metrics.table$new.col %in% c('LRA_averageRseq', 'Correlation_corrCoeff', 'PartialCorrelation_corrCoeff')
+                    keep <- bio.metrics.table$new.col %in% c(
+                        'LRA_averageRseq',
+                        'Correlation_corrCoeff',
+                        'PartialCorrelation_corrCoeff',
+                        'LISI_meanScore'
+                    )
                     bio.metrics.table <- bio.metrics.table[keep , ]
                 } else {
                     bio.metrics.table <- metrics.table[metrics.table$Variables == x, ]
-                    keep <- bio.metrics.table$new.col %in% c('VCA_averageCorr', 'ARI_ari', 'Silhouette_silhouetteCoeff')
+                    keep <- bio.metrics.table$new.col %in% c(
+                        'VCA_averageCorr',
+                        'ARI_ari',
+                        'Silhouette_silhouetteCoeff',
+                        'LISI_meanScore'
+                    )
                     bio.metrics.table <- bio.metrics.table[keep , ]
                 }
             })
@@ -189,8 +212,9 @@ assessNormalization <- function(
                     keep <- uv.metrics.table$new.col %in% c(
                         'LRA_averageRseq',
                         'Correlation_corrCoeff',
-                        'PartialCorrelation_corrCoeff'
-                        )
+                        'PartialCorrelation_corrCoeff',
+                        'LISI_meanScore'
+                    )
                     uv.metrics.table <- uv.metrics.table[keep , ]
                 } else {
                     uv.metrics.table <- metrics.table[metrics.table$Variables == x, ]
@@ -200,20 +224,19 @@ assessNormalization <- function(
                         'Silhouette_silhouetteCoeff',
                         'DGE_pvalueNull',
                         'ANOVA_pvalueNull',
-                        'ANOVA_fStat'
-                        )
+                        'ANOVA_fStat',
+                        'LISI_meanScore',
+                        'KBET_meanScore'
+                    )
                     uv.metrics.table <- uv.metrics.table[keep , ]
                 }
             })
         uv.metrics.table <- do.call(rbind, uv.metrics.table)
         metrics.table <- rbind(bio.metrics.table, uv.metrics.table, metrics.table[metrics.table$Variables == 'General' , ])
     }
-    # if (assessment.level == 'L2'){
-    #
-    # }
-    # if (assessment.level == 'L3'){
-    #
-    # }
+    if (assessment.level == 'L2'){
+        metrics.table <- metrics.table
+    }
 
     printColoredMessage(
         message = paste0(
@@ -227,23 +250,25 @@ assessNormalization <- function(
     # Filter assessment #####
     if (!is.null(assessments.to.exclude)){
         printColoredMessage(
-            message = '-- Filter assessment metrics:',
+            message = '-- Filtering assessment metrics:',
             color = 'magenta',
             verbose = verbose
         )
         metrics.table <- metrics.table[!metrics.table$Code %in% assessments.to.exclude, ]
         printColoredMessage(
-            message = paste0('- After filteration, the totall of ',  sum(metrics.table$Assessments!='DA'),
-                             ' assessment metrics will be used for normalization performance assessment.'),
+            message = paste0(
+                '- After filteration, the totall of ',
+                sum(metrics.table$Assessments!='DA'),
+                ' assessment metrics will be used for normalization performance assessment.'),
             color = 'blue',
             verbose = verbose
         )
 
     } else metrics.table <- metrics.table
 
-    # Summarize all the selected assessments ####
+    # Summarizing all the selected assessments ####
     printColoredMessage(
-        message = '-- Summarize all the selected assessment metrics:',
+        message = '-- Summarizing all the selected assessment metrics:',
         color = 'magenta',
         verbose = verbose
         )
@@ -266,14 +291,16 @@ assessNormalization <- function(
             levels(assay.names),
             function(x){
                 if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med)){
-                    stop(paste0('The RLE medians for the ', x , ' data cannot be found in the SummarizedExperiment object. ',
+                    stop(paste0('The RLE medians for the ',
+                                x ,
+                                ' data cannot be found in the SummarizedExperiment object. ',
                                 'Please run either the "compuetRLE" or "assessVariation" functions, and  ',
                                 'make sure to compute RLE medians.'))
                 }
             })
         ### compute rle medians scores ####
         printColoredMessage(
-            message = '- compute the RLE medians scores for each assay.',
+            message = '- Computing the RLE medians scores for each data.',
             color = 'blue',
             verbose = verbose
             )
@@ -338,7 +365,6 @@ assessNormalization <- function(
                 1 - c(iqr.qun_0.1_0.5_0.9[[3]] - iqr.qun_0.1_0.5_0.9[[1]])/iqr.qun_0.1_0.5_0.9[[2]]
             })
         names(general.rle.iqr.scores) <- levels(assay.names)
-
         ### put all together ####
         general.rle.iqr.scores <- as.data.frame(x = general.rle.iqr.scores, check.names = FALSE) %>%
             dplyr::mutate(data = row.names(.)) %>%
@@ -354,13 +380,13 @@ assessNormalization <- function(
     ### correlation between rle medians and variable #####
     if ('rleMedians_scatterPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
-            message = '- Summarize the association between the rle medians and the continuous variable(s):',
+            message = '- Summarizing the association between the rle medians and the continuous variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check the RLE medians ####
         printColoredMessage(
-            message = '* check to see all the RLE medians are computed.',
+            message = '- Checking to see all the RLE medians are computed.',
             color = 'blue',
             verbose = verbose
             )
@@ -368,27 +394,43 @@ assessNormalization <- function(
             levels(assay.names),
             function(x){
                 if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.med))
-                    stop(paste0('The RLE medians for the ', x ,  ' data cannot be found in the SummarizedExperiment object.',
+                    stop(paste0('The RLE medians for the ',
+                                x ,
+                                ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run either the "compuetRLE" or "assessVariation" functions and ',
                                 'make sure to compute RLE medians.'))
             })
         ### compute correlation between rle medians and variable ####
         printColoredMessage(
-            message = '* compute the association scores.',
+            message = '- Computing the association scores.',
             color = 'blue',
             verbose = verbose
             )
         selected.vars <- paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_') == 'rleMedians_scatterPlot'
         selected.vars <- metrics.table$Variables[selected.vars]
+        # rle.med.var.corr.scores <- lapply(
+        #     selected.vars,
+        #     function(x){
+        #         rle.med.var.corr.scores <- sapply(
+        #             levels(assay.names),
+        #             function(y){
+        #                 abs(suppressWarnings(stats::cor.test(
+        #                     x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.med,
+        #                     y = colData(se.obj)[[x]], method = corr.method)[[4]])[[1]])
+        #             })
+        #     })
+        # names(rle.med.var.corr.scores) <- selected.vars
         rle.med.var.corr.scores <- lapply(
             selected.vars,
             function(x){
                 rle.med.var.corr.scores <- sapply(
                     levels(assay.names),
                     function(y){
-                        abs(suppressWarnings(stats::cor.test(
-                            x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.med,
-                            y = colData(se.obj)[[x]], method = corr.method)[[4]])[[1]])
+                            a <- se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.med
+                            b <- colData(se.obj)[[x]]
+                            slope <- stats::coef(lm(b ~ a))[2]
+                            scaled <- 1 / (1 + exp(-slope))
+                            unname(scaled)
                     })
             })
         names(rle.med.var.corr.scores) <- selected.vars
@@ -400,19 +442,18 @@ assessNormalization <- function(
             dplyr::mutate(test = 'Association with RLE medians') %>%
             data.frame(.)
         rle.med.var.corr.scores <- rle.med.var.corr.scores[ , cols.names]
-
         } else rle.med.var.corr.scores <- NULL
 
     ### rle iqr and variable correlation #####
     if ('rleIqr_scatterPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
-            message = '- Summarize the association between the rle IQR and the continuous variable(s):',
+            message = '- Summarizing the association between the rle IQR and the continuous variable(s):',
             color = 'orange',
             verbose = verbose
         )
         #### check the RLE medians ####
         printColoredMessage(
-            message = '* check to see all the RLE IQRs are computed.',
+            message = '- Checking to see all the RLE IQRs are computed.',
             color = 'blue',
             verbose = verbose
         )
@@ -420,7 +461,9 @@ assessNormalization <- function(
             levels(assay.names),
             function(x){
                 if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr)){
-                    stop(paste0('The RLE IQRs for the ', x, ' data cannot be found in the SummarizedExperiment object.',
+                    stop(paste0('The RLE IQRs for the ',
+                                x,
+                                ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run the "compuetRLE" or "assessVariation" functions and ',
                                 'make sure to compute the RLE IQRs.'))
                 }
@@ -428,24 +471,39 @@ assessNormalization <- function(
 
         ### compute correlation between rle medians and variable ####
         printColoredMessage(
-            message = '* compute the association scores.',
+            message = '- Computing the association scores.',
             color = 'blue',
             verbose = verbose
         )
         selected.vars <- paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_') == 'rleIqr_scatterPlot'
         selected.vars <- metrics.table$Variables[selected.vars]
+        # rle.iqr.var.corr.scores <- lapply(
+        #     selected.vars,
+        #     function(x){
+        #         rle.med.var.corr.scores <- sapply(
+        #             levels(assay.names),
+        #             function(y){
+        #                 abs(suppressWarnings(stats::cor.test(
+        #                     x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.iqr,
+        #                     y = colData(se.obj)[[x]], method = corr.method)[[4]][[1]]))
+        #             })
+        #     })
+        # names(rle.iqr.var.corr.scores) <- selected.vars
         rle.iqr.var.corr.scores <- lapply(
             selected.vars,
             function(x){
                 rle.med.var.corr.scores <- sapply(
                     levels(assay.names),
                     function(y){
-                        abs(suppressWarnings(stats::cor.test(
-                            x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.iqr,
-                            y = colData(se.obj)[[x]], method = corr.method)[[4]][[1]]))
+                            a <- se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.iqr
+                            b <- colData(se.obj)[[x]]
+                            slope <- stats::coef(lm(b ~ a))[2]
+                            scaled <- 1 / (1 + exp(-slope))
+                            unname(scaled)
                     })
             })
         names(rle.iqr.var.corr.scores) <- selected.vars
+
         ### put all together ####
         rle.iqr.var.corr.scores <- as.data.frame(x = rle.iqr.var.corr.scores, check.names = FALSE) %>%
             dplyr::mutate(data = row.names(.)) %>%
@@ -458,16 +516,16 @@ assessNormalization <- function(
     ### rle medians and variable association #####
     if ('rleMedians_boxPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
-            message = '- Summarize the association between the rle medians and the categorical variables:',
+            message = '- Summarizing the association between the rle medians and the categorical variables:',
             color = 'orange',
             verbose = verbose
-        )
+            )
         #### check the RLE medians ####
         printColoredMessage(
-            message = '* check to see all the RLE medians are computed.',
+            message = '- Checking to see all the RLE medians are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         check.out <- lapply(
             levels(assay.names),
             function(x){
@@ -480,10 +538,10 @@ assessNormalization <- function(
 
         ### compute association between rle medians and variable ####
         printColoredMessage(
-            message = '* compute the association scores.',
+            message = '- Computing the association scores.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_') == 'rleMedians_boxPlot'
         selected.vars <- metrics.table$Variables[selected.vars]
         rle.med.var.association.scores <- lapply(
@@ -492,9 +550,13 @@ assessNormalization <- function(
                 rle.med.var.corr.scores <- sapply(
                     levels(assay.names),
                     function(y){
-                        suppressWarnings(kruskal.test(
+                        suppressWarnings(
+                            p.value <- kruskal.test(
                             x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.med,
-                            g = colData(se.obj)[[x]])$p.value)
+                            g = colData(se.obj)[[x]])$p.value
+                            )
+                        if (p.value < 0.01) p.value = 0.01
+                        p.value
                     })
             })
         names(rle.med.var.association.scores) <- selected.vars
@@ -511,21 +573,23 @@ assessNormalization <- function(
     ### rle iqr and variable association #####
     if ('rleIqr_boxPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
-            message = '- Summarize the association between the rle IQRs and variable(s):',
+            message = '- Summarizing the association between the rle IQRs and variable(s):',
             color = 'orange',
             verbose = verbose
-        )
+            )
         #### check the RLE medians ####
         printColoredMessage(
-            message = '* check to see all the RLE IQRs are computed.',
+            message = '- Checking to see all the RLE IQRs are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         check.out <- lapply(
             levels(assay.names),
             function(x){
                 if (is.null(se.obj@metadata$Metrics[[x]]$global.level$RLE$gene.median.center$general$data$rle.iqr)){
-                    stop(paste0('The RLE IQRs for the ', x, ' data cannot be found in the SummarizedExperiment object.',
+                    stop(paste0('The RLE IQRs for the ',
+                                x,
+                                ' data cannot be found in the SummarizedExperiment object.',
                                 'Please run the "compuetRLE" or "assessVariation" functions.'))
                 }
             })
@@ -544,13 +608,14 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         suppressWarnings(
-                            kruskal.test(
-                            x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.iqr,
-                            g = colData(se.obj)[[x]])$p.value)
+                            p.value <- kruskal.test(
+                                x = se.obj@metadata$Metrics[[y]]$global.level$RLE$gene.median.center$general$data$rle.iqr,
+                                g = colData(se.obj)[[x]])$p.value)
+                        if (p.value < 0.01) p.value = 0.01
+                        p.value
                     })
             })
         names(rle.iqr.var.association.scores) <- selected.vars
-
         ### put all together ####
         rle.iqr.var.association.scores <- as.data.frame(x = rle.iqr.var.association.scores, check.names = FALSE) %>%
             dplyr::mutate(data = row.names(.)) %>%
@@ -563,13 +628,13 @@ assessNormalization <- function(
     ## Vector correlation scores ####
     if ('VCA' %in% metrics.table$Metrics){
         printColoredMessage(
-            message = '- Summarize the vector correlations for each categorical variable(s):',
+            message = '- Summarizing the vector correlations for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check the vector correlations ####
         printColoredMessage(
-            message = '* check to see all the vector correlations are computed.',
+            message = '- Checking to see all the vector correlations are computed.',
             color = 'blue',
             verbose = verbose
         )
@@ -584,7 +649,9 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$global.level$VCA[[svd.method]][[x]]$vector.correlations)){
-                            stop(paste0('The vector correlation for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The vector correlation for the ',
+                                        x, ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computePCVariableCorrelation" or "assessVariation" functions.'))
                         }
@@ -593,10 +660,10 @@ assessNormalization <- function(
 
         ## average vector correlations ####
         printColoredMessage(
-            message = '* compute the vector correlation scorss.',
+            message = '- Computing the vector correlation scorss.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         pc.vec.corr.scores <- lapply(
             selected.vars,
             function(x){
@@ -604,7 +671,7 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         mean(
-                            se.obj@metadata$Metrics[[y]]$global.level$VCA$fast.svd[[x]]$vector.correlations[1:vca.nb.pcs]
+                            se.obj@metadata$Metrics[[y]]$global.level$VCA[[svd.method]][[x]]$vector.correlations[1:vca.nb.pcs]
                         )
                     })
             })
@@ -622,16 +689,16 @@ assessNormalization <- function(
     ## Linear regression scores ####
     if ('LRA' %in% metrics.table$Metrics){
         printColoredMessage(
-            message = '- Summarize the R.squared form the linear regression analysis for each continous variable(s):',
+            message = '- Summarizing the R.squared form the linear regression analysis for each continous variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check the linear regression ####
         printColoredMessage(
-            message = '* check to see all the R.squared of the linear regression analysis are computed.',
+            message = '- Checking to see all the R.squared of the linear regression analysis are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- metrics.table$Variables[metrics.table$Metrics == 'LRA']
         if (isTRUE(fast.pca)){
             svd.method <- 'fast.svd'
@@ -644,25 +711,27 @@ assessNormalization <- function(
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$global.level$LRA[[svd.method]][[x]]$r.squared)){
                             stop(paste0('The vector correlation for the ',
-                                        x, ' variable of the ' , y ,
-                                        ' data cannot be found in the SummarizedExperiment object.',
+                                        x,
+                                        ' variable of the ' , y ,
+                                        ' data cannot be found
+                                        in the SummarizedExperiment object.',
                                         'Please run the "computePCVariableRegression" or "assessVariation" functions.'))
                         }
                     })
             })
         ## average r squared ####
         printColoredMessage(
-            message = '* compute the linear regression scores.',
+            message = '- Computing the linear regression scores.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         pc.lin.reg.scores <- lapply(
             selected.vars,
             function(x){
                 sapply(
                     levels(assay.names),
                     function(y)
-                        mean(se.obj@metadata$Metrics[[y]]$global.level$LRA$fast.svd[[x]]$r.squared[1:lra.nb.pcs])
+                        mean(se.obj@metadata$Metrics[[y]]$global.level$LRA[[svd.method]][[x]]$r.squared[1:lra.nb.pcs])
                     )
             })
         names(pc.lin.reg.scores) <- selected.vars
@@ -679,16 +748,16 @@ assessNormalization <- function(
     ## Silhouette scores ####
     if ('silhouetteCoeff_barPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
-            message = '- Summarize the silhouette coefficients analysis for each categorical variable(s):',
+            message = '- Summarizing the silhouette coefficients analysis for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check the linear regression ####
         printColoredMessage(
-            message = '* check to see all the silhouette coefficients are computed.',
+            message = '- Checking to see all the silhouette coefficients are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_') == 'silhouetteCoeff_barPlot'
         selected.vars <- metrics.table$Variables[selected.vars]
         silhouette.method <- paste0('sil.', sil.dist.measure)
@@ -699,7 +768,10 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$global.level$Silhouette[[silhouette.method]][[x]]$silhouette.coeff)){
-                            stop(paste0('The Silhouette for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The Silhouette for the ',
+                                        x,
+                                        ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeSilhouette" or "assessVariation" functions.'))
                         }
@@ -707,7 +779,7 @@ assessNormalization <- function(
             })
         #### compute the silhouette scores ####
         printColoredMessage(
-            message = '* compute the silhouette scores.',
+            message = '- Computing the silhouette scores.',
             color = 'blue',
             verbose = verbose
         )
@@ -734,16 +806,16 @@ assessNormalization <- function(
     ## ARI scores ####
     if ('ariCoeff_barPlot' %in% paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_')){
         printColoredMessage(
-            message = '- Summarize the adjusted rand index for each categorical variable(s):',
+            message = '- Summarizing the adjusted rand index for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
-        )
+            )
         #### check the linear regression ####
         printColoredMessage(
-            message = '* check to see all the adjusted rand index are computed.',
+            message = '- Checking to see all the adjusted rand index are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- paste(metrics.table$Factors, metrics.table$PlotTypes, sep = '_') == 'ariCoeff_barPlot'
         selected.vars <- metrics.table$Variables[selected.vars]
         if (ari.clustering.method == 'mclust'){
@@ -756,7 +828,10 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$global.level$ARI[[ari.method]][[x]]$ari)){
-                            stop(paste0('The adjusted rand index for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The adjusted rand index for the ',
+                                        x,
+                                        ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeARI" or "assessVariation" functions.'))
                         }
@@ -764,7 +839,7 @@ assessNormalization <- function(
             })
         #### obtain silhouette ####
         printColoredMessage(
-            message = '* compute the adjusted rand index scores.',
+            message = '- Computing the adjusted rand index scores.',
             color = 'blue',
             verbose = verbose
             )
@@ -774,7 +849,7 @@ assessNormalization <- function(
                 sapply(
                     levels(assay.names),
                     function(y)
-                        c(se.obj@metadata$Metrics[[y]]$global.level$ARI$hclust.complete.euclidian[[x]]$ari+1)/2
+                        c(se.obj@metadata$Metrics[[y]]$global.level$ARI$hclust.complete.euclidian[[x]]$ari + 1)/2
                 )
             })
         names(ari.scores) <- selected.vars
@@ -792,16 +867,16 @@ assessNormalization <- function(
     ### number of genes with a correlation cutoff ####
     if ('Correlation_corrCoeff' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the correlation coefficients of gene-variable correlation analysis for each continuous:',
+            message = '- Summarizing the correlation coefficients of gene-variable correlation analysis for each continuous:',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the gene-variable correlations are computed.',
+            message = '- Checking to see all the gene-variable correlations are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') == 'Correlation_corrCoeff'
         selected.vars <- metrics.table$Variables[selected.vars]
         check.out <- lapply(
@@ -812,7 +887,9 @@ assessNormalization <- function(
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues)){
                             stop(paste0('The correlation for the ',
-                                        x, ' variable of the ' , y ,
+                                        x,
+                                        ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableCorrelation" or "assessVariation" functions.'))
                         }
@@ -820,21 +897,41 @@ assessNormalization <- function(
             })
         ### count number of genes ####
         printColoredMessage(
-            message = '* compute the correlation coefficients scores.',
+            message = '- Computing the correlation coefficients scores.',
             color = 'blue',
             verbose = verbose
-        )
-        gene.var.corr.coef.scores <- lapply(
-            selected.vars,
-            function(x){
-                sapply(
-                    levels(assay.names),
-                    function(y){
-                        corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues
-                        sum(corr.results[ ,'correlation'] < corr.cutoff)/nrow(se.obj)
-                    })
-            })
-        names(gene.var.corr.coef.scores) <- selected.vars
+            )
+        selected.vars.bio <- selected.vars[selected.vars %in% bio.variables]
+        if (length(selected.vars.bio) > 0){
+            gene.var.corr.coef.scores.bio <- lapply(
+                selected.vars.bio,
+                function(x){
+                    sapply(
+                        levels(assay.names),
+                        function(y){
+                            corr.results <- abs(se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues)
+                            sum(corr.results[ ,'correlation'] > corr.cutoff[[x]])/nrow(se.obj)
+                        })
+                })
+            names(gene.var.corr.coef.scores.bio) <- selected.vars.bio
+        } else gene.var.corr.coef.scores.bio <- NULL
+
+
+        selected.vars.uv <- selected.vars[selected.vars %in% uv.variables]
+        if (length(selected.vars.uv) > 0){
+            gene.var.corr.coef.scores.uv <- lapply(
+                selected.vars.uv,
+                function(x){
+                    sapply(
+                        levels(assay.names),
+                        function(y){
+                            corr.results <- abs(se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues)
+                            sum(corr.results[ ,'correlation'] < corr.cutoff[[x]])/nrow(se.obj)
+                        })
+                })
+            names(gene.var.corr.coef.scores.uv) <- selected.vars.uv
+        } else gene.var.corr.coef.scores.uv <- NULL
+        gene.var.corr.coef.scores <- c(gene.var.corr.coef.scores.bio, gene.var.corr.coef.scores.uv)
 
         ### Put all together ####
         gene.var.corr.coef.scores <- as.data.frame(x = gene.var.corr.coef.scores, check.names = FALSE) %>%
@@ -848,13 +945,13 @@ assessNormalization <- function(
     ### p-value distributions  ####
     if ('Correlation_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the p-value distribution of gene-variable correlation analysis for each continuous variable(s):',
+            message = '- Summarizing the p-value distribution of gene-variable correlation analysis for each continuous variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the gene-variable correlations are computed.',
+            message = '- Checking to see all the gene-variable correlations are computed.',
             color = 'blue',
             verbose = verbose
             )
@@ -867,7 +964,9 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues)){
-                            stop(paste0('The correlation for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The correlation for the ',
+                                        x, ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableCorrelation" or "assessVariation" functions.'))
                         }
@@ -876,10 +975,10 @@ assessNormalization <- function(
 
         #### assess p-value distribution ####
         printColoredMessage(
-            message = '* compute the p-value distribution scores.',
+            message = '- Computing the p-value distribution scores.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         gene.var.corr.pvalue.scores <- lapply(
             selected.vars,
             function(x){
@@ -888,13 +987,12 @@ assessNormalization <- function(
                     function(y){
                         corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues
                         selected.pvalues <- corr.results[, 'p-value'][corr.results[, 'p-value'] > 0.05 ]
-                        suppressWarnings(ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
+                        suppressWarnings(1 - ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
                     })
             })
         names(gene.var.corr.pvalue.scores) <- selected.vars
 
         #### Put all together ####
-        data <- NULL
         gene.var.corr.pvalue.scores <- as.data.frame(x = gene.var.corr.pvalue.scores, check.names = FALSE) %>%
             dplyr::mutate(data = row.names(.)) %>%
             pivot_longer(-data, names_to = 'variable', values_to = 'measurements') %>%
@@ -906,16 +1004,16 @@ assessNormalization <- function(
     ### null p-value ####
     if ('Correlation_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the Null p-values of the gene-variable correlation analysis for continuous variable(s):',
+            message = '- Summarizing the Null p-values of the gene-variable correlation analysis for continuous variable(s):',
             color = 'orange',
             verbose = verbose
-        )
+            )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the gene-variable correlations are computed.',
+            message = '- Checking to see all the gene-variable correlations are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') == 'Correlation_pvalueNull'
         selected.vars <- metrics.table$Variables[selected.vars]
         check.out <- lapply(
@@ -925,7 +1023,10 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues)){
-                            stop(paste0('The correlation for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The correlation for the ',
+                                        x,
+                                        ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableCorrelation" or "assessVariation" functions.'))
                         }
@@ -962,13 +1063,13 @@ assessNormalization <- function(
     ### number of genes with a f-stat cutoff ####
     if ('ANOVA_fStat' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the F-statistics of gene-variable ANOVA analysis for each categorical variable(s):',
+            message = '- Summarizing the F-statistics of gene-variable ANOVA analysis for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the ANOVA are computed.',
+            message = '- Checking to see all the ANOVA are computed.',
             color = 'blue',
             verbose = verbose
             )
@@ -989,7 +1090,7 @@ assessNormalization <- function(
             })
         ### count number of genes ####
         printColoredMessage(
-            message = '* compute the F-statistics scores.',
+            message = '- Computing the F-statistics scores.',
             color = 'blue',
             verbose = verbose
         )
@@ -1017,16 +1118,16 @@ assessNormalization <- function(
     ### p-value distributions  ####
     if ('ANOVA_pvalueDis' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the p-value distribution of gene-variable ANOVA analysis for each categorical variable(s):',
+            message = '- Summarizing the p-value distribution of gene-variable ANOVA analysis for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the ANOVA are computed.',
+            message = '- Checking to see all the ANOVA are computed.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         selected.vars <- paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') == 'ANOVA_pvalueDis'
         selected.vars <- metrics.table$Variables[selected.vars]
         check.out <- lapply(
@@ -1036,7 +1137,10 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$ANOVA[[anova.method]][[x]]$fstatistics.pvalues)){
-                            stop(paste0('The ANOVA for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The ANOVA for the ',
+                                        x,
+                                        ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesVariableAnova" or "assessVariation" functions.'))
                         }
@@ -1044,10 +1148,10 @@ assessNormalization <- function(
             })
         #### count number of genes ####
         printColoredMessage(
-            message = '* compute the p-value distribution scores.',
+            message = '- Computing the p-value distribution scores.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         gene.var.anova.pvalue.scores <- lapply(
             selected.vars,
             function(x){
@@ -1056,7 +1160,7 @@ assessNormalization <- function(
                     function(y){
                         anova.results <- se.obj@metadata$Metrics[[y]]$gene.level$ANOVA$aov[[x]]$fstatistics.pvalues
                         selected.pvalues <- anova.results[, 'pvalue'][anova.results[, 'pvalue'] > 0.05 ]
-                        suppressWarnings(ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
+                        suppressWarnings(1-ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
                     })
             })
         names(gene.var.anova.pvalue.scores) <- selected.vars
@@ -1073,13 +1177,13 @@ assessNormalization <- function(
     ### null p-value ####
     if ('ANOVA_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the null p-values of gene-variable ANOVA analysis for each categorical variable(s):',
+            message = '- Summarizing the null p-values of gene-variable ANOVA analysis for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the ANOVA are computed.',
+            message = '- Checking to see all the ANOVA are computed.',
             color = 'blue',
             verbose = verbose
             )
@@ -1100,7 +1204,7 @@ assessNormalization <- function(
             })
         #### count number of genes ####
         printColoredMessage(
-            message = '* compute the null p-value scores.',
+            message = '- Computing the null p-value scores.',
             color = 'blue',
             verbose = verbose
         )
@@ -1110,7 +1214,6 @@ assessNormalization <- function(
                 sapply(
                     levels(assay.names),
                     function(y){
-                        print(y)
                         corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$ANOVA$aov[[x]]$fstatistics.pvalues
                         pvalues <- corr.results[, 'pvalue']
                         pvalues <- pvalues[!is.na(pvalues) & !is.infinite(pvalues)]
@@ -1148,13 +1251,13 @@ assessNormalization <- function(
     ### number of genes ####
     if ('PartialCorrelation' %in% paste(metrics.table$Metrics) ){
         printColoredMessage(
-            message = '- Summarize the correlation differences in gene-gene partial correlation analysis for each continuous variable(s):',
+            message = '- Summarizing the correlation differences in gene-gene partial correlation analysis for each continuous variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the gene-gene partial correlation are computed.',
+            message = '- Checking to see all the gene-gene partial correlation are computed.',
             color = 'blue',
             verbose = verbose
             )
@@ -1166,7 +1269,9 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$PPcorr[[pcorr.method]][[x]]$correlations)){
-                            stop(paste0('The gene-gene partial correlation for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The gene-gene partial correlation for the ',
+                                        x, ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "computeGenesPartialCorrelation" or "assessVariation" functions.'))
                         }
@@ -1174,10 +1279,10 @@ assessNormalization <- function(
             })
         #### count number of genes ####
         printColoredMessage(
-            message = '* compute the correlation differences scores.',
+            message = '- Computing the correlation differences scores.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         ppcorr.corr.scores <- lapply(
             selected.vars,
             function(x){
@@ -1223,7 +1328,9 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         if (is.null(se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values)){
-                            stop(paste0('The differentail gene expressin for the ', x, ' variable of the ' , y ,
+                            stop(paste0('The differentail gene expressin for the ',
+                                        x, ' variable of the ' ,
+                                        y ,
                                         ' data cannot be found in the SummarizedExperiment object.',
                                         'Please run the "compuetDGE" or "assessVariation" functions.'))
                         }
@@ -1231,10 +1338,10 @@ assessNormalization <- function(
             })
         #### compute the p-values scores ####
         printColoredMessage(
-            message = '* compute the p-value distribution scores.',
+            message = '- Computing the p-value distribution scores.',
             color = 'blue',
             verbose = verbose
-        )
+            )
         dge.pvalue.scores <- lapply(
             selected.vars,
             function(x){
@@ -1246,7 +1353,7 @@ assessNormalization <- function(
                             function(z){
                                 corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values[[z]]
                                 selected.pvalues <- corr.results[, 'pvalue'][corr.results[, 'pvalue'] > 0.05 ]
-                                suppressWarnings(ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
+                                suppressWarnings(1 - ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
                             }))
                     })
             })
@@ -1264,13 +1371,13 @@ assessNormalization <- function(
     ### q-value ####
     if ('DGE_pvalueNull' %in% paste(metrics.table$Metrics, metrics.table$Assessments, sep = '_') ){
         printColoredMessage(
-            message = '- Summarize the null p-values of differentail gene expression analysis for each categorical variable(s):',
+            message = '- Summarizing the null p-values of differentail gene expression analysis for each categorical variable(s):',
             color = 'orange',
             verbose = verbose
             )
         #### check correlation data ####
         printColoredMessage(
-            message = '* check to see all the differentail gene expression are computed.',
+            message = '- Checking to see all the differentail gene expression are computed.',
             color = 'blue',
             verbose = verbose
             )
@@ -1319,15 +1426,130 @@ assessNormalization <- function(
         dge.qvalue.scores <- dge.qvalue.scores[ , cols.names]
     } else dge.qvalue.scores <- NULL
 
+    ## Lisi scores ####
+    if ('LISI' %in% metrics.table$Metrics){
+        printColoredMessage(
+            message = '- Summarizing the LISI scores for different variables:',
+            color = 'orange',
+            verbose = verbose
+            )
+        #### check correlation data ####
+        printColoredMessage(
+            message = '- Checking to see all the LISI are computed.',
+            color = 'blue',
+            verbose = verbose
+            )
+        selected.vars <- metrics.table$Metrics == 'LISI'
+        selected.vars <- metrics.table$Variables[selected.vars]
+        if (isTRUE(fast.pca)){
+            svd.method <- 'fast.svd'
+        } else svd.method <- 'ordinary.svd'
+        check.out <- lapply(
+            selected.vars,
+            function(x){
+                lapply(
+                    levels(assay.names),
+                    function(y){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$global.level$LISI[[svd.method]][[x]]$lisi))
+                            stop(paste0('The LISI for the ',  x, ' variable of the ' , y ,
+                                        ' data cannot be found in the SummarizedExperiment object.',
+                                        'Please run the "compuetLisi" or "assessVariation" functions.'))
+                    })
+            })
+        #### compute the null p-value ####
+        printColoredMessage(
+            message = '- Computing the average of LISI scores.',
+            color = 'blue',
+            verbose = verbose
+            )
+        lisi.average.scores <- lapply(
+            selected.vars,
+            function(x){
+                sapply(
+                    levels(assay.names),
+                    function(y){
+                        vec <- se.obj@metadata$Metrics[[y]]$global.level$LISI[[svd.method]][[x]]$lisi
+                        mean((vec - min(vec)) / (max(vec) - min(vec)))
+                    })
+            })
+        names(lisi.average.scores) <- selected.vars
+
+        #### put all together ####
+        lisi.average.scores <- as.data.frame(x = lisi.average.scores, check.names = FALSE) %>%
+            dplyr::mutate(data = row.names(.)) %>%
+            pivot_longer(-data, names_to = 'variable', values_to = 'measurements') %>%
+            dplyr::mutate(test = 'LISI (average scores)') %>%
+            data.frame(.)
+        lisi.average.scores <- lisi.average.scores[ , cols.names]
+    } else lisi.average.scores <- NULL
+    ## KBET scores ####
+    if ('KBET' %in% metrics.table$Metrics){
+        printColoredMessage(
+            message = '- Summarizing the KBET scores for different variables:',
+            color = 'orange',
+            verbose = verbose
+            )
+        #### check correlation data ####
+        printColoredMessage(
+            message = '- Checking to see all the KBET are computed.',
+            color = 'blue',
+            verbose = verbose
+            )
+        selected.vars <- metrics.table$Metrics == 'KBET'
+        selected.vars <- metrics.table$Variables[selected.vars]
+        if (isTRUE(fast.pca)){
+            svd.method <- 'fast.svd'
+        } else svd.method <- 'ordinary.svd'
+        check.out <- lapply(
+            selected.vars,
+            function(x){
+                lapply(
+                    levels(assay.names),
+                    function(y){
+                        if (is.null(se.obj@metadata$Metrics[[y]]$global.level$KBET[[svd.method]][[x]]$kBET))
+                            stop(paste0('The KBET for the ',
+                                        x,
+                                        ' variable of the ' ,
+                                        y ,
+                                        ' data cannot be found in the SummarizedExperiment object.',
+                                        'Please run the "compuetLisi" or "assessVariation" functions.'))
+                    })
+            })
+        #### compute the null p-value ####
+        printColoredMessage(
+            message = '- Computing the average of KBET scores.',
+            color = 'blue',
+            verbose = verbose
+            )
+        kbet.average.scores <- lapply(
+            selected.vars,
+            function(x){
+                sapply(
+                    levels(assay.names),
+                    function(y){
+                        1- mean(se.obj@metadata$Metrics[[y]]$global.level$KBET[[svd.method]][[x]]$kBET)
+                    })
+            })
+        names(kbet.average.scores) <- selected.vars
+
+        #### put all together ####
+        kbet.average.scores <- as.data.frame(x = kbet.average.scores, check.names = FALSE) %>%
+            dplyr::mutate(data = row.names(.)) %>%
+            pivot_longer(-data, names_to = 'variable', values_to = 'measurements') %>%
+            dplyr::mutate(test = 'kBET (average scores)') %>%
+            data.frame(.)
+        kbet.average.scores <- kbet.average.scores[ , cols.names]
+    } else kbet.average.scores <- NULL
+
     # Preparing the final matrix ####
     printColoredMessage(
         message = '-- Preparing final matrix to plot:',
         color = 'magenta',
         verbose = verbose
-    )
-    ## put all measurements together ####
+        )
+    ## putting all measurements together ####
     printColoredMessage(
-        message = '-- put all the compute score together.',
+        message = '-- Putting all the computed score together.',
         color = 'blue',
         verbose = verbose
         )
@@ -1350,14 +1572,16 @@ assessNormalization <- function(
         gene.var.anova.qvalue.scores,
         dge.pvalue.scores,
         dge.qvalue.scores,
-        ppcorr.corr.scores
+        ppcorr.corr.scores,
+        lisi.average.scores,
+        kbet.average.scores
         )
     all.measurements[ ,'data'] <- gsub(':', ".", all.measurements[ , 'data'])
     assay.names <- gsub(':', ".", assay.names)
 
-    ## add the labels of both biological and unwanted variables ####
+    ## adding the labels of both biological and unwanted variables ####
     printColoredMessage(
-        message = '- Add the biological or unwanted labels to the variables.',
+        message = '- Adding the biological or unwanted labels to the variables.',
         color = 'blue',
         verbose = verbose
         )
@@ -1375,46 +1599,60 @@ assessNormalization <- function(
         stop('Please check the variable names.')
     }
 
-    ## modify scores ####
+    ## modifying the direction of some scores ####
     printColoredMessage(
-        message = '- Modify the direction of several scores for unwanted and biological variables.',
+        message = '- Modifying the direction of several scores for unwanted and biological variables.',
         color = 'orange',
         verbose = verbose
-    )
+        )
     ### unwanted variables ####
-    uv.categorical.vars <- uv.continuous.vars <- NULL
     if (!is.null(uv.variables)) {
         vars.class <- sapply(
             uv.variables,
-            function(x) class(colData(se.obj)[[x]]))
+            function(x) class(colData(se.obj)[[x]])
+            )
         uv.categorical.vars <- names(vars.class[vars.class %in% c('character', 'factor')])
         uv.continuous.vars <- names(vars.class[vars.class %in% c('numeric', 'integer')])
         #### continuous variables ####
         if (!is.null(uv.continuous.vars)){
-            for(i in uv.continuous.vars){
+            for(a in uv.continuous.vars){
                 # LRA
-                index <- all.measurements$variable == i & all.measurements$test == 'LRA'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.a <- all.measurements$variable == a & all.measurements$test == 'LRA'
+                if (sum(index.a) > 0){
+                    all.measurements$measurements[index.a] <- 1 - all.measurements$measurements[index.a]
+                }
                 # correlation with RLE median
-                index <- all.measurements$variable == i & all.measurements$test == 'Association with RLE medians'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.b <- all.measurements$variable == a & all.measurements$test == 'Association with RLE medians'
+                if (sum(index.b) > 0){
+                    all.measurements$measurements[index.b] <- 1 - all.measurements$measurements[index.b]
+                }
                 # correlation with RLE IQR
-                index <- all.measurements$variable == i & all.measurements$test == 'Association with RLE IQRs'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.c <- all.measurements$variable == a & all.measurements$test == 'Association with RLE IQRs'
+                if (sum(index.c) > 0){
+                    all.measurements$measurements[index.c] <- 1 - all.measurements$measurements[index.c]
+                }
+                rm(a)
             }
         }
         ### categorical variables ####
         if (!is.null(uv.categorical.vars)){
-            for(i in uv.categorical.vars){
+            for(b in uv.categorical.vars){
                 # Silhouette
-                index <- all.measurements$variable == i & all.measurements$test == 'Silhouette'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.a <- all.measurements$variable == b & all.measurements$test == 'Silhouette'
+                if (sum(index.a) >0){
+                    all.measurements$measurements[index.a] <- 1 - all.measurements$measurements[index.a]
+                }
                 # ARI
-                index <- all.measurements$variable == i & all.measurements$test == 'ARI'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.b <- all.measurements$variable == b & all.measurements$test == 'ARI'
+                if (sum(index.b) > 0){
+                    all.measurements$measurements[index.b] <- 1 - all.measurements$measurements[index.b]
+                }
                 # VCA
-                index <- all.measurements$variable == i & all.measurements$test == 'VCA'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.c <- all.measurements$variable == b & all.measurements$test == 'VCA'
+                if (sum(index.c)){
+                    all.measurements$measurements[index.c] <- 1 - all.measurements$measurements[index.c]
+                }
+                rm(b)
             }
         }
     }
@@ -1422,46 +1660,69 @@ assessNormalization <- function(
     if (!is.null(bio.variables)) {
         vars.class <- sapply(
             bio.variables,
-            function(x) class(colData(se.obj)[[x]]))
+            function(x) class(colData(se.obj)[[x]])
+            )
         bio.categorical.vars <- names(vars.class[vars.class %in% c('character', 'factor')])
         bio.continuous.vars <- names(vars.class[vars.class %in% c('numeric', 'integer')])
         #### continuous variables ####
         if (!is.null(bio.continuous.vars)){
-            for(i in bio.continuous.vars){
+            for(a in bio.continuous.vars){
                 # correlation p-values
-                index <- all.measurements$variable == i & all.measurements$test == 'Gene-level correlation (null p-value)'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.a <- all.measurements$variable == a & all.measurements$test == 'Gene-level correlation (null p-value)'
+                if (sum(index.a)){
+                    all.measurements$measurements[index.a] <- 1 - all.measurements$measurements[index.a]
+                }
+                # LISI
+                index.b <- all.measurements$variable == a & all.measurements$test == 'LISI (average scores)'
+                if (sum(index.b) > 0){
+                    all.measurements$measurements[index.b] <- 1 - all.measurements$measurements[index.b]
+                }
                 # correlation cutoff F-values
-                index <- all.measurements$variable == i & all.measurements$test == 'Gene-level correlation (correlation cutoff)'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                # index.b <- all.measurements$variable == a & all.measurements$test == 'Gene-level correlation (correlation cutoff)'
+                # if (sum(index.b) > 0){
+                #     all.measurements$measurements[index.b] <- 1 - all.measurements$measurements[index.b]
+                # }
+                rm(a)
             }
         }
         ### categorical variables ####
         if (!is.null(bio.categorical.vars)){
-            for(i in bio.categorical.vars){
+            for(b in bio.categorical.vars){
                 # ANOVA null p-values
-                index <- all.measurements$variable == i & all.measurements$test == 'Gene-level ANOVA (null p-value)'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.a <- all.measurements$variable == b & all.measurements$test == 'Gene-level ANOVA (null p-value)'
+                if (sum(index.a) > 0){
+                    all.measurements$measurements[index.a] <- 1 - all.measurements$measurements[index.a]
+                }
                 # ANOVA F-values
-                index <- all.measurements$variable == i & all.measurements$test == 'Gene-level ANOVA (F-values cutoff)'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.b <- all.measurements$variable == b & all.measurements$test == 'Gene-level ANOVA (F-values cutoff)'
+                if (sum(index.b) > 0){
+                    all.measurements$measurements[index.b] <- 1 - all.measurements$measurements[index.b]
+                }
                 # DGE null pvalues
-                index <- all.measurements$variable == i & all.measurements$test == 'DGE (null p-value)'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.c <- all.measurements$variable == b & all.measurements$test == 'DGE (null p-value)'
+                if (sum(index.c) > 0){
+                    all.measurements$measurements[index.c] <- 1 - all.measurements$measurements[index.c]
+                }
                 # PPcorr
-                index <- all.measurements$variable == i & all.measurements$test == 'PPcorr (correlation differences cutoff)'
-                all.measurements$measurements[index] <- 1 - all.measurements$measurements[index]
+                index.d <- all.measurements$variable == b & all.measurements$test == 'PPcorr (correlation differences cutoff)'
+                if (sum(index.d) > 0){
+                    all.measurements$measurements[index.d] <- 1 - all.measurements$measurements[index.d]
+                }
+                # LISI
+                index.e <- all.measurements$variable == b & all.measurements$test == 'LISI (average scores)'
+                if (sum(index.e) > 0){
+                    all.measurements$measurements[index.e] <- 1 - all.measurements$measurements[index.e]
+                }
             }
         }
     }
 
     ## average of biological and unwanted variables scores ######
     printColoredMessage(
-        message = '- Average the scores for each biological and unwanted variables.',
+        message = '- Averaging the scores for each biological and unwanted variables.',
         color = 'blue',
         verbose = verbose
         )
-    group <- NULL
     bio.uv.overall.scores <- all.measurements %>%
         group_by(data, group) %>%
         summarise_at(vars("measurements"), mean) %>%
@@ -1469,13 +1730,12 @@ assessNormalization <- function(
         dplyr::mutate(variable = 'Score') %>%
         data.frame(.)
     bio.uv.overall.scores <- bio.uv.overall.scores [ , colnames(all.measurements)]
-
     ## calculate final scores ####
     printColoredMessage(
-        message = '- Calculate final scores for each data.',
+        message = '- Calculating final scores for each data.',
         color = 'blue',
         verbose = verbose
-    )
+        )
     final.overall.scores <- lapply(
         assay.names,
         function(x){
@@ -1501,24 +1761,36 @@ assessNormalization <- function(
 
     ## generate the plot ####
     printColoredMessage(
-        message = '- Generate the final assessmet plot.',
+        message = '- Generating the final assessmet plot.',
         color = 'blue',
         verbose = verbose
-    )
-    group.test.variable <- measurements <- test <- NULL
+        )
+    if (isTRUE(select.top.ruv)){
+        none.ruv <- assay.names[!assay.names %in% grep('RUVIIIprps', assay.names, value = TRUE)]
+        final.overall.scores.ruv <- final.overall.scores[final.overall.scores$data %in% grep('RUVIIIprps', assay.names, value = TRUE) , ]
+        final.overall.scores.ruv <- final.overall.scores.ruv[order(-final.overall.scores.ruv$measurements) , ]
+        final.overall.scores.ruv <- final.overall.scores.ruv[1 , , drop = FALSE]
+        final.overall.scores.none.ruv <- final.overall.scores[final.overall.scores$data %in% none.ruv , ]
+        final.overall.scores <- rbind(final.overall.scores.ruv, final.overall.scores.none.ruv)
+        all.measurements <- all.measurements[all.measurements$data %in% final.overall.scores$data , ]
+        bio.uv.overall.scores <- bio.uv.overall.scores[bio.uv.overall.scores$data %in% final.overall.scores$data , ]
+        assay.names <- assay.names[assay.names %in% bio.uv.overall.scores$data ]
+    }
     all.measurements <- rbind(
         all.measurements,
         bio.uv.overall.scores,
         final.overall.scores
         )
-    index <- all.measurements$variable == 'Score' & all.measurements$group == 'Removal of unwanted variation'
-    all.measurements$variable[index] <- 'UV'
-    all.measurements$group[index] <- 'Final performance'
-    index <- all.measurements$variable == 'Score' & all.measurements$group == 'Preservation of biological variation'
-    all.measurements$variable[index] <- 'Bio'
-    all.measurements$group[index] <- 'Final performance'
+    index.u <- all.measurements$variable == 'Score' & all.measurements$group == 'Removal of unwanted variation'
+    all.measurements$variable[index.u] <- 'UV'
+    all.measurements$group[index.u] <- 'Final performance'
+
+    index.b <- all.measurements$variable == 'Score' & all.measurements$group == 'Preservation of biological variation'
+    all.measurements$variable[index.b] <- 'Bio'
+    all.measurements$group[index.b] <- 'Final performance'
+
     all.measurements$variable[all.measurements$variable == 'Score'] <- 'Final'
-    final.overall.scores <- final.overall.scores[order(final.overall.scores$measurements, decreasing = F) , ]
+    final.overall.scores <- final.overall.scores[order(final.overall.scores$measurements, decreasing = FALSE) , ]
     all.measurements$data <- factor(
         x = all.measurements$data,
         levels = final.overall.scores$data
@@ -1557,13 +1829,15 @@ assessNormalization <- function(
                         .default = "grey")
                 ))
     )
-    num.colors <- length(assays(se.obj))
+    num.colors <- length(assay.names)
     original.palette <- RColorBrewer::brewer.pal(n = 8, name = 'BrBG')[8:1]
     interpolated.colors <- grDevices::colorRampPalette(original.palette)(num.colors)
     all.measurements$group[all.measurements$group == 'Final performance'] <- 'Final scores'
+
     assessment.plot <- ggplot(data = all.measurements, aes(x = test, y = data)) +
         geom_point(aes(size = measurements, color = rank)) +
-        scale_color_manual(values = interpolated.colors) +
+        scale_color_manual(values = interpolated.colors, name = 'Rank') +
+        scale_size_continuous(name = "Measurements") +
         theme_bw()  +
         xlab('') +
         ylab('') +
@@ -1573,8 +1847,6 @@ assessNormalization <- function(
             space = 'free_x',
             scales = 'free') +
         theme(
-            # panel.spacing = unit(0, "lines"),
-            # panel.grid = element_blank(),
               panel.background = element_blank(),
               axis.line = element_line(colour = 'black', linewidth = 1),
               strip.background = element_rect(color = "grey30", fill = "grey90"),
@@ -1589,16 +1861,20 @@ assessNormalization <- function(
         guides(color = guide_legend(override.aes = list(size = 5), ncol = 3), size = guide_legend(ncol = 3))
     if (isTRUE(plot.output)) print(assessment.plot)
 
-    # Save results ####
+    # Saving results ####
     ### add results to the SummarizedExperiment object ####
     if (is.null(output.name))
-        output.name <- paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays')
-
+        output.name <- paste0(
+            'RUVprps_assessNormalization',
+            length(assays(se.obj)),
+            '_assays'
+            )
     if (isTRUE(save.se.obj)){
         printColoredMessage(
-            message = '-- Save the selected bio genes to the metadata of the SummarizedExperiment object.',
+            message = '-- Saving the selected bio genes to the metadata of the SummarizedExperiment object.',
             color = 'magenta',
-            verbose = verbose)
+            verbose = verbose
+            )
         ## check if metadata metric already exist
         if (!'NormAssessment' %in% names(se.obj@metadata)) {
             se.obj@metadata[['NormAssessment']] <- list()
@@ -1626,10 +1902,13 @@ assessNormalization <- function(
         printColoredMessage(
             message = '- The assessment table and plot are saved to metadata of the SummarizedExperiment object.',
             color = 'blue',
-            verbose = verbose)
-        printColoredMessage(message = '------------The assessNormalization function finished.',
-                            color = 'white',
-                            verbose = verbose)
+            verbose = verbose
+            )
+        printColoredMessage(
+            message = '------------The assessNormalization function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj)
     }
     ### export results as list ####
@@ -1637,10 +1916,13 @@ assessNormalization <- function(
         printColoredMessage(
             message = '- The assessment table and plot are outputed as list.',
             color = 'blue',
-            verbose = verbose)
-        printColoredMessage(message = '------------The assessNormalization function finished.',
-                            color = 'white',
-                            verbose = verbose)
+            verbose = verbose
+            )
+        printColoredMessage(
+            message = '------------The assessNormalization function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(list(
             AssessmentTable = all.measurements,
             AssessmentPlot = assessment.plot,
@@ -1649,4 +1931,6 @@ assessNormalization <- function(
     }
     return(se.obj)
 }
+
+
 
