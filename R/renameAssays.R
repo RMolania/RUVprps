@@ -11,6 +11,6 @@ renameAssays <- function(
         new.names
 ){
     # Checking the input ####
-    names(assays(se.obj)) <- new.names
+    names(SummarizedExperiment::assays(se.obj)) <- new.names
     return(se.obj)
 }
