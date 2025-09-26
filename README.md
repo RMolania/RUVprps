@@ -31,7 +31,7 @@ RUVIII-PRPS is a novel strategy using pseudo-replicates of pseudo-samples (PRPS)
 We provided a vignette Introduction_to_RUVIII-PRPS.Rmd that explains step by step how to load and normalise datasets and also how to visualise the diagnostic plots before and after normalisation.
 
 
-![Description of figure](RUVprps_MainFigure2.png)
+![Description of figure](figures/RUVprps_MainFigure2.png)
 
 ##  Note
 The RUVIIIPRPS is under final preparation, a manuscript and comprehensive vignettes will be available soon.
