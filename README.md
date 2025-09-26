@@ -1,45 +1,49 @@
 
-# RUVprps software package
+# RUVprps
 
 <!-- badges: start -->
 <!-- badges: end -->
-RUVIII-PRPS is a novel strategy using pseudo-replicates of pseudo-samples (PRPS) to normalize RNA-seq data in situations 
-when technical replicate are not available or well-designed. 
-RUVprps is a comprehensive and user-friendly software package that streamlines the use of the RUV-III method for 
-end-to-end trasncriptomics data normalization, irrespective of whether data comes from a single study or multiple studies. 
-RUV-III is a powerful method that effectively removes sources of unwanted variation such as library size, batch effects,
-and tumor purity, ... from complex transcriptomic datasets. RUVprps can accommodate technical replicates, pseudo-replicate (PR) and 
-pseudo-replicates of pseudo-samples (PRPS). 
 
+**RUVprps** implements *RUV-III with pseudo-replicates of pseudo-samples (PRPS)* — a novel strategy for transcriptomics data normalization when technical replicates are unavailable or poorly designed.  
 
-The key and novel contributions of RUVprps: 
+This user-friendly R package provides an end-to-end workflow for removing unwanted variation from large-scale transcriptomic datasets, whether derived from a single study or multiple studies. RUV-III effectively corrects for sources of variation such as library size, batch effects, and tumor purity. The package accommodates technical replicates, pseudo-replicates (PR), and pseudo-replicates of pseudo-samples (PRPS).  
 
-- Comprehensive diagnostic and assessment tools for evaluating both biological and unwanted variation in RNA-seq data.
-- Robust strategies to identify sources of unwanted variation, even when such factors are unknown.
-- A fast and scalable implementation of RUV-III, enabling efficient normalization of large-scale datasets.
-- Novel unsupervised methods for identifying PRPS and negative control genes (NCGs), allowing greater flexibility and applicability to real-world datasets.
-- A normalization performance summary table, providing clear guidance to help users select the most appropriate normalization strategy.
+---
 
+## ✨ Key Features
 
-![Description of figure](figures/RUVprps_MainFigure2.png)
+- Comprehensive diagnostic and assessment tools to evaluate both biological and unwanted variation in RNA-seq data  
+- Robust strategies to identify unknown sources of unwanted variation  
+- Fast and scalable implementation of RUV-III for efficient normalization of large datasets  
+- Novel unsupervised methods for identifying PRPS and negative control genes (NCGs)  
+- Normalization performance summary tables, helping users select the most appropriate strategy  
 
+---
 
-The RUVIII-PRPS software package itself can be cited as:
+## 📊 Overview
 
-Molania R, et.al. Removing unwanted variation from large-scale RNA sequencing data with PRPS. Nat Biotechnology. 2023 
-Jan;41(1):82-95. doi: 10.1038/s41587-022-01440-w. Epub 2022 Sep 15. PMID: 36109686; PMCID: PMC9849124.
+![RUVprps workflow](figures/RUVprps_MainFigure2.png)
 
-##  RUVprps Installation
+---
 
-After installing the dependent libraries, RUVIII-PRPS can be installed by running the following lines
+## 📖 Citation
 
-``` r
+If you use **RUVprps**, please cite:  
+
+Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP.  
+*Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnol.** 2023;41(1):82–95.  
+[doi:10.1038/s41587-022-01440-w](https://doi.org/10.1038/s41587-022-01440-w)  
+
+---
+
+## ⚙️ Installation
+
+After installing the required dependencies, install **RUVprps** from GitHub with:  
+
+```r
 library(devtools)
 devtools::install_github(
-    repo = 'RMolania/RUVIIIPRPS',
-    force = TRUE,
-    build_vignettes = FALSE)
-```
-
-##  Note
-The RUVIIIPRPS is under final preparation, a manuscript and comprehensive vignettes will be available soon.
+  repo = "RMolania/RUVIIIPRPS",
+  force = TRUE,
+  build_vignettes = FALSE
+)
