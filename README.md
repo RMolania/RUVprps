@@ -12,14 +12,13 @@ pseudo-replicates of pseudo-samples (PRPS).
 
 
 The key and novel contributions of RUVprps: 
-\vspace{-1em} 
-\begin{itemize} 
-\item Comprehensive diagnostic and assessment tools for evaluating both biological and unwanted variation in RNA-seq data.
-\item Robust strategies to identify sources of unwanted variation, even when such factors are unknown.
-\item A fast and scalable implementation of RUV-III, enabling efficient normalization of large-scale datasets.
-\item Novel unsupervised methods for identifying PRPS and negative control genes (NCGs), allowing greater flexibility and applicability to real-world datasets.
-\item A normalization performance summary table, providing clear guidance to help users select the most appropriate normalization strategy.     
-\end{itemize}
+
+Comprehensive diagnostic and assessment tools for evaluating both biological and unwanted variation in RNA-seq data.\\
+Robust strategies to identify sources of unwanted variation, even when such factors are unknown.\\
+A fast and scalable implementation of RUV-III, enabling efficient normalization of large-scale datasets.\\
+Novel unsupervised methods for identifying PRPS and negative control genes (NCGs), allowing greater flexibility and applicability to real-world datasets.\\
+A normalization performance summary table, providing clear guidance to help users select the most appropriate normalization strategy.\\
+
 
 
 The RUVIII-PRPS software package itself can be cited as:
