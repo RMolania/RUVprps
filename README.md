@@ -5,9 +5,22 @@
 <!-- badges: end -->
 
 RUVprps is a comprehensive and user-friendly software package that streamlines the use of the RUV-III method for 
-end-to-end RNA-seq data normalization, irrespective of whether data comes from a single study or multiple studies. 
+end-to-end trasncriptomics data normalization, irrespective of whether data comes from a single study or multiple studies. 
 RUV-III is a powerful method that effectively removes sources of unwanted variation such as library size, batch effects,
-and tumor purity, from complex transcriptomic datasets. 
+and tumor purity, ... from complex transcriptomic datasets. RUVprps can accommodate technical replicates, pseudo-replicate (PR) and 
+pseudo-replicates of pseudo-samples (PRPS). 
+
+
+The key and novel contributions of RUVprps: 
+\vspace{-1em} 
+\begin{itemize} 
+\item Comprehensive diagnostic and assessment tools for evaluating both biological and unwanted variation in RNA-seq data.
+\item Robust strategies to identify sources of unwanted variation, even when such factors are unknown.
+\item A fast and scalable implementation of RUV-III, enabling efficient normalization of large-scale datasets.
+\item Novel unsupervised methods for identifying PRPS and negative control genes (NCGs), allowing greater flexibility and applicability to real-world datasets.
+\item A normalization performance summary table, providing clear guidance to help users select the most appropriate normalization strategy.     
+\end{itemize}
+
 
 The RUVIII-PRPS software package itself can be cited as:
 
