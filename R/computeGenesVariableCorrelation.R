@@ -165,7 +165,7 @@ computeGenesVariableCorrelation <- function(
         }
         if (isFALSE(apply.log)){
             printColoredMessage(
-                message = '-- The specified assay(s) will be used for DGE, without applying log transformation.',
+                message = '-- The specified assay(s) will be used for correlation analysis, without applying log transformation.',
                 color = 'blue',
                 verbose = verbose
             )
