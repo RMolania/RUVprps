@@ -21,8 +21,10 @@
 #' object will be selected.
 #' @param variable character. The name of the column containing a variable in the SummarizedExperiment object.
 #' This variable can represent either a biological or an unwanted factor.
-#' @param k0 TTTT
-#' @param knn TTTT
+#' @param k0 number of nearest neighbors to test on (neighborhood size). The default is set to `NULL`. Refer to the
+#' `kBET` function form the kBET package for more information.
+#' @param knn an n x k matrix of nearest neighbors for each cell (optional). The default is set to `NULL`. Refer to the
+#' `kBET` function form the kBET package for more information.
 #' @param fast.pca Logical. Indicates whether to use principal components computed via fast PCA by the `comptePCA` function
 #' The default is set to `TRUE`. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
 #' See details for more information.
