@@ -11,26 +11,15 @@ RoxygenNote: 7.3.2
 LinkingTo: Rcpp, RcppEigen
 Imports: 
     RColorBrewer,
-    GGally,
     ggforestplot,
     qvalue,
     viridis,
     gtools,
     fastDummies,
     ruv,
-    ggVennDiagram,
     scales,
     DescTools,
     ggrepel,
-    scran,
-    DESeq2,
-    singscore,
-    tidyestimate,
-    survminer,
-    survival,
-    genefu,
-    biomaRt,
-    EDASeq,
     ggplot2,
     ggh4x,
     ggjoy,
@@ -57,7 +46,6 @@ Imports:
     matrixTests,
     matrixStats,
     car,
-    CMScaller,
     changepoint,
     purrr,
     stringr,
@@ -72,12 +60,24 @@ Imports:
     lsa,
     Biobase,
     kBET,
-    lisi
-URL: https://github.com/RMolania/RUVIIIPRPS
-BugReports: https://github.com/RMolania/RUVIIIPRPS/issues
+    lisi,
+    DESeq2,
+    EDASeq,
+    genefu,
+    CMScaller,
+    biomaRt,
+    singscore,
+    tidyestimate,
+    survminer,
+    survival,
+    scran,
+    GGally
 Suggests: 
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    ggVennDiagram
+URL: https://github.com/RMolania/RUVIIIPRPS
+BugReports: https://github.com/RMolania/RUVIIIPRPS/issues
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Depends: 
