@@ -1,32 +1,28 @@
-#' Generate barplot the local inverse Simpson's index (lisi).
+#' Generate barplots the local inverse Simpson's index (lisi).
 #'
 #' @author Ramyar Molania
 #'
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-#'
 #' @description
-#' This function generates barplots of the Adjusted Rand Index (ARI) for individual datasets in the `SummarizedExperiment`
-#' object. If two variables are provided, the function creates scatter plots comparing the ARIs of each variable across
-#' the assays. The `computeARI()` function must applied before using the `plotARI()` function.
+#' This function generates barplots of the local inverse Simpson's index (lisi) for individual dataset(s) in the
+#' `SummarizedExperiment` object. Before applying the function, the `computeLisi` function should have been applied on the
+#' specified dataset(s).
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the `SummarizedExperiment`
-#' object to be used for generating barplots or scatter plots of the computed Adjusted Rand Index (ARI). By default,
-#' all assays in the `SummarizedExperiment` object will be selected.
-#' @param variable Character or character vector of length one or two. Indicates one or two column names in the
-#' `SummarizedExperiment` object that contain categorical variables, such as sample subtypes or batch labels. If two
-#' variables are provided, the function plots the ARIs against each other for all specified assays.
-#' @param fast.pca TTTT
+#' @param assay.names Character or character vector. Specifies the name(s) of the dataset(s) in the `SummarizedExperiment`
+#' object to be used for generating barplots or scatter plots of the computed LISI By default, all dataset(s) in the
+#' `SummarizedExperiment` object will be selected.
+#' @param variable Character. A character specifying a column name in the sample annotation of the SummarizedExperiment
+#' object that corresponds to the variable for which LISI has been computed.
+#' @param fast.pca Character. A character specifying which PCA approach has been used to compute LISI The default is set
+#' to `fast.pca`. Refer to the `computeLisi` function for more information.
 #' @param plot.output Logical. If `TRUE`, the individual barplots or scatter plots will be printed during function execution.
-#' Default is `TRUE`.
+#' The default is set to `TRUE`.
 #' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the `SummarizedExperiment` object
-#' or return them as a list. The default is `TRUE`.
+#' or return them as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, messages for different steps of the function will be displayed.
 #'
-#' @return A `SummarizedExperiment` object or a list containing all the plots of the computed ARIs for the categorical
-#' variable(s).
+#' @return A `SummarizedExperiment` object or a list containing all the plots of the computed LISI scores for the
+#' categorical variable(s).
 #'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom ggrepel geom_text_repel
@@ -43,9 +39,11 @@ plotLisi <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The plotLisi function starts:',
-                        color = 'white',
-                        verbose = verbose)
+    printColoredMessage(
+        message = '------------The plotLisi function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # Checking the inputs ####
     if (is.null(assay.names) | is.logical(assay.names)) {
         stop('The "assay.names" cannot be NUll or logical.')
