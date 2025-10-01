@@ -2,13 +2,13 @@
 #'
 #' @author Ramyar Molania
 #'
-#'#' @references
+#' @references
 #' Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research, 2019.
 #' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS, Nature Biotechnology, 2023
 #'
 #' @description
-#' This function applies a range of global and gene-level metrics to assess the variation of specified
-#' variables in the assay(s) of a SummarizedExperiment object.
+#' This function applies a range of global and gene-level metrics to assess the impact variables on gene expression data
+#' in a SummarizedExperiment object.
 #'
 #' @details
 #' Several assessments will be performed:
@@ -32,87 +32,137 @@
 #' - RLE plot distribution.
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character. A character string or vector for selecting assay name(s) in the SummarizedExperiment object. The default is set to `all`.
-#' @param bio.variables Character. Column names containing variables to assess for variation. Can be categorical or continuous.
-#' @param uv.variables Character. Column names containing variables to assess for variation. Can be categorical or continuous.
-#' @param assessment.level TTTT
-#' @param plots.to.exclude Character. A character string or vector indicating which metrics to exclude. Use `getAssessmentMetrics()` to view options. The default is set to `NULL`.
-#' @param apply.log Logical. Whether to apply a log-transformation. The default is set to `FALSE`.
-#' @param pseudo.count Numeric. Pseudo count added to all measurements before log-transformation. The default is set to 1.
-#' @param general.points.size Numeric. Size of points in scatter plots. The default is set to 1.
-#' @param rle.iqr.width Numeric. Width of IQR in RLE plots. The default is set to 1.
+#' @param assay.names Character. A character string or vector for selecting dataset name(s) in the SummarizedExperiment
+#' object. The default is set to `all`. All available dataset(s) wiil be selected.
+#' @param bio.variables Character. A character string or vector of column names in the sample annotation that containing
+#' biological variables to assess their impact on the dataset(s). The variables can be categorical or continuous.
+#' @param uv.variables Character. A character string or vector of column names in the sample annotation that containing
+#' biological variables to assess their impact on the dataset(s). The variables can be categorical or continuous.
+#' @param assessment.level Character. A character string specifying the level of assessment. The options are `L1` amd `L2`.
+#' The default is set to `L2`. Refer to the details of the function for more information.
+#' @param plots.to.exclude Character. A character string or vector indicating which metrics to exclude. Use the
+#' `getAssessmentMetrics()` function to view all the possible metrics. The default is set to `NULL`.
+#' @param apply.log Logical. Whether to apply a log-transformation on the dataset(s) before applying the metrics. The
+#' default is set to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value as pseudo count added to all measurements before log-transformation. The
+#' default is set to 1.
+#' @param general.points.size Numeric. Size of points in scatter plots. The default is set to 1.5.
+#' @param rle.iqr.width Numeric. Width of IQR in RLE plots. The default is set to 2.
 #' @param rle.median.points.size Numeric. Size of median points in RLE plots. The default is set to 1.
 #' @param rle.median.points.color Character. Color of median points in RLE plots. The default is set to `red`.
 #' @param rle.geom.hline.color Character. Color of the horizontal line in RLE plots. The default is set to `cyan`.
-#' @param rle.plot.ncol Numeric. Number of columns in the RLE boxplot grid. The default is set to 1.
-#' @param rle.plot.nrow Numeric. Number of rows in the RLE boxplot grid. The default is set to 3.
-#' @param rle.var.plot.ncol Numeric. Number of columns in scatter plots of RLE medians against variables. The default is set to 3.
-#' @param rle.var.plot.nrow Numeric. Number of rows in scatter plots of RLE medians against variables. The default is set to 3.
-#' @param rle.colors List. List of colors for variables in RLE plots. The default is set to `NULL`.
-#' @param fast.pca Logical. Use fewer PCs for faster PCA. The default is set to `TRUE`.
-#' @param compute.nb.pcs Numeric. Number of PCs to compute for fast PCA. The default is set to 4.
-#' @param nb.pcs.toplot.pca Numeric. Number of PCs to plot against each other. The default is set to 3. Must be ≤ `compute.nb.pcs`.
-#' @param center Logical. Whether to center data before SVD. The default is set to `TRUE`.
+#' @param rle.plot.ncol Numeric. Number of columns when putting more than one RLE plots in a grid. The default is set to 2.
+#' @param rle.plot.nrow Numeric. Number of rows when putting more than one RLE plots in a grid. The default is set to 3.
+#' @param rle.var.plot.ncol Numeric. Number of columns when putting more than one scatter plot of RLE medians or QR against
+#' a variable in a grid. The default is set to 3.
+#' @param rle.var.plot.nrow Numeric. Number of rows when putting more than one scatter plot of RLE medians or QR against
+#' a variable in a grid. The default is set to 3.
+#' @param rle.colors List. List of colors for variables in RLE plots. The default is set to `NULL`, the the function will
+#' use the default colors.
+#' @param fast.pca Logical. This specifies whether to use fast algorithm to do PCA ot not. The default is set to `TRUE`
+#' @param compute.nb.pcs Numeric. Number of PCs to compute for PCA. The default is set to 10.
+#' @param nb.pcs.toplot.pca Numeric. Number of PCs to plot against each other in PCA plots. The default is set to 3.
+#' This must be ≤ `compute.nb.pcs`.
+#' @param center Logical. Whether to center data before applying PCA. The default is set to `TRUE`.
 #' @param scale Logical. Whether to scale data before SVD. The default is set to `FALSE`.
-#' @param svd.bsparam A `BiocParallelParam` object for parallelization. The default is set to `bsparam()`. See `runSVD()` in BiocSingular.
-#' @param pca.variables.colors List. List of colors for categorical variables in PCA plots. The default is set to `NULL`.
-#' @param color.palette TTTT
-#' @param pca.plot.ncol Numeric. Number of columns in PCA plot grid. The default is set to 3.
-#' @param pca.plot.nrow Numeric. Number of rows in PCA plot grid. The default is set to 3.
-#' @param pca.stroke.size Numeric. Stroke size in PCA plots. The default is set to 0.1.
-#' @param pca.stroke.color Character. Color of stroke in PCA plots. The default is set to `gray`.
-#' @param pca.points.alpha Numeric. Transparency of PCA points. The default is set to 0.5.
+#' @param svd.bsparam A `BiocParallelParam` object for parallelization. The default is set to `bsparam()`. See `runSVD()`
+#' in BiocSingular for more details.
+#' @param pca.variables.colors List. List of colors for categorical variables in PCA plots. The default is set to `NULL`,
+#' then the function will use the default colors.
+#' @param color.palette Character. Name of the color palette to use for plots. The default is set to `nrc`.
+#' @param pca.plot.ncol Numeric. Number of columns when putting more than one PCA plot in a grid. The default is set to 2.
+#' @param pca.plot.nrow Numeric. Number of rows when putting more than one PCA plot in a grid. The default is set to 3.
+#' @param pca.var.plot.ncol Numeric. Number of columns in a grid when more than one  scatter plots of PCs against continuous
+#' variables are generated. The default is set to 3.
+#' @param pca.var.plot.nrow Numeric. Number of rows in a grid when more than one  scatter plots of PCs against continuous
+#' variables are generated. The default is set to 3.
+#' @param pca.stroke.size Numeric. Stroke size of points in PCA plots. The default is set to 0.1.
+#' @param pca.stroke.color Character. Color of stroke of points in PCA plots. The default is set to `gray`.
+#' @param pca.points.alpha Numeric. Transparency of points in PCA plot. The default is set to 0.5.
 #' @param pca.densities.alpha Numeric. Transparency of densities in PCA plots. The default is set to 0.5.
-#' @param sil.dist.measure Character. Distance measure for silhouette: `euclidean`, `maximum`, `manhattan`, `canberra`,
-#' `binary`, or `minkowski`. The default is set to `euclidean`.
-#' @param sli.nb.pcs Numeric. Number of PCs to use for silhouette. The default is set to 3. Must be ≤ `compute.nb.pcs`.
-#' @param ari.clustering.method Character. Clustering method for ARI: `mclust` or `hclust`. The default is set to `hclust`.
-#' @param ari.hclust.method Character. Agglomeration method for `hclust`: `ward.D`, `ward.D2`, `single`, `complete`,
-#' `average`, `mcquitty`, `median`, `centroid`. The default is set to `complete`.
-#' @param ari.hclust.dist.measure Character. Distance measure for `hclust`: `euclidean`, `maximum`, `manhattan`, `canberra`,
-#'  `binary`, `minkowski`. The default is set to `euclidean`.
-#' @param ari.nb.pcs Numeric. Number of PCs for ARI. The default is set to 3. Must be ≤ `compute.nb.pcs`.
-#' @param vca.nb.pcs Numeric. Number of PCs for vector correlation. The default is set to 3.
-#' @param lra.nb.pcs Numeric. Number of PCs for linear regression. The default is set to 3.
-#' @param corr.method Character. Correlation method: `pearson`, `kendall`, `spearman`. The default is set to `spearman`.
+#' @param pca.legend.position Character. Position of legend in PCA plots: `top`, `bottom`, `left`, `right`, or `none`.
+#' The default is set to `right`.
+#' @param sil.dist.measure Character. A character string that specifies how to measure the distance for silhouette. The options
+#' are `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or `minkowski`. The default is set to `euclidean`.
+#' @param sli.nb.pcs Numeric. Number of PCs to use for silhouette calculation. The default is set to 3. The is must be
+#' ≤ `compute.nb.pcs`.
+#' @param ari.clustering.method Character. A character string that specifies which clustering method to sue for ARI calculation.
+#' The options are: `mclust` or `hclust`. The default is set to `hclust`.
+#' @param ari.hclust.method Character. A character string that specifies the agglomeration method for `hclust`. The
+#' options are `ward.D`, `ward.D2`, `single`, `complete`, `average`, `mcquitty`, `median`, `centroid`. The default is set
+#' to `complete`.
+#' @param ari.hclust.dist.measure Character. A character string that specifies the distance measure for `hclust`. The options
+#' are `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, `minkowski`. The default is set to `euclidean`.
+#' @param ari.nb.pcs Numeric. Number of PCs to use for ARI calculation. The default is set to 3. This must be ≤ `compute.nb.pcs`.
+#' @param vca.nb.pcs Numeric. Number of PCs to use for vector correlation calculation. The default is set to 3
+#' @param lra.nb.pcs Numeric. Number of PCs to use for linear regression calculation.. The default is set to 3.
+#' @param vca.nb.pcs.to.plot Numeric. Number of PCs to include in vector correlation plots. The default is set to 10.
+#' @param lra.nb.pcs.to.plot Numeric. Number of PCs to include in linear regression plots. The default is set to 10.
+#' @param kbet.nb.pcs Numeric. Number of PCs to use for kBET analysis. The default is set to 10.
+#' @param k0 number of nearest neighbors to test on (neighborhood size). The default is set to `NULL`. Refer to the
+#' `kBET` function form the kBET package for more information.
+#' @param knn an n x k matrix of nearest neighbors for each cell (optional). The default is set to `NULL`. Refer to the
+#' `kBET` function form the kBET package for more information.
+#' @param lisi.nb.pcs Numeric. Number of PCs to use for LISI analysis. The default is set to 3.
+#' @param perplexity Numeric. The effective number of each cell's neighbors. The default is set to 10.
+#' @param nn.eps Numeric. Error bound for nearest neighbor search with RANN:nn2(). The default is set to 0.0, implies exact
+#' nearest neighbor search.
+#' @param corr.method Character. A character string that specifies which correlation method should be used. The options are
+#' `pearson`, `kendall`, `spearman`. The default is set to `spearman`.
 #' @param a Numeric. Significance level for confidence intervals in correlation. The default is set to 0.05.
 #' @param rho Numeric. Hypothesized correlation for testing. The default is set to 0.
-#' @param correlation.plot.ncol Numeric. Number of columns in correlation boxplot grid. The default is set to 1.
-#' @param correlation.plot.nrow Numeric. Number of rows in correlation boxplot grid. The default is set to 3.
-#' @param anova.method Character. ANOVA method: `aov` or `welch`. The default is set to `aov`.
-#' @param anova.plot.ncol Numeric. Columns in ANOVA F-value boxplot grid. The default is set to 1.
-#' @param anova.plot.nrow Numeric. Rows in ANOVA F-value boxplot grid. The default is set to 3.
-#' @param pcorr.method Character. Method for gene-gene partial correlation: `pearson`, `kendall`, `spearman`. The default is set to `spearman`.
-#' @param pcorr.genes Vector. Genes for pairwise correlation. Logical, numeric, or gene names. The default is set to `NULL`.
-#' @param pcorr.select.genes Logical. Whether to pre-filter genes by correlation cutoff. The default is set to `TRUE`.
-#' @param pcorr.reference.data Character. Assay to use for gene selection. The default is set to `NULL`.
-#' @param pcorr.corr.cutoff Numeric. Correlation cutoff for selecting genes. The default is set to 0.7.
+#' @param correlation.plot.ncol Numeric. Number of columns of a gird plot when putting more than one correlation plot .
+#' The default is set to 3.
+#' @param correlation.plot.nrow  Numeric. Number of rows of a gird plot when putting more than one correlation plot .
+#' The default is set to
+#' @param anova.method Character. A character string that specifies which correlation method should be used. The options
+#' are `aov` or `welch`. The default is set to `aov`.
+#' @param anova.plot.ncol Numeric. Number of columns of a gird plot when putting more than one ANOVA plot. The default
+#' is set to 3
+#' @param anova.plot.nrow Numeric. Number of columns of a gird plot when putting more than one ANOVA plot .The default
+#' is set to 3.
+#' @param pcorr.method Character. A character string that specifies which correlation method should be used for partial
+#' correlation. The options are `pearson`, `kendall`, `spearman`. The default is set to `spearman`.
+#' @param pcorr.genes Vector. A logical vector that specify genes for pairwise correlation analysis. The default is set
+#' to `NULL`, then all genes will be selected.
+#' @param pcorr.select.genes Logical. If `TRUE`, the function will compute the correlation between individual genes and the
+#' specified variable, then select a subset of genes based on the "corr.coff.cutoff" for downstream analysis. The default
+#' is set to `TRUE`. This will speed up the computational time.
+#' @param pcorr.reference.data  Character. A character string specifying the name of the data to be used for selecting genes
+#' based on the correlation analysis. The default is se to `NULL`, which means all specified assays will be used.
+#' @param pcorr.corr.cutoff Numeric. A numeric value used as a cutoff for selecting genes. The default is set to 0.7.
 #' @param pcorr.filter.genes Logical. Whether to filter pairwise correlations before plotting. The default is set to `TRUE`.
-#' @param pcorr.corr.dif.cutoff Numeric. Cutoff for difference in correlation. The default is set to 0.3.
-#' @param pcorr.plot.ncol Numeric. Columns in correlation plot grid. Used when multiple assays selected.
-#' @param pcorr.plot.nrow Numeric. Rows in correlation plot grid. Used when multiple assays selected.
-#' @param deg.method Character. Differential expression method. The default is set to `limma`.
-#' @param deg.plot.ncol Numeric. Columns in DEG p-value plot grid. The default is set to 1.
-#' @param deg.plot.nrow Numeric. Rows in DEG p-value plot grid. The default is set to 3.
-#' @param gene.set.score.reference.data Character. Column name or assay name used as reference for gene set scoring.
-#' @param gene.set.score.regress.out.variables Character. Column(s) to regress out before scoring. The default is set to `NULL`.
-#' @param gene.set.score.list List. Gene sets used for enrichment analysis.
-#' @param gene.set.score.normalization Character. Normalization method for gene set scoring. The default is set to `NULL`.
-#' @param check.se.obj Logical. Whether to check the SummarizedExperiment object.
-#' @param remove.na Character. Whether to remove `NA` values from assays. Options: `assays`, `none`. The default is set to `assays`.
-#' @param override.check Logical. Skip recalculating metrics if already present. The default is set to `FALSE`.
-#' @param verbose Logical. Print progress messages. The default is set to `FALSE`.
-#' @param pca.var.plot.ncol TTT
-#' @param pca.var.plot.nrow TTT
-#' @param pca.legend.position TTT
-#' @param vca.nb.pcs.to.plot TTT
-#' @param lra.nb.pcs.to.plot TTT
-#' @param kbet.nb.pcs TTT
-#' @param k0 TTT
-#' @param knn TTT
-#' @param lisi.nb.pcs TTT
-#' @param perplexity TTT
-#' @param nn.eps TTT
+#' @param pcorr.corr.dif.cutoff Numeric. A cutoff for difference in correlation coefficients between ordinary correlation
+#' and partial correlation.  The default is set to 0.3. This means if a gene shows 0.3 difference between the two correlation
+#' analyses, it will be selected.
+#' @param pcorr.plot.ncol Numeric. Number of columns of a gird plot when putting more than one partial-pair wise plot.
+#' The default is set to 3.
+#' @param pcorr.plot.nrow Numeric. Number of rows of a gird plot when putting more than one partial-pair wise plot.
+#' The default is set to 2.
+#' @param deg.method Character. A character string that specifies which differential expression method should be used. The
+#' default is set to `limma`.
+#' @param deg.plot.ncol Numeric. Number of columns of a gird plot when putting more than one p-value histograms. The default
+#' is set to 1.
+#' @param deg.plot.nrow Numeric. Number of rows of a gird plot when putting more than one p-value histograms. The default
+#' is set to 1.
+#' @param gene.set.score.reference.data Character. A character string that specifies the gene set score whose data should
+#' be used as reference, so all other scores from other datasets will be plotted against the reference data.
+#' If set to `NULL`, all possible pair-wise plots of the scores will be generated.
+#' @param gene.set.score.regress.out.variables Character. A character string or a vector specifying the name(s) of column(s)
+#' in the sample annotation to regress out from the dataset(s) before performing gene set scoring analysis.
+#' The default is set to `NULL`.
+#' @param gene.set.score.list List. A list of gene sets used for enrichment analysis. All gene signature in the list will
+#' be used to for scoring analysis separately.
+#' @param gene.set.score.normalization Character. A character string that specifies which normalization should be applied
+#' before applying the gene set scoring analysis.The default is set to `NULL`, so the dataset(s) will be used without any
+#' normalization.
+#' @param check.se.obj Logical. Whether to check the structure of the SummarizedExperiment object. The default is set to
+#' `TRUE`
+#' @param remove.na Character. Whether to remove `NA` values from assays. Options: `assays`, `none`. The default is set to
+#' `none`.
+#' @param override.check Logical. If set to `TRUE`, skip recalculating metrics if already present in the metadata of the
+#' SummarizedExperiment object. The default is set to `FALSE`.
+#' @param verbose Logical. Print progress messages while function is running. The default is set to `TRUE`.
 #' @return A SummarizedExperiment object containing assessment metrics and plots. Optionally saves a PDF of results.
 #'
 #' @importFrom grDevices colorRampPalette dev.off pdf

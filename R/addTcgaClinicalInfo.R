@@ -3,13 +3,28 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function adds the TCGA RNA-seq batch information to the a SummarizedExperiment object.
-#' @param se.obj TTT
-#' @param tissue.type TTT
-#' @param factors TTTT
-#' @param cancer.type TTTT
-#' @param missing.samples.name TTTTT
-#' @param verbose TTTTT
+#' This function adds the TCGA RNA-seq batch information to a `SummarizedExperiment` object, using metadata
+#' provided by TCGA sample barcodes or external batch information files.
+#'
+#' @param se.obj A `SummarizedExperiment` object containing TCGA RNA-seq data.
+#' @param tissue.type A data frame or character string specifying batch information. This can be a metadata table
+#' with batch IDs for each sample, or a file path to such a table.
+#' @param factors Character. A TCGA cancer type code (e.g., `"BRCA"`, `"PRAD"`, `"COAD"`) used to match batch
+#' annotations with the corresponding dataset.
+#' @param cancer.type Logical. If `TRUE`, all samples in the `SummarizedExperiment` object are retained, even if
+#' batch information is missing. If `FALSE`, samples without batch annotations are removed. The default is `TRUE`.
+#' @param missing.samples.name Character. A label to assign to samples without batch information. The default is
+#' `"Unknown"`.
+#' @param verbose UUU
+#'
+#' @importFrom stringr str_split
+#' @importFrom tidyr separate
+#' @importFrom purrr map_int
+#'
+#' @return A `SummarizedExperiment` object with TCGA RNA-seq batch information added to the `colData`.
+#'
+#' @export
+
 
 addTcgaClinicalInfo <- function(
         se.obj,
