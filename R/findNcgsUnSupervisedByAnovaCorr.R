@@ -789,7 +789,7 @@ findNcgsUnSupervisedByAnovaCorr <- function(
                 bio = bio.genes$bio.stat,
                 uv = g.statistic
                 )
-            all.stats$uv.bio <- all.stats$uv /c(bio + 10e-6)
+            all.stats$tech.var <- all.stats$uv /c(all.stats$bio + 10e-6)
         }
         if (is.null(anova.genes.uv) & !is.null(corr.genes.uv)){
             g.statistic <- sapply(
@@ -803,7 +803,7 @@ findNcgsUnSupervisedByAnovaCorr <- function(
                 bio = bio.genes$bio.stat,
                 uv = corr.genes.uv$g.statistic
                 )
-            all.stats$uv.bio <- all.stats$uv /c(bio + 10e-6)
+            all.stats$tech.var <- all.stats$uv /c(all.stats$bio + 10e-6)
         }
         if (!is.null(anova.genes.uv) & !is.null(corr.genes.uv)){
             g.statistic.corr <- sapply(

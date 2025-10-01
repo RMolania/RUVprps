@@ -3,29 +3,38 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function plots any variables in a SummarizedExperiment object
+#' This function plots variables stored in a `SummarizedExperiment` object, including categorical and continuous
+#' variables. It can generate scatter plots, boxplots, or heatmaps depending on the input and options selected.
 #'
-#' @param se.obj TTT
-#' @param x.variables TTT
-#' @param y.variables TTTT
-#' @param cat.test TTTT
-#' @param cont.test TTTT
-#' @param generate.heatmap TTTT
-#' @param legend.title TTTT
-#' @param legend.labels TTTT
-#' @param nb.ncol TTTT
-#' @param x.lab TTTT
-#' @param y.lab TTTTT
-#' @param plot.out.put TTTTT
-#' @param color.palette TTTTT
-#' @param check.se.object TTTTT
-#' @param remove.na TTTTT
-#' @param verbose TTTTT
+#' @param se.obj A `SummarizedExperiment` object containing the data and sample annotations to be plotted.
+#' @param x.variables Character. The variable(s) from the sample annotations to be used as x-axis in the plot(s).
+#' @param y.variables Character. The variable(s) from the sample annotations to be used as y-axis in the plot(s).
+#' @param cat.test Character. The statistical test to apply when comparing categorical variables (e.g., `"chisq"`, `"fisher"`).
+#' @param cont.test Character. The statistical test to apply when comparing continuous variables (e.g., `"t.test"`, `"wilcox"`).
+#' @param generate.heatmap Logical. If `TRUE`, a heatmap of the specified variables will be generated in addition to plots.
+#' The default is `FALSE`.
+#' @param legend.title Character. A string specifying the title of the legend.
+#' @param legend.labels Character vector. Labels to be used for categories in the legend.
+#' @param nb.ncol Numeric. Number of columns to arrange plots in when multiple plots are generated. The default is 1.
+#' @param x.lab Character. A string specifying the x-axis label.
+#' @param y.lab Character. A string specifying the y-axis label.
+#' @param plot.out.put Logical. If `TRUE`, the plots are displayed during function execution. If `FALSE`, the plots
+#' are returned as a list without being displayed. The default is `TRUE`.
+#' @param color.palette Character or function. Specifies the color palette to use for plots. Defaults to `ggplot2`
+#' color scales if not provided.
+#' @param check.se.object Logical. Indicates whether to validate the structure of the `SummarizedExperiment` object
+#' before plotting. The default is `TRUE`.
+#' @param remove.na Character. Specifies how to handle missing values. Options are: `"all"` (remove all rows with NAs),
+#' `"pairwise"` (remove only for specific variable comparisons), or `"none"`. The default is `"all"`.
+#' @param verbose Logical. If `TRUE`, messages describing progress and steps of the function will be displayed. The
+#' default is `TRUE`.
 #'
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom dplyr any_of mutate
 #' @importFrom tidyr pivot_longer
 #' @import ggplot2
+#'
+#' @return A list of plots (scatter plots, boxplots, or heatmaps) depending on the input options.
 #'
 #' @export
 

@@ -2,27 +2,33 @@
 #'
 #' @author Ramyar Molania
 #'
-#' @param se.obj A SummarizedExperiment object.
-#' @param main.variable TTTT
-#' @param other.variables TTTT
-#' @param nb.mnn TTTT
-#' @param min.sample.for.ps TTTT
-#' @param clustering.method TTTT
-#' @param nb.clusters TTTT
-#' @param other.uv.clustering.method TTTT
-#' @param nb.other.uv.clusters TTTT
-#' @param select.extreme.groups TTTT
-#' @param cover.all.batches TTTT
-#' @param nb.batches.to.cover TTTT
-#' @param assess.variables.association TTTT
-#' @param plot.output TTTT
-#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
-#' `TRUE`.
+#' @description
+#' This function prepares biological and unwanted variation variables for Partial Residualization and Partial Scoring (PRPS)
+#' analysis. It includes optional clustering, extreme group selection, batch coverage, and variable association assessment.
+#'
+#' @param se.obj A `SummarizedExperiment` object containing gene expression data and sample annotations.
+#' @param main.variable Character. The primary variable of interest to be used in PRPS.
+#' @param other.variables Character vector. Other covariates or unwanted variation variables to include in the analysis.
+#' @param nb.mnn Numeric. Number of nearest neighbors to consider when assessing variable relationships. Default is 10.
+#' @param min.sample.for.ps Numeric. Minimum number of samples required in a group to perform partial scoring. Default is 5.
+#' @param clustering.method Character. Clustering method to apply to continuous variables (e.g., `"kmeans"`, `"hierarchical"`). Default is `"kmeans"`.
+#' @param nb.clusters Numeric. Number of clusters for the main variable if clustering is applied. Default is 3.
+#' @param other.uv.clustering.method Character. Clustering method for other unwanted variation variables. Default is `"kmeans"`.
+#' @param nb.other.uv.clusters Numeric. Number of clusters for other unwanted variation variables. Default is 3.
+#' @param select.extreme.groups Logical. If `TRUE`, selects groups with extreme values for the main variable. Default is `FALSE`.
+#' @param cover.all.batches Logical. If `TRUE`, ensures that selected groups cover all batches present in the dataset. Default is `TRUE`.
+#' @param nb.batches.to.cover Numeric. Minimum number of batches to cover when `cover.all.batches = TRUE`. Default is 1.
+#' @param assess.variables.association Logical. If `TRUE`, computes associations between variables using `canCorPairs`. Default is `TRUE`.
+#' @param plot.output Logical. If `TRUE`, generates heatmaps or plots summarizing variable clusters or associations. Default is `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays messages during function execution. Default is `TRUE`.
+#'
+#' @return A list containing processed main and other variables, clusters, and optionally plots and variable associations,
+#' ready for PRPS analysis.
 #'
 #' @importFrom variancePartition canCorPairs
 #' @importFrom ComplexHeatmap Heatmap
-#'
 #' @export
+
 
 prepareVariableForPrPs <- function(
         se.obj,
@@ -30,11 +36,11 @@ prepareVariableForPrPs <- function(
         other.variables = NULL,
         nb.mnn = 1,
         min.sample.for.ps = 3,
-        clustering.method = 'kmeans',
+        clustering.method = 'cut',
         nb.clusters = 3,
-        other.uv.clustering.method = 'kmeans',
+        other.uv.clustering.method = 'cut',
         nb.other.uv.clusters = 3,
-        select.extreme.groups = TRUE,
+        select.extreme.groups = FALSE,
         cover.all.batches = FALSE,
         nb.batches.to.cover = 2,
         assess.variables.association = TRUE,
