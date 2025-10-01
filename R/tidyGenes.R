@@ -1,15 +1,27 @@
 #' Remove assays from a SummarizedExperiment object
 #'
-#' @param se.obj A SummarizedExperiment object.
-#' @param keep.gene.type TTTT
-#' @param gene.type.col.name TTTT
-#' @param remove.duplicates.ids TTTT
-#' @param ids.col.name TTTT
-#' @param change.row.names TTTT
-#' @param new.row.names TTTT
+#' @description
+#' This function removes assays or subsets rows from a `SummarizedExperiment` object based on gene type, identifiers,
+#' or custom row names. It allows filtering while optionally handling duplicate IDs or renaming row identifiers.
+#'
+#' @param se.obj A `SummarizedExperiment` object.
+#' @param keep.gene.type Character or NULL. Specifies which gene type(s) to retain (e.g., `"protein_coding"`). If `NULL`,
+#' no filtering by gene type is applied.
+#' @param gene.type.col.name Character. The column name in `rowData` that contains the gene type annotation used for filtering.
+#' @param remove.duplicates.ids Logical. If `TRUE`, rows with duplicated identifiers in `ids.col.name` will be removed. The
+#' default is `FALSE`.
+#' @param ids.col.name Character. The column name in `rowData` containing the identifiers to check for duplicates.
+#' @param change.row.names Logical. If `TRUE`, replaces the current row names of the `SummarizedExperiment` object with values
+#' from `new.row.names`.
+#' @param new.row.names Character. A column name in `rowData` containing the values to use as new row names. Required if
+#' `change.row.names = TRUE`.
 #'
 #' @importFrom SummarizedExperiment assays
 #'
+#' @return A filtered `SummarizedExperiment` object with updated assays and/or row names.
+#'
+#' @export
+
 tidyGenes <- function(
         se.obj,
         keep.gene.type,
