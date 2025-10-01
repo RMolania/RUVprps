@@ -2,37 +2,74 @@
 #'
 #' @author Ramyar Molania
 #'
-#' @param se.obj description
-#' @param assay.name description
-#' @param approach description
-#' @param nb.hvg description
-#' @param uv.variables description
-#' @param bio.variables description
-#' @param group.name description
-#' @param hvg.selection  TTT
-#' @param form description
-#' @param adjust.data description
-#' @param nb.bio.pcs description
-#' @param bio.percentile TTT
-#' @param span description
-#' @param clustering.method description
-#' @param nb.clusters description
-#' @param samples.to.use description
-#' @param regress.out.variables description
-#' @param regress.out.rle.med description
-#' @param normalization description
-#' @param apply.log description
-#' @param pseudo.count description
-#' @param center TTT
-#' @param scale TTT
-#' @param svd.bsparam TTT
-#' @param nb.cores TTT
-#' @param hvg.group.name description
-#' @param hvg.set.name description
-#' @param check.se.obj TTT
-#' @param remove.na description
-#' @param save.se.obj description
-#' @param verbose description
+#' @description
+#' A short description...
+#'
+#' @details
+#' Additional details...
+#'
+#' @param se.obj SummarizedExperiment. A SummarizedExperiment object containing data and sample annotation.
+#' @param assay.name Character. A character specifying the name of the data within the SummarizedExperiment object
+#' to be used for finding highly variable genes.
+#' @param approach Character. A character specifying the strategy or method to use to find highly variable genes. The options
+#' are: `mad`, `cv`, `var`, `mad.cv`, `mean.var`, `auto`, `vst`, and `lmm`. Refer to the details of the function for more
+#' information. The default is set to `vst`.
+#' @param nb.hvg Numeric. A numeric value specifying the number of highly variable genes (HVGs) to select. The default is
+#' set to 0.1 (10% of total genes in the SummarizedExperiment object).
+#' @param uv.variables Character. A character vector specifying the column name(s) in the sample annotation of the SummarizedExperiment
+#' object that correspond to unwanted variation to be considered while finding highly variable genes. The default is set to
+#' `NULL`; HVGs will be found without considering those variables.
+#' @param bio.variables Character. A character vector specifying the column name(s) in the sample annotation of the SummarizedExperiment
+#' object that correspond to biological variation to be considered while finding highly variable genes. The default is set to
+#' `NULL`; HVGs will be found without considering those variables.
+#' @param group.name Character. A character specifying the name of the primary grouping variable in the sample annotation,
+#' used to perform statistical analysis within each group. The default is set to `NULL`, so the analysis will be performed
+#' across all samples.
+#' @param hvg.selection Logical. A logical value indicating how to combine various results when the identification of highly
+#' variable genes is performed within each group specified by `group.name`. The options are `intersect`, `union`, `max`,
+#' `average`, and `median`. The default is set to `intersect`.
+#' @param form Formula. A formula specifying the design of a linear mixed model if `approach = lmm`.
+#' @param adjust.data Logical. A logical value indicating whether to adjust the data while applying the `lmm` approach or not.
+#' The default is set to `FALSE`; then the LMM will find highly variable genes without adjusting the data.
+#' @param nb.bio.pcs Numeric. A numeric value specifying the number of principal components of biological variation to retain
+#' in LMM modeling steps. If `approach = lmm`, `adjust.data = TRUE`, and only `uv.variables` is specified, the LMM model will
+#' adjust the data for the unwanted variables and then perform PCA on the residual to obtain `nb.bio.pcs` PCs to find
+#' highly variable genes.
+#' @param bio.percentile Numeric. A numeric value between 0 and 1 specifying the percentile cutoff for selecting genes based on
+#' biological variation (e.g., top percentile).
+#' @param span Numeric. A numeric value specifying the span parameter for smoothing procedures used when `approach = vst`.
+#' The default is set to 0.3.
+#' @param clustering.method Character. A character specifying the clustering approach to be used
+#' when grouping continuous variables. The default is set to `kmeans`.
+#' @param nb.clusters Numeric. A numeric value specifying the number of clusters to be formed. The default is set to 3.
+#' @param samples.to.use Logical. A logical vector specifying which samples to use for finding highly variable genes. The
+#' default is set to `all`; all samples will be used.
+#' @param regress.out.variables Character. A character vector specifying one or more column names in the sample annotation
+#' that will be regressed out before finding highly variable genes. The default is set to `NULL`.
+#' @param regress.out.rle.med Logical. A logical value indicating whether to regress out the median of RLE (relative log
+#' expression) per sample after normalization and regression. The default is set to `FALSE`.
+#' @param normalization Character. A character specifying which normalization method should be applied before finding
+#' highly variable genes. The default is set to `CPM`. Refer to `applyOtherNormalization` function for more details.
+#' @param apply.log Logical. A logical value indicating whether to apply a log-transformation to the normalized data.
+#' The default is set to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value specifying the pseudo-count to add to the data values prior to
+#' log-transformation. The default is set to 1.
+#' @param center Logical. A logical value indicating whether to mean-center the data before applying PCA. The default is
+#' set to `TRUE`.
+#' @param scale Logical. A logical value indicating whether to scale the data before applying PCA. The default is set to `TRUE`.
+#' @param svd.bsparam List. A list of parameters controlling SVD or basis decomposition (e.g., rank selection or algorithm options).
+#' @param nb.cores Numeric. A numeric value specifying the number of CPU cores to use for parallel computations. If set to
+#' `NULL`, the function will find the maximum available cores minus one for the analysis.
+#' @param hvg.group.name Character. A character specifying the grouping variable used when selecting HVGs within groups.
+#' @param hvg.set.name Character. A character specifying the label for the HVG set that will be stored in metadata.
+#' @param check.se.obj Logical. A logical value indicating whether to validate the SummarizedExperiment object structure,
+#' assays, and annotation before running the function. The default is set to `TRUE`.
+#' @param remove.na Character. A character specifying whether to remove missing values from the `assays`, the
+#' `sample.annotation`, `both`, or `none`. The default is set to `both`.
+#' @param save.se.obj Logical. A logical value indicating whether to save the results, highly variable genes, in the
+#' SummarizedExperiment object (`TRUE`) or to return them as a list (`FALSE`).
+#' @param verbose Logical. A logical value indicating whether to print detailed messages about progress and steps of the
+#' function. The default is set to `TRUE`.
 #'
 #' @importFrom SummarizedExperiment assays colData
 #' @importFrom matrixStats rowVars
@@ -83,7 +120,7 @@ findHVG <- function(
     if (!is.vector(assay.name) | length(assay.name) > 1 | is.logical(assay.name) | assay.name == 'all'){
         stop('The "assay.name" must be a single assay name in the SummarizedExperiment object.')
     }
-    if (!approach %in% c('mad', 'cv', 'var', 'mad.cv' ,'mean.var', 'auto', 'vst', 'lmm')){
+    if (!approach %in% c('mad', 'cv', 'var', 'mad.cv' ,'mean.var', 'vst', 'lmm')){
         stop('The "approach" muat be one of "mad", "cv", "var", "mad.cv","mean.var", "auto", "vst", "lmm".')
     }
     if (nb.hvg >= 1 | nb.hvg <= 0){
@@ -815,4 +852,5 @@ findHVG <- function(
         return(hvg)
     }
 }
+
 
