@@ -1,0 +1,28 @@
+{
+    "id": "48D49560",
+    "path": "~/Documents/Current_Projects/Project13.2_Final_RUVIIIIPRPS/RUVprps/R/computeGenesPartialCorrelation.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "3205144098",
+    "contents": "",
+    "dirty": false,
+    "created": 1732642084640.0,
+    "source_on_save": false,
+    "relative_order": 15,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "48,2",
+        "scrollLine": "0",
+        "docOutlineVisible": "1",
+        "docOutlineSize": "361"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1747779079,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1747779079983,
+    "read_only": false,
+    "read_only_alternatives": []
+}
