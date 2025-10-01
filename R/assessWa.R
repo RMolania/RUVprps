@@ -26,8 +26,9 @@
 #' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
 #' @param uv.variables Character. A character or character vector of unwanted variables within the SummarizedExperiment
 #' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
-#' @param compare.w Logical. If `TRUE` and both 'bio.variables' and 'uv.variables' are provided, the function generates
+#' @param compare.wa Logical. If `TRUE` and both 'bio.variables' and 'uv.variables' are provided, the function generates
 #' performance scores for each W matrix of RUV-III normalized data. The default is set to `FALSE`.
+#' @param nb.pcs TTTT
 #' @param plot.output Logical. If `TRUE`, the function will show the output plots while is running. The default is set
 #' to `TRUE`.
 #' @param save.se.obj Logical. If `TRUE`, the plots will be saved to the metadata of the SummarizedExperiment object. The
@@ -45,7 +46,8 @@ assessWa <- function(
         variables,
         bio.variables = NULL,
         uv.variables = NULL,
-        compare.w = FALSE,
+        compare.wa = FALSE,
+        nb.pcs = 10,
         plot.output = TRUE,
         save.se.obj = TRUE,
         verbose = TRUE
@@ -102,105 +104,95 @@ assessWa <- function(
             stop('All or some of the "uv.variables" cannot be found in the SummarizedExperiment object.')
         }
     }
-    if (isTRUE(compare.w)){
+    if (isTRUE(compare.wa)){
         if (is.null(uv.variables) | is.null(bio.variables)){
             stop('To compare the different W matrix, both the "bio.variables" and "uv.variables" must be provided.')
         }
     }
     # Comparing W  ####
-    if (isTRUE(compare.w)){
+    if (isTRUE(compare.wa)){
         printColoredMessage(
             message = '-- Comparing the performance of different W values:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         ## Retrieving all the W matrix ####
         printColoredMessage(
             message = '- Retrieving all the W matrix of each RUV-III normalized data:',
             color = 'blue',
             verbose = verbose
-        )
-        data.names <- names(se.obj@metadata$RUVIII$W)
+            )
+        data.names <- names(se.obj@metadata$RUVIII$Wa)
         names.order <- mixedorder(data.names)
         data.names <- data.names[names.order]
-        all.w <- lapply(
+        all.wa <- lapply(
             data.names,
-            function(x) se.obj@metadata$RUVIII[['W']][[x]]
-        )
+            function(x) se.obj@metadata$RUVIII$Wa[[x]]
+            )
+        names(all.wa) <- data.names
 
-        min.k <- unlist(lapply(
-            data.names,
-            function(x){
-                split.name <- strsplit(x, split = '_')
-                char.len <- length(split.name[[1]])
-                split.name[[1]][char.len]
-            }))
-        min.k <- min(as.numeric(min.k))
-        data.names <- unlist(lapply(
+        # Applying PCA on WA data ####
+        all.wa.pca <- lapply(
             data.names,
             function(x){
-                split.name <- strsplit(x, split = '_')
-                char.len <- length(split.name[[1]])
-                if (split.name[[1]][char.len] == min.k){
-                    paste(split.name[[1]][char.len-1], split.name[[1]][char.len], sep = '_')
-                } else {
-                    paste0(split.name[[1]][char.len-1], "_", min.k, ":" ,split.name[[1]][char.len])
-                }
-
-            }))
-        names(all.w) <- data.names
-
+                pca.res <- irlba::svdr(
+                    x = t(all.wa[[x]]),
+                    k = nb.pcs,
+                    center = TRUE
+                    )
+            })
+        names(all.wa.pca) <- data.names
         # Finding the class of variables ####
         printColoredMessage(
             message = '- Finding the class of variables:',
             color = 'blue',
             verbose = verbose
-        )
+            )
         all.vars <- c(bio.variables, uv.variables)
         class.all.vars <- sapply(
             all.vars,
             function(x) class(colData(x = se.obj)[[x]])
-        )
+            )
         cat.vars <- names(class.all.vars[class.all.vars %in% c('factor', 'character')])
         cont.vars <- names(class.all.vars[class.all.vars %in% c('numeric', 'integer')])
 
         # Performing linear regression analysis ####
         if (length(cont.vars) > 0){
             cont.vars.r.squareds <- lapply(
-                names(all.w),
+                names(all.wa),
                 function(x) {
-                    w <- all.w[[x]]
+                    pca.res <- all.wa.pca[[x]]$u
                     r.squareds <- sapply(
                         cont.vars,
                         function(y) {
-                            lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ w))
+                            lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ pca.res))
                             lm.reg$r.squared
                         })
                     names(r.squareds) <- cont.vars
                     r.squareds
                 })
-            names(cont.vars.r.squareds) <- names(all.w)
+            names(cont.vars.r.squareds) <- names(all.wa)
             cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
         } else cont.vars.r.squareds <- NULL
 
         # Performing vector correlation analysis ####
         if (length(cat.vars) > 0){
             cat.vars.vec.corr <- lapply(
-                names(all.w),
+                names(all.wa),
                 function(x) {
-                    w <- all.w[[x]]
+                    pca.res <- all.wa.pca[[x]]$u
                     vec.corr <- sapply(
                         cat.vars,
                         function(y) {
                             catvar.dummies <- fastDummies::dummy_cols(se.obj@colData[[y]])
                             catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                            cca <- cancor(x = w, y = catvar.dummies)
+                            cca <- cancor(x = pca.res, y = catvar.dummies)
                             1 - prod(1 - cca$cor ^ 2)
                         })
                     names(vec.corr) <- cat.vars
                     vec.corr
                 })
-            names(cat.vars.vec.corr) <- names(all.w)
+            names(cat.vars.vec.corr) <- names(all.wa)
             cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
         } else cat.vars.vec.corr <- NULL
 
@@ -210,13 +202,13 @@ assessWa <- function(
         all.a <- mutate(.data = all, var = row.names(all)) %>%
             pivot_longer(cols = -var, values_to = 'corr', names_to = 'data') %>%
             mutate(data =  gsub('\\.', ':', data)) %>%
-            mutate(data = factor(data, levels = names(all.w)))
+            mutate(data = factor(data, levels = names(all.wa)))
 
         p.w.1 <- ggplot(data = all.a, aes(x = data, y = corr, group = var)) +
             geom_line(aes(color = var), linewidth = 1) +
             geom_point(aes(color = var), size = 3) +
             scale_color_manual(
-                values = selectColors(nb.color = 1:length(all.vars), group = "pan.selection"),
+                values = selectColors(nb.color = 1:length(all.vars), group = "pan.selection.a"),
                 name = 'Variables') +
             xlab('W (estimated unwanted factors)') +
             ylab('Correlations') +
@@ -242,7 +234,7 @@ assessWa <- function(
             summarise(corr = mean(corr)) %>%
             summarise(assess = corr[groups == 'wanted']/2 + corr[groups == 'unwanted']/2) %>%
             mutate(data =  gsub('\\.', ':', data)) %>%
-            mutate(data = factor(data, levels = names(all.w)))
+            mutate(data = factor(data, levels = names(all.wa)))
         p.w.2 <- ggplot(all, aes(x = data, y = assess)) +
             geom_bar(stat = 'identity', fill = 'grey') +
             xlab('W (estimated unwanted factors)') +
@@ -261,87 +253,99 @@ assessWa <- function(
         if (isTRUE(plot.output)) print(p.w)
     }
     #  Assessing W ####
-    if (isFALSE(compare.w)){
+    if (isFALSE(compare.wa)){
         printColoredMessage(
             message = '-- Assessing the performance of different W values:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         ## Retrieving all the W matrix ####
         printColoredMessage(
             message = '- Retrieving all the W matrix of each RUV-III normalized data:',
             color = 'blue',
             verbose = verbose
-        )
-        data.names <- gsub('\\.', '_', names(se.obj@metadata$RUVIII$W))
+            )
+        data.names <- gsub('\\.', '_', names(se.obj@metadata$RUVIII$Wa))
         data.names <- mixedorder(data.names)
-        all.w <- lapply(
+        all.wa <- lapply(
             data.names,
-            function(x) se.obj@metadata$RUVIII[['W']][[x]]
-        )
-        names(all.w) <- gsub('\\.', '_', names(se.obj@metadata$RUVIII$W))
+            function(x) se.obj@metadata$RUVIII$Wa[[x]]
+            )
+        names(all.wa) <- gsub('\\.', '_', names(se.obj@metadata$RUVIII$Wa))
+
+        # Applying PCA on WA data ####
+        all.wa.pca <- lapply(
+            data.names,
+            function(x){
+                pca.res <- irlba::svdr(
+                    x = t(all.wa[[x]]),
+                    k = nb.pcs,
+                    center = TRUE
+                )
+            })
+        names(all.wa.pca) <- data.names
 
         # Finding the class of variables ####
         class.all.vars <- sapply(
             variables,
             function(x) class(colData(x = se.obj)[[x]])
-        )
+            )
         cat.vars <- names(class.all.vars[class.all.vars %in% c('factor', 'character')])
         cont.vars <- names(class.all.vars[class.all.vars %in% c('numeric', 'integer')])
 
         # Peforming linear regression ####
         if (length(cont.vars) > 0){
             cont.vars.r.squareds <- lapply(
-                names(all.w),
+                names(all.wa),
                 function(x) {
-                    w <- all.w[[x]]
+                    pca.res <- all.wa.pca[[x]]$u
                     r.squareds <- sapply(
                         cont.vars,
                         function(y) {
-                            lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ w))
+                            lm.reg <- summary(lm(colData(x = se.obj)[[y]] ~ pca.res))
                             lm.reg$r.squared
                         })
                     names(r.squareds) <- cont.vars
                     r.squareds
                 })
-            names(cont.vars.r.squareds) <- names(all.w)
+            names(cont.vars.r.squareds) <- names(all.wa)
             cont.vars.r.squareds <- as.data.frame(cont.vars.r.squareds)
         } else cont.vars.r.squareds <- NULL
 
         # Performing vector correlation analysis ####
         if (length(cat.vars) > 0){
             cat.vars.vec.corr <- lapply(
-                names(all.w),
+                names(all.wa),
                 function(x) {
-                    w <- all.w[[x]]
+                    pca.res <- all.wa.pca[[x]]$u
                     vec.corr <- sapply(
                         cat.vars,
                         function(y) {
                             catvar.dummies <- fastDummies::dummy_cols(se.obj@colData[[y]])
                             catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                            cca <- cancor(x = w, y = catvar.dummies)
+                            cca <- cancor(x = pca.res, y = catvar.dummies)
                             1 - prod(1 - cca$cor ^ 2)
                         })
                     names(vec.corr) <- cat.vars
                     vec.corr
                 })
-            names(cat.vars.vec.corr) <- names(all.w)
+            names(cat.vars.vec.corr) <- names(all.wa)
             cat.vars.vec.corr <- as.data.frame(cat.vars.vec.corr)
         } else cat.vars.vec.corr <- NULL
 
         # Putting all together ####
         all.corrs <- bind_rows(cont.vars.r.squareds, cat.vars.vec.corr) %>%
             round(digits = 3)
-        all.corrs <- mutate(variable = row.names(all.corrs))
+        all.corrs$variable <- row.names(all.corrs)
         all.corrs <- pivot_longer(
             data = all.corrs,
             cols = -variable,
             values_to = 'corr',
             names_to = 'data') %>%
-            mutate(data = factor(data, levels = gsub('\\.', '_', names(se.obj@metadata$RUVIII$W))))
+            mutate(data = factor(data, levels = gsub('\\.', '_', names(se.obj@metadata$RUVIII$Wa))))
         all.corrs <- data.frame(all.corrs)
         p.w <- ggplot(all.corrs, aes(x = data, y = corr, group = variable)) +
-            geom_line(aes(color = variable), size = 1) +
+            geom_line(aes(color = variable), linewidth = 1) +
             geom_point(aes(color = variable), size = 3) +
             ylab('Correlations') +
             xlab('W') +
@@ -370,10 +374,10 @@ assessWa <- function(
             se.obj@metadata[['RUVIII']] <- list()
         }
         ## check if W already exists in the RUVIII
-        if (!'CompareW' %in% names(se.obj@metadata[['RUVIII']])) {
-            se.obj@metadata[['RUVIII']][['CompareW']] <- list()
+        if (!'CompareWa' %in% names(se.obj@metadata[['RUVIII']])) {
+            se.obj@metadata[['RUVIII']][['CompareWa']] <- list()
         }
-        se.obj@metadata[['RUVIII']][['CompareW']] <- p.w
+        se.obj@metadata[['RUVIII']][['CompareWa']] <- p.w
         return(se.obj)
     }
     if (isFALSE(save.se.obj)){
