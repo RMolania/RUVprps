@@ -3,63 +3,48 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' TTTT
-#' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
-#' in the SummarizedExperiment object to compute the gene variance composition By default is set to 'all', which means all
-#' assays of the SummarizedExperiment object will be selected.
-#' @param form TTT
-#' @param adjust.data TTT
-#' @param adjustment.form TTT
-#' @param adjustment.method TTT
-#' @param samples.to.use TTT
-#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
-#' default is set to `TRUE`.
-#' @param pseudo.count Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
-#' the log transformation. The default is set to 1.
-#' @param nb.cores Numeric.
-#' @param plot.output Logical.
-#' @param output.name TTT
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to `TRUE`.
-#' This means the function will apply the `checkSeObj()` function.
-#' @param remove.na Character. A character string specifying whether to eliminate missing values from `assays`, `sample.annotation`,
-#' `both`, or `none`. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
-#' samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.
-#' @param save.se.obj Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
-#' of the SummarizedExperiment object or to output these results as a list or vector. The default is set to `TRUE`.
-#' @param verbose Logical. If `TRUE`, displays the messages of different steps of the function.
+#' This function computes the proportion of variance in gene expression explained by different biological
+#' and technical variables in RNA-seq data, using variance partitioning methods. It can adjust for
+#' unwanted variation, apply linear mixed models, and optionally log-transform data.
 #'
-#' @return Either a SummarizedExperiment object containing TTTT
+#' @param se.obj A `SummarizedExperiment` object containing gene expression data and sample annotations.
+#' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the assay(s)
+#' in the `SummarizedExperiment` object to compute gene-level variance composition. By default, set to `"all"`, which means all
+#' assays in the object will be selected.
+#' @param form Formula. A formula specifying the model used for variance partitioning (e.g., `~ Batch + Condition + Age`).
+#' @param adjust.data Logical. If `TRUE`, adjusts the data before variance partitioning using the model defined in
+#' `adjustment.form`. The default is `FALSE`.
+#' @param adjustment.form Formula. A formula specifying the model to adjust the data (e.g., unwanted variation factors).
+#' Used only if `adjust.data = TRUE`.
+#' @param adjustment.method Character. The method used to adjust for unwanted variation (e.g., `"lm"`, `"combat"`).
+#' @param samples.to.use Character or NULL. A vector of sample identifiers to include in the analysis. If `NULL`,
+#' all samples are used.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data before performing variance
+#' partitioning. The default is set to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value added as a pseudo-count to avoid log-transformation of zeros.
+#' The default is 1.
+#' @param nb.cores Numeric. Number of CPU cores to use for parallel computation. If `NULL`, maximum available cores - 1
+#' will be used.
+#' @param plot.output Logical. If `TRUE`, generates plots summarizing variance composition across variables. The default
+#' is `TRUE`.
+#' @param output.name Character. A label to assign to the results when stored in the metadata of the `SummarizedExperiment`
+#' object.
+#' @param check.se.obj Logical. Indicates whether to validate the `SummarizedExperiment` object before running the
+#' analysis. The default is `TRUE`.
+#' @param remove.na Character. Specifies how to handle missing values. Options are `"assays"`, `"sample.annotation"`,
+#' `"both"`, or `"none"`. The default is `"both"`.
+#' @param save.se.obj Logical. If `TRUE`, saves the results (variance components, F-statistics, p-values) in the metadata
+#' of the `SummarizedExperiment` object. If `FALSE`, returns them as a list. The default is `TRUE`.
+#' @param verbose Logical. If `TRUE`, displays progress messages during execution. The default is `TRUE`.
+#'
+#' @return Either a `SummarizedExperiment` object containing variance partitioning results in the metadata,
+#' or a list of variance components, depending on `save.se.obj`.
 #'
 #' @importFrom variancePartition fitExtractVarPartModel
 #' @importFrom variancePartition fitVarPartModel
 #' @importFrom BiocParallel MulticoreParam
 #' @importFrom limma lmFit
-
-
-# se.obj = read.se.obj
-# assay.names = 'RawCount'
-# form =  ~ (1|Estimated.batches) + Library.size + (1|CMS) + Tumour.purity
-# adjust.data = FALSE
-# adjustment.form = NULL
-# adjustment.method = 'lm'
-# samples.to.use = !read.se.obj$CMS %in% c('Not.classified')
-# apply.log = TRUE
-# pseudo.count = 1
-# nb.cores = 1
-# plot.output = TRUE
-# output.name = NULL
-# check.se.obj = TRUE
-# remove.na = 'both'
-# save.se.obj = TRUE
-# verbose = TRUE
-#
-# mm <- computeGenesVarianceComposition(
-#     se.obj = read.se.obj,
-#     assay.names = 'RawCount',
-#     form =  ~ (1|Estimated.batches) + Library.size + (1|CMS) + Tumour.purity,
-#     samples.to.use = !read.se.obj$CMS %in% c('Not.classified'), nb.cores =
-#     )
+#' @export
 
 computeGenesVarianceComposition <- function(
         se.obj,
