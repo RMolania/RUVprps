@@ -75,7 +75,7 @@
 #' @return A SummarizedExperiment object containing assay(s) and also samples annotation, gene annotation and metadata
 #' if there are specified.
 #'
-#' @importFrom SummarizedExperiment SummarizedExperiment assay rowData colData
+#' @importFrom SummarizedExperiment SummarizedExperiment assay rowData colData rowData<-
 #' @importFrom tidyestimate filter_common_genes estimate_score
 #' @importFrom biomaRt getBM useMart useDataset
 #' @importFrom singscore rankGenes simpleScore
@@ -554,12 +554,12 @@ prepareSeObj <- function(
         }
         # estimate tumor purity ####
         if (!is.null(estimate.tumor.purity)){
-            printColoredMessage(message = '-- Estimate tumour purity:',
+            printColoredMessage(message = '-- Estimating tumour purity:',
                                 color = 'magenta',
                                 verbose = verbose)
             if (estimate.tumor.purity == 'estimate'){
                 printColoredMessage(
-                    message = '-- Estimate tumour purity using the ESTIMATE method:',
+                    message = '-- Estimating tumour purity using the ESTIMATE method:',
                     color = 'blue',
                     verbose = verbose)
                 tumour.purity <- tidyestimate::filter_common_genes(
@@ -575,7 +575,7 @@ prepareSeObj <- function(
                 sample.annotation[['tumour.purity']] <- tumour.purity
             } else if (estimate.tumor.purity == 'singscore'){
                 printColoredMessage(
-                    message = '-- Estimate tumour purity using the singscore method:',
+                    message = '-- Estimating tumour purity using the singscore method:',
                     color = 'blue',
                     verbose = verbose)
                 im.str.gene.sig <- hk_immunStroma$immune.gene.signature == 'TRUE' |
@@ -630,6 +630,14 @@ prepareSeObj <- function(
                 tumour.purity.singscore <- tumour.purity$TotalScore
                 sample.annotation[['tumour.purity.estimate']] <- tumour.purity.estimate
                 sample.annotation[['tumour.purity.singscore']] <- 1 - tumour.purity.singscore
+                if (isTRUE(scale.singscore.values)){
+                    tps <- sample.annotation[['tumour.purity.singscore']]
+                    tpe <- sample.annotation[['tumour.purity.estimate']]
+                    rtps <- range(tps)
+                    rtpe <- range(tpe)
+                    stps <- (tps - min(rtps)) / (max(rtps) - min(rtps)) * (max(rtpe) - min(rtpe)) + min(rtpe)
+                    sample.annotation[['tumour.purity.singscore.scaled']]<- stps
+                }
             }
         }
         # outputs ####
