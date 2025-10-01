@@ -1,32 +1,28 @@
-#' Generate boxplots the k-nearest neighbour batch effect test (kBET).
+#' Generate boxplots for the k-nearest neighbor batch effect test (kBET).
 #'
 #' @author Ramyar Molania
 #'
-#' @references
-#' Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
-#' Nature Biotechnology, 2023
-#'
 #' @description
-#' This function generates barplots of the Adjusted Rand Index (ARI) for individual datasets in the `SummarizedExperiment`
-#' object. If two variables are provided, the function creates scatter plots comparing the ARIs of each variable across
-#' the assays. The `computeARI()` function must applied before using the `plotARI()` function.
+#' This function generates barplots of the k-nearest neighbor batch effect test (kBET) for individual dataset(s) in the
+#' `SummarizedExperiment` object. Before applying the function, the `computeKbet` function should have been applied on the
+#' specified dataset(s).
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the `SummarizedExperiment`
-#' object to be used for generating barplots or scatter plots of the computed Adjusted Rand Index (ARI). By default,
-#' all assays in the `SummarizedExperiment` object will be selected.
-#' @param variable Character or character vector of length one or two. Indicates one or two column names in the
-#' `SummarizedExperiment` object that contain categorical variables, such as sample subtypes or batch labels. If two
-#' variables are provided, the function plots the ARIs against each other for all specified assays.
-#' @param fast.pca TTTT
+#' @param assay.names Character or character vector. Specifies the name(s) of the dataset(s) in the `SummarizedExperiment`
+#' object to be used for generating barplots or scatter plots of the computed kBET. By default, all dataset(s) in the
+#' `SummarizedExperiment` object will be selected.
+#' @param variable Character. A character specifying a column name in the sample annotation of the SummarizedExperiment
+#' object that corresponds to the variable for which kBET has been computed.
+#' @param fast.pca Character. A character specifying which PCA approach has been used to compute kBET. The default is set
+#' to `fast.pca`. Refer to the `computeKbet` function for more information.
 #' @param plot.output Logical. If `TRUE`, the individual barplots or scatter plots will be printed during function execution.
-#' Default is `TRUE`.
+#' The default is set to `TRUE`.
 #' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the `SummarizedExperiment` object
-#' or return them as a list. The default is `TRUE`.
+#' or return them as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, messages for different steps of the function will be displayed.
 #'
-#' @return A `SummarizedExperiment` object or a list containing all the plots of the computed ARIs for the categorical
-#' variable(s).
+#' @return A `SummarizedExperiment` object or a list containing all the plots of the computed kBET scores for the
+#' categorical variable(s).
 #'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom ggrepel geom_text_repel
@@ -43,7 +39,7 @@ plotKbet <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The plotLisi function starts:',
+    printColoredMessage(message = '------------The plotKbet function starts:',
                         color = 'white',
                         verbose = verbose)
     # Checking the inputs ####
@@ -152,7 +148,8 @@ plotKbet <- function(
                     size = 14,
                     angle = 25,
                     hjust = 1),
-                axis.text.y = element_text(size = 12))
+                axis.text.y = element_text(size = 12)
+                )
         overall.single.kbet.plot <- annotate_figure(
             p = overall.single.kbet.plot,
             top = text_grob(
@@ -170,9 +167,9 @@ plotKbet <- function(
                 hjust = 1,
                 x = 1,
                 size = 10)
-        )
+            )
         printColoredMessage(
-            message = '- The individual LISI boxplots from each dataset have been combined into a single plot.',
+            message = '- The individual boxplots of the kBET scores from each dataset have been combined into a single plot.',
             color = 'blue',
             verbose = verbose
         )
@@ -225,15 +222,15 @@ plotKbet <- function(
     ## return only the adjusted rand index results ####
     if (isFALSE(save.se.obj)) {
         printColoredMessage(
-            message = paste0('- All the LISI plots re saved as list.'),
+            message = paste0('- All the plots of the kBET scores are outputed as a list.'),
             color = 'blue',
             verbose = verbose
-        )
+            )
         printColoredMessage(
             message = '------------The plotKbet function finished.',
             color = 'white',
             verbose = verbose
-        )
+            )
         if(length(assay.names) == 1){
             return(all.kbet.plots = list(all.single.kbet.plots = all.single.kbet.plots))
         }
