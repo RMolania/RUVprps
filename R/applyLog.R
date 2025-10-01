@@ -1,10 +1,10 @@
-#' Applies log2 with a pseudo count on data sets in SummarizedExperiment object.
+#' Apply log2 with a pseudo count on dataset(s) in SummarizedExperiment object.
 #'
 #' @author Ramyar Molania
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character or a vector of characters specifying the name(s) of the data (assays) in the
-#' SummarizedExperiment object to be selected. These data stes will be log2-transformed with a pseudo count. The default
+#' SummarizedExperiment object to be selected. These datasets will be log2-transformed with a pseudo count. The default
 #' is se to `all`, which indicates that all data sets in the SummarizedExperiment object will be selected.
 #' @param pseudo.count Numeric. A numeric value as pseudo count value to be added to all measurements in the selected
 #' data sets before applying the log2 transformation, to avoid `-Inf` values for zero measurements. The default is set to 1.
