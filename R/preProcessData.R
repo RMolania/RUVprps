@@ -3,22 +3,32 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function applies ....
+#' This function applies normalization, log-transformation, and regression-based adjustment to RNA-seq data stored
+#' in a `SummarizedExperiment` object. It can optionally regress out unwanted variables or the median relative log
+#' expression (RLE) per sample before downstream analyses.
 #'
-#' @param se.obj description
-#' @param assay.name description
-#' @param normalization description
-#' @param regress.out.variables description
-#' @param regress.out.rle.med description
-#' @param apply.log description
-#' @param pseudo.count description
-#' @param check.se.obj description
-#' @param remove.na description
-#' @param verbose description
+#' @param se.obj A `SummarizedExperiment` object containing RNA-seq counts or expression data.
+#' @param assay.name Character. Name of the assay in `se.obj` to preprocess.
+#' @param normalization Character. Method of normalization to apply (e.g., `"CPM"`, `"TMM"`, `"RPKM"`). Default is `"CPM"`.
+#' @param regress.out.variables Character vector. Column names in `colData(se.obj)` representing unwanted variation variables
+#' to regress out. Default is `NULL`.
+#' @param regress.out.rle.med Logical. If `TRUE`, regress out the median relative log expression (RLE) per sample after normalization.
+#' Default is `FALSE`.
+#' @param apply.log Logical. If `TRUE`, applies log2-transformation after adding `pseudo.count`. Default is `TRUE`.
+#' @param pseudo.count Numeric. Value to add to counts before log2-transformation to avoid `-Inf`. Default is 1.
+#' @param check.se.obj Logical. If `TRUE`, validates the structure of the `SummarizedExperiment` object before preprocessing.
+#' Default is `TRUE`.
+#' @param remove.na Character. Determines how to handle missing values. Options: `"assays"`, `"sample.annotation"`, `"both"`, or `"none"`.
+#' Default is `"both"`.
+#' @param verbose Logical. If `TRUE`, displays messages during preprocessing. Default is `TRUE`.
+#'
+#' @return A `SummarizedExperiment` object with preprocessed assay(s) and updated `colData` if regression was applied.
+#'
 #' @importFrom SummarizedExperiment assays colData
 #' @importFrom CMScaller CMScaller
 #' @importFrom parallel mclapply
 #' @export
+
 
 preProcessData <- function(
         se.obj ,
