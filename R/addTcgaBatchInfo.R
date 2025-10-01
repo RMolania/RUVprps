@@ -3,20 +3,28 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function adds the TCGA RNA-seq batch information to the a SummarizedExperiment object.
-#' @param se.obj TTT
-#' @param batch.info TTTT
-#' @param cancer.type TTTT
-#' @param keep.all.samples TTTT
-#' @param use.lables TTTT
-#' @param missing.samples.name TTTTT
+#' This function adds the TCGA RNA-seq batch information to a `SummarizedExperiment` object, using metadata
+#' provided by TCGA sample barcodes or external batch information files.
+#'
+#' @param se.obj A `SummarizedExperiment` object containing TCGA RNA-seq data.
+#' @param batch.info A data frame or character string specifying batch information. This can be a metadata table
+#' with batch IDs for each sample or a file path to such a table.
+#' @param cancer.type Character. A TCGA cancer type code (e.g., `"BRCA"`, `"PRAD"`, `"COAD"`) used to match batch
+#' annotations with the corresponding dataset.
+#' @param keep.all.samples Logical. If `TRUE`, all samples in the `SummarizedExperiment` object are retained even if
+#' batch information is missing. If `FALSE`, samples without batch annotations are removed. The default is `TRUE`.
+#' @param use.lables Logical. Indicates whether to use TCGA barcode labels to infer batch information directly.
+#' If `TRUE`, batch identifiers are parsed from the TCGA sample barcodes.
+#' @param missing.samples.name Character. A label to assign to samples without batch information. By default,
+#' `"Unknown"`.
 #'
 #' @importFrom stringr str_split
 #' @importFrom tidyr separate
 #' @importFrom purrr map_int
 #'
+#' @return A `SummarizedExperiment` object with TCGA RNA-seq batch information added to the `colData`.
+#'
 #' @export
-
 
 addTcgaBatchInfo <- function(
         se.obj,
@@ -26,11 +34,8 @@ addTcgaBatchInfo <- function(
         use.lables = FALSE,
         missing.samples.name = 'DF'
         ){
-    # tcga.batch.info <- read.csv('../RequiredData_Temp/TCGA.PanCancer.RNAseq.BatchInformation.csv', row.names = 1)
-    # usethis::use_data(tcga.batch.info, overwrite = TRUE)
     colnames(tcga.batch.info)[11:13] <- c('Years', 'Months', 'Days')
     tcga.batchs <- c('Years','Months','Days','Plates','TSS','Center')
-
     # Checking batch information ####
     if (length(batch.info) > 1){
         if (sum(batch.info %in% tcga.batchs) != length(batch.info)){
@@ -44,8 +49,6 @@ addTcgaBatchInfo <- function(
     if (!is.null(cancer.type)){
         tcga.batch.info <- tcga.batch.info[tcga.batch.info$Cancer.type == cancer.type , , drop = FALSE]
     }
-
-
     # Checking sample bar codes ####
     ## TCGA id
     samples.barcode <- colnames(se.obj)
@@ -100,7 +103,6 @@ addTcgaBatchInfo <- function(
         stop('There are not enough information in the sample ids to find batch information.')
     }
     # Extract the 4th part of each barcode
-
     if (length(a.barcode) == 3){
         index <- intersect(tcga.batch.info$Sample.ids.3, colnames(se.obj))
         tcga.batch.info <- tcga.batch.info[tcga.batch.info$Samples %in% index, ]
@@ -139,51 +141,3 @@ addTcgaBatchInfo <- function(
     }
     return(se.obj)
 }
-
-
-
-# tcga.batch.info$Sample.ids.3 <- sapply(
-#     tcga.batch.info$Sample.ids.full,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:3], collapse = '-'))
-# tcga.batch.info$Sample.ids.4 <- sapply(
-#     tcga.batch.info$Sample.ids.full,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:4], collapse = '-'))
-# tcga.batch.info$Sample.ids.5 <- sapply(
-#     tcga.batch.info$Sample.ids.full,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:5], collapse = '-'))
-# tcga.batch.info$Sample.ids.6 <- sapply(
-#     tcga.batch.info$Sample.ids.full,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:6], collapse = '-'))
-#
-# tcga.batch.info$Sample.ids.3.a <- sapply(
-#     tcga.batch.info$Sample.ids.full.a,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:3], collapse = '-'))
-# tcga.batch.info$Sample.ids.4.a <- sapply(
-#     tcga.batch.info$Sample.ids.full.a,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:4], collapse = '-'))
-# tcga.batch.info$Sample.ids.5.a <- sapply(
-#     tcga.batch.info$Sample.ids.full.a,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:5], collapse = '-'))
-# tcga.batch.info$Sample.ids.6.a <- sapply(
-#     tcga.batch.info$Sample.ids.full.a,
-#     function(x) paste0(strsplit(x, split = '[-]')[[1]][1:6], collapse = '-'))
-# tcga.batch.info$Cancer.type <- sub(" .*", "", tcga.batch.info$Cancer.type.a)
-# tcga.batch.info <- tcga.batch.info[ , c(1,10, 11, 12, 13, 14, 15, 16, 17, 18, 2,3,4,5,6,7,8,9,19)]
-# write.csv(x = tcga.batch.info, file = 'TCGA.PanCancer.RNAseq.BatchInformation.csv')
-
-# se.obj <- read.se.obj
-# library(purrr)
-# library(stringr)
-# library(tidyr)
-#
-# part4 <- sapply(samples.barcode, function(x) strsplit(x, "-")[[1]][4])
-# all.numeric <- grepl("^[0-9]+$", part4)
-# tcga.batch.info$SamplesA <- sapply(tcga.batch.info$Samples, function(bc) {
-#     parts <- strsplit(bc, "-")[[1]]
-#     parts[4] <- gsub("[A-Za-z]", "", parts[4])  # Remove letters from 4th part
-#     paste(parts, collapse = "-")
-# })
-#
-# m <- read.se.obj
-# se.obj <- read.se.obj
-#
