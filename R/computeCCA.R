@@ -1,26 +1,47 @@
-#' Find canonical correlation coordinates in RNA-seq data
-
+#' Perform canonical correlation coordinates in RNA-seq data
+#'
+#' @description
+#' The function performs canonical correlation analysis between each pair of groups in order to obtain a CCA dimensional
+#' space. This space can be used by other functions in RUVprps to identify similar samples and create PRPS.
+#'
 #' @author Ramyar Molania
-
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name TTTTT
-#' @param variable TTTTT
-#' @param reference.group TTTTT
-#' @param nb.cca TTTTT
-#' @param hvg TTTTT
-#' @param scale TTTTT
-#' @param normalization TTTTT
-#' @param regress.out.variables TTTTT
-#' @param regress.out.rle.med TTTTT
-#' @param cosine.norm TTTTT
-#' @param samples.to.use TTTTT
-#' @param apply.log TTTTT
-#' @param pseudo.count TTTTT
-#' @param check.se.obj TTTTT
-#' @param remove.na TTTTT
-#' @param cca.set.name TTTTT
-#' @param save.se.obj TTTTT
-#' @param verbose TTTTT
+#' @param assay.name Character. A character specifying a data (assay) name within the SummarizedExperiment object.
+#' @param variable Character. A character specifying a variable name in the sample annotation of the SummarizedExperiment
+#' object. The variable must be a categorical variable with at least two levels.
+#' @param reference.group Character. The name of a group provided in the `variable` to be used as the reference group to
+#' perform all possible pair-wise CCA with the reference. If it is set to `NULL`, all possible pairs of groups will be
+#' selected. The default is set to `NULL`.
+#' @param nb.cca Numeric. A numeric value specifying the number of CCA to be calculated. The default is set to 10.
+#' @param hvg A logical vector or character vector of highly variable genes to be used to calculate CCA. The default
+#' is set to `NULL`, in which case all genes will be used.
+#' @param scale Logical. This specifies whether to scale the data before applying CCA. The default is set to `TRUE`.
+#' @param normalization Character. A character that specifies which normalization should be performed before applying CCA.
+#' The default is set to `CPM`. Refer to the `applyOtherNormalization` function for more details.
+#' @param regress.out.variables Character. A character or a vector of characters that indicate the column name(s) in the sample
+#' annotation in the SummarizedExperiment object. These variables will be regressed out from the data before performing CCA.
+#' The default is set to `NULL`, indicating that regression will not be applied.
+#' @param regress.out.rle.med Logical. This indicates whether to regress out the median of RLE data after applying either
+#' normalization or regression. The default is set to `FALSE`.
+#' @param cosine.norm Logical. This indicates whether to apply a cosine normalization or not. The default is set to `FALSE`.
+#' This normalization will be applied after all other normalization and regression steps.
+#' @param samples.to.use Logical. A logical vector indicating which samples to use for computing CCA. The default is
+#' set to `all`, meaning all samples will be selected.
+#' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
+#' The default is set to 1.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If `TRUE`, the `checkSeObj()`
+#' function will be applied inside the function. The default is set to `TRUE`.
+#' @param remove.na Character. A character indicating whether to remove NA or missing values from either the 'assays',
+#' the `sample.annotation`, `both`, or `none`. If `assays` is selected, the genes that contain NA or missing values will
+#' be excluded. If `sample.annotation` is selected, the samples that contain NA or missing values for any `bio.variables`
+#' and `uv.variables` will be excluded. The default is set to `both`.
+#' @param cca.set.name Character. A character specifying the name of the output file to be saved in the metadata
+#' of the SummarizedExperiment object. If set to `NULL`, the function will select a name based on
+#' `paste0('Cca:', nb.cca, '|', 'HVG:', length(hvg), '|Scale:', scale, '|Norm:', normalization)`.
+#' @param save.se.obj Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
+#' or to output the result as a list. The default is set to `TRUE`.
+#' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
 #'
 #' @importFrom irlba irlba
 
@@ -45,6 +66,11 @@ computeCCA <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
+    printColoredMessage(
+        message = '------------The computeCCA function starts',
+        color = 'white',
+        verbose = verbose
+        )
     # Specifying the number of sample to use ####
     if (is.logical(samples.to.use)){
         if (length(samples.to.use) != ncol(se.obj)){
@@ -60,7 +86,6 @@ computeCCA <- function(
     if (is.null(hvg)){
         hvg = row.names(se.obj)
     }
-
     # Specifying reference data ####
     variable.names <- as.character(unique(se.obj[[variable]]))
     if (is.null(reference.group)){
@@ -226,88 +251,18 @@ computeCCA <- function(
     ### Export results as logical vector ####
     if (isFALSE(save.se.obj)){
         printColoredMessage(
-            message = '-- The set of HVG is outpputed as a logical vector.',
+            message = '-- All the CCA results are outputed as a list.',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         printColoredMessage(
-            message = '------------The findHVG function finished.',
+            message = '------------The computeCCA function finished.',
             color = 'white',
             verbose = verbose
-        )
+            )
         return(all.cca)
     }
-
 }
 
-# pairs(all.cca$Batch1_Batch2[,1:4], col = factor(read.se.obj$Time.interval))
-# pairs(all.cca$Batch1_Batch2[,1:4], col = factor(read.se.obj$Tissues))
-# pairs(all.cca$Batch1_Batch2[,1:4], col = factor(read.se.obj$Quantile.CMS.TI))
-#
-# pairs(cca.data[,1:4], col = factor(read.se.obj$Time.interval))
-# pairs(cca.data[,1:4], col = factor(read.se.obj$Tissues))
-# pairs(cca.data[,1:4], col = factor(read.se.obj$Quantile.CMS.TI))
-#
-#
-#
-# data.0 <- assay(read.se.obj, 'RawCount')
-# data.1 <- data.0[ , read.se.obj$Time.interval == 'Batch1']
-# data.2 <- data.0[ , read.se.obj$Time.interval == 'Batch2']
-#
-#
-#
-# data.0 <- cpm(assay(read.se.obj, 'RawCount'), log = TRUE)
-# data.a <- data.0[ , read.se.obj$Time.interval == 'Batch1']
-# data.b <- data.0[ , read.se.obj$Time.interval == 'Batch2']
-#
-# data.0 <- assay(read.se.obj, 'RawCount')
-# data.a <- cpm(data.0[ , read.se.obj$Time.interval == 'Batch1'], log = T)
-# data.b <- cpm(data.0[ , read.se.obj$Time.interval == 'Batch2'], log = T)
-#
-#
-# library(Seurat)
-# s1 <- CreateSeuratObject(counts = data.1[ , ])
-# s2 <- CreateSeuratObject(counts = data.2[, ])
-# s1 <- NormalizeData(s1)
-# s2 <- NormalizeData(s2)
-#
-#
-# s1 <- SetAssayData(s1, layer = "data", new.data = as.matrix(data.a))
-# s2 <- SetAssayData(s2, layer = "data", new.data = as.matrix(data.b))
-#
-#
-# s1 <- FindVariableFeatures(s1)
-# s2 <- FindVariableFeatures(s2)
-# s1 <- ScaleData(object = s1 , features = row.names(data.1))
-# s2 <- ScaleData(object = s2 , features = row.names(data.2))
-# pp <- intersect(VariableFeatures(s1), VariableFeatures(s2))
-# cca_out <- RunCCA(s1, s2, features = pp, num.cc = 10)
-# cca_embeddings <- Embeddings(cca_out, reduction = "cca")
-# pairs(cca_embeddings[,1:4], col = factor(read.se.obj$Time.interval))
-# pairs(cca_embeddings[,1:4], col = factor(read.se.obj$Tissues))
-# pairs(cca_embeddings[,1:4], col = factor(read.se.obj$Quantile.CMS.TI))
-#
-# plot(cca_embeddings[,1], cca.data[,1])
-# plot(cca_embeddings[,2], cca.data[,2])
-# plot(cca_embeddings[,3], cca.data[,3])
-#
-# pairs(cca_embeddings[, 1:3], col = factor(brca.se.obj$paper_BRCA_Subtype_PAM50))
-# pairs(cca_embeddings[, 1:3], col = factor(all.sample$studies))
-# cca.mnn <- findMutualNN(data1 = cca_embeddings[colnames(data.a) , ], data2 = cca_embeddings[colnames(data.b),  ], k1  = 3)
-# cca.mnn <- data.frame(left = cca.mnn$first, right = cca.mnn$second + 221)
-# cca.mnn$bio1 <- all.sample$pam50[cca.mnn$left]
-# cca.mnn$bio2 <- all.sample$pam50[cca.mnn$right]
-# table(apply(cca.mnn[ , 3:4], 1, function(x) length(unique(x))))
-#
-# pp <- as.data.frame(cca.mnn@metadata$merge.info$pairs@listData)
-# pp$bio1 <- all.sample$pam50[pp$left]
-# pp$bio2 <- all.sample$pam50[pp$right]
-# table(apply(pp[ , 3:4], 1, function(x) length(unique(x))))
-# 368/108
 
-# data.1 <- log2(assay(read.se.obj[ , read.se.obj$Years == '2013'], 'RawCount') + 1)
-# data.2 <- log2(assay(read.se.obj[ , read.se.obj$Years == '2014'], 'RawCount') + 1)
-#
-# cross.pro.data <- crossprod(x = data.1, y = data.2)
-# cca.svd <- irlba(A = cross.pro.data, nv = nb.cca)
 
