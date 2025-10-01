@@ -137,6 +137,19 @@
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the
 #' SummarizedExperiment object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
+#' @param ncg.idenfitication.approach TTT
+#' @param form TTT
+#' @param nb.bio.pcs TTT
+#' @param nb.uv.pcs TTT
+#' @param use.rank TTT
+#' @param samples.to.use TTT
+#' @param svd.bsparam TTT
+#' @param svd.bsparam TTT
+#' @param regress.out.rle.med TTT
+#' @param nb.cores TTT
+#' @param approach TTT
+#'
+#'
 #'
 #' @return A `SummarizedExperiment` object containing the selected negative control genes and optional assessment plots,
 #' or a list of the results.
@@ -204,6 +217,7 @@ findNcgUnSupervised <- function(
         normalization = 'CPM',
         apply.log = TRUE,
         pseudo.count = 1,
+        nb.cores = 1,
         check.se.obj = TRUE,
         remove.na = 'both',
         ncg.group.name = NULL,
