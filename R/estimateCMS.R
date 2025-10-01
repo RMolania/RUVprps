@@ -3,29 +3,39 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function employees the `CMScaller` function from the `CMScaller` R package to estimates the CMS subtypes of
-#' colorectal cancer RNA-seq data
+#' This function employs the `CMScaller` function from the `CMScaller` R package to estimate the CMS subtypes of
+#' colorectal cancer RNA-seq data. The function allows flexibility in choosing assays, applying transformations,
+#' handling missing values, and parallelizing computations.
 #'
-#' @param se.obj description
-#' @param assay.names description
-#' @param raw.count.assay.name description
-#' @param subtype description
-#' @param tissue.type description
-#' @param groups description
-#' @param templates description
-#' @param row.names description
-#' @param count.data description
-#' @param nb.perm description
-#' @param fdr description
-#' @param generate.plot description
-#' @param nb.cores description
-#' @param apply.log description
-#' @param pseudo.count description
-#' @param out.put.name description
-#' @param check.se.obj description
-#' @param remove.na description
-#' @param seed description
-#' @param verbose description
+#' @param se.obj A `SummarizedExperiment` object containing the RNA-seq data.
+#' @param assay.names Character or character vector. Specifies the name(s) of the assay(s) in the `SummarizedExperiment`
+#' object to be used for CMS subtype estimation.
+#' @param raw.count.assay.name Character. The name of the assay containing raw counts, used if normalization or log
+#' transformation is applied.
+#' @param subtype Character. The subtype classification method to use. Options are those supported by `CMScaller`.
+#' @param tissue.type Character. A character string specifying the tissue type (e.g., `colon`, `rectum`) for subtype assignment.
+#' @param groups Character. A vector of group labels to be used for stratification or annotation in the subtype analysis.
+#' @param templates Character. A template set for CMS classification, as required by `CMScaller`.
+#' @param row.names Character or logical. Indicates whether to use row names as gene identifiers.
+#' @param count.data Logical. If `TRUE`, the input assay data are treated as raw counts. The default is `FALSE`.
+#' @param nb.perm Integer. Number of permutations for the subtype classification. The default is as in `CMScaller`.
+#' @param fdr Numeric. False discovery rate threshold to call CMS subtypes.
+#' @param generate.plot Logical. If `TRUE`, diagnostic plots of subtype classification will be generated. The default is `TRUE`.
+#' @param nb.cores Integer. Number of CPU cores to use for parallel processing. The default is 1.
+#' @param apply.log Logical. Indicates whether to apply log2 transformation to the input assay data. The default is `TRUE`.
+#' @param pseudo.count Numeric. A pseudo count value to be added prior to log2 transformation to avoid `-Inf` values.
+#' The default is set to 1.
+#' @param out.put.name Character. The name prefix for saving the output results or plots.
+#' @param check.se.obj Logical. If `TRUE`, the input `SummarizedExperiment` object will be checked for validity before
+#' processing. The default is `TRUE`.
+#' @param remove.na Character. Indicates how missing values should be handled. Options are `assays` or `none`. The
+#' default is `assays`.
+#' @param seed Integer. A random seed to ensure reproducibility of the results.
+#' @param verbose Logical. If `TRUE`, messages and progress updates will be displayed during function execution. The
+#' default is `TRUE`.
+#'
+#' @return A `SummarizedExperiment` object with CMS subtype classification results added to the metadata, along with
+#' optional plots if `generate.plot = TRUE`.
 #'
 #' @importFrom SummarizedExperiment assays colData colData<-
 #' @importFrom CMScaller CMScaller
