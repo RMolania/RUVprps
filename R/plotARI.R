@@ -1,4 +1,4 @@
-#' Generate barplot or scatter plot the Adjusted Rand Index (ARI).
+#' Generate barplots or scatter plots the Adjusted Rand Index (ARI).
 #'
 #' @author Ramyar Molania
 #'

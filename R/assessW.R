@@ -1,11 +1,19 @@
-#' Assesses the W matrix of RUV-III.
+#' Assess the variation of the W matrix in RUV-III.
 #'
 #' @author Ramyar Molania
 #'
+#' @references
+#' Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. *Nucleic Acids Research*.
+#' [https://doi.org/10.1093/nar/gkz655]
+#'
+#' Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. *Nature Biotechnology*
+#' [https://doi.org/10.1038/s41587-022-01440-w]
+#'
 #' @description
-#' This function assesses the association between the W matrix from RUV-III normalized data and known variables. It calculates
-#' the correlation between the columns of the W matrix and both the specified biological and unwanted variables.
-
+#' This function assesses the association between the columns of W matrix from RUV-III normalized data and known variables.
+#' It calculates the linear regression and vector correlations between the columns of the W matrix and continuous and
+#' categorical variable respectively. The variables can be biological and unwanted variables.
+#'
 #' @details
 #' The function performs linear regression between each individual continuous variable specified by users and the columns
 #' of the W matrix in a cumulative manner, and then computes R^2 .For categorical variables, the function applies vector
@@ -18,16 +26,18 @@
 #' RUV-III normalized data.
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param variables Character. A character or character vector of variables within the SummarizedExperiment object. These
-#' can be categorical, continuous, or a combination of both. If oit is specified, a line-dot plots between correlations
-#' and the columns of W , in cumulative way, will be generated. If set to `NULL`, both `bio.variables` and `bio.variables`
-#' must be provided.
-#' @param bio.variables Character. A character or character vector of biological variables within the SummarizedExperiment
-#' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
-#' @param uv.variables Character. A character or character vector of unwanted variables within the SummarizedExperiment
-#' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
-#' @param compare.w Logical. If `TRUE` and both 'bio.variables' and 'uv.variables' are provided, the function generates
-#' performance scores for each W matrix of RUV-III normalized data. The default is set to `FALSE`.
+#' @param variables Character. A character string or vector specifying column names in the sample annotation of the
+#' `SummarizedExperiment` object. These columns can be categorical, continuous, or a combination of both. If it is set
+#' to `NULL`, both the `bio.variables` and `tech.variables` must be provided.
+#' @param bio.variables A character string or vector specifying column names of biological variables in the sample
+#' annotation of the  `SummarizedExperiment` object. These columns can be categorical, continuous, or a combination of
+#' both.The defeat is set to `NULL`.
+#' @param uv.variables A character string or vector specifying column names of unwanted variables in the sample
+#' annotation of the  `SummarizedExperiment` object. These columns can be categorical, continuous, or a combination of
+#' both.The defeat is set to `NULL`.
+#' @param compare.w Logical. If `TRUE` and both the `bio.variables` and `uv.variables` are provided, the function generates
+#' performance scores for each W matrix of RUV-III normalized data in the `SummarizedExperiment` object. The default is
+#' set to `FALSE`, the the comparison will not be performed.
 #' @param plot.output Logical. If `TRUE`, the function will show the output plots while is running. The default is set
 #' to `TRUE`.
 #' @param save.se.obj Logical. If `TRUE`, the plots will be saved to the metadata of the SummarizedExperiment object. The
@@ -36,8 +46,8 @@
 #'
 #' @importFrom dplyr bind_rows summarise mutate group_by
 #' @importFrom fastDummies dummy_cols
-#' @importFrom gtools mixedorder
 #' @importFrom tidyr pivot_longer
+#' @importFrom gtools mixedorder
 #' @export
 
 assessW <- function(
@@ -50,6 +60,11 @@ assessW <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
+    printColoredMessage(
+        message = '------------The assessW function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # Checking the function inputs ####
     if (isTRUE(compare.w)){
         variables <- NULL
@@ -377,9 +392,19 @@ assessW <- function(
             se.obj@metadata[['RUVIII']][['CompareW']] <- list()
         }
         se.obj@metadata[['RUVIII']][['CompareW']] <- p.w
+        printColoredMessage(
+            message = '------------The assessW function finished.',
+            color = 'white',
+            verbose = verbose
+        )
         return(se.obj)
     }
     if (isFALSE(save.se.obj)){
+        printColoredMessage(
+            message = '------------The assessW function finished.',
+            color = 'white',
+            verbose = verbose
+        )
         return(p.w = p.w)
     }
 }

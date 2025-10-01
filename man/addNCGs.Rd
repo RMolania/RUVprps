@@ -7,29 +7,52 @@
 addNCGs(se.obj, ncg, subset.name = NULL, verbose = TRUE)
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A SummarizedExperiment object}
 
 \item{ncg}{A logical value or a vector of gene names or IDs representing pre-selected NCGs. If gene names or IDs are
 provided, the row names of the SummarizedExperiment object must match these names or IDs.}
 
-\item{subset.name}{Character. A character that specifies the name of the NCG set in the metadata of the SummarizedExperiment
-object. The default is set to \code{NULL}, in which case the function will generate a name as following:
-\code{paste0(sum(ncg), '_psg')}.}
+\item{subset.name}{Character. The name of the NCG set to be stored in the \code{metadata} slot of the \code{SummarizedExperiment} object.
+Defaults to \code{NULL}. If \code{NULL}, the function will automatically
+generate a name of the form: \code{paste0(sum(ncg), "_psncg")}.}
 
 \item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
 \code{TRUE}.}
 }
 \value{
-A SummarizedExperiment object with a metadata that contains the NCGs.
+A SummarizedExperiment object with a metadata that contains the NCG set(s).
 }
 \description{
 This function adds pre-selected set(s) of gene(s) as negative control genes (NCGs) to a SummarizedExperiment object.
+This genes can be used for RUV-III normalization, identification of unknown unwanted variation, normalization performance
+assessment.
 }
 \details{
-A pre-selected set of negative control genes (NCGs) will be stored in the following location:
-se.obj->metadata->NCG->pre.selected->subset.name. These genes can be used for various analyses, including identifying
-unknown sources of variation, assessing variation, performing RUV normalization, and evaluating normalization steps. The
-gene set will be stored in: metadata->NCG->pre.selected->subset.name->gene.set
+A pre-selected set of negative control genes (NCGs) will be stored in the
+\code{SummarizedExperiment} object under:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{se.obj@metadata$NCG$pre.selected$subset.name
+}\if{html}{\out{</div>}}
+
+These NCGs can be used for several purposes, including:
+\itemize{
+\item Identifying unknown sources of variation
+\item Assessing variation
+\item Performing RUV normalization
+\item Evaluating normalization steps
+}
+
+The actual gene set is stored in:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{se.obj@metadata$NCG$pre.selected$subset.name$gene.set
+}\if{html}{\out{</div>}}
+}
+\references{
+Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. \emph{Nucleic Acids Research}.
+\link{https://doi.org/10.1093/nar/gkz655}
+
+Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. \emph{Nature Biotechnology}
+\link{https://doi.org/10.1038/s41587-022-01440-w}
 }
 \author{
 Ramyar Molania

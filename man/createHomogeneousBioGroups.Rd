@@ -2,7 +2,7 @@
 % Please edit documentation in R/createHomogeneousBioGroups.R
 \name{createHomogeneousBioGroups}
 \alias{createHomogeneousBioGroups}
-\title{Creates all possible homogeneous groups with respect to biological variables.}
+\title{Create all possible homogeneous groups with respect to biological variables.}
 \usage{
 createHomogeneousBioGroups(
   se.obj,
@@ -43,8 +43,8 @@ BiologicalVariables ; otherwise, the results will be returned as a vector. The d
 \item{verbose}{Logical. If \code{TRUE} , displays messages for different steps of the function.}
 }
 \value{
-Either a ' SummarizedExperiment' object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
-->BiologicalVariables' or a vector of all possible homogeneous sample groups.
+Either a \code{SummarizedExperiment} object containing all possible homogeneous groups in the metadata or a vector
+of all possible homogeneous sample groups.
 }
 \description{
 This function generates all possible homogeneous sample groups based on the specified biological variables.

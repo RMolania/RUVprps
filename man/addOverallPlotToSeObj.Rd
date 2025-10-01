@@ -18,19 +18,20 @@ addOverallPlotToSeObj(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{slot}{Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.}
+\item{slot}{Character A character string  indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.}
 
-\item{assessment.type}{Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.}
+\item{assessment.type}{Character A character string  indicating the type of assessment. Options are \code{gene.level} or
+\code{global.level}.}
 
-\item{assessment}{Symbol. A symbol indicating the name of the metric to be checked.}
+\item{assessment}{Character A character string  indicating the name of the metric to be checked.}
 
-\item{method}{Symbol. A symbol indicating the method used to calculate the metric.}
+\item{method}{Character A character string  indicating the method used to calculate the metric.}
 
-\item{variables}{Symbol. A symbol or a vector of symbols indicating the variables used to calculate the metric.}
+\item{variables}{Character A character string or a vector of symbols indicating the variables used to calculate the metric.}
 
-\item{file.name}{Symbol. A symbol indicating the file name to which the results of the metric are assigned.}
+\item{file.name}{Character A character string indicating the file name to which the results of the metric are assigned.}
 
-\item{plot.data}{Symbol. A symbol indicating the name of the plots file for the metric.}
+\item{plot.data}{Character A character string indicating the name of the plots file for the metric.}
 }
 \description{
 Add overall plot to the "metadata" of SummarizedExperiment object.

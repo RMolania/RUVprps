@@ -1,6 +1,6 @@
-#' Applies log-transformation to the assay(s) of a SummarizedExperiment object.
+#' Apply log-transformation to the assay(s) of a SummarizedExperiment object.
 #'
-#' @author Marie Trussart
+#' @author Ramyar Molania
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A single symbol or a vector of symbols specifying the name(s) of the assay(s) in the
@@ -9,7 +9,8 @@
 #' @param pseudo.count Numeric. A value to be added to all measurements in the assay(s) before log-transformation to prevent
 #' -Inf values for measurements equal to 0. The default is 1.
 #' @param replace.assays Logical. If 'TRUE', the original assay(s) will be replaced with the log-transformed values.
-#' @param new.name Character. A symbol to append to the name(s) of the assay(s) for the log-transformed data. The default is 'log.'.
+#' @param new.name Character. A character string to append to the name(s) of the dataset(s) for the log-transformed data.
+#' The default is paste('Log.', assayName).
 #' @param apply.round Logical. If 'TRUE', the measurements in the individual assays will be rounded to two decimal places.
 #' The default is 'TRUE'.
 #' @param verbose Logical. If `TRUE`, the function will display messages about the different steps being executed.

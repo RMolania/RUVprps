@@ -37,7 +37,7 @@ SummarizedExperiment object or to output the result as a list. By default, it is
 \item{verbose}{Logical. If \code{TRUE}, displays the messages for the different steps of the function.}
 }
 \value{
-A SummarizedExperiment object or a list containing the vector correlation plots of individual assay(s) for
+A SummarizedExperiment object or a list containing the vector correlation plots of individual dataset(s) for
 a categorical variable.
 }
 \description{

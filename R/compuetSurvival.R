@@ -23,12 +23,14 @@
 #' @param return.p.value Logical. Indicates whether to calculate p-values in the survival analysis. The default is `TRUE`.
 #' @param return.survival.plot Logical. Indicates whether to generate survival plots. The default is set to `FALSE`.
 #' @param plot.output Logical. Indicates whether to plot variable-level survival analysis. The default is set to `TRUE`.
-#' @param color.palette TTTT
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the `checkSeObj`
-#' function will be applied. The default is set to `TRUE`.
+#' @param color.palette Character. A character string specifying which color palette to be used. The options are:`nrc`,
+#' `pan.selection.a`, `pan.selection.b` and `pan.selection.c`. The default is set to `nrc`. Refer to the `selectColors()`
+#' function for more information.
+#' @param check.se.obj Logical. Indicates whether to assess the structure of the SummarizedExperiment object. If `TRUE`,
+#' the `checkSeObj()` function will be applied. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove NA or missing values from the assays. Options are `assays`
 #' ,`sample annotation` or `none`. The default is set to `assays`, which removes all NA or missing values from the data
-#' (assay) before performing the gene level analysis. See the `checkSeObj` function for more details.
+#' (assay) before performing the gene level analysis. See the `checkSeObj()` function for more details.
 #' @param save.se.obj Logical. Indicates whether to save the results of the survival analysis in the metadata of the
 #' SummarizedExperiment object or output the results as a list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages for each step of the function.
@@ -58,10 +60,11 @@ computeSurvival <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The computeSurvival function starts:',
-                        color = 'white',
-                        verbose = verbose)
-
+    printColoredMessage(
+        message = '------------The computeSurvival function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # Checking function inputs ####
     if (!survival.time %in% colnames(colData(se.obj))){
         stop('The "survival.time" cannot be found in the SummarizedExperiment object.')
@@ -336,24 +339,25 @@ computeSurvival <- function(
                     results.data = surv.plot.variable
                 )
             }
-
         }
         printColoredMessage(
-            message = paste0('All the survival results of individual assays is saved to the in SummarizedExperiment object.'),
+            message = 'All the survival results of individual assays is saved to the in SummarizedExperiment object.',
             color = 'blue',
             verbose = verbose
-        )
-        printColoredMessage(message = '------------The computeSurvival function finished.',
-                            color = 'white',
-                            verbose = verbose
-                            )
+            )
+        printColoredMessage(
+            message = '------------The computeSurvival function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(se.obj = se.obj)
     }
     if (isFALSE(save.se.obj)){
-        printColoredMessage(message = '------------The computeSurvival function finished.',
-                            color = 'white',
-                            verbose = verbose
-        )
+        printColoredMessage(
+            message = '------------The computeSurvival function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         if (!is.null(genes)){
             if (isTRUE(return.survival.plot) & isTRUE(return.p.value)){
                 return(list(

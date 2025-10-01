@@ -3,14 +3,15 @@
 #' @author Ramyar Molania
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.names Character. A character or a vector of characters specifying the name(s) of the data (assays) in the
-#' SummarizedExperiment object to be selected. These datasets will be log2-transformed with a pseudo count. The default
-#' is se to `all`, which indicates that all data sets in the SummarizedExperiment object will be selected.
+#' @param assay.names Character. A character string or a vector of characters strings specifying the name(s) of the data
+#' (assays) in the SummarizedExperiment object to be selected to apply a log transformation. These dataset(s) will be
+#' log2-transformed with a pseudo count. The default is se to `all`, which indicates that all data sets in the
+#' SummarizedExperiment object will be selected.
 #' @param pseudo.count Numeric. A numeric value as pseudo count value to be added to all measurements in the selected
-#' data sets before applying the log2 transformation, to avoid `-Inf` values for zero measurements. The default is set to 1.
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
-#'  set to `TRUE`.
-#' @param remove.na Character. A Character that indicates whether to remove NA or missing values from the data sets or
+#' dataset(s) before applying the log2 transformation, to avoid `-Inf` values for zero measurements. The default is set to 1.
+#' @param check.se.obj Logical. Indicates whether to assess the structure fo the SummarizedExperiment object or not. The
+#' default it is set to `TRUE`.
+#' @param remove.na Character. A Character string that indicates whether to remove NA or missing values from the data sets or
 #' not. The options are: `assays` or `none`. The default is set to `assays`.  Refer to the `checkSeObj()` function for more
 #' details.
 #' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to

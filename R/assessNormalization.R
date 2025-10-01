@@ -1,4 +1,4 @@
-#' Assesses the performance of normalization methods.
+#' Assess the performance of RNA-seq normalization methods.
 #'
 #' @author Ramyar Molania
 #'

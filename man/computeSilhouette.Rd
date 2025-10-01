@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeSilhouette.R
 \name{computeSilhouette}
 \alias{computeSilhouette}
-\title{Computes the average silhouette width using PCs.}
+\title{Compute the average silhouette width using PCs.}
 \usage{
 computeSilhouette(
   se.obj,
@@ -19,7 +19,7 @@ computeSilhouette(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
-in the SummarizedExperiment object for which to calculate the Silhouette coefficient. The default is set to 'all', which
+in the SummarizedExperiment object for which to calculate the Silhouette coefficient. The default is set to \code{all}, which
 indicates that all the assays of the SummarizedExperiment object will be selected.}
 
 \item{variable}{Character. A character string indicating the column name that contains the categorical variable in the
@@ -27,7 +27,7 @@ SummarizedExperiment object. The variable can represent a biological or unwanted
 
 \item{dist.measure}{Character. A character string indicating which distance measure to use for calculating the Silhouette
 coefficient. The options are \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or \code{minkowski}. The default is
-set to \code{euclidean}. Refer to the \code{dist} function from the \strong{stats} R package for more details.}
+set to \code{euclidean}. Refer to the \code{dist()} function from the \strong{stats} R package for more details.}
 
 \item{fast.pca}{Logical. Indicates whether to use the PCs calculated using fast PCA. The default is set to 'TRUE'.
 Fast PCA and ordinary PCA do not affect the Silhouette coefficient calculation.}
@@ -46,7 +46,7 @@ or a list of Silhouette coefficients for all specified assay(s).
 }
 \description{
 This function calculates the average silhouette width for each categorical variables such as sample biological subtypes,
-batches, etc.. The distance matrix is based on the principal components.
+batches, etc.. The distance matrix is calculated using the first \code{nb.pcs} principal components.
 }
 \details{
 The Silhouette coefficient analysis is used to assess the separation of categorical samples groups. We use first few

@@ -34,7 +34,7 @@
 #' SummarizedExperiment object or to output the result as a list. By default, it is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays the messages for the different steps of the function.
 #'
-#' @return A SummarizedExperiment object or a list containing the vector correlation plots of individual assay(s) for
+#' @return A SummarizedExperiment object or a list containing the vector correlation plots of individual dataset(s) for
 #' a categorical variable.
 #'
 #' @importFrom SummarizedExperiment assays assay

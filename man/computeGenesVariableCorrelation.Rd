@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeGenesVariableCorrelation.R
 \name{computeGenesVariableCorrelation}
 \alias{computeGenesVariableCorrelation}
-\title{Computes the correlation between individual gene expression and a continuous variable.}
+\title{Compute the correlation between individual gene expression and a continuous variable.}
 \usage{
 computeGenesVariableCorrelation(
   se.obj,

@@ -6,16 +6,15 @@
 #' This function counts and evaluates the overlap of the NGCs stored in the metadata of the SummarizedExperiment object.
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param ncg.selection Character. A character indicating which type of NCG should be selected. The options are: `supervised`
-#' and `unsupervised`.
-#' @param ncg.group.name Character. A character indicating which group of NCGs should be selected. Group names are specified
-#' in the functions that identifies NCGs. If set to `NULL`, all current NCG group will be selected.
+#' @param ncg.selection Character. A character string indicating which type of NCG should be selected. The options are:
+#' `supervised` and `unsupervised`.
+#' @param ncg.group.name Character. A character string indicating which group of NCGs should be selected. Group names are
+#' specified in the functions that identifies NCGs. If set to `NULL`, all current NCG group will be selected.
 #' @param create.venn.diagram Logical. Specifies whether to create a venn diagram using all NCG sets or not. The default
 #' is set to `TRUE`.
 #' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
 #' `TRUE`.
 #'
-#' @importFrom ggVennDiagram ggVennDiagram
 #' @export
 
 countNCG <- function(
@@ -25,6 +24,12 @@ countNCG <- function(
         create.venn.diagram = FALSE,
         verbose = TRUE
         ){
+    if (!is.character(ncg.selection) | length(ncg.selection) > 1){
+        stop('The "ncg.selection" must be one of the "supervised" or "unsupervised".')
+    }
+    if (!ncg.selection %in% c('supervised', 'unsupervised')){
+        stop('The "ncg.selection" must be one of the "supervised" or "unsupervised".')
+    }
     if (!is.null(ncg.group.name)){
         ncgs.list <- names(se.obj@metadata$NCG[[ncg.selection]][[ncg.group.name]])
         ncgs.list <- ncgs.list[!ncgs.list %in% 'assessment.plot']
@@ -59,6 +64,9 @@ countNCG <- function(
         count.ncgs
     }
     if (isTRUE(create.venn.diagram)){
+        if (!requireNamespace("ggVennDiagram", quietly = TRUE)){
+            stop("Package 'ggVennDiagram' is required for creating a Venn diagram. Please install it.")
+        }
         count.ncgs <- lapply(
             ncgs.list,
             function(x){

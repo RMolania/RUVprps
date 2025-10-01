@@ -7,8 +7,8 @@
 #' Nature Biotechnology, 2023
 #'
 #' @description
-#' This functions computes the adjusted rand index(ARI) for given a categorical variable using the first PCs of the specified
-#' data(assay) in a SummarizedExperiment object.
+#' This functions computes the adjusted rand index(ARI) for given a categorical variable using the first n PCs of the
+#' specified dataset(s) in a SummarizedExperiment object.
 #'
 #' @details
 #' The ARI is the corrected-for-chance version of the Rand index. The ARI measures the percentage of matches between
@@ -26,7 +26,7 @@
 #' @param hclust.method Character. Agglomeration method to use when `clustering.method` is set to `hclust`. Options include:
 #' `ward.D`, `ward.D2`, `single`, `complete`, `average` (= UPGMA), `mcquitty` (= WPGMA), `median` (= WPGMC), or `centroid`
 #' (= UPGMC). See the `hclust` function in the **stats** package for more details.
-#' @param hclust.dist.measure Character. A character specifying which distance measure to be used in the `dist` function
+#' @param hclust.dist.measure Character. A character string specifying which distance measure to be used in the `dist` function
 #' when applying hierarchical clustering. Options are: `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or
 #' `minkowski`. See the `dist` function in the **stats** package for more details.
 #' @param fast.pca Logical. Indicates whether to use principal components computed via fast PCA by the `comptePCA` function
@@ -34,7 +34,7 @@
 #' See details for more information.
 #' @param nb.pcs Numeric. Number of first principal components to use when calculating distances between samples. The efault
 #' is to 3.
-#' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
+#' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the SummarizedExperiment object; otherwise,
 #' returns the result as list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages for each step of the function.
 #'

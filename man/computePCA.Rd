@@ -2,7 +2,7 @@
 % Please edit documentation in R/computePCA.R
 \name{computePCA}
 \alias{computePCA}
-\title{Performs principal component analysis (PCA)}
+\title{Perform principal component analysis (PCA) using SVD}
 \usage{
 computePCA(
   se.obj,
@@ -59,9 +59,11 @@ See the \code{checkSeObj()} function for more details.}
 \item{override.check}{Logical. When set to \code{TRUE}, the function checks whether PCA has already been computed for the
 current parameters. If so, the PCA will not be recalculated. The default is set to \code{FALSE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the SVD results in the metadata of the SummarizedExperiment object
-or to output the results as a list. The default is set to \code{TRUE}. The results can be found:
-"se.obj->metadata->metric->AssayName->global.level->PCA$"}
+\item{save.se.obj}{Logical. Determines how the SVD results are returned.
+If \code{TRUE} (default), the results are saved in the metadata of the
+\code{SummarizedExperiment} object under:
+\code{se.obj@metadata@metric@AssayName@global.level@PCA}.
+If \code{FALSE}, the results are returned as a list.}
 
 \item{verbose}{Logical. If \code{TRUE}, displays messages for the different steps of the function.}
 }

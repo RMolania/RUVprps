@@ -51,14 +51,16 @@ meaning the expression level of each specified gene will be divided into two gro
 
 \item{plot.output}{Logical. Indicates whether to plot variable-level survival analysis. The default is set to \code{TRUE}.}
 
-\item{color.palette}{TTTT}
+\item{color.palette}{Character. A character string specifying which color palette to be used. The options are:\code{nrc},
+\code{pan.selection.a}, \code{pan.selection.b} and \code{pan.selection.c}. The default is set to \code{nrc}. Refer to the \code{selectColors()}
+function for more information.}
 
-\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If 'TRUE', the \code{checkSeObj}
-function will be applied. The default is set to \code{TRUE}.}
+\item{check.se.obj}{Logical. Indicates whether to assess the structure of the SummarizedExperiment object. If \code{TRUE},
+the \code{checkSeObj()} function will be applied. The default is set to \code{TRUE}.}
 
 \item{remove.na}{Character. Indicates whether to remove NA or missing values from the assays. Options are \code{assays}
 ,\verb{sample annotation} or \code{none}. The default is set to \code{assays}, which removes all NA or missing values from the data
-(assay) before performing the gene level analysis. See the \code{checkSeObj} function for more details.}
+(assay) before performing the gene level analysis. See the \code{checkSeObj()} function for more details.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the results of the survival analysis in the metadata of the
 SummarizedExperiment object or output the results as a list. The default is set to \code{TRUE}.}

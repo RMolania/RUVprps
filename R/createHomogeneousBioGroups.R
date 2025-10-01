@@ -1,4 +1,4 @@
-#' Creates all possible homogeneous groups with respect to biological variables.
+#' Create all possible homogeneous groups with respect to biological variables.
 #'
 #' @author Ramyar Molania
 #'
@@ -30,8 +30,8 @@
 #' BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE` , displays messages for different steps of the function.
 #'
-#' @return Either a ' SummarizedExperiment' object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
-#' ->BiologicalVariables' or a vector of all possible homogeneous sample groups.
+#' @return Either a `SummarizedExperiment` object containing all possible homogeneous groups in the metadata or a vector
+#' of all possible homogeneous sample groups.
 #'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom stats kmeans quantile

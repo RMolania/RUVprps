@@ -1,4 +1,4 @@
-#' Performs principal component analysis (PCA)
+#' Perform principal component analysis (PCA) using SVD
 #'
 #' @author Ramyar Molania
 #'
@@ -37,9 +37,11 @@
 #' 'assays' and 'none'. The default is set to `assays`.
 #' @param override.check Logical. When set to `TRUE`, the function checks whether PCA has already been computed for the
 #' current parameters. If so, the PCA will not be recalculated. The default is set to `FALSE`.
-#' @param save.se.obj Logical. Indicates whether to save the SVD results in the metadata of the SummarizedExperiment object
-#' or to output the results as a list. The default is set to `TRUE`. The results can be found:
-#' "se.obj->metadata->metric->AssayName->global.level->PCA$"
+#' @param save.se.obj Logical. Determines how the SVD results are returned.
+#' If `TRUE` (default), the results are saved in the metadata of the
+#' \code{SummarizedExperiment} object under:
+#' \code{se.obj@metadata@metric@AssayName@global.level@PCA}.
+#' If `FALSE`, the results are returned as a list.
 #' @param verbose Logical. If `TRUE`, displays messages for the different steps of the function.
 #'
 #' @return A SummarizedExperiment object or a list containing the singular value decomposition results and the

@@ -15,11 +15,11 @@ countNCG(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{ncg.selection}{Character. A character indicating which type of NCG should be selected. The options are: \code{supervised}
-and \code{unsupervised}.}
+\item{ncg.selection}{Character. A character string indicating which type of NCG should be selected. The options are:
+\code{supervised} and \code{unsupervised}.}
 
-\item{ncg.group.name}{Character. A character indicating which group of NCGs should be selected. Group names are specified
-in the functions that identifies NCGs. If set to \code{NULL}, all current NCG group will be selected.}
+\item{ncg.group.name}{Character. A character string indicating which group of NCGs should be selected. Group names are
+specified in the functions that identifies NCGs. If set to \code{NULL}, all current NCG group will be selected.}
 
 \item{create.venn.diagram}{Logical. Specifies whether to create a venn diagram using all NCG sets or not. The default
 is set to \code{TRUE}.}

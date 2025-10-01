@@ -2,25 +2,49 @@
 #'
 #' @author Ramyar Molania
 #'
+#' @references
+#' Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. *Nucleic Acids Research*.
+#' [https://doi.org/10.1093/nar/gkz655]
+#'
+#' Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. *Nature Biotechnology*
+#' [https://doi.org/10.1038/s41587-022-01440-w]
+#'
 #' @description
 #' This function adds pre-selected set(s) of gene(s) as negative control genes (NCGs) to a SummarizedExperiment object.
+#' This genes can be used for RUV-III normalization, identification of unknown unwanted variation, normalization performance
+#' assessment.
 #'
 #' @details
-#' A pre-selected set of negative control genes (NCGs) will be stored in the following location:
-#' se.obj->metadata->NCG->pre.selected->subset.name. These genes can be used for various analyses, including identifying
-#' unknown sources of variation, assessing variation, performing RUV normalization, and evaluating normalization steps. The
-#' gene set will be stored in: metadata->NCG->pre.selected->subset.name->gene.set
+#' A pre-selected set of negative control genes (NCGs) will be stored in the
+#' `SummarizedExperiment` object under:
 #'
-#' @param se.obj A SummarizedExperiment object.
+#' ```
+#' se.obj@metadata$NCG$pre.selected$subset.name
+#' ```
+#'
+#' These NCGs can be used for several purposes, including:
+#'
+#' - Identifying unknown sources of variation
+#' - Assessing variation
+#' - Performing RUV normalization
+#' - Evaluating normalization steps
+#'
+#' The actual gene set is stored in:
+#'
+#' ```
+#' se.obj@metadata$NCG$pre.selected$subset.name$gene.set
+#' ```
+#'
+#' @param se.obj A SummarizedExperiment object
 #' @param ncg A logical value or a vector of gene names or IDs representing pre-selected NCGs. If gene names or IDs are
 #' provided, the row names of the SummarizedExperiment object must match these names or IDs.
-#' @param subset.name Character. A character that specifies the name of the NCG set in the metadata of the SummarizedExperiment
-#' object. The default is set to `NULL`, in which case the function will generate a name as following:
-#' `paste0(sum(ncg), '_psg')`.
+#' @param subset.name Character. The name of the NCG set to be stored in the `metadata` slot of the `SummarizedExperiment` object.
+#' Defaults to `NULL`. If `NULL`, the function will automatically
+#' generate a name of the form: `paste0(sum(ncg), "_psncg")`.
 #' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
 #' `TRUE`.
 #'
-#' @return A SummarizedExperiment object with a metadata that contains the NCGs.
+#' @return A SummarizedExperiment object with a metadata that contains the NCG set(s).
 #'
 #' @importFrom SummarizedExperiment colData
 #' @export
@@ -100,7 +124,7 @@ addNCGs <- function(
     }
     # Adding the gene set to metadata of the SummarizedExperiment object ####
     if (is.null(subset.name)){
-        subset.name <- paste0(sum(ncg), '_genes')
+        subset.name <- paste0(sum(ncg), '_psncg')
     }
     printColoredMessage(
         message = '-- Saving the provided NCGs to the metadata of the SummarizedExperiment object.',

@@ -1,4 +1,4 @@
-#' Computes the average silhouette width using PCs.
+#' Compute the average silhouette width using PCs.
 #'
 #' @author Ramyar Molania
 #'
@@ -8,7 +8,7 @@
 #'
 #' @description
 #' This function calculates the average silhouette width for each categorical variables such as sample biological subtypes,
-#' batches, etc.. The distance matrix is based on the principal components.
+#' batches, etc.. The distance matrix is calculated using the first `nb.pcs` principal components.
 #'
 #' @details
 #' The Silhouette coefficient analysis is used to assess the separation of categorical samples groups. We use first few
@@ -18,13 +18,13 @@
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or a vector of character strings specifying the name(s) of the assay(s)
-#' in the SummarizedExperiment object for which to calculate the Silhouette coefficient. The default is set to 'all', which
+#' in the SummarizedExperiment object for which to calculate the Silhouette coefficient. The default is set to `all`, which
 #' indicates that all the assays of the SummarizedExperiment object will be selected.
 #' @param variable Character. A character string indicating the column name that contains the categorical variable in the
 #' SummarizedExperiment object. The variable can represent a biological or unwanted variable.
 #' @param dist.measure Character. A character string indicating which distance measure to use for calculating the Silhouette
 #' coefficient. The options are `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or `minkowski`. The default is
-#' set to `euclidean`. Refer to the `dist` function from the **stats** R package for more details.
+#' set to `euclidean`. Refer to the `dist()` function from the **stats** R package for more details.
 #' @param fast.pca Logical. Indicates whether to use the PCs calculated using fast PCA. The default is set to 'TRUE'.
 #' Fast PCA and ordinary PCA do not affect the Silhouette coefficient calculation.
 #' @param nb.pcs Numeric. A numeric value indicating the number of principal components (PCs) to use when calculating the

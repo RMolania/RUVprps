@@ -1,9 +1,9 @@
-#' Computes the linear regression.
+#' Compute the linear regression.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function calculates the linear regression between the the first 'nb.pcs' PCs (cumulatively) of the gene expression
+#' This function calculates the linear regression between the the first `nb.pcs` PCs (cumulatively) of the gene expression
 #' data (assays) of a SummarizedExperiment object and a continuous variable (i.e. library size or tumor purity).
 #'
 #' @details
@@ -17,7 +17,7 @@
 #' all assays of the SummarizedExperiment object will be selected.
 #' @param variable Character. A character string indicating the name of the column in the sample annotation of the
 #' SummarizedExperiment object. The variable must be continuous, such as library size, tumor purity, etc.
-#' @param fast.pca Logical. Indicates whether to use the computed fast PCA or PCA results from the 'computePCA' function.
+#' @param fast.pca Logical. Indicates whether to use the computed fast PCA or PCA results from the `computePCA` function.
 #' The default is set to `TRUE`. If `FALSE`, the `fast.pca` argument in the `computePCA()` function should be set to `FALSE`.
 #' @param nb.pcs Numeric. A numeric value specifying the number of the first principal components (PCs) to use for computing
 #' the vector correlation. The default is set to 10.

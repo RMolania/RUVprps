@@ -28,10 +28,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the results to the metadata of the SummarizedExperiment object
 #' or not. If `TRUE` , all the possible homogeneous groups will be saved into 'se.obj->metadata->HomogeneousGroups->
 #' BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to `TRUE`.
-#' @param verbose Logical. If `TRUE` , displays messages for different steps of the function.
+#' @param verbose Logical. If `TRUE`, displays messages for different steps of the function.
 #'
-#' @return Either a  SummarizedExperiment object containing all possible homogeneous groups in 'metadata->HomogeneousGroups
-#' ->UnwantedVariables' or a vector of all possible homogeneous sample groups.
+#' @return Either a `SummarizedExperiment` object containing all possible homogeneous groups in the metadata or a vector
+#' of all possible homogeneous sample groups.
 #'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom stats kmeans quantile

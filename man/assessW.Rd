@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessW.R
 \name{assessW}
 \alias{assessW}
-\title{Assesses the W matrix of RUV-III.}
+\title{Assess the variation of the W matrix in RUV-III.}
 \usage{
 assessW(
   se.obj,
@@ -18,19 +18,21 @@ assessW(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{variables}{Character. A character or character vector of variables within the SummarizedExperiment object. These
-can be categorical, continuous, or a combination of both. If oit is specified, a line-dot plots between correlations
-and the columns of W , in cumulative way, will be generated. If set to \code{NULL}, both \code{bio.variables} and \code{bio.variables}
-must be provided.}
+\item{variables}{Character. A character string or vector specifying column names in the sample annotation of the
+\code{SummarizedExperiment} object. These columns can be categorical, continuous, or a combination of both. If it is set
+to \code{NULL}, both the \code{bio.variables} and \code{tech.variables} must be provided.}
 
-\item{bio.variables}{Character. A character or character vector of biological variables within the SummarizedExperiment
-object. These can be categorical, continuous, or a combination of both. The defeat is set to \code{NULL}.}
+\item{bio.variables}{A character string or vector specifying column names of biological variables in the sample
+annotation of the  \code{SummarizedExperiment} object. These columns can be categorical, continuous, or a combination of
+both.The defeat is set to \code{NULL}.}
 
-\item{uv.variables}{Character. A character or character vector of unwanted variables within the SummarizedExperiment
-object. These can be categorical, continuous, or a combination of both. The defeat is set to \code{NULL}.}
+\item{uv.variables}{A character string or vector specifying column names of unwanted variables in the sample
+annotation of the  \code{SummarizedExperiment} object. These columns can be categorical, continuous, or a combination of
+both.The defeat is set to \code{NULL}.}
 
-\item{compare.w}{Logical. If \code{TRUE} and both 'bio.variables' and 'uv.variables' are provided, the function generates
-performance scores for each W matrix of RUV-III normalized data. The default is set to \code{FALSE}.}
+\item{compare.w}{Logical. If \code{TRUE} and both the \code{bio.variables} and \code{uv.variables} are provided, the function generates
+performance scores for each W matrix of RUV-III normalized data in the \code{SummarizedExperiment} object. The default is
+set to \code{FALSE}, the the comparison will not be performed.}
 
 \item{plot.output}{Logical. If \code{TRUE}, the function will show the output plots while is running. The default is set
 to \code{TRUE}.}
@@ -41,8 +43,9 @@ default is set to \code{TRUE}.}
 \item{verbose}{Logical. If \code{TRUE}, the function will display progress messages. The default is set to \code{TRUE}.}
 }
 \description{
-This function assesses the association between the W matrix from RUV-III normalized data and known variables. It calculates
-the correlation between the columns of the W matrix and both the specified biological and unwanted variables.
+This function assesses the association between the columns of W matrix from RUV-III normalized data and known variables.
+It calculates the linear regression and vector correlations between the columns of the W matrix and continuous and
+categorical variable respectively. The variables can be biological and unwanted variables.
 }
 \details{
 The function performs linear regression between each individual continuous variable specified by users and the columns
@@ -54,6 +57,13 @@ the correlations for biological and unwanted variables are averaged separately. 
 values is sum of the half of the average scores. A higher score indicates a better value for $k$. It is important to
 note that the assessment of W, should be used in combination with all other normalization assessments to select suitable
 RUV-III normalized data.
+}
+\references{
+Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. \emph{Nucleic Acids Research}.
+\link{https://doi.org/10.1093/nar/gkz655}
+
+Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. \emph{Nature Biotechnology}
+\link{https://doi.org/10.1038/s41587-022-01440-w}
 }
 \author{
 Ramyar Molania

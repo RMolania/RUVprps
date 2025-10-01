@@ -34,7 +34,7 @@ components to calculate the ARI. Options are \code{mclust} or \code{hclust}. The
 \code{ward.D}, \code{ward.D2}, \code{single}, \code{complete}, \code{average} (= UPGMA), \code{mcquitty} (= WPGMA), \code{median} (= WPGMC), or \code{centroid}
 (= UPGMC). See the \code{hclust} function in the \strong{stats} package for more details.}
 
-\item{hclust.dist.measure}{Character. A character specifying which distance measure to be used in the \code{dist} function
+\item{hclust.dist.measure}{Character. A character string specifying which distance measure to be used in the \code{dist} function
 when applying hierarchical clustering. Options are: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or
 \code{minkowski}. See the \code{dist} function in the \strong{stats} package for more details.}
 
@@ -45,7 +45,7 @@ See details for more information.}
 \item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The efault
 is to 3.}
 
-\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment object; otherwise,
 returns the result as list. The default is set to \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, displays messages for each step of the function.}
@@ -54,8 +54,8 @@ returns the result as list. The default is set to \code{TRUE}.}
 A SummarizedExperiment object or a list containing the computed ARI for specified categorical variable.
 }
 \description{
-This functions computes the adjusted rand index(ARI) for given a categorical variable using the first PCs of the specified
-data(assay) in a SummarizedExperiment object.
+This functions computes the adjusted rand index(ARI) for given a categorical variable using the first n PCs of the
+specified dataset(s) in a SummarizedExperiment object.
 }
 \details{
 The ARI is the corrected-for-chance version of the Rand index. The ARI measures the percentage of matches between

@@ -2,7 +2,7 @@
 % Please edit documentation in R/computePCVariableRegression.R
 \name{computePCVariableRegression}
 \alias{computePCVariableRegression}
-\title{Computes the linear regression.}
+\title{Compute the linear regression.}
 \usage{
 computePCVariableRegression(
   se.obj,
@@ -24,7 +24,7 @@ all assays of the SummarizedExperiment object will be selected.}
 \item{variable}{Character. A character string indicating the name of the column in the sample annotation of the
 SummarizedExperiment object. The variable must be continuous, such as library size, tumor purity, etc.}
 
-\item{fast.pca}{Logical. Indicates whether to use the computed fast PCA or PCA results from the 'computePCA' function.
+\item{fast.pca}{Logical. Indicates whether to use the computed fast PCA or PCA results from the \code{computePCA} function.
 The default is set to \code{TRUE}. If \code{FALSE}, the \code{fast.pca} argument in the \code{computePCA()} function should be set to \code{FALSE}.}
 
 \item{nb.pcs}{Numeric. A numeric value specifying the number of the first principal components (PCs) to use for computing
@@ -39,7 +39,7 @@ SummarizedExperiment object or output the result as a list. By default, it is se
 A SummarizedExperiment object containing the computed regression R^2 for or output the result as a list.
 }
 \description{
-This function calculates the linear regression between the the first 'nb.pcs' PCs (cumulatively) of the gene expression
+This function calculates the linear regression between the the first \code{nb.pcs} PCs (cumulatively) of the gene expression
 data (assays) of a SummarizedExperiment object and a continuous variable (i.e. library size or tumor purity).
 }
 \details{

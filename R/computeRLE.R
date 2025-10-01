@@ -1,4 +1,4 @@
-#' Calculates relative log expression (RLE) of RNA-seq data.
+#' Calculate relative log expression (RLE) of RNA-seq data.
 #'
 #' @author Ramyar Molania
 #'

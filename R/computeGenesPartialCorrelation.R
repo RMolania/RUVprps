@@ -1,14 +1,38 @@
-#' Computes gene-gene partial correlation analysis.
+#' Compute gene-gene partial correlation analysis.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function computes all possible gene-gene pairwise ordinary and partial correlation of the assays in the
+#' This function computes all possible gene-gene pairwise ordinary and partial correlation of the dataset(s) in the
 #' SummarizedExperiment object.
 #'
+#' Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. *Nature Biotechnology*
+#' [https://doi.org/10.1038/s41587-022-01440-w]
+#'
 #' @details
-#' Partial correlation is used to estimate correlation between two variables while controlling for third
-#' variables.
+#' Partial correlation estimates the correlation between two variables while controlling for the effect of a third variable.
+#' In the context of RNA-seq data, this allows computation of gene–gene correlations while accounting for confounding factors
+#' such as library size or tumor purity.
+#' The function \code{computeGenesPartialCorrelation()} calculates both ordinary
+#' and partial correlations for all possible gene–gene pairs. The formula for the
+#' partial correlation \( r_{xy.z} \) is:
+#' \deqn{r_{xy.z} = \frac{r_{xy} - r_{xz} \cdot r_{yz}}{\sqrt{(1 - r_{xz}^2) \cdot (1 - r_{yz}^2)}}}
+#'
+#' where:
+#' \itemize{
+#'   \item \( r_{xy} \): correlation between variables \( x \) and \( y \)
+#'   \item \( r_{xz} \): correlation between \( x \) and the control variable \( z \)
+#'   \item \( r_{yz} \): correlation between \( y \) and the control variable \( z \)
+#' }
+#'
+#' The companion function \code{plotGenesPartialCorrelation()} generates histograms,
+#' scatter plots, and boxplots of both ordinary and partial correlation coefficients
+#' for individual assays.
+#'
+#' @note Computing partial correlations for all gene pairs in large RNA-seq datasets
+#' can be computationally intensive. It is recommended to restrict the analysis
+#' to a subset of genes that show strong association with the variable of interest.
+#'
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character. A character string or vector of character strings specifying the name(s) of the data set(s)

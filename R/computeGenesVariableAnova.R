@@ -1,4 +1,4 @@
-#' Computes ANOVA between individual gene expression and a categorical variable
+#' Compute ANOVA between individual gene expression and a categorical variable
 #'
 #' @author Ramyar Molania
 #'

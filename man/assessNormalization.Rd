@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessNormalization.R
 \name{assessNormalization}
 \alias{assessNormalization}
-\title{Assesses the performance of normalization methods.}
+\title{Assess the performance of RNA-seq normalization methods.}
 \usage{
 assessNormalization(
   se.obj,

@@ -3,13 +3,14 @@
 #' @author Ramyar Molania
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param slot Symbol. A symbol indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.
-#' @param assessment.type Symbol. A symbol indicating the type of assessment. Options are 'gene.level' or 'global.level'.
-#' @param assessment Symbol. A symbol indicating the name of the metric to be checked.
-#' @param method Symbol. A symbol indicating the method used to calculate the metric.
-#' @param variables Symbol. A symbol or a vector of symbols indicating the variables used to calculate the metric.
-#' @param file.name Symbol. A symbol indicating the file name to which the results of the metric are assigned.
-#' @param plot.data Symbol. A symbol indicating the name of the plots file for the metric.
+#' @param slot Character A character string  indicating the name of the slots in the 'metadata' of the SummarizedExperiment object.
+#' @param assessment.type Character A character string  indicating the type of assessment. Options are `gene.level` or
+#' `global.level`.
+#' @param assessment Character A character string  indicating the name of the metric to be checked.
+#' @param method Character A character string  indicating the method used to calculate the metric.
+#' @param variables Character A character string or a vector of symbols indicating the variables used to calculate the metric.
+#' @param file.name Character A character string indicating the file name to which the results of the metric are assigned.
+#' @param plot.data Character A character string indicating the name of the plots file for the metric.
 
 addOverallPlotToSeObj <- function(
         se.obj,
