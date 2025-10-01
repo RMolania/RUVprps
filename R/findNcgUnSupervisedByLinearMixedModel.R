@@ -340,10 +340,6 @@ findNcgUnSupervisedByLinearMixedModel <- function(
             }
         }
     }
-
-    # Example usage
-    detect_cores()
-
     if (ncg.idenfitication.approach == 'LMM'){
         if (isTRUE(apply.log)){
             expr.data <- applyLog(
