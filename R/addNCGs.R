@@ -3,7 +3,7 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function adds pre-selected sets of negative control genes (NCGs) to a SummarizedExperiment object.
+#' This function adds pre-selected set(s) of gene(s) as negative control genes (NCGs) to a SummarizedExperiment object.
 #'
 #' @details
 #' A pre-selected set of negative control genes (NCGs) will be stored in the following location:
