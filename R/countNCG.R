@@ -1,25 +1,19 @@
-#' Count the current NCG sets in SummarizedExperiment object.
+#' Count and check the overlap the NCG sets in SummarizedExperiment object.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function adds pre-selected sets of negative control genes (NCGs) to a SummarizedExperiment object.
-#'
-#' @details
-#' A pre-selected set of negative control genes (NCGs) will be stored in the following location:
-#' se.obj->metadata->NCG->pre.selected->subset.name. These genes can be used for various analyses, including identifying
-#' unknown sources of variation, assessing variation, performing RUV normalization, and evaluating normalization steps. The
-#' gene set will be stored in: metadata->NCG->pre.selected->subset.name->gene.set
+#' This function counts and evaluates the overlap of the NGCs stored in the metadata of the SummarizedExperiment object.
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param ncg.selection Character. A character indicating which type of NCG should be selected. The options are: `supervised`
 #' and `unsupervised`.
-#' @param ncg.group.name Character. A character indicating which group of NCG should be selected.
-#' @param create.venn.diagram Logical. Specifies whether to creaet a venn diagram using all NCG sets or not. The default
-#' is ser to `TRUE`.
-#' @param check.all
-#'
-#' @return A SummarizedExperiment object with a metadata that contains the NCGs.
+#' @param ncg.group.name Character. A character indicating which group of NCGs should be selected. Group names are specified
+#' in the functions that identifies NCGs. If set to `NULL`, all current NCG group will be selected.
+#' @param create.venn.diagram Logical. Specifies whether to create a venn diagram using all NCG sets or not. The default
+#' is set to `TRUE`.
+#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
+#' `TRUE`.
 #'
 #' @importFrom ggVennDiagram ggVennDiagram
 #' @export
@@ -27,17 +21,40 @@
 countNCG <- function(
         se.obj,
         ncg.selection,
-        ncg.group.name,
+        ncg.group.name = NULL,
         create.venn.diagram = FALSE,
-        check.all = FALSE){
-
-    if (isFALSE(check.all)){
+        verbose = TRUE
+        ){
+    if (!is.null(ncg.group.name)){
         ncgs.list <- names(se.obj@metadata$NCG[[ncg.selection]][[ncg.group.name]])
         ncgs.list <- ncgs.list[!ncgs.list %in% 'assessment.plot']
         count.ncgs <- sapply(
             ncgs.list,
             function(x){
                 sum(se.obj@metadata$NCG[[ncg.selection]][[ncg.group.name]][[x]]$ncg.set)
+            })
+        count.ncgs
+    }
+    if (is.null(ncg.group.name)){
+        ncg.group.name <- names(se.obj@metadata$NCG[[ncg.selection]])
+        ncgs.set.names <- lapply(
+            ncg.group.name,
+            function(x){
+                ncgs.list <- names(se.obj@metadata$NCG[[ncg.selection]][[x]])
+                ncgs.list <- ncgs.list[!ncgs.list %in% 'assessment.plot']
+                ncgs.list
+            })
+        count.ncgs <- sapply(
+            ncg.group.name,
+            function(x){
+                ncgs.list <- names(se.obj@metadata$NCG[[ncg.selection]][[x]])
+                ncgs.list <- ncgs.list[!ncgs.list %in% 'assessment.plot']
+                ncgs.list <- sapply(
+                    ncgs.list,
+                    function(y){
+                        sum(se.obj@metadata$NCG[[ncg.selection]][[x]][[y]]$ncg.set)
+                    })
+                ncgs.list
             })
         count.ncgs
     }
