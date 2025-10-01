@@ -126,18 +126,23 @@ computeGeneSetScore <- function(
     all.assays <- lapply(
         levels(assay.names),
         function(x){
-            preProcessData(
-                se.obj = se.obj,
-                assay.name = x,
-                normalization = normalization,
-                regress.out.variables = regress.out.variables,
-                regress.out.rle.med = regress.out.rle.med,
-                apply.log = apply.log,
-                pseudo.count = pseudo.count,
-                check.se.obj = FALSE,
-                remove.na = 'none',
-                verbose = verbose
-            )
+            if (is.null(normalization) & is.null(regress.out.variables) & is.null(regress.out.rle.med) & is.null(apply.log)){
+                assay(x = se.obj, i = x)
+            } else{
+                preProcessData(
+                    se.obj = se.obj,
+                    assay.name = x,
+                    normalization = normalization,
+                    regress.out.variables = regress.out.variables,
+                    regress.out.rle.med = regress.out.rle.med,
+                    apply.log = apply.log,
+                    pseudo.count = pseudo.count,
+                    check.se.obj = FALSE,
+                    remove.na = 'none',
+                    verbose = verbose
+                )
+            }
+
         })
     names(all.assays) <- levels(assay.names)
     # Computing gene set scoring analysis ####
