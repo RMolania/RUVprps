@@ -75,13 +75,18 @@
 #' argument cannot be `NULL`.
 #' @param uv.variables Character. A character string or vector of strings indicating the column name(s) of the unwanted
 #' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
-#'  argument cannot be `NULL`.
-#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
-#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
-#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' argument cannot be `NULL`.
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param samples.to.use TTT
+#' @param use.rank TTT
+#' @param ratio.variable TTT
+#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
+#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' @param rank.variable TTTT
+
 #' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
 #' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
 #' or `non.overlap`. The default is set to 0.2.
@@ -97,6 +102,13 @@
 #' @param grid.group Character. A character that indicates whether the grid search should be performed on biological,
 #' unwanted, or both factors when the `ncg.selection.method` is set to `auto`. The options are `bio`, `uv`, or `both`.
 #' The default is set to `uv`. For more details, refer to the function documentation.
+#' @param grid.direction Character. A character that indicates whether the grid search should be performed in decreasing
+#' or increasing order when the `ncg.selection.method` is set to `auto`. The options are: `increase` and `decrease`. The
+#' default is set to `decrease`.
+#' @param grid.nb Numeric. A numeric value that indicates the number of genes for grid search when the `ncg.selection.method`
+#' is set to `auto`. In the `auto` approach, the grid search starts with the initial `top.rank.uv.genes` and
+#' `top.rank.bio.genes` values and adds or drops the `grid.nb` in each loop to find `nb.ncg` of genes as negative control
+#' genes. The default is set to 20.
 #' @param filter.ncgs Logical. Whether to filter selected NCGs based on public human housekeeping gene sets. The default
 #' is set to `FALSE`.
 #' @param common.hk Character. Specifies group of housekeeping genes to use: `cancer` or `non.cancer`. The default is set
@@ -106,13 +118,6 @@
 #' @param hk.group Character. Column name in the gene annotation containing non-cancer housekeeping genes. Options include:
 #' `bulk.rnaseq.hk.genes.v1`, `bulk.rnaseq.hk.genes.v2`, `micorarray.hk.genes`, `nanostring.pan.cancer.hk.genes`,
 #' `singscore.pan.cancer.hk.genes`. The default is set to `micorarray.hk.genes`.
-#' @param grid.direction Character. A character that indicates whether the grid search should be performed in decreasing
-#' or increasing order when the `ncg.selection.method` is set to `auto`. The options are: `increase` and `decrease`. The
-#' default is set to `decrease`.
-#' @param grid.nb Numeric. A numeric value that indicates the number of genes for grid search when the `ncg.selection.method`
-#' is set to `auto`. In the `auto` approach, the grid search starts with the initial `top.rank.uv.genes` and
-#' `top.rank.bio.genes` values and adds or drops the `grid.nb` in each loop to find `nb.ncg` of genes as negative control
-#' genes. The default is set to 20.
 #' @param create.ncg.rank.plot Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
 #' with respect to their biological and unwanted variation effects. The default is set to `FALSE`.
 #' @param plot.ncg.rank Logical. Indicates whether to plot a heatmap that shows the rank of the all genes
@@ -146,15 +151,10 @@
 #' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing
 #' the(centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square
 #' otherwise. The default is set to `FALSE`.
+#' @param svd.bsparam TTTT
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
 #' @param nb.cores Numeric. A numeric value to specify number of cores for palatalization. The default is set to 1.
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
-#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
-#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
-#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
-#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
-#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
 #' @param ncg.group.name Character. A character to be used as name of the group of NCG. The default is set to `NULL`, then
 #' the function create a names as following: `paste0('ncg|unsupervised')`. We refer to the details of the function for
 #' more details.
@@ -168,13 +168,16 @@
 #' re-calculated. The default is set to `FALSE`.
 #' @param imf.name Character string. A name to save the intermediate file. If `NULL`, the function generates a name.
 #' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to `FALSE`.
+#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
+#'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
+#' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
+#' The options are: `assays`, the `sample.annotation`, `both`, or `none`. If `assays` is selected, genes containing NA or
+#' missing values will be excluded. If `sample.annotation` is selected, the samples containing NA or missing values for
+#' any `bio.variables` or `uv.variables` will be excluded. The default is set to `none`.
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the SummarizedExperiment
 #' object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-#' @param samples.to.use TTT
-#' @param use.rank TTT
-#' @param ratio.variable TTT
-#' @param rank.variable TTTT
+#' @param use.fvalues TTT
 #'
 #' @importFrom dplyr mutate progress_estimated
 #' @importFrom BiocSingular runSVD bsparam
@@ -188,29 +191,30 @@
 #' @import ggplot2
 #' @export
 
-findNcgSupervisedByTwoWayAnova<- function(
+findNcgSupervisedByTwoWayAnova <- function(
         se.obj,
         assay.name,
         bio.variables,
         uv.variables,
+        nb.ncg = 0.05,
         samples.to.use = 'all',
         use.rank = FALSE,
-        ncg.selection.method = 'non.overlap',
         ratio.variable = 'eta.squared',
-        nb.ncg = 0.1,
+        ncg.selection.method = 'non.overlap',
+        rank.variable = 'fvalue',
         top.rank.bio.genes = 0.8,
         top.rank.uv.genes = 0.2,
-        bio.percentile = 0.5,
-        uv.percentile = 0.5,
+        bio.percentile = 0.2,
+        uv.percentile = 0.8,
         grid.group = 'uv',
         grid.direction = 'increase',
         grid.nb = 20,
-        rank.variable = 'fvalue',
         filter.ncgs = FALSE,
         common.hk = 'cancer',
         nb.stable.genes = 2000,
         hk.group = 'micorarray.hk.genes',
         create.ncg.rank.plot = FALSE,
+        use.fvalues = FALSE,
         plot.ncg.rank = FALSE,
         bio.clustering.method = 'kmeans',
         nb.bio.clusters = 3,
@@ -220,18 +224,19 @@ findNcgSupervisedByTwoWayAnova<- function(
         pseudo.count = 1,
         assess.ncg = TRUE,
         variables.to.assess.ncg = NULL,
-        nb.pcs = 5,
+        nb.pcs = 10,
         center = TRUE,
         scale = FALSE,
+        svd.bsparam = bsparam(),
         plot.ncg.assessment = TRUE,
         nb.cores = 1,
-        check.se.obj = TRUE,
-        remove.na = 'none',
         ncg.group.name = NULL,
         ncg.set.name = NULL,
         save.imf = FALSE,
         imf.name = NULL,
         use.imf = FALSE,
+        check.se.obj = TRUE,
+        remove.na = 'none',
         save.se.obj = TRUE,
         verbose = TRUE
         ){
@@ -289,7 +294,6 @@ findNcgSupervisedByTwoWayAnova<- function(
     if (isFALSE(is.logical(save.imf))) {
         stop('The "save.imf" must be "TRUE" or "FALSE".')
     }
-
     if (ncg.selection.method %in% c('non.overlap' , 'auto')){
         if (top.rank.bio.genes > 1 | top.rank.bio.genes <= 0){
             stop('The "top.rank.bio.genes" must be a positve value  0 < top.rank.bio.genes =< 1.')
@@ -302,12 +306,10 @@ findNcgSupervisedByTwoWayAnova<- function(
             stop('The "ratio.variable" must be one of the "fvalue" or "variance".')
         }
     }
-
     if (isTRUE(apply.log)){
         if (length(pseudo.count) > 1 | pseudo.count < 0 | is.null(pseudo.count))
             stop('The "pseudo.count" must be 0 or a postive integer value.')
     }
-
     if (isTRUE(use.rank)){
         if (isTRUE(ncg.selection.method == 'quantile')){
             if (is.null(bio.percentile) | is.null(uv.percentile))
@@ -318,7 +320,6 @@ findNcgSupervisedByTwoWayAnova<- function(
                 stop('The "uv.percentile" must be a postive value between 0 and 1.')
         }
     }
-
     if (isFALSE(check.se.obj)) {
         if (isTRUE(sum(bio.variables %in% colnames(colData(se.obj))) != length(bio.variables))) {
             stop('All or some of "bio.variables" cannot be found in the SummarizedExperiment object.')
@@ -367,29 +368,17 @@ findNcgSupervisedByTwoWayAnova<- function(
             verbose = verbose
             )
         ### Applying log2 + pseudo count transformation ####
-        if (isTRUE(apply.log) & !is.null(pseudo.count)){
-            printColoredMessage(
-                message = paste0(
-                    '- Applying log2 + ',
-                    pseudo.count,
-                    ' (pseudo.count) on the ',
-                    assay.name,
-                    ' data.'),
-                color = 'blue',
+        if (isTRUE(apply.log)){
+            expr.data <- applyLog(
+                se.obj = se.obj,
+                assay.names = assay.name,
+                pseudo.count = pseudo.count,
+                check.se.obj = FALSE,
+                remove.na = 'none',
                 verbose = verbose
-                )
-            expr.data <- log2(assay(x = se.obj, i = assay.name) + pseudo.count)
-        } else if (isTRUE(apply.log) & is.null(pseudo.count)){
-            printColoredMessage(
-                message = paste0(
-                    '- Applying log2 on the ',
-                    assay.name,
-                    ' data.'),
-                color = 'blue',
-                verbose = verbose
-                )
-            expr.data <- log2(assay(x = se.obj, i = assay.name))
-        } else if (isFALSE(apply.log)) {
+                )[[assay.name]]
+        }
+        if (isFALSE(apply.log)) {
             printColoredMessage(
                 message = paste0(
                     '- The ',
@@ -397,16 +386,17 @@ findNcgSupervisedByTwoWayAnova<- function(
                     ' data will be used without any log transformation.'),
                 color = 'blue',
                 verbose = verbose
-                )
+            )
             expr.data <- assay(x = se.obj, i = assay.name)
         }
+
         ## Creating all possible homogeneous sample groups ####
         ### Biological groups ####
         printColoredMessage(
             message = '-- Creating all possible groups with respect to the specified sources of biological variation:',
             color = 'magenta',
             verbose = verbose
-        )
+            )
         all.bio.groups <- createHomogeneousBioGroups(
             se.obj = se.obj,
             bio.variables = bio.variables,
@@ -417,7 +407,6 @@ findNcgSupervisedByTwoWayAnova<- function(
             remove.na = remove.na,
             verbose = verbose
             )
-
         ### Unwanted groups ####
         printColoredMessage(
             message = '-- Creating all possible groups with respect to the specified sources of unwanted variation:',
@@ -434,7 +423,6 @@ findNcgSupervisedByTwoWayAnova<- function(
             remove.na = 'none',
             verbose = verbose
             )
-
         ## Applying Two way ANOVA ####
         printColoredMessage(
             message = '-- Performing two way ANOVA:',
@@ -469,7 +457,8 @@ findNcgSupervisedByTwoWayAnova<- function(
                     uv.fvalue = result.twa$`F value`[1],
                     bio.fvalue = result.twa$`F value`[2]
                 )
-            }, mc.cores = nb.cores)
+            }, mc.cores = nb.cores
+            )
         all.aov <- do.call(rbind, all.aov)
         all.aov$uv.fvalue.scaled <- (all.aov$uv.fvalue - min(all.aov$uv.fvalue)) /
             (max(all.aov$uv.fvalue) - min(all.aov$uv.fvalue))
@@ -479,28 +468,30 @@ findNcgSupervisedByTwoWayAnova<- function(
         row.names(all.aov) <- row.names(se.obj)
 
         ### Ranking of the F-statistics ####
-        if (rank.variable == 'fvalue'){
-            set.seed(2190)
-            all.aov$uv.rank <- rank(x = -all.aov$uv.fvalue, ties.method = 'random')
-            set.seed(2190)
-            all.aov$bio.rank <- rank(x = all.aov$bio.fvalue, ties.method = 'random')
-            all.aov$uv.rank.plot <- rank(x = all.aov$uv.fvalue, ties.method = 'random')
-        }
-        ### Ranking of the percentage variation ####
-        if (rank.variable == 'variance'){
-            set.seed(2190)
-            all.aov$uv.rank <- rank(x = -all.aov$uv.pct, ties.method = 'random')
-            set.seed(2190)
-            all.aov$bio.rank <- rank(x = all.aov$bio.pct, ties.method = 'random')
-            all.aov$uv.rank.plot <- rank(x = all.aov$uv.pct, ties.method = 'random')
-        }
-        ### Ranking of the partial eta sqaured ####
-        if (rank.variable == 'eta.squared'){
-            set.seed(2190)
-            all.aov$uv.rank <- rank(x = -all.aov$uv.eta.p, ties.method = 'random')
-            set.seed(2190)
-            all.aov$bio.rank <- rank(x = all.aov$bio.eta.p, ties.method = 'random')
-            all.aov$uv.rank.plot <- rank(x = all.aov$uv.eta.p, ties.method = 'random')
+        if (isTRUE(use.rank)){
+            if (rank.variable == 'fvalue'){
+                set.seed(2190)
+                all.aov$uv.rank <- rank(x = -all.aov$uv.fvalue, ties.method = 'random')
+                set.seed(2190)
+                all.aov$bio.rank <- rank(x = all.aov$bio.fvalue, ties.method = 'random')
+                all.aov$uv.rank.plot <- rank(x = all.aov$uv.fvalue, ties.method = 'random')
+            }
+            ### Ranking of the percentage variation ####
+            if (rank.variable == 'variance'){
+                set.seed(2190)
+                all.aov$uv.rank <- rank(x = -all.aov$uv.pct, ties.method = 'random')
+                set.seed(2190)
+                all.aov$bio.rank <- rank(x = all.aov$bio.pct, ties.method = 'random')
+                all.aov$uv.rank.plot <- rank(x = all.aov$uv.pct, ties.method = 'random')
+            }
+            ### Ranking of the partial eta sqaured ####
+            if (rank.variable == 'eta.squared'){
+                set.seed(2190)
+                all.aov$uv.rank <- rank(x = -all.aov$uv.eta.p, ties.method = 'random')
+                set.seed(2190)
+                all.aov$bio.rank <- rank(x = all.aov$bio.eta.p, ties.method = 'random')
+                all.aov$uv.rank.plot <- rank(x = all.aov$uv.eta.p, ties.method = 'random')
+            }
         }
     }
     # Reading the intermediate file ####
@@ -563,7 +554,7 @@ findNcgSupervisedByTwoWayAnova<- function(
         ### Ratio of F value ####
         if (ratio.variable == 'fvalue'){
             all.aov$ratio.fvalue <- all.aov$uv.fvalue.scaled / c(all.aov$bio.fvalue.scaled + 1e-6)
-            all.aov <- all.aov[order(-all.aov$ratio.fvalue), ]
+            all.aov <- all.aov[order(-all.aov$ratio.fvalue), , drop = FALSE]
             all.aov <- all.aov[all.aov$uv.fvalue.scaled > quantile(x = all.aov$uv.fvalue.scaled, probs = uv.percentile) , ]
             nb.ncg <- round(x = nrow(se.obj) * nb.ncg, digits = 0)
             ncg.selected <- row.names(se.obj) %in% row.names(all.aov)[1:nb.ncg]
@@ -1087,121 +1078,35 @@ findNcgSupervisedByTwoWayAnova<- function(
             rm(p.fvalues, p.fvalues.rank)
         }
     } else all.plots = NULL
-    # Performance assessment of selected NCG  ####
+    # Assessing the performance of selected NCG ####
     if (isTRUE(assess.ncg)){
         printColoredMessage(
             message = '-- Assessing the performance of the selected NCG set:',
             color = 'magenta',
             verbose = verbose
             )
-        printColoredMessage(
-            message = '- Performing PCA on only selected genes as NCG.',
-            color = 'blue',
-            verbose = verbose
-            )
-        if (is.null(variables.to.assess.ncg))
+        if (is.null(variables.to.assess.ncg)){
             variables.to.assess.ncg <- c(bio.variables, uv.variables)
-        printColoredMessage(
-            message = paste0(
-                '- Exploring the association of the first ',
-                nb.pcs,
-                '  PCs with the ',
-                paste0(variables.to.assess.ncg, collapse = ' & '),
-                ' variables.'),
-            color = 'blue',
+        }
+        assess.ncg.plot <- assessNCGs(
+            se.obj = se.obj,
+            assay.name = assay.name,
+            variables.to.assess.ncg = variables.to.assess.ncg,
+            ncg = ncg.selected,
+            apply.log = apply.log,
+            pseudo.count = pseudo.count,
+            nb.pcs = nb.pcs,
+            svd.bsparam = svd.bsparam,
+            center = center,
+            scale = scale,
+            plot.output = plot.ncg.assessment,
+            check.se.obj = FALSE,
+            remove.na = 'none',
             verbose = verbose
-            )
-        ### Computing PCA suing selected genes as NCG ####
-        pca.data <- BiocSingular::runSVD(
-            x = t(expr.data[ncg.selected, ]),
-            k = nb.pcs,
-            BSPARAM = bsparam(),
-            center = center,
-            scale = scale
-            )
-        pc.var <- (pca.data$d^2) / (ncol(expr.data) - 1)
-        centered.data <- scale(
-            t(expr.data[ncg.selected , ]),
-            center = center,
-            scale = scale
-            )
-        total.var <- sum(colVars(centered.data))
-        percentage <- round(x = c(pc.var / total.var) * 100, digits = 2)
-        # Applying regression and vector correlations analysis ####
-        all.corr <- lapply(
-            variables.to.assess.ncg,
-            function(x){
-                if (class(se.obj[[x]]) %in% c('numeric', 'integer')){
-                    rSquared <- sapply(
-                        1:nb.pcs,
-                        function(y) summary(lm(se.obj[[x]] ~ pca.data$u[, 1:y]))$r.squared
-                        )
-                } else if (class(se.obj[[x]]) %in% c('factor', 'character')){
-                    catvar.dummies <- dummy_cols(se.obj[[x]])
-                    catvar.dummies <- catvar.dummies[, c(2:ncol(catvar.dummies))]
-                    cca.pcs <- sapply(
-                        1:nb.pcs,
-                        function(y){ cca <- cancor(
-                            x = pca.data$u[, 1:y, drop = FALSE],
-                            y = catvar.dummies)
-                        1 - prod(1 - cca$cor^2)
-                        })
-                }
-            })
-        names(all.corr) <- variables.to.assess.ncg
-        pca.ncg <- as.data.frame(do.call(cbind, all.corr))
-        pca.ncg['pcs'] <- c(1:nb.pcs)
-        pca.ncg <- tidyr::pivot_longer(
-            data = pca.ncg,
-            -pcs,
-            names_to = 'Groups',
-            values_to = 'ls'
-            )
-        # Generating dot-line plot ####
-        assess.ncg.plot <- ggplot(pca.ncg, aes(x = pcs, y = ls, group = Groups)) +
-            geom_line(aes(color = Groups), linewidth = 1) +
-            geom_point(aes(color = Groups), size = 2) +
-            xlab('') +
-            ylab (expression("Correlations")) +
-            ggtitle('') +
-            scale_x_continuous(breaks = (1:nb.pcs),labels = c('PC1', paste0('PC1:', 2:nb.pcs)) ) +
-            scale_y_continuous(breaks = scales::pretty_breaks(n = 5), limits = c(0,1)) +
-            theme(
-                panel.background = element_blank(),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.title.x = element_text(size = 14),
-                axis.title.y = element_text(size = 14),
-                axis.text.x = element_text(size = 10, angle = 25, hjust = 1),
-                axis.text.y = element_text(size = 12),
-                legend.text = element_text(size = 14),
-                legend.title = element_text(size = 16),
-                plot.title = element_text(size = 16)
-            )
-        p.pca.percentage <- data.frame(var = percentage, no = 1:nb.pcs) %>%
-            ggplot(., aes(x = no, y = percentage)) +
-            geom_point(size = 3) +
-            ylab('Variation(%)') +
-            ylim(c(0,100)) +
-            geom_line() +
-            theme(
-                panel.background = element_blank(),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.line.x  = element_blank(),
-                axis.title.x = element_blank(),
-                axis.ticks.x = element_blank(),
-                axis.title.y = element_text(size = 14),
-                axis.text.x = element_blank(),
-                axis.text.y = element_text(size = 12),
-                legend.text = element_text(size = 10),
-                legend.title = element_text(size = 14),
-                plot.title = element_text(size = 16),
-                plot.margin = unit(c(0, 0, 3, 0), "pt")
-            )
-        assess.ncg.plot <- assess.ncg.plot / p.pca.percentage + plot_layout(heights = c(3, 1))
-        if (isTRUE(plot.ncg.assessment)) print(assess.ncg.plot)
+        )
     } else assess.ncg.plot = NULL
 
-    # Saving results ####
+    # Saving the results ####
     ### Adding the results to the SummarizedExperiment object ####
     if (is.logical(samples.to.use)){
         se.obj <- se.obj.all
