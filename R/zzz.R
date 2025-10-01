@@ -97,3 +97,4 @@ utils::globalVariables(
       'Topmatch'
       )
     )
+
