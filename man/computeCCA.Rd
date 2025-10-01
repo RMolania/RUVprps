@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeCCA.R
 \name{computeCCA}
 \alias{computeCCA}
-\title{Find canonical correlation coordinates in RNA-seq data}
+\title{Perform canonical correlation coordinates in RNA-seq data}
 \usage{
 computeCCA(
   se.obj,
@@ -29,44 +29,63 @@ computeCCA(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{TTTTT}
+\item{assay.name}{Character. A character specifying a data (assay) name within the SummarizedExperiment object.}
 
-\item{variable}{TTTTT}
+\item{variable}{Character. A character specifying a variable name in the sample annotation of the SummarizedExperiment
+object. The variable must be a categorical variable with at least two levels.}
 
-\item{reference.group}{TTTTT}
+\item{reference.group}{Character. The name of a group provided in the \code{variable} to be used as the reference group to
+perform all possible pair-wise CCA with the reference. If it is set to \code{NULL}, all possible pairs of groups will be
+selected. The default is set to \code{NULL}.}
 
-\item{nb.cca}{TTTTT}
+\item{nb.cca}{Numeric. A numeric value specifying the number of CCA to be calculated. The default is set to 10.}
 
-\item{hvg}{TTTTT}
+\item{hvg}{A logical vector or character vector of highly variable genes to be used to calculate CCA. The default
+is set to \code{NULL}, in which case all genes will be used.}
 
-\item{scale}{TTTTT}
+\item{scale}{Logical. This specifies whether to scale the data before applying CCA. The default is set to \code{TRUE}.}
 
-\item{normalization}{TTTTT}
+\item{normalization}{Character. A character that specifies which normalization should be performed before applying CCA.
+The default is set to \code{CPM}. Refer to the \code{applyOtherNormalization} function for more details.}
 
-\item{regress.out.variables}{TTTTT}
+\item{regress.out.variables}{Character. A character or a vector of characters that indicate the column name(s) in the sample
+annotation in the SummarizedExperiment object. These variables will be regressed out from the data before performing CCA.
+The default is set to \code{NULL}, indicating that regression will not be applied.}
 
-\item{regress.out.rle.med}{TTTTT}
+\item{regress.out.rle.med}{Logical. This indicates whether to regress out the median of RLE data after applying either
+normalization or regression. The default is set to \code{FALSE}.}
 
-\item{cosine.norm}{TTTTT}
+\item{cosine.norm}{Logical. This indicates whether to apply a cosine normalization or not. The default is set to \code{FALSE}.
+This normalization will be applied after all other normalization and regression steps.}
 
-\item{samples.to.use}{TTTTT}
+\item{samples.to.use}{Logical. A logical vector indicating which samples to use for computing CCA. The default is
+set to \code{all}, meaning all samples will be selected.}
 
-\item{apply.log}{TTTTT}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data. The default is set to \code{TRUE}.}
 
-\item{pseudo.count}{TTTTT}
+\item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
+The default is set to 1.}
 
-\item{check.se.obj}{TTTTT}
+\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. If \code{TRUE}, the \code{checkSeObj()}
+function will be applied inside the function. The default is set to \code{TRUE}.}
 
-\item{remove.na}{TTTTT}
+\item{remove.na}{Character. A character indicating whether to remove NA or missing values from either the 'assays',
+the \code{sample.annotation}, \code{both}, or \code{none}. If \code{assays} is selected, the genes that contain NA or missing values will
+be excluded. If \code{sample.annotation} is selected, the samples that contain NA or missing values for any \code{bio.variables}
+and \code{uv.variables} will be excluded. The default is set to \code{both}.}
 
-\item{cca.set.name}{TTTTT}
+\item{cca.set.name}{Character. A character specifying the name of the output file to be saved in the metadata
+of the SummarizedExperiment object. If set to \code{NULL}, the function will select a name based on
+\code{paste0('Cca:', nb.cca, '|', 'HVG:', length(hvg), '|Scale:', scale, '|Norm:', normalization)}.}
 
-\item{save.se.obj}{TTTTT}
+\item{save.se.obj}{Logical. Indicates whether to save the results in the metadata of the SummarizedExperiment object
+or to output the result as a list. The default is set to \code{TRUE}.}
 
-\item{verbose}{TTTTT}
+\item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-Find canonical correlation coordinates in RNA-seq data
+The function performs canonical correlation analysis between each pair of groups in order to obtain a CCA dimensional
+space. This space can be used by other functions in RUVprps to identify similar samples and create PRPS.
 }
 \author{
 Ramyar Molania

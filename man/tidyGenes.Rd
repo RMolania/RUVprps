@@ -15,20 +15,28 @@ tidyGenes(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{keep.gene.type}{TTTT}
+\item{keep.gene.type}{Character or NULL. Specifies which gene type(s) to retain (e.g., \code{"protein_coding"}). If \code{NULL},
+no filtering by gene type is applied.}
 
-\item{gene.type.col.name}{TTTT}
+\item{gene.type.col.name}{Character. The column name in \code{rowData} that contains the gene type annotation used for filtering.}
 
-\item{remove.duplicates.ids}{TTTT}
+\item{remove.duplicates.ids}{Logical. If \code{TRUE}, rows with duplicated identifiers in \code{ids.col.name} will be removed. The
+default is \code{FALSE}.}
 
-\item{ids.col.name}{TTTT}
+\item{ids.col.name}{Character. The column name in \code{rowData} containing the identifiers to check for duplicates.}
 
-\item{change.row.names}{TTTT}
+\item{change.row.names}{Logical. If \code{TRUE}, replaces the current row names of the \code{SummarizedExperiment} object with values
+from \code{new.row.names}.}
 
-\item{new.row.names}{TTTT}
+\item{new.row.names}{Character. A column name in \code{rowData} containing the values to use as new row names. Required if
+\code{change.row.names = TRUE}.}
+}
+\value{
+A filtered \code{SummarizedExperiment} object with updated assays and/or row names.
 }
 \description{
-Remove assays from a SummarizedExperiment object
+This function removes assays or subsets rows from a \code{SummarizedExperiment} object based on gene type, identifiers,
+or custom row names. It allows filtering while optionally handling duplicate IDs or renaming row identifiers.
 }

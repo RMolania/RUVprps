@@ -2,7 +2,7 @@
 % Please edit documentation in R/applyLog.R
 \name{applyLog}
 \alias{applyLog}
-\title{Applies log2 with a pseudo count on data sets in SummarizedExperiment object.}
+\title{Apply log2 with a pseudo count on dataset(s) in SummarizedExperiment object.}
 \usage{
 applyLog(
   se.obj,
@@ -17,7 +17,7 @@ applyLog(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character. A character or a vector of characters specifying the name(s) of the data (assays) in the
-SummarizedExperiment object to be selected. These data stes will be log2-transformed with a pseudo count. The default
+SummarizedExperiment object to be selected. These datasets will be log2-transformed with a pseudo count. The default
 is se to \code{all}, which indicates that all data sets in the SummarizedExperiment object will be selected.}
 
 \item{pseudo.count}{Numeric. A numeric value as pseudo count value to be added to all measurements in the selected
@@ -37,7 +37,7 @@ details.}
 The function returns a log2 transformed of all specified data sets as a list object.
 }
 \description{
-Applies log2 with a pseudo count on data sets in SummarizedExperiment object.
+Apply log2 with a pseudo count on dataset(s) in SummarizedExperiment object.
 }
 \author{
 Ramyar Molania

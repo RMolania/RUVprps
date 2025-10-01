@@ -2,7 +2,7 @@
 % Please edit documentation in R/applyOtherNormalizations.R
 \name{applyOtherNormalizations}
 \alias{applyOtherNormalizations}
-\title{Performs several normalization methods for RNA-seq data.}
+\title{Perform several normalization methods for RNA-seq data.}
 \usage{
 applyOtherNormalizations(
   se.obj,

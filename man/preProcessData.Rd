@@ -18,28 +18,37 @@ preProcessData(
 )
 }
 \arguments{
-\item{se.obj}{description}
+\item{se.obj}{A \code{SummarizedExperiment} object containing RNA-seq counts or expression data.}
 
-\item{assay.name}{description}
+\item{assay.name}{Character. Name of the assay in \code{se.obj} to preprocess.}
 
-\item{normalization}{description}
+\item{normalization}{Character. Method of normalization to apply (e.g., \code{"CPM"}, \code{"TMM"}, \code{"RPKM"}). Default is \code{"CPM"}.}
 
-\item{regress.out.variables}{description}
+\item{regress.out.variables}{Character vector. Column names in \code{colData(se.obj)} representing unwanted variation variables
+to regress out. Default is \code{NULL}.}
 
-\item{regress.out.rle.med}{description}
+\item{regress.out.rle.med}{Logical. If \code{TRUE}, regress out the median relative log expression (RLE) per sample after normalization.
+Default is \code{FALSE}.}
 
-\item{apply.log}{description}
+\item{apply.log}{Logical. If \code{TRUE}, applies log2-transformation after adding \code{pseudo.count}. Default is \code{TRUE}.}
 
-\item{pseudo.count}{description}
+\item{pseudo.count}{Numeric. Value to add to counts before log2-transformation to avoid \code{-Inf}. Default is 1.}
 
-\item{check.se.obj}{description}
+\item{check.se.obj}{Logical. If \code{TRUE}, validates the structure of the \code{SummarizedExperiment} object before preprocessing.
+Default is \code{TRUE}.}
 
-\item{remove.na}{description}
+\item{remove.na}{Character. Determines how to handle missing values. Options: \code{"assays"}, \code{"sample.annotation"}, \code{"both"}, or \code{"none"}.
+Default is \code{"both"}.}
 
-\item{verbose}{description}
+\item{verbose}{Logical. If \code{TRUE}, displays messages during preprocessing. Default is \code{TRUE}.}
+}
+\value{
+A \code{SummarizedExperiment} object with preprocessed assay(s) and updated \code{colData} if regression was applied.
 }
 \description{
-This function applies ....
+This function applies normalization, log-transformation, and regression-based adjustment to RNA-seq data stored
+in a \code{SummarizedExperiment} object. It can optionally regress out unwanted variables or the median relative log
+expression (RLE) per sample before downstream analyses.
 }
 \author{
 Ramyar Molania

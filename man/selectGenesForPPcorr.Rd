@@ -23,38 +23,45 @@ selectGenesForPPcorr(
 )
 }
 \arguments{
-\item{se.obj}{TTT}
+\item{se.obj}{A \code{SummarizedExperiment} object containing gene expression data.}
 
-\item{assay.names}{TTT}
+\item{assay.names}{Character. The name(s) of the assay(s) in the \code{SummarizedExperiment} object to be used.}
 
-\item{variables}{TTTT}
+\item{variables}{Character. The variable(s) in the sample annotation to be considered for correlation analysis.}
 
-\item{groups}{TTTTsss}
+\item{groups}{Character. A grouping variable in the sample annotation used to stratify the analysis.}
 
-\item{cor.cutoff}{TTTT}
+\item{cor.cutoff}{Numeric. A correlation threshold for selecting genes (e.g., 0.3).}
 
-\item{abs.cor}{TTTT}
+\item{abs.cor}{Logical. If \code{TRUE}, absolute correlation values are used when applying the cutoff. The default is \code{TRUE}.}
 
-\item{top.genes}{TTTTT}
+\item{top.genes}{Numeric. The number of top-ranked genes to select based on correlation or scoring. If \code{NULL}, all
+genes above the cutoff are retained.}
 
-\item{method}{TTTTT}
+\item{method}{Character. The method to use for correlation or scoring (e.g., \code{"pearson"}, \code{"spearman"}, \code{"kendall"}).}
 
-\item{a}{TTTTT}
+\item{a}{Numeric. A tuning parameter (e.g., weighting factor) used in the gene scoring function.}
 
-\item{rho}{TTTTT}
+\item{rho}{Numeric. A correlation parameter used in scoring or thresholding (e.g., shrinkage factor).}
 
-\item{apply.log}{TTTTT}
+\item{apply.log}{Logical. Indicates whether to log-transform the data prior to correlation analysis. The default is \code{TRUE}.}
 
-\item{pseudo.count}{TTTTT}
+\item{pseudo.count}{Numeric. A pseudo-count to add before log-transformation. The default is 1.}
 
-\item{check.se.object}{TTTTT}
+\item{check.se.object}{Logical. If \code{TRUE}, validates the structure of the \code{SummarizedExperiment} object before running
+the analysis. The default is \code{TRUE}.}
 
-\item{remove.na}{TTTTT}
+\item{remove.na}{Character. Specifies how to handle missing values. Options are: \code{"genes"}, \code{"samples"}, \code{"both"},
+or \code{"none"}. The default is \code{"genes"}.}
 
-\item{verbose}{TTTTT}
+\item{verbose}{Logical. If \code{TRUE}, messages describing the progress of the function will be displayed. The default is \code{TRUE}.}
+}
+\value{
+A list containing the selected genes and their associated correlation or scoring statistics.
 }
 \description{
-This function adds the TCGA RNA-seq batch information to the a SummarizedExperiment object.
+This function selects genes from a \code{SummarizedExperiment} object for partial correlation and gene scoring
+analysis, based on correlation thresholds, ranking strategies, or group-specific variables.
 }
 \author{
 Ramyar Molania

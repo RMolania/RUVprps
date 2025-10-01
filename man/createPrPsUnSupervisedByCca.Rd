@@ -69,20 +69,23 @@ used for the RUV-III normalization.}
 object. The \code{uv.variable} can be either categorical or continuous. If \code{uv.variable} is a continuous variable, this will
 be divided into \code{nb.clusters} groups using the \code{clustering.method}.}
 
-\item{reference.group}{TTTT}
+\item{reference.group}{Character. A character string specifying which group in the \code{main.uv.variable} should be used
+as the reference group when constructing PRPS. Default is set to \code{NULL}, meaning no explicit reference group is used.}
 
 \item{other.uv.variables}{Character. A character or character vector representing the name(s) of the columns of
 unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
 continuous, or a combination. These variables will be considered when generating PRPS sets for the \code{main.uv.variable}
 to help avoid potential contamination. The default is set to \code{NULL}}
 
-\item{coordinates.to.use}{TTT}
+\item{coordinates.to.use}{Character. Indicates which coordinates (e.g., PCA or CCA embeddings) should be used to
+identify mutual nearest neighbors. Default is set to \code{NULL}, meaning the raw assay data is used.}
 
-\item{nb.cca}{TTT}
+\item{nb.cca}{Numeric. Number of canonical correlation components to use for constructing PRPS. Default is set to 20.}
 
-\item{nb.pcs}{TTT}
+\item{nb.pcs}{Numeric. Number of principal components to use for constructing PRPS. Default is set to 20.}
 
-\item{samples.to.use}{TTT}
+\item{samples.to.use}{Character. A vector of sample names to restrict the analysis to. Default is \code{NULL}, meaning
+all samples in the SummarizedExperiment object are used.}
 
 \item{min.sample.for.ps}{Numeric. Minimum number of samples required for pseudo-replicate creation. The default is set
 to 3.}
@@ -101,7 +104,8 @@ The default is set to 10.}
 \item{min.batches.to.cover}{Numeric. Minimum number of batches that must be covered by PRPS set. The default is set to
 \code{all}, indicating all possible batch must have enough samples to create PRPS, otherwise the function gives error.}
 
-\item{cover.all.batches}{TTTT}
+\item{cover.all.batches}{Logical. Indicates whether PRPS must be created such that all batches are covered. If \code{TRUE},
+the function ensures coverage across all batches; otherwise, partial coverage is allowed. Default is set to \code{TRUE}.}
 
 \item{check.prps.connectedness}{Logical. Indicates whether to assess the \code{connectedness} between the PRPS sets across
 all batches. Default is set to \code{TRUE}, indicating if there is not connections between all PRPS sets across all batches,
@@ -111,26 +115,31 @@ the function will give error. We refer to the checkPRPSconnectedness() function 
 will be used to prepare the input data for knn and mnn analysis. The default is set to \code{NULL}, this means all genes
 will be used.}
 
-\item{scale.cca}{TTTT}
+\item{scale.cca}{Logical. Indicates whether to scale the CCA components before constructing PRPS. Default is set to \code{TRUE}.}
 
-\item{apply.ruviii.norm}{TTTT}
+\item{apply.ruviii.norm}{Logical. Indicates whether to apply RUV-III normalization on the constructed PRPS before
+downstream analysis. Default is set to \code{FALSE}.}
 
-\item{use.ruviii.norm.for.mnn}{TTTT}
+\item{use.ruviii.norm.for.mnn}{Logical. Indicates whether RUV-III normalized data should be used to identify mutual
+nearest neighbors. Default is set to \code{FALSE}.}
 
-\item{ncg}{TTTT}
+\item{ncg}{Character. A vector of negative control genes to be used in the RUV-III normalization when
+\code{apply.ruviii.norm = TRUE}. Default is set to \code{NULL}.}
 
-\item{k}{TTTT}
+\item{k}{Numeric. The number of nearest neighbors to use when finding mutual nearest neighbors. Default is set to 20.}
 
 \item{nb.mnn}{Numeric. A numeric value specifying the maximum number of mutual nearest neighbors to compute. The
 default is set to 1.}
 
-\item{min.ps}{TTTT}
+\item{min.ps}{Numeric. Minimum number of pseudo-samples required for each PRPS set to be considered valid. Default is set to 2.}
 
-\item{min.nb.for.mnn}{TTTT}
+\item{min.nb.for.mnn}{Numeric. Minimum number of neighbors required to define a mutual nearest neighbor pair. Default is set to 5.}
 
-\item{similarity.approach}{TTTT}
+\item{similarity.approach}{Character. A character string specifying how similarity between samples is measured
+(e.g., \code{cosine}, \code{correlation}, or \code{euclidean}). Default is set to \code{cosine}.}
 
-\item{data.for.similarity}{TTTT}
+\item{data.for.similarity}{Character. Specifies which type of data should be used for computing similarity
+(e.g., \code{raw}, \code{normalized}, or \code{reduced}). Default is set to \code{normalized}.}
 
 \item{clustering.method}{Character. A character indicating the choice of clustering method for grouping the
 \code{uv.variable} if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set
@@ -146,7 +155,8 @@ and \code{quantile}. The default is set to \code{kmeans}. See createHomogeneousU
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
 unwanted variable specified in the \code{other.uv.variables}. The default is set to 3.}
 
-\item{nb.batches.to.cover}{TTT}
+\item{nb.batches.to.cover}{Numeric. A numeric value specifying the minimum number of batches that each PRPS set must
+span to be considered valid. Default is set to 2.}
 
 \item{normalization}{Character. A character that indicates which normalization method should be applied on the
 data before finding the knn. Options are: \code{CPM}, \code{TMM}, \code{upper}, \code{median}, \code{full}, and \code{VST}. The default is set to
@@ -160,20 +170,24 @@ is set to \code{TRUE}.}
 sample annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
 finding MNN. The default is set to \code{NULL}, indicating that regression will not be applied.}
 
-\item{regress.out.rle.med}{TTTT}
+\item{regress.out.rle.med}{Logical. Indicates whether to regress out the relative log expression (RLE) median
+from the data before finding MNN. Default is set to \code{FALSE}.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 The default is set to \code{TRUE}.}
 
-\item{apply.log.for.prps}{TTTT}
+\item{apply.log.for.prps}{Logical. Indicates whether log-transformation should be applied only for the construction of
+PRPS sets, regardless of global log-transformation. Default is set to \code{FALSE}.}
 
 \item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
 to 1.}
 
-\item{assess.variables.association}{TTTT}
+\item{assess.variables.association}{Logical. Indicates whether to assess the association between constructed PRPS and
+biological/unwanted variables. Default is set to \code{TRUE}.}
 
-\item{create.prps.map}{TTTT}
+\item{create.prps.map}{Logical. Indicates whether to generate a visualization (map) of the constructed PRPS sets across
+batches and unwanted variables. Default is set to \code{FALSE}.}
 
 \item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches and PRPS sets
 across the \code{main.uv.variable}.}
@@ -191,7 +205,8 @@ to \code{TRUE}. See the checkSeObj() function for more details.}
 \code{none}. The default is set to \code{assays}, so all the NA or missing values from the assay(s) will be removed before computing
 performing any down-stream analysis. See the \code{checkSeObj()} function for more details.}
 
-\item{cca.set.name}{TTTT}
+\item{cca.set.name}{Character. A character string specifying the name of the CCA set used for PRPS construction.
+Default is set to \code{NULL}, meaning a name will be automatically generated.}
 
 \item{prps.group.name}{Character. A character specifying the name of the prps.group.name to which the current KNN belong.
 If set to \code{NULL}, the function will automatically assign a name using  \code{main.uv.variable}.}

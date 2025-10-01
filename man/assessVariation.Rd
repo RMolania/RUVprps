@@ -89,23 +89,30 @@ assessVariation(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.names}{Character. A character string or vector for selecting assay name(s) in the SummarizedExperiment object. The default is set to \code{all}.}
+\item{assay.names}{Character. A character string or vector for selecting dataset name(s) in the SummarizedExperiment
+object. The default is set to \code{all}. All available dataset(s) wiil be selected.}
 
-\item{bio.variables}{Character. Column names containing variables to assess for variation. Can be categorical or continuous.}
+\item{bio.variables}{Character. A character string or vector of column names in the sample annotation that containing
+biological variables to assess their impact on the dataset(s). The variables can be categorical or continuous.}
 
-\item{uv.variables}{Character. Column names containing variables to assess for variation. Can be categorical or continuous.}
+\item{uv.variables}{Character. A character string or vector of column names in the sample annotation that containing
+biological variables to assess their impact on the dataset(s). The variables can be categorical or continuous.}
 
-\item{assessment.level}{TTTT}
+\item{assessment.level}{Character. A character string specifying the level of assessment. The options are \code{L1} amd \code{L2}.
+The default is set to \code{L2}. Refer to the details of the function for more information.}
 
-\item{plots.to.exclude}{Character. A character string or vector indicating which metrics to exclude. Use \code{getAssessmentMetrics()} to view options. The default is set to \code{NULL}.}
+\item{plots.to.exclude}{Character. A character string or vector indicating which metrics to exclude. Use the
+\code{getAssessmentMetrics()} function to view all the possible metrics. The default is set to \code{NULL}.}
 
-\item{apply.log}{Logical. Whether to apply a log-transformation. The default is set to \code{FALSE}.}
+\item{apply.log}{Logical. Whether to apply a log-transformation on the dataset(s) before applying the metrics. The
+default is set to \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. Pseudo count added to all measurements before log-transformation. The default is set to 1.}
+\item{pseudo.count}{Numeric. A numeric value as pseudo count added to all measurements before log-transformation. The
+default is set to 1.}
 
-\item{general.points.size}{Numeric. Size of points in scatter plots. The default is set to 1.}
+\item{general.points.size}{Numeric. Size of points in scatter plots. The default is set to 1.5.}
 
-\item{rle.iqr.width}{Numeric. Width of IQR in RLE plots. The default is set to 1.}
+\item{rle.iqr.width}{Numeric. Width of IQR in RLE plots. The default is set to 2.}
 
 \item{rle.median.points.size}{Numeric. Size of median points in RLE plots. The default is set to 1.}
 
@@ -113,147 +120,190 @@ assessVariation(
 
 \item{rle.geom.hline.color}{Character. Color of the horizontal line in RLE plots. The default is set to \code{cyan}.}
 
-\item{rle.plot.ncol}{Numeric. Number of columns in the RLE boxplot grid. The default is set to 1.}
+\item{rle.plot.ncol}{Numeric. Number of columns when putting more than one RLE plots in a grid. The default is set to 2.}
 
-\item{rle.plot.nrow}{Numeric. Number of rows in the RLE boxplot grid. The default is set to 3.}
+\item{rle.plot.nrow}{Numeric. Number of rows when putting more than one RLE plots in a grid. The default is set to 3.}
 
-\item{rle.var.plot.ncol}{Numeric. Number of columns in scatter plots of RLE medians against variables. The default is set to 3.}
+\item{rle.var.plot.ncol}{Numeric. Number of columns when putting more than one scatter plot of RLE medians or QR against
+a variable in a grid. The default is set to 3.}
 
-\item{rle.var.plot.nrow}{Numeric. Number of rows in scatter plots of RLE medians against variables. The default is set to 3.}
+\item{rle.var.plot.nrow}{Numeric. Number of rows when putting more than one scatter plot of RLE medians or QR against
+a variable in a grid. The default is set to 3.}
 
-\item{rle.colors}{List. List of colors for variables in RLE plots. The default is set to \code{NULL}.}
+\item{rle.colors}{List. List of colors for variables in RLE plots. The default is set to \code{NULL}, the the function will
+use the default colors.}
 
-\item{fast.pca}{Logical. Use fewer PCs for faster PCA. The default is set to \code{TRUE}.}
+\item{fast.pca}{Logical. This specifies whether to use fast algorithm to do PCA ot not. The default is set to \code{TRUE}}
 
-\item{compute.nb.pcs}{Numeric. Number of PCs to compute for fast PCA. The default is set to 4.}
+\item{compute.nb.pcs}{Numeric. Number of PCs to compute for PCA. The default is set to 10.}
 
-\item{nb.pcs.toplot.pca}{Numeric. Number of PCs to plot against each other. The default is set to 3. Must be ≤ \code{compute.nb.pcs}.}
+\item{nb.pcs.toplot.pca}{Numeric. Number of PCs to plot against each other in PCA plots. The default is set to 3.
+This must be ≤ \code{compute.nb.pcs}.}
 
-\item{center}{Logical. Whether to center data before SVD. The default is set to \code{TRUE}.}
+\item{center}{Logical. Whether to center data before applying PCA. The default is set to \code{TRUE}.}
 
 \item{scale}{Logical. Whether to scale data before SVD. The default is set to \code{FALSE}.}
 
-\item{svd.bsparam}{A \code{BiocParallelParam} object for parallelization. The default is set to \code{bsparam()}. See \code{runSVD()} in BiocSingular.}
+\item{svd.bsparam}{A \code{BiocParallelParam} object for parallelization. The default is set to \code{bsparam()}. See \code{runSVD()}
+in BiocSingular for more details.}
 
-\item{pca.variables.colors}{List. List of colors for categorical variables in PCA plots. The default is set to \code{NULL}.}
+\item{pca.variables.colors}{List. List of colors for categorical variables in PCA plots. The default is set to \code{NULL},
+then the function will use the default colors.}
 
-\item{color.palette}{TTTT}
+\item{color.palette}{Character. Name of the color palette to use for plots. The default is set to \code{nrc}.}
 
-\item{pca.plot.nrow}{Numeric. Number of rows in PCA plot grid. The default is set to 3.}
+\item{pca.plot.nrow}{Numeric. Number of rows when putting more than one PCA plot in a grid. The default is set to 3.}
 
-\item{pca.plot.ncol}{Numeric. Number of columns in PCA plot grid. The default is set to 3.}
+\item{pca.plot.ncol}{Numeric. Number of columns when putting more than one PCA plot in a grid. The default is set to 2.}
 
-\item{pca.var.plot.ncol}{TTT}
+\item{pca.var.plot.ncol}{Numeric. Number of columns in a grid when more than one  scatter plots of PCs against continuous
+variables are generated. The default is set to 3.}
 
-\item{pca.var.plot.nrow}{TTT}
+\item{pca.var.plot.nrow}{Numeric. Number of rows in a grid when more than one  scatter plots of PCs against continuous
+variables are generated. The default is set to 3.}
 
-\item{pca.stroke.size}{Numeric. Stroke size in PCA plots. The default is set to 0.1.}
+\item{pca.stroke.size}{Numeric. Stroke size of points in PCA plots. The default is set to 0.1.}
 
-\item{pca.stroke.color}{Character. Color of stroke in PCA plots. The default is set to \code{gray}.}
+\item{pca.stroke.color}{Character. Color of stroke of points in PCA plots. The default is set to \code{gray}.}
 
-\item{pca.points.alpha}{Numeric. Transparency of PCA points. The default is set to 0.5.}
+\item{pca.points.alpha}{Numeric. Transparency of points in PCA plot. The default is set to 0.5.}
 
 \item{pca.densities.alpha}{Numeric. Transparency of densities in PCA plots. The default is set to 0.5.}
 
-\item{pca.legend.position}{TTT}
+\item{pca.legend.position}{Character. Position of legend in PCA plots: \code{top}, \code{bottom}, \code{left}, \code{right}, or \code{none}.
+The default is set to \code{right}.}
 
-\item{sil.dist.measure}{Character. Distance measure for silhouette: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra},
-\code{binary}, or \code{minkowski}. The default is set to \code{euclidean}.}
+\item{sil.dist.measure}{Character. A character string that specifies how to measure the distance for silhouette. The options
+are \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or \code{minkowski}. The default is set to \code{euclidean}.}
 
-\item{sli.nb.pcs}{Numeric. Number of PCs to use for silhouette. The default is set to 3. Must be ≤ \code{compute.nb.pcs}.}
+\item{sli.nb.pcs}{Numeric. Number of PCs to use for silhouette calculation. The default is set to 3. The is must be
+≤ \code{compute.nb.pcs}.}
 
-\item{ari.clustering.method}{Character. Clustering method for ARI: \code{mclust} or \code{hclust}. The default is set to \code{hclust}.}
+\item{ari.clustering.method}{Character. A character string that specifies which clustering method to sue for ARI calculation.
+The options are: \code{mclust} or \code{hclust}. The default is set to \code{hclust}.}
 
-\item{ari.hclust.method}{Character. Agglomeration method for \code{hclust}: \code{ward.D}, \code{ward.D2}, \code{single}, \code{complete},
-\code{average}, \code{mcquitty}, \code{median}, \code{centroid}. The default is set to \code{complete}.}
+\item{ari.hclust.method}{Character. A character string that specifies the agglomeration method for \code{hclust}. The
+options are \code{ward.D}, \code{ward.D2}, \code{single}, \code{complete}, \code{average}, \code{mcquitty}, \code{median}, \code{centroid}. The default is set
+to \code{complete}.}
 
-\item{ari.hclust.dist.measure}{Character. Distance measure for \code{hclust}: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra},
-\code{binary}, \code{minkowski}. The default is set to \code{euclidean}.}
+\item{ari.hclust.dist.measure}{Character. A character string that specifies the distance measure for \code{hclust}. The options
+are \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, \code{minkowski}. The default is set to \code{euclidean}.}
 
-\item{ari.nb.pcs}{Numeric. Number of PCs for ARI. The default is set to 3. Must be ≤ \code{compute.nb.pcs}.}
+\item{ari.nb.pcs}{Numeric. Number of PCs to use for ARI calculation. The default is set to 3. This must be ≤ \code{compute.nb.pcs}.}
 
-\item{vca.nb.pcs}{Numeric. Number of PCs for vector correlation. The default is set to 3.}
+\item{vca.nb.pcs}{Numeric. Number of PCs to use for vector correlation calculation. The default is set to 3}
 
-\item{lra.nb.pcs}{Numeric. Number of PCs for linear regression. The default is set to 3.}
+\item{lra.nb.pcs}{Numeric. Number of PCs to use for linear regression calculation.. The default is set to 3.}
 
-\item{vca.nb.pcs.to.plot}{TTT}
+\item{vca.nb.pcs.to.plot}{Numeric. Number of PCs to include in vector correlation plots. The default is set to 10.}
 
-\item{lra.nb.pcs.to.plot}{TTT}
+\item{lra.nb.pcs.to.plot}{Numeric. Number of PCs to include in linear regression plots. The default is set to 10.}
 
-\item{kbet.nb.pcs}{TTT}
+\item{kbet.nb.pcs}{Numeric. Number of PCs to use for kBET analysis. The default is set to 10.}
 
-\item{k0}{TTT}
+\item{k0}{number of nearest neighbors to test on (neighborhood size). The default is set to \code{NULL}. Refer to the
+\code{kBET} function form the kBET package for more information.}
 
-\item{knn}{TTT}
+\item{knn}{an n x k matrix of nearest neighbors for each cell (optional). The default is set to \code{NULL}. Refer to the
+\code{kBET} function form the kBET package for more information.}
 
-\item{lisi.nb.pcs}{TTT}
+\item{lisi.nb.pcs}{Numeric. Number of PCs to use for LISI analysis. The default is set to 3.}
 
-\item{perplexity}{TTT}
+\item{perplexity}{Numeric. The effective number of each cell's neighbors. The default is set to 10.}
 
-\item{nn.eps}{TTT}
+\item{nn.eps}{Numeric. Error bound for nearest neighbor search with RANN:nn2(). The default is set to 0.0, implies exact
+nearest neighbor search.}
 
-\item{corr.method}{Character. Correlation method: \code{pearson}, \code{kendall}, \code{spearman}. The default is set to \code{spearman}.}
+\item{corr.method}{Character. A character string that specifies which correlation method should be used. The options are
+\code{pearson}, \code{kendall}, \code{spearman}. The default is set to \code{spearman}.}
 
 \item{a}{Numeric. Significance level for confidence intervals in correlation. The default is set to 0.05.}
 
 \item{rho}{Numeric. Hypothesized correlation for testing. The default is set to 0.}
 
-\item{correlation.plot.ncol}{Numeric. Number of columns in correlation boxplot grid. The default is set to 1.}
+\item{correlation.plot.ncol}{Numeric. Number of columns of a gird plot when putting more than one correlation plot .
+The default is set to 3.}
 
-\item{correlation.plot.nrow}{Numeric. Number of rows in correlation boxplot grid. The default is set to 3.}
+\item{correlation.plot.nrow}{Numeric. Number of rows of a gird plot when putting more than one correlation plot .
+The default is set to}
 
-\item{anova.method}{Character. ANOVA method: \code{aov} or \code{welch}. The default is set to \code{aov}.}
+\item{anova.method}{Character. A character string that specifies which correlation method should be used. The options
+are \code{aov} or \code{welch}. The default is set to \code{aov}.}
 
-\item{anova.plot.ncol}{Numeric. Columns in ANOVA F-value boxplot grid. The default is set to 1.}
+\item{anova.plot.ncol}{Numeric. Number of columns of a gird plot when putting more than one ANOVA plot. The default
+is set to 3}
 
-\item{anova.plot.nrow}{Numeric. Rows in ANOVA F-value boxplot grid. The default is set to 3.}
+\item{anova.plot.nrow}{Numeric. Number of columns of a gird plot when putting more than one ANOVA plot .The default
+is set to 3.}
 
-\item{pcorr.method}{Character. Method for gene-gene partial correlation: \code{pearson}, \code{kendall}, \code{spearman}. The default is set to \code{spearman}.}
+\item{pcorr.method}{Character. A character string that specifies which correlation method should be used for partial
+correlation. The options are \code{pearson}, \code{kendall}, \code{spearman}. The default is set to \code{spearman}.}
 
-\item{pcorr.genes}{Vector. Genes for pairwise correlation. Logical, numeric, or gene names. The default is set to \code{NULL}.}
+\item{pcorr.genes}{Vector. A logical vector that specify genes for pairwise correlation analysis. The default is set
+to \code{NULL}, then all genes will be selected.}
 
-\item{pcorr.select.genes}{Logical. Whether to pre-filter genes by correlation cutoff. The default is set to \code{TRUE}.}
+\item{pcorr.select.genes}{Logical. If \code{TRUE}, the function will compute the correlation between individual genes and the
+specified variable, then select a subset of genes based on the "corr.coff.cutoff" for downstream analysis. The default
+is set to \code{TRUE}. This will speed up the computational time.}
 
-\item{pcorr.reference.data}{Character. Assay to use for gene selection. The default is set to \code{NULL}.}
+\item{pcorr.reference.data}{Character. A character string specifying the name of the data to be used for selecting genes
+based on the correlation analysis. The default is se to \code{NULL}, which means all specified assays will be used.}
 
-\item{pcorr.corr.cutoff}{Numeric. Correlation cutoff for selecting genes. The default is set to 0.7.}
+\item{pcorr.corr.cutoff}{Numeric. A numeric value used as a cutoff for selecting genes. The default is set to 0.7.}
 
 \item{pcorr.filter.genes}{Logical. Whether to filter pairwise correlations before plotting. The default is set to \code{TRUE}.}
 
-\item{pcorr.corr.dif.cutoff}{Numeric. Cutoff for difference in correlation. The default is set to 0.3.}
+\item{pcorr.corr.dif.cutoff}{Numeric. A cutoff for difference in correlation coefficients between ordinary correlation
+and partial correlation.  The default is set to 0.3. This means if a gene shows 0.3 difference between the two correlation
+analyses, it will be selected.}
 
-\item{pcorr.plot.ncol}{Numeric. Columns in correlation plot grid. Used when multiple assays selected.}
+\item{pcorr.plot.ncol}{Numeric. Number of columns of a gird plot when putting more than one partial-pair wise plot.
+The default is set to 3.}
 
-\item{pcorr.plot.nrow}{Numeric. Rows in correlation plot grid. Used when multiple assays selected.}
+\item{pcorr.plot.nrow}{Numeric. Number of rows of a gird plot when putting more than one partial-pair wise plot.
+The default is set to 2.}
 
-\item{deg.method}{Character. Differential expression method. The default is set to \code{limma}.}
+\item{deg.method}{Character. A character string that specifies which differential expression method should be used. The
+default is set to \code{limma}.}
 
-\item{deg.plot.ncol}{Numeric. Columns in DEG p-value plot grid. The default is set to 1.}
+\item{deg.plot.ncol}{Numeric. Number of columns of a gird plot when putting more than one p-value histograms. The default
+is set to 1.}
 
-\item{deg.plot.nrow}{Numeric. Rows in DEG p-value plot grid. The default is set to 3.}
+\item{deg.plot.nrow}{Numeric. Number of rows of a gird plot when putting more than one p-value histograms. The default
+is set to 1.}
 
-\item{gene.set.score.reference.data}{Character. Column name or assay name used as reference for gene set scoring.}
+\item{gene.set.score.reference.data}{Character. A character string that specifies the gene set score whose data should
+be used as reference, so all other scores from other datasets will be plotted against the reference data.
+If set to \code{NULL}, all possible pair-wise plots of the scores will be generated.}
 
-\item{gene.set.score.regress.out.variables}{Character. Column(s) to regress out before scoring. The default is set to \code{NULL}.}
+\item{gene.set.score.regress.out.variables}{Character. A character string or a vector specifying the name(s) of column(s)
+in the sample annotation to regress out from the dataset(s) before performing gene set scoring analysis.
+The default is set to \code{NULL}.}
 
-\item{gene.set.score.list}{List. Gene sets used for enrichment analysis.}
+\item{gene.set.score.list}{List. A list of gene sets used for enrichment analysis. All gene signature in the list will
+be used to for scoring analysis separately.}
 
-\item{gene.set.score.normalization}{Character. Normalization method for gene set scoring. The default is set to \code{NULL}.}
+\item{gene.set.score.normalization}{Character. A character string that specifies which normalization should be applied
+before applying the gene set scoring analysis.The default is set to \code{NULL}, so the dataset(s) will be used without any
+normalization.}
 
-\item{check.se.obj}{Logical. Whether to check the SummarizedExperiment object.}
+\item{check.se.obj}{Logical. Whether to check the structure of the SummarizedExperiment object. The default is set to
+\code{TRUE}}
 
-\item{remove.na}{Character. Whether to remove \code{NA} values from assays. Options: \code{assays}, \code{none}. The default is set to \code{assays}.}
+\item{remove.na}{Character. Whether to remove \code{NA} values from assays. Options: \code{assays}, \code{none}. The default is set to
+\code{none}.}
 
-\item{override.check}{Logical. Skip recalculating metrics if already present. The default is set to \code{FALSE}.}
+\item{override.check}{Logical. If set to \code{TRUE}, skip recalculating metrics if already present in the metadata of the
+SummarizedExperiment object. The default is set to \code{FALSE}.}
 
-\item{verbose}{Logical. Print progress messages. The default is set to \code{FALSE}.}
+\item{verbose}{Logical. Print progress messages while function is running. The default is set to \code{TRUE}.}
 }
 \value{
 A SummarizedExperiment object containing assessment metrics and plots. Optionally saves a PDF of results.
 }
 \description{
-This function applies a range of global and gene-level metrics to assess the variation of specified
-variables in the assay(s) of a SummarizedExperiment object.
+This function applies a range of global and gene-level metrics to assess the impact variables on gene expression data
+in a SummarizedExperiment object.
 }
 \details{
 Several assessments will be performed:
@@ -282,10 +332,10 @@ It will output the following plots:
 \item RLE plot distribution.
 }
 }
-\author{
-Ramyar Molania
-
-#' @references
+\references{
 Molania R., ..., Speed, T. P., A new normalization for Nanostring nCounter gene expression data, Nucleic Acids Research, 2019.
 Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS, Nature Biotechnology, 2023
+}
+\author{
+Ramyar Molania
 }

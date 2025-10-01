@@ -11,7 +11,7 @@ assessNCGs(
   ncg,
   apply.log = TRUE,
   pseudo.count = 1,
-  nb.pcs,
+  nb.pcs = 3,
   svd.bsparam = bsparam(),
   center = TRUE,
   scale = FALSE,
@@ -24,41 +24,48 @@ assessNCGs(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A character or a vector of characters specifying the name(s) of the data (assays) in the
-SummarizedExperiment object to be selected. These data stes will be log2-transformed with a pseudo count. The default
-is se to \code{all}, which indicates that all data sets in the SummarizedExperiment object will be selected.}
+\item{assay.name}{Character. A character specifying the name of the data (assay) in the SummarizedExperiment object
+to be selected. This data be will be used to assess the performance of NCGs. The data should the same one used for the
+identification of the NCG.}
 
-\item{variables.to.assess.ncg}{TTT}
+\item{variables.to.assess.ncg}{Character or character vector. Specifies the column name(s) in the sample annotation
+of the SummarizedExperiment object corresponding to variables for which NCG performance should be assessed.}
 
-\item{ncg}{TTTT}
+\item{ncg}{Logical. A logical vector specifying a set of NCG whose performance will be assessed.}
 
-\item{apply.log}{TTTT}
+\item{apply.log}{Logical. Indicates whether to apply log2 transformation to the selected data set. The default is set
+to \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. A numeric value as pseudo count value to be added to all measurements in the selected
-data sets before applying the log2 transformation, to avoid \code{-Inf} values for zero measurements. The default is set to 1.}
+\item{pseudo.count}{Numeric. A numeric value to be added to all measurements in the selected
+data sets before applying the log2 transformation to avoid \code{-Inf} values for zero measurements. The default is set to 1.}
 
-\item{nb.pcs}{TTT}
+\item{nb.pcs}{Numeric. Specifies the number of principal components to retain when performing PCA on the data. The PCs
+will be used for the assessment. The default is set to 3.}
 
-\item{svd.bsparam}{TTT}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+PCA using SVD. The default is set to \code{bsparam()}. We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package
+for further details.}
 
-\item{center}{TTTT}
+\item{center}{Logical. Indicates whether to center the data or not before calculating PCs. If center is \code{TRUE}, then
+centering is done by subtracting the column means of the assay from their corresponding columns. The default is set
+to \code{TRUE}.}
 
-\item{scale}{TTT}
+\item{scale}{Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to \code{TRUE}, then
+scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is \code{TRUE}, and
+the root mean square otherwise. The default is set to \code{FALSE}.}
 
-\item{plot.output}{TTT}
+\item{plot.output}{Logical. Indicates whether to generate and display performance plots of NCG. Default is \code{TRUE}.}
 
-\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
-set to \code{TRUE}.}
+\item{check.se.obj}{Logical. Indicates whether to validate the SummarizedExperiment object before analysis. The default
+is set to \code{TRUE}.}
 
-\item{remove.na}{Character. A Character that indicates whether to remove NA or missing values from the data sets or
-not. The options are: \code{assays} or \code{none}. The default is set to \code{assays}.  Refer to the \code{checkSeObj()} function for more
-details.}
+\item{remove.na}{Character. Indicates whether to remove NA or missing values from the data sets. Options are: \code{assays}
+or \code{none}. Default is \code{assays}. Refer to the \code{checkSeObj()} function for more details.}
 
-\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
-\code{TRUE}.}
+\item{verbose}{Logical. Indicates whether to display messages during function execution. The default is set \code{TRUE}.}
 }
 \value{
-The function returns a log2 transformed of all specified data sets as a list object.
+A line-dot plot show the association between the first few PCs and the variables
 }
 \description{
 Assess performance of NCG.

@@ -2,38 +2,33 @@
 % Please edit documentation in R/countNCG.R
 \name{countNCG}
 \alias{countNCG}
-\title{Count the current NCG sets in SummarizedExperiment object.}
+\title{Count and check the overlap the NCG sets in SummarizedExperiment object.}
 \usage{
 countNCG(
   se.obj,
   ncg.selection,
-  ncg.group.name,
+  ncg.group.name = NULL,
   create.venn.diagram = FALSE,
-  check.all = FALSE
+  verbose = TRUE
 )
 }
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{ncg.selection}{TTTT}
+\item{ncg.selection}{Character. A character indicating which type of NCG should be selected. The options are: \code{supervised}
+and \code{unsupervised}.}
 
-\item{ncg.group.name}{TTTT}
+\item{ncg.group.name}{Character. A character indicating which group of NCGs should be selected. Group names are specified
+in the functions that identifies NCGs. If set to \code{NULL}, all current NCG group will be selected.}
 
-\item{create.venn.diagram}{TTTT}
+\item{create.venn.diagram}{Logical. Specifies whether to create a venn diagram using all NCG sets or not. The default
+is set to \code{TRUE}.}
 
-\item{check.all}{TTT}
-}
-\value{
-A SummarizedExperiment object with a metadata that contains the NCGs.
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
+\code{TRUE}.}
 }
 \description{
-This function adds pre-selected sets of negative control genes (NCGs) to a SummarizedExperiment object.
-}
-\details{
-A pre-selected set of negative control genes (NCGs) will be stored in the following location:
-se.obj->metadata->NCG->pre.selected->subset.name. These genes can be used for various analyses, including identifying
-unknown sources of variation, assessing variation, performing RUV normalization, and evaluating normalization steps. The
-gene set will be stored in: metadata->NCG->pre.selected->subset.name->gene.set
+This function counts and evaluates the overlap of the NGCs stored in the metadata of the SummarizedExperiment object.
 }
 \author{
 Ramyar Molania

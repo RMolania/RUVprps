@@ -12,6 +12,7 @@ plotPCA(
   nb.pcs = 3,
   plot.type = "scatter",
   variable.colors = NULL,
+  color.palette = "nrc",
   points.size = 1,
   stroke.color = "gray",
   stroke.size = 0.1,
@@ -50,6 +51,8 @@ The default is set to \code{scatter}. Note that \code{plot.type} cannot be set t
 
 \item{variable.colors}{Character vector. Specifies the colors to be used in scatter plots of PCs when a categorical
 variable is provided. If \code{NULL}, the function will use the default color scheme.}
+
+\item{color.palette}{TTT}
 
 \item{points.size}{Numeric. A numeric value specifying the size of the points in the scatter PCA plots. The default
 is set to 1.}

@@ -14,20 +14,28 @@ addTcgaClinicalInfo(
 )
 }
 \arguments{
-\item{se.obj}{TTT}
+\item{se.obj}{A \code{SummarizedExperiment} object containing TCGA RNA-seq data.}
 
-\item{tissue.type}{TTT}
+\item{tissue.type}{A data frame or character string specifying batch information. This can be a metadata table
+with batch IDs for each sample, or a file path to such a table.}
 
-\item{factors}{TTTT}
+\item{factors}{Character. A TCGA cancer type code (e.g., \code{"BRCA"}, \code{"PRAD"}, \code{"COAD"}) used to match batch
+annotations with the corresponding dataset.}
 
-\item{cancer.type}{TTTT}
+\item{cancer.type}{Logical. If \code{TRUE}, all samples in the \code{SummarizedExperiment} object are retained, even if
+batch information is missing. If \code{FALSE}, samples without batch annotations are removed. The default is \code{TRUE}.}
 
-\item{missing.samples.name}{TTTTT}
+\item{missing.samples.name}{Character. A label to assign to samples without batch information. The default is
+\code{"Unknown"}.}
 
-\item{verbose}{TTTTT}
+\item{verbose}{UUU}
+}
+\value{
+A \code{SummarizedExperiment} object with TCGA RNA-seq batch information added to the \code{colData}.
 }
 \description{
-This function adds the TCGA RNA-seq batch information to the a SummarizedExperiment object.
+This function adds the TCGA RNA-seq batch information to a \code{SummarizedExperiment} object, using metadata
+provided by TCGA sample barcodes or external batch information files.
 }
 \author{
 Ramyar Molania

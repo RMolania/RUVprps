@@ -10,11 +10,11 @@ prepareVariableForPrPs(
   other.variables = NULL,
   nb.mnn = 1,
   min.sample.for.ps = 3,
-  clustering.method = "kmeans",
+  clustering.method = "cut",
   nb.clusters = 3,
-  other.uv.clustering.method = "kmeans",
+  other.uv.clustering.method = "cut",
   nb.other.uv.clusters = 3,
-  select.extreme.groups = TRUE,
+  select.extreme.groups = FALSE,
   cover.all.batches = FALSE,
   nb.batches.to.cover = 2,
   assess.variables.association = TRUE,
@@ -23,39 +23,43 @@ prepareVariableForPrPs(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object containing gene expression data and sample annotations.}
 
-\item{main.variable}{TTTT}
+\item{main.variable}{Character. The primary variable of interest to be used in PRPS.}
 
-\item{other.variables}{TTTT}
+\item{other.variables}{Character vector. Other covariates or unwanted variation variables to include in the analysis.}
 
-\item{nb.mnn}{TTTT}
+\item{nb.mnn}{Numeric. Number of nearest neighbors to consider when assessing variable relationships. Default is 10.}
 
-\item{min.sample.for.ps}{TTTT}
+\item{min.sample.for.ps}{Numeric. Minimum number of samples required in a group to perform partial scoring. Default is 5.}
 
-\item{clustering.method}{TTTT}
+\item{clustering.method}{Character. Clustering method to apply to continuous variables (e.g., \code{"kmeans"}, \code{"hierarchical"}). Default is \code{"kmeans"}.}
 
-\item{nb.clusters}{TTTT}
+\item{nb.clusters}{Numeric. Number of clusters for the main variable if clustering is applied. Default is 3.}
 
-\item{other.uv.clustering.method}{TTTT}
+\item{other.uv.clustering.method}{Character. Clustering method for other unwanted variation variables. Default is \code{"kmeans"}.}
 
-\item{nb.other.uv.clusters}{TTTT}
+\item{nb.other.uv.clusters}{Numeric. Number of clusters for other unwanted variation variables. Default is 3.}
 
-\item{select.extreme.groups}{TTTT}
+\item{select.extreme.groups}{Logical. If \code{TRUE}, selects groups with extreme values for the main variable. Default is \code{FALSE}.}
 
-\item{cover.all.batches}{TTTT}
+\item{cover.all.batches}{Logical. If \code{TRUE}, ensures that selected groups cover all batches present in the dataset. Default is \code{TRUE}.}
 
-\item{nb.batches.to.cover}{TTTT}
+\item{nb.batches.to.cover}{Numeric. Minimum number of batches to cover when \code{cover.all.batches = TRUE}. Default is 1.}
 
-\item{assess.variables.association}{TTTT}
+\item{assess.variables.association}{Logical. If \code{TRUE}, computes associations between variables using \code{canCorPairs}. Default is \code{TRUE}.}
 
-\item{plot.output}{TTTT}
+\item{plot.output}{Logical. If \code{TRUE}, generates heatmaps or plots summarizing variable clusters or associations. Default is \code{TRUE}.}
 
-\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
-\code{TRUE}.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages during function execution. Default is \code{TRUE}.}
+}
+\value{
+A list containing processed main and other variables, clusters, and optionally plots and variable associations,
+ready for PRPS analysis.
 }
 \description{
-Prepare variables for PRPS
+This function prepares biological and unwanted variation variables for Partial Residualization and Partial Scoring (PRPS)
+analysis. It includes optional clustering, extreme group selection, batch coverage, and variable association assessment.
 }
 \author{
 Ramyar Molania

@@ -24,51 +24,59 @@ computeGenesVarianceComposition(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object containing gene expression data and sample annotations.}
 
 \item{assay.names}{Character. A character string or vector of character strings specifying the name(s) of the assay(s)
-in the SummarizedExperiment object to compute the gene variance composition By default is set to 'all', which means all
-assays of the SummarizedExperiment object will be selected.}
+in the \code{SummarizedExperiment} object to compute gene-level variance composition. By default, set to \code{"all"}, which means all
+assays in the object will be selected.}
 
-\item{form}{TTT}
+\item{form}{Formula. A formula specifying the model used for variance partitioning (e.g., \code{~ Batch + Condition + Age}).}
 
-\item{adjust.data}{TTT}
+\item{adjust.data}{Logical. If \code{TRUE}, adjusts the data before variance partitioning using the model defined in
+\code{adjustment.form}. The default is \code{FALSE}.}
 
-\item{adjustment.form}{TTT}
+\item{adjustment.form}{Formula. A formula specifying the model to adjust the data (e.g., unwanted variation factors).
+Used only if \code{adjust.data = TRUE}.}
 
-\item{adjustment.method}{TTT}
+\item{adjustment.method}{Character. The method used to adjust for unwanted variation (e.g., \code{"lm"}, \code{"combat"}).}
 
-\item{samples.to.use}{TTT}
+\item{samples.to.use}{Character or NULL. A vector of sample identifiers to include in the analysis. If \code{NULL},
+all samples are used.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
-default is set to \code{TRUE}.}
+\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing variance
+partitioning. The default is set to \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
-the log transformation. The default is set to 1.}
+\item{pseudo.count}{Numeric. A numeric value added as a pseudo-count to avoid log-transformation of zeros.
+The default is 1.}
 
-\item{nb.cores}{Numeric.}
+\item{nb.cores}{Numeric. Number of CPU cores to use for parallel computation. If \code{NULL}, maximum available cores - 1
+will be used.}
 
-\item{plot.output}{Logical.}
+\item{plot.output}{Logical. If \code{TRUE}, generates plots summarizing variance composition across variables. The default
+is \code{TRUE}.}
 
-\item{output.name}{TTT}
+\item{output.name}{Character. A label to assign to the results when stored in the metadata of the \code{SummarizedExperiment}
+object.}
 
-\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
-This means the function will apply the \code{checkSeObj()} function.}
+\item{check.se.obj}{Logical. Indicates whether to validate the \code{SummarizedExperiment} object before running the
+analysis. The default is \code{TRUE}.}
 
-\item{remove.na}{Character. A character string specifying whether to eliminate missing values from \code{assays}, \code{sample.annotation},
-\code{both}, or \code{none}. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
-samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.}
+\item{remove.na}{Character. Specifies how to handle missing values. Options are \code{"assays"}, \code{"sample.annotation"},
+\code{"both"}, or \code{"none"}. The default is \code{"both"}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
-of the SummarizedExperiment object or to output these results as a list or vector. The default is set to \code{TRUE}.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results (variance components, F-statistics, p-values) in the metadata
+of the \code{SummarizedExperiment} object. If \code{FALSE}, returns them as a list. The default is \code{TRUE}.}
 
-\item{verbose}{Logical. If \code{TRUE}, displays the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays progress messages during execution. The default is \code{TRUE}.}
 }
 \value{
-Either a SummarizedExperiment object containing TTTT
+Either a \code{SummarizedExperiment} object containing variance partitioning results in the metadata,
+or a list of variance components, depending on \code{save.se.obj}.
 }
 \description{
-TTTT
+This function computes the proportion of variance in gene expression explained by different biological
+and technical variables in RNA-seq data, using variance partitioning methods. It can adjust for
+unwanted variation, apply linear mixed models, and optionally log-transform data.
 }
 \author{
 Ramyar Molania

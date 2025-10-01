@@ -23,39 +23,43 @@ estimatePAM50(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object containing gene expression data.}
 
-\item{assay.names}{Character or character vector. The name(s) of the assay(s) in the \code{SummarizedExperiment} object.
-The default is set to 'all'.}
+\item{assay.names}{Character or character vector. The name(s) of the assay(s) in \code{se.obj} to use. Default is \code{"all"}.}
 
-\item{entrez.gene.id}{description}
+\item{entrez.gene.id}{Character. Column name in \code{rowData(se.obj)} containing Entrez gene IDs for mapping to PAM50 genes.}
 
-\item{probe}{description}
+\item{probe}{Character. Column name in \code{rowData(se.obj)} containing probe or gene symbols if Entrez IDs are not used.}
 
-\item{tissue.type}{description}
+\item{tissue.type}{Character. Tissue type for samples (e.g., \code{"breast"}) to select the appropriate PAM50 reference.}
 
-\item{groups}{description}
+\item{groups}{Character or NULL. Optional grouping variable(s) in \code{colData(se.obj)} to perform subtype estimation within groups.}
 
-\item{apply.log}{description}
+\item{apply.log}{Logical. If \code{TRUE}, log2-transforms the assay data prior to subtype estimation. Default is \code{TRUE}.}
 
-\item{pseudo.count}{description}
+\item{pseudo.count}{Numeric. Pseudo-count added to assay values before log2 transformation to avoid \code{-Inf}. Default is 1.}
 
-\item{normalization}{description}
+\item{normalization}{Character. Normalization method applied before subtype estimation (e.g., \code{"CPM"}, \code{"TMM"}). Default is \code{"CPM"}.}
 
-\item{regress.out.variables}{description}
+\item{regress.out.variables}{Character vector. Column names in \code{colData(se.obj)} representing unwanted variation variables to regress out. Default is \code{NULL}.}
 
-\item{regress.out.rle.med}{description}
+\item{regress.out.rle.med}{Logical. If \code{TRUE}, regress out the median relative log expression (RLE) per sample. Default is \code{FALSE}.}
 
-\item{out.put.name}{description}
+\item{out.put.name}{Character. Name to assign to the results stored in the \code{SummarizedExperiment} metadata.}
 
-\item{check.se.obj}{description}
+\item{check.se.obj}{Logical. If \code{TRUE}, validates the structure of \code{se.obj} before analysis. Default is \code{TRUE}.}
 
-\item{remove.na}{description}
+\item{remove.na}{Character. Determines how to handle missing values. Options: \code{"assays"}, \code{"sample.annotation"}, \code{"both"}, or \code{"none"}. Default is \code{"both"}.}
 
-\item{verbose}{description}
+\item{verbose}{Logical. If \code{TRUE}, prints progress messages during subtype estimation. Default is \code{TRUE}.}
+}
+\value{
+A \code{SummarizedExperiment} object with PAM50 subtype assignments stored in the \code{colData}.
 }
 \description{
-Estimate PAM50 subtypes
+This function estimates PAM50 molecular subtypes from RNA-seq or microarray data stored in a \code{SummarizedExperiment} object
+using the \code{genefu} package. It supports preprocessing steps such as normalization, log-transformation, and regression
+of unwanted variables.
 }
 \author{
 Ramyar Molania

@@ -39,70 +39,104 @@ findHVG(
 )
 }
 \arguments{
-\item{se.obj}{description}
+\item{se.obj}{SummarizedExperiment. A SummarizedExperiment object containing data and sample annotation.}
 
-\item{assay.name}{description}
+\item{assay.name}{Character. A character specifying the name of the data within the SummarizedExperiment object
+to be used for finding highly variable genes.}
 
-\item{approach}{description}
+\item{approach}{Character. A character specifying the strategy or method to use to find highly variable genes. The options
+are: \code{mad}, \code{cv}, \code{var}, \code{mad.cv}, \code{mean.var}, \code{auto}, \code{vst}, and \code{lmm}. Refer to the details of the function for more
+information. The default is set to \code{vst}.}
 
-\item{nb.hvg}{description}
+\item{nb.hvg}{Numeric. A numeric value specifying the number of highly variable genes (HVGs) to select. The default is
+set to 0.1 (10\% of total genes in the SummarizedExperiment object).}
 
-\item{uv.variables}{description}
+\item{uv.variables}{Character. A character vector specifying the column name(s) in the sample annotation of the SummarizedExperiment
+object that correspond to unwanted variation to be considered while finding highly variable genes. The default is set to
+\code{NULL}; HVGs will be found without considering those variables.}
 
-\item{bio.variables}{description}
+\item{bio.variables}{Character. A character vector specifying the column name(s) in the sample annotation of the SummarizedExperiment
+object that correspond to biological variation to be considered while finding highly variable genes. The default is set to
+\code{NULL}; HVGs will be found without considering those variables.}
 
-\item{group.name}{description}
+\item{group.name}{Character. A character specifying the name of the primary grouping variable in the sample annotation,
+used to perform statistical analysis within each group. The default is set to \code{NULL}, so the analysis will be performed
+across all samples.}
 
-\item{hvg.selection}{TTT}
+\item{hvg.selection}{Logical. A logical value indicating how to combine various results when the identification of highly
+variable genes is performed within each group specified by \code{group.name}. The options are \code{intersect}, \code{union}, \code{max},
+\code{average}, and \code{median}. The default is set to \code{intersect}.}
 
-\item{form}{description}
+\item{form}{Formula. A formula specifying the design of a linear mixed model if \code{approach = lmm}.}
 
-\item{adjust.data}{description}
+\item{adjust.data}{Logical. A logical value indicating whether to adjust the data while applying the \code{lmm} approach or not.
+The default is set to \code{FALSE}; then the LMM will find highly variable genes without adjusting the data.}
 
-\item{nb.bio.pcs}{description}
+\item{nb.bio.pcs}{Numeric. A numeric value specifying the number of principal components of biological variation to retain
+in LMM modeling steps. If \code{approach = lmm}, \code{adjust.data = TRUE}, and only \code{uv.variables} is specified, the LMM model will
+adjust the data for the unwanted variables and then perform PCA on the residual to obtain \code{nb.bio.pcs} PCs to find
+highly variable genes.}
 
-\item{bio.percentile}{TTT}
+\item{bio.percentile}{Numeric. A numeric value between 0 and 1 specifying the percentile cutoff for selecting genes based on
+biological variation (e.g., top percentile).}
 
-\item{span}{description}
+\item{span}{Numeric. A numeric value specifying the span parameter for smoothing procedures used when \code{approach = vst}.
+The default is set to 0.3.}
 
-\item{clustering.method}{description}
+\item{clustering.method}{Character. A character specifying the clustering approach to be used
+when grouping continuous variables. The default is set to \code{kmeans}.}
 
-\item{nb.clusters}{description}
+\item{nb.clusters}{Numeric. A numeric value specifying the number of clusters to be formed. The default is set to 3.}
 
-\item{samples.to.use}{description}
+\item{samples.to.use}{Logical. A logical vector specifying which samples to use for finding highly variable genes. The
+default is set to \code{all}; all samples will be used.}
 
-\item{normalization}{description}
+\item{normalization}{Character. A character specifying which normalization method should be applied before finding
+highly variable genes. The default is set to \code{CPM}. Refer to \code{applyOtherNormalization} function for more details.}
 
-\item{regress.out.variables}{description}
+\item{regress.out.variables}{Character. A character vector specifying one or more column names in the sample annotation
+that will be regressed out before finding highly variable genes. The default is set to \code{NULL}.}
 
-\item{regress.out.rle.med}{description}
+\item{regress.out.rle.med}{Logical. A logical value indicating whether to regress out the median of RLE (relative log
+expression) per sample after normalization and regression. The default is set to \code{FALSE}.}
 
-\item{center}{TTT}
+\item{center}{Logical. A logical value indicating whether to mean-center the data before applying PCA. The default is
+set to \code{TRUE}.}
 
-\item{scale}{TTT}
+\item{scale}{Logical. A logical value indicating whether to scale the data before applying PCA. The default is set to \code{TRUE}.}
 
-\item{svd.bsparam}{TTT}
+\item{svd.bsparam}{List. A list of parameters controlling SVD or basis decomposition (e.g., rank selection or algorithm options).}
 
-\item{apply.log}{description}
+\item{apply.log}{Logical. A logical value indicating whether to apply a log-transformation to the normalized data.
+The default is set to \code{TRUE}.}
 
-\item{pseudo.count}{description}
+\item{pseudo.count}{Numeric. A numeric value specifying the pseudo-count to add to the data values prior to
+log-transformation. The default is set to 1.}
 
-\item{nb.cores}{TTT}
+\item{nb.cores}{Numeric. A numeric value specifying the number of CPU cores to use for parallel computations. If set to
+\code{NULL}, the function will find the maximum available cores minus one for the analysis.}
 
-\item{hvg.group.name}{description}
+\item{hvg.group.name}{Character. A character specifying the grouping variable used when selecting HVGs within groups.}
 
-\item{hvg.set.name}{description}
+\item{hvg.set.name}{Character. A character specifying the label for the HVG set that will be stored in metadata.}
 
-\item{check.se.obj}{TTT}
+\item{check.se.obj}{Logical. A logical value indicating whether to validate the SummarizedExperiment object structure,
+assays, and annotation before running the function. The default is set to \code{TRUE}.}
 
-\item{remove.na}{description}
+\item{remove.na}{Character. A character specifying whether to remove missing values from the \code{assays}, the
+\code{sample.annotation}, \code{both}, or \code{none}. The default is set to \code{both}.}
 
-\item{save.se.obj}{description}
+\item{save.se.obj}{Logical. A logical value indicating whether to save the results, highly variable genes, in the
+SummarizedExperiment object (\code{TRUE}) or to return them as a list (\code{FALSE}).}
 
-\item{verbose}{description}
+\item{verbose}{Logical. A logical value indicating whether to print detailed messages about progress and steps of the
+function. The default is set to \code{TRUE}.}
 }
 \description{
-Find highly variable genes on RNA-seq data.
+A short description...
+}
+\details{
+Additional details...
 }
 \author{
 Ramyar Molania

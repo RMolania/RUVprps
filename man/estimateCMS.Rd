@@ -28,49 +28,60 @@ estimateCMS(
 )
 }
 \arguments{
-\item{se.obj}{description}
+\item{se.obj}{A \code{SummarizedExperiment} object containing the RNA-seq data.}
 
-\item{assay.names}{description}
+\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the \code{SummarizedExperiment}
+object to be used for CMS subtype estimation.}
 
-\item{raw.count.assay.name}{description}
+\item{raw.count.assay.name}{Character. The name of the assay containing raw counts, used if normalization or log
+transformation is applied.}
 
-\item{subtype}{description}
+\item{subtype}{Character. The subtype classification method to use. Options are those supported by \code{CMScaller}.}
 
-\item{tissue.type}{description}
+\item{tissue.type}{Character. A character string specifying the tissue type (e.g., \code{colon}, \code{rectum}) for subtype assignment.}
 
-\item{groups}{description}
+\item{groups}{Character. A vector of group labels to be used for stratification or annotation in the subtype analysis.}
 
-\item{templates}{description}
+\item{templates}{Character. A template set for CMS classification, as required by \code{CMScaller}.}
 
-\item{row.names}{description}
+\item{row.names}{Character or logical. Indicates whether to use row names as gene identifiers.}
 
-\item{count.data}{description}
+\item{count.data}{Logical. If \code{TRUE}, the input assay data are treated as raw counts. The default is \code{FALSE}.}
 
-\item{nb.perm}{description}
+\item{nb.perm}{Integer. Number of permutations for the subtype classification. The default is as in \code{CMScaller}.}
 
-\item{fdr}{description}
+\item{fdr}{Numeric. False discovery rate threshold to call CMS subtypes.}
 
-\item{generate.plot}{description}
+\item{generate.plot}{Logical. If \code{TRUE}, diagnostic plots of subtype classification will be generated. The default is \code{TRUE}.}
 
-\item{nb.cores}{description}
+\item{nb.cores}{Integer. Number of CPU cores to use for parallel processing. The default is 1.}
 
-\item{apply.log}{description}
+\item{apply.log}{Logical. Indicates whether to apply log2 transformation to the input assay data. The default is \code{TRUE}.}
 
-\item{pseudo.count}{description}
+\item{pseudo.count}{Numeric. A pseudo count value to be added prior to log2 transformation to avoid \code{-Inf} values.
+The default is set to 1.}
 
-\item{out.put.name}{description}
+\item{out.put.name}{Character. The name prefix for saving the output results or plots.}
 
-\item{check.se.obj}{description}
+\item{check.se.obj}{Logical. If \code{TRUE}, the input \code{SummarizedExperiment} object will be checked for validity before
+processing. The default is \code{TRUE}.}
 
-\item{remove.na}{description}
+\item{remove.na}{Character. Indicates how missing values should be handled. Options are \code{assays} or \code{none}. The
+default is \code{assays}.}
 
-\item{seed}{description}
+\item{seed}{Integer. A random seed to ensure reproducibility of the results.}
 
-\item{verbose}{description}
+\item{verbose}{Logical. If \code{TRUE}, messages and progress updates will be displayed during function execution. The
+default is \code{TRUE}.}
+}
+\value{
+A \code{SummarizedExperiment} object with CMS subtype classification results added to the metadata, along with
+optional plots if \code{generate.plot = TRUE}.
 }
 \description{
-This function employees the \code{CMScaller} function from the \code{CMScaller} R package to estimates the CMS subtypes of
-colorectal cancer RNA-seq data
+This function employs the \code{CMScaller} function from the \code{CMScaller} R package to estimate the CMS subtypes of
+colorectal cancer RNA-seq data. The function allows flexibility in choosing assays, applying transformations,
+handling missing values, and parallelizing computations.
 }
 \author{
 Ramyar Molania

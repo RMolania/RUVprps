@@ -24,40 +24,50 @@ plotVariables(
 )
 }
 \arguments{
-\item{se.obj}{TTT}
+\item{se.obj}{A \code{SummarizedExperiment} object containing the data and sample annotations to be plotted.}
 
-\item{x.variables}{TTT}
+\item{x.variables}{Character. The variable(s) from the sample annotations to be used as x-axis in the plot(s).}
 
-\item{y.variables}{TTTT}
+\item{y.variables}{Character. The variable(s) from the sample annotations to be used as y-axis in the plot(s).}
 
-\item{cat.test}{TTTT}
+\item{cat.test}{Character. The statistical test to apply when comparing categorical variables (e.g., \code{"chisq"}, \code{"fisher"}).}
 
-\item{cont.test}{TTTT}
+\item{cont.test}{Character. The statistical test to apply when comparing continuous variables (e.g., \code{"t.test"}, \code{"wilcox"}).}
 
-\item{generate.heatmap}{TTTT}
+\item{generate.heatmap}{Logical. If \code{TRUE}, a heatmap of the specified variables will be generated in addition to plots.
+The default is \code{FALSE}.}
 
-\item{legend.title}{TTTT}
+\item{legend.title}{Character. A string specifying the title of the legend.}
 
-\item{legend.labels}{TTTT}
+\item{legend.labels}{Character vector. Labels to be used for categories in the legend.}
 
-\item{nb.ncol}{TTTT}
+\item{nb.ncol}{Numeric. Number of columns to arrange plots in when multiple plots are generated. The default is 1.}
 
-\item{x.lab}{TTTT}
+\item{x.lab}{Character. A string specifying the x-axis label.}
 
-\item{y.lab}{TTTTT}
+\item{y.lab}{Character. A string specifying the y-axis label.}
 
-\item{plot.out.put}{TTTTT}
+\item{plot.out.put}{Logical. If \code{TRUE}, the plots are displayed during function execution. If \code{FALSE}, the plots
+are returned as a list without being displayed. The default is \code{TRUE}.}
 
-\item{color.palette}{TTTTT}
+\item{color.palette}{Character or function. Specifies the color palette to use for plots. Defaults to \code{ggplot2}
+color scales if not provided.}
 
-\item{check.se.object}{TTTTT}
+\item{check.se.object}{Logical. Indicates whether to validate the structure of the \code{SummarizedExperiment} object
+before plotting. The default is \code{TRUE}.}
 
-\item{remove.na}{TTTTT}
+\item{remove.na}{Character. Specifies how to handle missing values. Options are: \code{"all"} (remove all rows with NAs),
+\code{"pairwise"} (remove only for specific variable comparisons), or \code{"none"}. The default is \code{"all"}.}
 
-\item{verbose}{TTTTT}
+\item{verbose}{Logical. If \code{TRUE}, messages describing progress and steps of the function will be displayed. The
+default is \code{TRUE}.}
+}
+\value{
+A list of plots (scatter plots, boxplots, or heatmaps) depending on the input options.
 }
 \description{
-This function plots any variables in a SummarizedExperiment object
+This function plots variables stored in a \code{SummarizedExperiment} object, including categorical and continuous
+variables. It can generate scatter plots, boxplots, or heatmaps depending on the input and options selected.
 }
 \author{
 Ramyar Molania

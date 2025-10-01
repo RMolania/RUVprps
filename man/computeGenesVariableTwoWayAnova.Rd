@@ -25,67 +25,56 @@ computeGenesVariableTwoWayAnova(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.names}{Character. A character string or vector of character strings specifying the name(s) of the assay(s)
-in the SummarizedExperiment object to compute the ANOVA. By default is set to 'all', which means all assays of the
-SummarizedExperiment object will be selected.}
+\item{assay.names}{Character. A character string or vector specifying the name(s) of the assay(s) to compute ANOVA.
+Defaults to \code{"all"} to select all assays.}
 
-\item{bio.variables}{Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
-object that contains a categorical variable, such as experimental batches, etc.}
+\item{bio.variables}{Character. Column name(s) in \code{colData(se.obj)} representing biological variables for ANOVA.}
 
-\item{uv.variables}{Character. A character string indicating a column name in the sample annotation of the SummarizedExperiment
-object that contains a categorical variable, such as experimental batches, etc.}
+\item{uv.variables}{Character. Column name(s) in \code{colData(se.obj)} representing unwanted variation variables.}
 
-\item{nb.bio.clusters}{TTT}
+\item{nb.bio.clusters}{Numeric. Number of clusters to use for grouping biological variables if clustering is applied.}
 
-\item{bio.clustering.method}{TTTT}
+\item{bio.clustering.method}{Character. Method used for clustering biological variables (e.g., \code{"kmeans"}, \code{"hierarchical"}).}
 
-\item{nb.uv.clusters}{TTT}
+\item{nb.uv.clusters}{Numeric. Number of clusters to use for unwanted variation variables if clustering is applied.}
 
-\item{uv.clustering.method}{TTT}
+\item{uv.clustering.method}{Character. Method used for clustering unwanted variation variables (e.g., \code{"kmeans"}, \code{"hierarchical"}).}
 
-\item{samples.to.use}{TTT}
+\item{samples.to.use}{Character or NULL. Vector of sample IDs to include in the analysis. If \code{NULL}, all samples are used.}
 
-\item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data before performing ANOVA. The
-default is set to \code{TRUE}.}
+\item{apply.log}{Logical. Indicates whether to log-transform the assay data before ANOVA. Default is \code{TRUE}.}
 
-\item{pseudo.count}{Numeric. A numeric value representing a pseudo count to be added to all measurements before applying
-the log transformation. The default is set to 1.}
+\item{pseudo.count}{Numeric. Pseudo-count added to assay values before log transformation. Default is 1.}
 
-\item{nb.cores}{TTT}
+\item{nb.cores}{Numeric. Number of CPU cores to use for parallel computation. Default is 1.}
 
-\item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object. The default is set to \code{TRUE}.
-This means the function will apply the \code{checkSeObj()} function.}
+\item{check.se.obj}{Logical. If \code{TRUE}, validates the \code{SummarizedExperiment} object before analysis. Default is \code{TRUE}.}
 
-\item{remove.na}{Character. A character string specifying whether to eliminate missing values from \code{assays}, \code{sample.annotation},
-\code{both}, or \code{none}. When 'assays' is chosen, genes with missing values will be omitted. If 'sample.annotation' is selected,
-samples with NA or missing values for each 'variable' will be excluded. The default is 'both'.}
+\item{remove.na}{Character. Specifies how to handle missing values: \code{"assays"}, \code{"sample.annotation"}, \code{"both"}, or \code{"none"}.
+Default is \code{"both"}.}
 
-\item{override.check}{Logical. When set to TRUE, the function checks whether ANOVA has already been computed for the
-current parameters on the SummarizedExperiment object. If it has, the metric will not be recalculated. The default is
-set to \code{FALSE}.}
+\item{override.check}{Logical. If \code{TRUE}, recalculates ANOVA even if results already exist in the object metadata. Default is \code{FALSE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the results, ANOVA F-statistics, and p-values in the metadata
-of the SummarizedExperiment object or to output these results as a list or vector. The default is set to \code{TRUE}.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves F-statistics and p-values in the metadata of the \code{SummarizedExperiment} object;
+otherwise returns results as a list. Default is \code{TRUE}.}
 
-\item{verbose}{Logical. If \code{TRUE}, displays the messages of different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages for progress and steps. Default is \code{TRUE}.}
 }
 \value{
-Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
-variable or a list of these results.
+Either a \code{SummarizedExperiment} object containing log2-transformed F-statistics and p-values for ANOVA
+or a list of these results.
 }
 \description{
-This function calculates the ANOVA between individual gene expression of the assay(s) in a SummarizedExperiment object
-and a categorical variable as factor.
+This function calculates the ANOVA between individual gene expression of the assay(s) in a \code{SummarizedExperiment} object
+and a categorical variable as a factor.
 }
 \details{
-ANOVA enables us to assess the effects of a given qualitative variable (which we call a factor) on gene expression
-measurements across any set of groups (labeled by the levels of the factor) under study. We use ANOVA F-statistics
-to summarize the effects of a qualitative source of unwanted variation (for example, batches) on the expression levels
-of individual genes, where genes having large F-statistics are deemed to be affected by the unwanted variation.
-We also use ANOVA tests (the aov() function in R) to assign P values to the association between tumor purity and
-molecular subtypes.
+ANOVA enables assessment of the effect of a given qualitative variable (factor) on gene expression measurements
+across groups labeled by the factor's levels. F-statistics summarize the effects of a qualitative source of unwanted
+variation (e.g., batch) on gene expression, with larger F-statistics indicating stronger association. P-values
+are assigned using R's \code{aov()} function to quantify associations with variables such as tumor purity or molecular subtypes.
 }
 \author{
 Ramyar Molania
