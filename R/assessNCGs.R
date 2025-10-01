@@ -3,28 +3,35 @@
 #' @author Ramyar Molania
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character. A character or a vector of characters specifying the name(s) of the data (assays) in the
-#' SummarizedExperiment object to be selected. These data stes will be log2-transformed with a pseudo count. The default
-#' is se to `all`, which indicates that all data sets in the SummarizedExperiment object will be selected.
-#' @param variables.to.assess.ncg TTT
-#' @param ncg TTTT
-#' @param apply.log TTTT
-#' @param pseudo.count Numeric. A numeric value as pseudo count value to be added to all measurements in the selected
-#' data sets before applying the log2 transformation, to avoid `-Inf` values for zero measurements. The default is set to 1.
-#' @param nb.pcs TTT
-#' @param svd.bsparam TTT
-#' @param center TTTT
-#' @param scale TTT
-#' @param plot.output TTT
-#' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default it is
-#'  set to `TRUE`.
-#' @param remove.na Character. A Character that indicates whether to remove NA or missing values from the data sets or
-#' not. The options are: `assays` or `none`. The default is set to `assays`.  Refer to the `checkSeObj()` function for more
-#' details.
-#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
-#' `TRUE`.
+#' @param assay.name Character. A character specifying the name of the data (assay) in the SummarizedExperiment object
+#' to be selected. This data be will be used to assess the performance of NCGs. The data should the same one used for the
+#' identification of the NCG.
+#' @param variables.to.assess.ncg Character or character vector. Specifies the column name(s) in the sample annotation
+#' of the SummarizedExperiment object corresponding to variables for which NCG performance should be assessed.
+##' @param ncg Logical. A logical vector specifying a set of NCG whose performance will be assessed.
+#' @param apply.log Logical. Indicates whether to apply log2 transformation to the selected data set. The default is set
+#' to `TRUE`.
+#' @param pseudo.count Numeric. A numeric value to be added to all measurements in the selected
+#' data sets before applying the log2 transformation to avoid `-Inf` values for zero measurements. The default is set to 1.
+#' @param nb.pcs Numeric. Specifies the number of principal components to retain when performing PCA on the data. The PCs
+#' will be used for the assessment. The default is set to 3.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+#' PCA using SVD. The default is set to `bsparam()`. We refer to the `runSVD()` function from the **BiocSingular** R package
+#' for further details.
+#' @param center Logical. Indicates whether to center the data or not before calculating PCs. If center is `TRUE`, then
+#' centering is done by subtracting the column means of the assay from their corresponding columns. The default is set
+#' to `TRUE`.
+#' @param scale Logical. Indicates whether to scale the data or not before calculating PCs. If scale is set to `TRUE`, then
+#' scaling is done by dividing the (centered) columns of the assays by their standard deviations if center is `TRUE`, and
+#' the root mean square otherwise. The default is set to `FALSE`.
+#' @param plot.output Logical. Indicates whether to generate and display performance plots of NCG. Default is `TRUE`.
+#' @param check.se.obj Logical. Indicates whether to validate the SummarizedExperiment object before analysis. The default
+#' is set to `TRUE`.
+#' @param remove.na Character. Indicates whether to remove NA or missing values from the data sets. Options are: `assays`
+#' or `none`. Default is `assays`. Refer to the `checkSeObj()` function for more details.
+#' @param verbose Logical. Indicates whether to display messages during function execution. The default is set `TRUE`.
 #'
-#' @return The function returns a log2 transformed of all specified data sets as a list object.
+#' @return A line-dot plot show the association between the first few PCs and the variables
 
 assessNCGs <- function(
         se.obj,
@@ -33,7 +40,7 @@ assessNCGs <- function(
         ncg,
         apply.log = TRUE,
         pseudo.count = 1,
-        nb.pcs,
+        nb.pcs = 3,
         svd.bsparam = bsparam(),
         center = TRUE,
         scale = FALSE,
@@ -42,6 +49,11 @@ assessNCGs <- function(
         remove.na = 'none',
         verbose = TRUE
         ){
+    printColoredMessage(
+        message = '------------The assessNCGs function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     printColoredMessage(
         message = '-- Assessing the performance of selected NCG set:',
         color = 'magenta',
@@ -169,5 +181,10 @@ assessNCGs <- function(
         )
     assess.ncg.plot <- assess.ncg.plot / p.pca.percentage + plot_layout(heights = c(3, 1))
     if (isTRUE(plot.output)) print(assess.ncg.plot)
+    printColoredMessage(
+        message = '------------The assessNCGs function finished:',
+        color = 'white',
+        verbose = verbose
+        )
     return(assess.ncg.plot)
 }
