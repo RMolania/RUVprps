@@ -1,4 +1,4 @@
-#' Performs several normalization methods for RNA-seq data.
+#' Perform several normalization methods for RNA-seq data.
 #'
 #' @author Ramyar Molania
 #'
