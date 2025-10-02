@@ -8,7 +8,7 @@
 #' @details
 #' Additional details...
 #'
-#' @param se.obj SummarizedExperiment. A SummarizedExperiment object containing data and sample annotation.
+#' @param se.obj SummarizedExperiment. A SummarizedExperiment object.
 #' @param assay.name Character. A character specifying the name of the data within the SummarizedExperiment object
 #' to be used for finding highly variable genes.
 #' @param approach Character. A character specifying the strategy or method to use to find highly variable genes. The options

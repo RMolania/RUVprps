@@ -1,10 +1,10 @@
-#' Generate boxplots for the k-nearest neighbor batch effect test (kBET).
+#' Generate boxplots for the k-nearest neighbor batch effect test (kBET) scores.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
 #' This function generates barplots of the k-nearest neighbor batch effect test (kBET) for individual dataset(s) in the
-#' `SummarizedExperiment` object. Before applying the function, the `computeKbet` function should have been applied on the
+#' `SummarizedExperiment` object. Before applying the function, the `computeKbet()` function should have been applied on the
 #' specified dataset(s).
 #'
 #' @param se.obj A SummarizedExperiment object.
