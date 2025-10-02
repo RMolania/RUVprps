@@ -17,7 +17,7 @@ and pseudo-replicates of pseudo-samples (PRPS).
 ## ✨ Key Features
 
 - Comprehensive diagnostic and assessment tools to evaluate both biological and unwanted variation in RNA-seq data  
-- Robust strategies to identify unknown sources of unwanted variation  
+- Robust strategies to identify unknown sources of unwanted variation 
 - Unsupervised methods for identifying PRPS and negative control genes (NCGs), particularly when biological variation is unknown  
 - A fast and scalable implementation of RUV-III for efficient normalization of large datasets, with flexible parameter tuning  
 - A comprehensive numerical summary of normalization performance, helping users select the most appropriate strategy  
