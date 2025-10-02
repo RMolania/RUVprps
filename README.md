@@ -3,9 +3,14 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-**RUVprps** implements *RUV-III with pseudo-replicates of pseudo-samples (PRPS)* — a novel strategy for transcriptomics data normalization when technical replicates are unavailable or poorly designed.  
+**RUVprps** implements *RUV-III with pseudo-replicates of pseudo-samples (PRPS)*, a novel strategy for transcriptomics 
+data normalization when technical replicates are unavailable or poorly designed. RUVprps can also accommodate pseudo-replicate,
+technical replicate or a combination of them.
 
-This user-friendly R package provides an end-to-end workflow for removing unwanted variation from large-scale transcriptomic datasets, whether derived from a single study or multiple studies. RUV-III effectively corrects for sources of variation such as library size, batch effects, and tumor purity. The package accommodates technical replicates, pseudo-replicates (PR), and pseudo-replicates of pseudo-samples (PRPS).  
+This user-friendly R package provides an end-to-end workflow for removing unwanted variation from large-scale transcriptomic
+datasets, whether derived from a single study or multiple studies. RUV-III effectively corrects for sources of variation 
+such as library size, batch effects, and tumor purity. The package accommodates technical replicates, pseudo-replicates (PR),
+and pseudo-replicates of pseudo-samples (PRPS).  
 
 ---
 
@@ -37,7 +42,7 @@ Additionally, the `assessNormalization()` function numerically summarizes result
 
 ## 📖 Citation
 
-A manuscript describing RUVprps is in preparation. In the meantime, if you use **RUVprps**, please cite:  
+A manuscript describing RUVprps will be available soon. In the meantime, if you use **RUVprps**, please cite:  
 
 Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP.  
 *Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnology.** 2023;41(1):82–95.  
