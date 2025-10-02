@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotKbet.R
 \name{plotKbet}
 \alias{plotKbet}
-\title{Generate boxplots for the k-nearest neighbor batch effect test (kBET).}
+\title{Generate boxplots for the k-nearest neighbor batch effect test (kBET) scores.}
 \usage{
 plotKbet(
   se.obj,
@@ -41,7 +41,7 @@ categorical variable(s).
 }
 \description{
 This function generates barplots of the k-nearest neighbor batch effect test (kBET) for individual dataset(s) in the
-\code{SummarizedExperiment} object. Before applying the function, the \code{computeKbet} function should have been applied on the
+\code{SummarizedExperiment} object. Before applying the function, the \code{computeKbet()} function should have been applied on the
 specified dataset(s).
 }
 \author{

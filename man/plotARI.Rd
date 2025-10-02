@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotARI.R
 \name{plotARI}
 \alias{plotARI}
-\title{Generate barplot or scatter plot the Adjusted Rand Index (ARI).}
+\title{Generate barplots or scatter plots the Adjusted Rand Index (ARI).}
 \usage{
 plotARI(
   se.obj,

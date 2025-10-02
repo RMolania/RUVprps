@@ -512,7 +512,7 @@ createPrPsUnSupervisedByCca <- function(
                         center = TRUE,
                         scale = FALSE
                         )
-                    Y0 <- optimized_function(Y, m.matrix)
+                    Y0 <- fastResidop2(Y, m.matrix)
                     left.sing.value <- BiocSingular::runSVD(
                         x = Y0,
                         k = k,
@@ -1233,7 +1233,7 @@ createPrPsUnSupervisedByCca <- function(
                                 center = TRUE,
                                 scale = FALSE
                             )
-                            Y0 <- optimized_function(Y, m.matrix)
+                            Y0 <- fastResidop2(Y, m.matrix)
                             left.sing.value <- BiocSingular::runSVD(
                                 x = Y0,
                                 k = k,

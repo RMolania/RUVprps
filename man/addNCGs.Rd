@@ -24,7 +24,7 @@ A SummarizedExperiment object with a metadata that contains the NCG set(s).
 }
 \description{
 This function adds pre-selected set(s) of gene(s) as negative control genes (NCGs) to a SummarizedExperiment object.
-This genes can be used for RUV-III normalization, identification of unknown unwanted variation, normalization performance
+These genes can be used for RUV-III normalization, identification of unknown unwanted variation, and normalization performance
 assessment.
 }
 \details{
@@ -48,11 +48,8 @@ The actual gene set is stored in:
 }\if{html}{\out{</div>}}
 }
 \references{
-Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. \emph{Nucleic Acids Research}.
-\link{https://doi.org/10.1093/nar/gkz655}
-
-Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. \emph{Nature Biotechnology}
-\link{https://doi.org/10.1038/s41587-022-01440-w}
+Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. \emph{Nucleic Acids Research}. \url{https://doi.org/10.1093/nar/gkz655}
+Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. \emph{Nature Biotechnology}. \url{https://doi.org/10.1038/s41587-022-01440-w}
 }
 \author{
 Ramyar Molania

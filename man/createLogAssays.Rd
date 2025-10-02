@@ -2,7 +2,7 @@
 % Please edit documentation in R/createLogAssays.R
 \name{createLogAssays}
 \alias{createLogAssays}
-\title{Applies log-transformation to the assay(s) of a SummarizedExperiment object.}
+\title{Apply log-transformation to the assay(s) of a SummarizedExperiment object.}
 \usage{
 createLogAssays(
   se.obj,
@@ -26,7 +26,8 @@ be selected.}
 
 \item{replace.assays}{Logical. If 'TRUE', the original assay(s) will be replaced with the log-transformed values.}
 
-\item{new.name}{Character. A symbol to append to the name(s) of the assay(s) for the log-transformed data. The default is 'log.'.}
+\item{new.name}{Character. A character string to append to the name(s) of the dataset(s) for the log-transformed data.
+The default is paste('Log.', assayName).}
 
 \item{apply.round}{Logical. If 'TRUE', the measurements in the individual assays will be rounded to two decimal places.
 The default is 'TRUE'.}
@@ -34,8 +35,8 @@ The default is 'TRUE'.}
 \item{verbose}{Logical. If \code{TRUE}, the function will display messages about the different steps being executed.}
 }
 \description{
-Applies log-transformation to the assay(s) of a SummarizedExperiment object.
+Apply log-transformation to the assay(s) of a SummarizedExperiment object.
 }
 \author{
-Marie Trussart
+Ramyar Molania
 }

@@ -40,7 +40,7 @@ will be removed.}
 or not. If \code{TRUE} , all the possible homogeneous groups will be saved into 'se.obj->metadata->HomogeneousGroups->
 BiologicalVariables ; otherwise, the results will be returned as a vector. The default is set to \code{TRUE}.}
 
-\item{verbose}{Logical. If \code{TRUE} , displays messages for different steps of the function.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages for different steps of the function.}
 }
 \value{
 Either a \code{SummarizedExperiment} object containing all possible homogeneous groups in the metadata or a vector

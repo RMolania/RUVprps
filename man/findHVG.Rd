@@ -39,7 +39,7 @@ findHVG(
 )
 }
 \arguments{
-\item{se.obj}{SummarizedExperiment. A SummarizedExperiment object containing data and sample annotation.}
+\item{se.obj}{SummarizedExperiment. A SummarizedExperiment object.}
 
 \item{assay.name}{Character. A character specifying the name of the data within the SummarizedExperiment object
 to be used for finding highly variable genes.}

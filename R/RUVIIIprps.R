@@ -899,8 +899,8 @@ RUVIIIprps <- function(
             color = 'blue',
             verbose = verbose
             )
-        # Y0 <- fastResidop2(Y, M)
-        Y0 <- optimized_function(Y, M)
+        Y0 <- fastResidop2(Y, M)
+        # Y0 <- optimized_function(Y, M)
         ## applying svd on the residuals and the obtain alpha ####
         printColoredMessage(
             message = '- Applying SVD on the residuals to obtain full alpha.',
