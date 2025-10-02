@@ -3,8 +3,8 @@
 #' @author Ramyar Molania
 #'
 #' @references
-#' Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. *Nucleic Acids Research*. \url{https://doi.org/10.1093/nar/gkz655}
-#' Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. *Nature Biotechnology*. \url{https://doi.org/10.1038/s41587-022-01440-w}
+#' - Molania R., et al. (2019). A new normalization for Nanostring nCounter gene expression data. *Nucleic Acids Research*. \url{https://doi.org/10.1093/nar/gkz655}
+#' - Molania R., et al. (2023). Removing unwanted variation from large-scale RNA sequencing data with PRPS. *Nature Biotechnology*. \url{https://doi.org/10.1038/s41587-022-01440-w}
 #'
 #' @description
 #' This function adds pre-selected set(s) of gene(s) as negative control genes (NCGs) to a SummarizedExperiment object.

@@ -5,14 +5,21 @@
 #' @description
 #' This functions uses a linear model to regresses out any specified variables from data in SummarizedExperiment object.
 #'
-#' @param se.obj description
-#' @param assay.name description
-#' @param variables description
-#' @param apply.log description
-#' @param pseudo.count TTTT
-#' @param check.se.obj description
-#' @param remove.na description
-#' @param verbose description
+#' @param se.obj A SummarizedExperiment object.
+#' @param assay.name Character. A character specifying the name of the data (assay) in the SummarizedExperiment object
+#' to be selected.
+#' @param variables Character. A character string or vector specifying column names in the sample annotation of the
+#' `SummarizedExperiment` object. These columns can be categorical, continuous, or a combination of both. These variable
+#' will be regressed out from the data.
+#' @param apply.log Logical. If `TRUE`, a log2 transformation + `pseudo.count` will be applied to the data before applying
+#' regression analysis.
+#' @param pseudo.count Numeric. A numerical value to be addedd to all measurements before applying a log transformation.
+#' The default is set to 1
+#' @param check.se.obj Logical. Indicates whether to validate the SummarizedExperiment object before analysis. The default
+#' is set to `TRUE`.
+#' @param remove.na Character. Indicates whether to remove NA or missing values from the data sets. Options are: `assays`
+#' or `none`. Default is `assays`. Refer to the `checkSeObj()` function for more details.
+#' @param verbose Logical. Indicates whether to display messages during function execution. The default is set `TRUE`.
 #'
 #' @importFrom stats model.matrix residuals
 #' @importFrom limma lmFit

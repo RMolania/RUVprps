@@ -16,21 +16,28 @@ regressOutVariables(
 )
 }
 \arguments{
-\item{se.obj}{description}
+\item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{description}
+\item{assay.name}{Character. A character specifying the name of the data (assay) in the SummarizedExperiment object
+to be selected.}
 
-\item{variables}{description}
+\item{variables}{Character. A character string or vector specifying column names in the sample annotation of the
+\code{SummarizedExperiment} object. These columns can be categorical, continuous, or a combination of both. These variable
+will be regressed out from the data.}
 
-\item{apply.log}{description}
+\item{apply.log}{Logical. If \code{TRUE}, a log2 transformation + \code{pseudo.count} will be applied to the data before applying
+regression analysis.}
 
-\item{pseudo.count}{TTTT}
+\item{pseudo.count}{Numeric. A numerical value to be addedd to all measurements before applying a log transformation.
+The default is set to 1}
 
-\item{check.se.obj}{description}
+\item{check.se.obj}{Logical. Indicates whether to validate the SummarizedExperiment object before analysis. The default
+is set to \code{TRUE}.}
 
-\item{remove.na}{description}
+\item{remove.na}{Character. Indicates whether to remove NA or missing values from the data sets. Options are: \code{assays}
+or \code{none}. Default is \code{assays}. Refer to the \code{checkSeObj()} function for more details.}
 
-\item{verbose}{description}
+\item{verbose}{Logical. Indicates whether to display messages during function execution. The default is set \code{TRUE}.}
 }
 \description{
 This functions uses a linear model to regresses out any specified variables from data in SummarizedExperiment object.

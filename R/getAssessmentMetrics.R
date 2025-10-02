@@ -4,15 +4,15 @@
 #'
 #' @description
 #' This function provides the names of all possible assessment plots and metrics for the given variable(s). The list
-#' can be used in the `assessVariation` and `assessNormalization` functions.
+#' can be used in the `assessVariation()` and `assessNormalization()` functions.
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param bio.variables Character string or vector. Specifies the column name(s) of variables in the sample annotation
 #' of the SummarizedExperiment object. The `variables` can be either categorical or continuous.
 #' @param uv.variables Character string or vector. Specifies the column name(s) of variables in the sample annotation
 #' of the SummarizedExperiment object. The `variables` can be either categorical or continuous.
-#' @param plot.output Logical. Whether to display the plot of all possible assessment plots. Default is `TRUE`.
-#' @param save.se.obj Logical. Whether to save the results into the SummarizedExperiment object. Default is `TRUE`.
+#' @param plot.output Logical. Whether to display the plot of all possible assessment plots. The default is set to `TRUE`.
+#' @param save.se.obj Logical. Whether to save the results into the SummarizedExperiment object.The default is set to  `TRUE`.
 #'
 #' @return A list of all possible assessment metrics for the variables.
 #'

@@ -21,16 +21,16 @@ of the SummarizedExperiment object. The \code{variables} can be either categoric
 \item{uv.variables}{Character string or vector. Specifies the column name(s) of variables in the sample annotation
 of the SummarizedExperiment object. The \code{variables} can be either categorical or continuous.}
 
-\item{plot.output}{Logical. Whether to display the plot of all possible assessment plots. Default is \code{TRUE}.}
+\item{plot.output}{Logical. Whether to display the plot of all possible assessment plots. The default is set to \code{TRUE}.}
 
-\item{save.se.obj}{Logical. Whether to save the results into the SummarizedExperiment object. Default is \code{TRUE}.}
+\item{save.se.obj}{Logical. Whether to save the results into the SummarizedExperiment object.The default is set to  \code{TRUE}.}
 }
 \value{
 A list of all possible assessment metrics for the variables.
 }
 \description{
 This function provides the names of all possible assessment plots and metrics for the given variable(s). The list
-can be used in the \code{assessVariation} and \code{assessNormalization} functions.
+can be used in the \code{assessVariation()} and \code{assessNormalization()} functions.
 }
 \author{
 Ramyar Molania

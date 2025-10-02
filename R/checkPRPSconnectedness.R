@@ -1,16 +1,24 @@
-#' Assesses the disconnectedness across PRPS sets.
+#' Assess the connectedness across PRPS sets.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' A short description...
+#' A replicate or pseudo-replicate set is said to span two batches if it includes samples  or pseudo-samples from both
+#' batches. In such cases, RUV-III will remove the batch  differences captured by those replicates across the two batches.
+#' For experiments with multiple batches, it may not be possible to have a single replicate or pseudo-replicate set that
+#' spans all of them. Instead, it is necessary to construct replicate or pseudo-replicate sets with connections that collectively
+#' cover all batches. The functions that create PRPS data include the argument \code{check.prps.connectedness}.
+#' When set to \code{TRUE}, the function checks connectivity between PRPS sets and reports  how they collectively cover
+#' the specified batches.
 #'
-#' @param data.input A matrix. A
-#' @param min.samples TTTTTT
-#' @param batch.name TTTTTT
-#' @param verbose TTTTTT
-
+#' @param data.input A matrix (table) of PRPS sets across all batches.
+#' @param min.samples Numeric. The minimum number of samples required to create a pseudo-sample.
+#' @param batch.name Character. A character string indicating the name of the source of unwanted variation for which the
+#' connectivity between PRPS sets is assessed.
+#' @param verbose Logical. If `TRUE`, the function displays progress messages. The default is `TRUE`.
+#'
 #' @importFrom Matrix colSums rowSums
+
 checkPRPSconnectedness <- function(
         data.input,
         min.samples,
