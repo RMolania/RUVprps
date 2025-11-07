@@ -86,6 +86,67 @@
 #' @importFrom edgeR cpm
 #' @export
 
+# raw.count <- data.table::fread(
+#     '/Users/molania.r/Documents/Current_Projects/Project_DFCI_2_RUVprpsApplication/Application_RUVprps/data/Tumor-25.01-Polya_ensembl_counts_60499genes_2025-03-03.tsv')
+# raw.count <- as.data.frame(raw.count)
+# gene.names <- raw.count$Gene
+# raw.count <- raw.count[ , -1]
+# raw.count <- data.matrix(raw.count)
+# row.names(raw.count) <- gene.names
+#
+#
+# sample.annot <- read.delim('/Users/molania.r/Documents/Current_Projects/Project_DFCI_2_RUVprpsApplication/Application_RUVprps/data/GSE294351_clinical_Treehouse-Tumor-Compendium-25.01-PolyA_20250131v1.tsv')
+# row.names(sample.annot) <- sample.annot$th_dataset_id
+# dim(sample.annot)
+# common.samples <- intersect(sample.annot$th_dataset_id, colnames(raw.count))
+# sample.annot <- sample.annot[common.samples , ]
+# raw.count <- raw.count[ , common.samples ]
+# all.equal(colnames(raw.count), sample.annot$th_dataset_id)
+#
+# row.names(raw.count) <- sub("\\..*$", "", row.names(raw.count))
+#
+# data = raw.count
+# sample.annotation = sample.annot
+# raw.count.assay.name = 'RawCount'
+# remove.lowly.expressed.genes = FALSE
+# count.cutoff = 10
+# biological.group = NULL
+# minimum.proportion = 0.5
+# calculate.library.size = TRUE
+# estimate.tumor.purity = 'both'
+# scale.singscore.values = TRUE
+# assay.name.to.estimate.purity = 'RawCount'
+# create.sample.annotation = FALSE
+# gene.annotation = NULL
+# create.gene.annotation = TRUE
+# add.gene.details = TRUE
+# gene.group = 'ensembl_gene_id'
+# column.name = NULL
+# gene.details = NULL
+# add.housekeeping.genes = TRUE
+# add.immun.stroma.genes = TRUE
+# metaData = NULL
+# verbose = TRUE
+# gene.ids.to.estimate.tumor.purity = 'hgnc_symbol'
+# gene.group = 'ensembl_gene_id'
+#
+# se.obj <- prepareSeObj(
+#     data = raw.count,
+#     sample.annotation = sample.annot,
+#     raw.count.assay.name = 'RawCount',
+#     remove.lowly.expressed.genes = FALSE,
+#     calculate.library.size = TRUE,
+#     estimate.tumor.purity = 'both',
+#     gene.ids.to.estimate.tumor.purity = 'ensembl_gene_id',
+#     scale.singscore.values = TRUE,
+#     gene.annotation = NULL,
+#     create.gene.annotation = TRUE,
+#     add.gene.details = TRUE,
+#     add.housekeeping.genes = TRUE,
+#     assay.name.to.estimate.purity = 'RawCount',
+#     gene.group = 'ensembl_gene_id')
+
+
 prepareSeObj <- function(
         data = NULL,
         sample.annotation = NULL,
@@ -96,6 +157,7 @@ prepareSeObj <- function(
         minimum.proportion = 0.5,
         calculate.library.size = FALSE,
         estimate.tumor.purity = NULL,
+        gene.ids.to.estimate.tumor.purity = 'hgnc_symbol',
         scale.singscore.values = TRUE,
         assay.name.to.estimate.purity = NULL,
         create.sample.annotation = FALSE,
@@ -174,6 +236,9 @@ prepareSeObj <- function(
                 if (nrow(sample.annotation) != ncol(data[[raw.count.assay.name]]) ){
                     stop('The number of rows in the "sample.annotation" must be the same as the number fo the columns in the data.')
                 }
+                if (!all.equal(colnames(data[[1]]), row.names(sample.annotation))){
+                    stop('The colum names of the dataset(s) must be the same as row names of the sample.annotation.')
+                }
             }
             if (isTRUE(remove.lowly.expressed.genes)){
                 printColoredMessage(
@@ -194,8 +259,8 @@ prepareSeObj <- function(
                 stop('To estimate the tumour purity, the "assay.name.to.estimate.purity" must be provided.')
             } else if (!estimate.tumor.purity %in% c("estimate", "singscore", "both")){
                 stop('The "estimate.tumor.purity" must be one of the "estimate", "singscore", "both" or "NULL"')
-            } else if (is.null(gene.group)){
-                stop('To estimate purity, the "gene.group" must be specified to one of the "entrezgene_id", "hgnc_symbol" or "ensembl_gene_id".')
+            } else if (is.null(gene.ids.to.estimate.tumor.purity)){
+                stop('To estimate purity, the "gene.ids.to.estimate.tumor.purity" must be specified to one of the "entrezgene_id", "hgnc_symbol" or "ensembl_gene_id".')
             }
         }
         if (isTRUE(add.gene.details)){
@@ -289,17 +354,18 @@ prepareSeObj <- function(
             assay.n <- 'assay'
         } else assay.n <- 'assays'
         # remove lowly expressed genes ####
-        if (remove.lowly.expressed.genes){
-            printColoredMessage(message = paste0('-- Remove lowly expressed genes from the ', raw.count.assay.name, ' assay.'),
-                                color = 'magenta',
-                                verbose = verbose)
+        if (isTRUE(remove.lowly.expressed.genes)){
+            printColoredMessage(
+                message = paste0('-- Removing lowly expressed genes from the ', raw.count.assay.name, ' assay.'),
+                color = 'magenta',
+                verbose = verbose
+                )
             library.size <- Matrix::colSums(data[[raw.count.assay.name]])
             cpm.data <- edgeR::cpm(y = data[[raw.count.assay.name]], lib.size = NULL)
             cpm.cutoff <- round(count.cutoff/median(library.size) * 1e6, digits = 2)
             if (!is.null(biological.group)){
                 sample.size <- min(table(sample.annotation[[biological.group]]))
-            }
-            if (!is.null(minimum.proportion)){
+            } else if (!is.null(minimum.proportion)){
                 sample.size <- round(ncol(cpm.data) * minimum.proportion, digits = 0)
             }
             if (is.null(minimum.proportion) & is.null(biological.group)){
@@ -330,7 +396,7 @@ prepareSeObj <- function(
             }
         }
         ### calculate library size
-        if (calculate.library.size){
+        if (isTRUE(calculate.library.size)){
             printColoredMessage(
                 message = ' -- Calculating library size.',
                 color = 'magenta',
@@ -490,7 +556,7 @@ prepareSeObj <- function(
             )
         }
         # add housekeeping genes list ####
-        if (add.housekeeping.genes){
+        if (isTRUE(add.housekeeping.genes)){
             printColoredMessage(
                 message = '-- Add several lists of housekeeping genes to the gene annotation:',
                 color = 'magenta',
@@ -520,7 +586,7 @@ prepareSeObj <- function(
                                     col.names = 'nb.genes'))
         }
         # add immune and stroma genes signatures ####
-        if (add.immun.stroma.genes){
+        if (isTRUE(add.immun.stroma.genes)){
             printColoredMessage(
                 message = '-- Add immune and stromal genes signature to the gene annotation:',
                 color = 'magenta',
@@ -554,37 +620,64 @@ prepareSeObj <- function(
         }
         # estimate tumor purity ####
         if (!is.null(estimate.tumor.purity)){
-            printColoredMessage(message = '-- Estimating tumour purity:',
-                                color = 'magenta',
-                                verbose = verbose)
+            printColoredMessage(
+                message = '-- Estimating tumour purity:',
+                color = 'magenta',
+                verbose = verbose
+                )
+            current.row.names <- NULL
+            if (!gene.group %in% c("entrezgene_id", "hgnc_symbol")){
+                if (!is.null(gene.annotation)){
+                    if (sum(colnames(gene.annotation) %in% c("entrezgene_id", "hgnc_symbol")) > 0){
+                        gene.ids <- gene.annotation[[gene.ids.to.estimate.tumor.purity]]
+                        dup.ids <- duplicated(gene.ids)
+                        gene.ids[dup.ids] <- paste('gene', 1:sum(dup.ids))
+                    }
+                    current.row.names <- row.names(data[[assay.name.to.estimate.purity]])
+                    row.names(data[[assay.name.to.estimate.purity]]) <- gene.ids
+                    if (sum(colnames(gene.annotation) %in% c("entrezgene_id", "hgnc_symbol")) == 0){
+                        stop('To estimate tumour purity, the "gene.ids.to.estimate.tumor.purity" must be either "entrezgene_id" or "hgnc_symbol".')
+                    }
+                }
+                if (is.null(gene.annotation)){
+                    stop('To estimate tumour purity, the "gene.ids.to.estimate.tumor.purity" must be either "entrezgene_id" or "hgnc_symbol".')
+                }
+            }
             if (estimate.tumor.purity == 'estimate'){
                 printColoredMessage(
                     message = '-- Estimating tumour purity using the ESTIMATE method:',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 tumour.purity <- tidyestimate::filter_common_genes(
                     df = data[[assay.name.to.estimate.purity]],
-                    id = "hgnc_symbol",
+                    id = gene.ids.to.estimate.tumor.purity,
                     tidy = FALSE,
                     tell_missing = verbose,
-                    find_alias = TRUE)
+                    find_alias = TRUE
+                    )
                 tumour.purity <- tidyestimate::estimate_score(
                     df = tumour.purity,
-                    is_affymetrix = TRUE)
+                    is_affymetrix = TRUE
+                    )
                 tumour.purity <- tumour.purity$purity
                 sample.annotation[['tumour.purity']] <- tumour.purity
+                if (!is.null(current.row.names)){
+                    row.names(data[[assay.name.to.estimate.purity]]) <- current.row.names
+                }
             } else if (estimate.tumor.purity == 'singscore'){
                 printColoredMessage(
                     message = '-- Estimating tumour purity using the singscore method:',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 im.str.gene.sig <- hk_immunStroma$immune.gene.signature == 'TRUE' |
                     hk_immunStroma$stromal.gene.signature == 'TRUE'
-                if (gene.group == "entrezgene_id"){
+                if (gene.ids.to.estimate.tumor.purity == "entrezgene_id"){
                     im.str.gene.sig <- hk_immunStroma$entrezgene_id[im.str.gene.sig]
-                } else if (gene.group == 'hgnc_symbol'){
+                } else if (gene.ids.to.estimate.tumor.purity == 'hgnc_symbol'){
                     im.str.gene.sig <- hk_immunStroma$hgnc_symbol[im.str.gene.sig]
-                } else if (gene.group == 'ensembl_gene_id')
+                } else if (gene.ids.to.estimate.tumor.purity == 'ensembl_gene_id')
                     im.str.gene.sig <- hk_immunStroma$ensembl_gene_id[im.str.gene.sig]
                 tumour.purity <- singscore::rankGenes(data[[assay.name.to.estimate.purity]])
                 tumour.purity <- singscore::simpleScore(
@@ -592,41 +685,49 @@ prepareSeObj <- function(
                     upSet = im.str.gene.sig)
                 tumour.purity <- tumour.purity$TotalScore
                 sample.annotation[['tumour.purity']] <- 1 - tumour.purity
+                if (!is.null(current.row.names)){
+                    row.names(data[[assay.name.to.estimate.purity]]) <- current.row.names
+                }
             } else if (estimate.tumor.purity == 'both'){
                 printColoredMessage(
-                    message = '- Estimate tumour purity using both ESTIMATE and singscore methods:',
+                    message = '- Estimating tumour purity using both ESTIMATE and singscore methods:',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 printColoredMessage(
-                    message = '- Apply Estimate method:',
+                    message = '- Applying the Estimate method:',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 tumour.purity <- tidyestimate::filter_common_genes(
                     df = data[[assay.name.to.estimate.purity]],
-                    id = "hgnc_symbol",
+                    id = gene.ids.to.estimate.tumor.purity,
                     tidy = FALSE,
                     tell_missing = verbose,
-                    find_alias = TRUE)
+                    find_alias = TRUE
+                    )
                 tumour.purity <- tidyestimate::estimate_score(
                     df = tumour.purity,
                     is_affymetrix = TRUE)
                 tumour.purity.estimate <- tumour.purity$purity
                 printColoredMessage(
-                    message = '- Apply singscore method:',
+                    message = '- Applying the singscore method:',
                     color = 'blue',
-                    verbose = verbose)
+                    verbose = verbose
+                    )
                 im.str.gene.sig <- hk_immunStroma$immune.gene.signature == 'TRUE' |
                     hk_immunStroma$stromal.gene.signature == 'TRUE'
-                if (gene.group == "entrezgene_id"){
+                if (gene.ids.to.estimate.tumor.purity == "entrezgene_id"){
                     im.str.gene.sig <- hk_immunStroma$entrezgene_id[im.str.gene.sig]
-                } else if (gene.group == 'hgnc_symbol'){
+                } else if (gene.ids.to.estimate.tumor.purity == 'hgnc_symbol'){
                     im.str.gene.sig <- hk_immunStroma$hgnc_symbol[im.str.gene.sig]
-                } else if (gene.group == 'ensembl_gene_id')
+                } else if (gene.ids.to.estimate.tumor.purity == 'ensembl_gene_id')
                     im.str.gene.sig <- hk_immunStroma$ensembl_gene_id[im.str.gene.sig]
                 tumour.purity <- singscore::rankGenes(data[[assay.name.to.estimate.purity]])
                 tumour.purity <- singscore::simpleScore(
                     rankData = tumour.purity,
-                    upSet = im.str.gene.sig)
+                    upSet = im.str.gene.sig
+                    )
                 tumour.purity.singscore <- tumour.purity$TotalScore
                 sample.annotation[['tumour.purity.estimate']] <- tumour.purity.estimate
                 sample.annotation[['tumour.purity.singscore']] <- 1 - tumour.purity.singscore
@@ -636,13 +737,16 @@ prepareSeObj <- function(
                     rtps <- range(tps)
                     rtpe <- range(tpe)
                     stps <- (tps - min(rtps)) / (max(rtps) - min(rtps)) * (max(rtpe) - min(rtpe)) + min(rtpe)
-                    sample.annotation[['tumour.purity.singscore.scaled']]<- stps
+                    sample.annotation[['tumour.purity.singscore.scaled']] <- stps
                 }
+            }
+            if (!is.null(current.row.names)){
+                row.names(data[[assay.name.to.estimate.purity]]) <- current.row.names
             }
         }
         # outputs ####
         printColoredMessage(
-            message = '-- Create a SummarizedExperiment object:',
+            message = '-- Creating a SummarizedExperiment object:',
             color = 'magenta',
             verbose = verbose
         )
@@ -734,10 +838,11 @@ prepareSeObj <- function(
     }
     # Data input is SummarizedExperiment ####
     if (class(data)[1] == 'SummarizedExperiment' | class(data)[1] == 'RangedSummarizedExperiment'){
-        gene.annotation.a <- rowData(data)
-        gene.annotation.a[[gene.group]] <- gene.annotation.a[[column.name]]
-        rowData(data) <- gene.annotation.a
-
+        if (!is.null(gene.group)){
+            gene.annotation.a <- rowData(data)
+            gene.annotation.a[[gene.group]] <- gene.annotation.a[[column.name]]
+            rowData(data) <- gene.annotation.a
+        }
         ## Checking and adding sample annotation ####
         if (is.logical(sample.annotation)){
             stop('The "sample.annotation" cannot be logical.')
@@ -991,8 +1096,7 @@ prepareSeObj <- function(
                 )
             if (!is.null(biological.group)){
                 sample.size <- min(table(sample.annotation[[biological.group]]))
-            }
-            if (!is.null(minimum.proportion)){
+            } else if (!is.null(minimum.proportion)){
                 sample.size <- round(ncol(cpm.data) * minimum.proportion, digits = 0)
             }
             if (is.null(minimum.proportion) & is.null(biological.group)){
@@ -1233,7 +1337,7 @@ prepareSeObj <- function(
                     )
                 tumour.purity <- tidyestimate::filter_common_genes(
                     df = assay(x = data, i = assay.name.to.estimate.purity),
-                    id = "hgnc_symbol",
+                    id = gene.ids.to.estimate.tumor.purity,
                     tidy = FALSE,
                     tell_missing = verbose,
                     find_alias = TRUE
@@ -1253,11 +1357,11 @@ prepareSeObj <- function(
                     )
                 im.str.gene.sig <- hk_immunStroma$immune.gene.signature == 'TRUE' |
                     hk_immunStroma$stromal.gene.signature == 'TRUE'
-                if (gene.group == "entrezgene_id"){
+                if (gene.ids.to.estimate.tumor.purity == "entrezgene_id"){
                     im.str.gene.sig <- hk_immunStroma$entrezgene_id[im.str.gene.sig]
-                } else if (gene.group == 'hgnc_symbol'){
+                } else if (gene.ids.to.estimate.tumor.purity == 'hgnc_symbol'){
                     im.str.gene.sig <- hk_immunStroma$hgnc_symbol[im.str.gene.sig]
-                } else if (gene.group == 'ensembl_gene_id')
+                } else if (gene.ids.to.estimate.tumor.purity == 'ensembl_gene_id')
                     im.str.gene.sig <- hk_immunStroma$ensembl_gene_id[im.str.gene.sig]
                 tumour.purity <- singscore::rankGenes(
                     assay(x = data, i = assay.name.to.estimate.purity)
@@ -1281,7 +1385,7 @@ prepareSeObj <- function(
                     )
                 tumour.purity <- tidyestimate::filter_common_genes(
                     df = assay(x = data, i = assay.name.to.estimate.purity),
-                    id = "hgnc_symbol",
+                    id = gene.ids.to.estimate.tumor.purity,
                     tidy = FALSE,
                     tell_missing = verbose,
                     find_alias = TRUE
@@ -1307,7 +1411,8 @@ prepareSeObj <- function(
                 tumour.purity <- singscore::rankGenes(assay(x = data, i = assay.name.to.estimate.purity))
                 tumour.purity <- singscore::simpleScore(
                     rankData = tumour.purity,
-                    upSet = im.str.gene.sig)
+                    upSet = im.str.gene.sig
+                    )
                 tumour.purity.singscore <- tumour.purity$TotalScore
                 data[['tumour.purity.estimate']] <- tumour.purity.estimate
                 data[['tumour.purity.singscore']] <- 1 - tumour.purity.singscore
