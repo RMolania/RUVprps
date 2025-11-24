@@ -32,6 +32,7 @@ findNcgUnSupervisedByLinearMixedModel(
   assess.ncg = TRUE,
   apply.log = TRUE,
   pseudo.count = 1,
+  top.ncg = 0.7,
   variables.to.assess.ncg = NULL,
   nb.pcs = 5,
   center = TRUE,
@@ -145,6 +146,8 @@ analysis. The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A numeric value to be added as a pseudo count to all measurements before log transformation.
 The default is set to 1.}
+
+\item{top.ncg}{Numeric. A numeric value.}
 
 \item{variables.to.assess.ncg}{Character. A character string or vector of strings indicating the column names in the sample
 annotation of the SummarizedExperiment object that contain variables whose association with the selected genes as
