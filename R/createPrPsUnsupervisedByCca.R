@@ -127,6 +127,59 @@
 #' @importFrom RANN nn2
 #' @export
 
+
+# se.obj = ms.se.obj
+# assay.name = 'FPKM'
+# main.uv.variable = 'studies'
+# reference.group = NULL
+# other.uv.variables = NULL
+# coordinates.to.use = 'both'
+# nb.cca = 2
+# nb.pcs = 5
+# samples.to.use = 'all'
+# min.sample.for.ps = 3
+# select.extreme.groups = FALSE
+# filter.prps.sets = TRUE
+# max.prps.sets = 3
+# min.batches.to.cover = 'all'
+# cover.all.batches = FALSE
+# check.prps.connectedness = FALSE
+# hvg = hvg
+# scale.cca = TRUE
+# apply.ruviii.norm = TRUE
+# use.ruviii.norm.for.mnn = TRUE
+# ncg = NULL
+# k = 2
+# nb.mnn = 3
+# min.ps = 10
+# min.nb.for.mnn =  1
+# similarity.approach = 'euclidean'
+# data.for.similarity = 'ruv'
+# clustering.method = 'cut'
+# nb.clusters = 3
+# other.uv.clustering.method = 'kmeans'
+# nb.other.uv.clusters = 2
+# nb.batches.to.cover = 2
+# normalization = NULL
+# cosine.norm = FALSE
+# regress.out.variables = NULL
+# regress.out.rle.med = FALSE
+# apply.log = FALSE
+# apply.log.for.prps = FALSE
+# pseudo.count = 1
+# assess.variables.association = TRUE
+# create.prps.map = FALSE
+# plot.output = TRUE
+# mnn.bpparam = SerialParam()
+# mnn.nbparam = KmknnParam()
+# check.se.obj = TRUE
+# remove.na = 'both'
+# cca.set.name = NULL
+# prps.group.name = NULL
+# prps.sets.name = NULL
+# save.se.obj = TRUE
+# verbose = TRUE
+
 createPrPsUnSupervisedByCca <- function(
         se.obj,
         assay.name,
@@ -180,9 +233,11 @@ createPrPsUnSupervisedByCca <- function(
         save.se.obj = TRUE,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The createPrPsUnSupervisedByCca function starts:',
-                        color = 'white',
-                        verbose = verbose)
+    printColoredMessage(
+        message = '------------The createPrPsUnSupervisedByCca function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # Assessing and grouping the main unwanted variable ####
     printColoredMessage(
         message = '- Assessing and grouping the main unwanted variable:',
@@ -304,8 +359,8 @@ createPrPsUnSupervisedByCca <- function(
                     )
                 ## Sub-setting the CCA data for each pairs of batches ####
                 temp.cca <- all.cca[[x]]
-                sample.annot.a <- all.sample.annot[all.sample.annot[[main.uv.variable]] == all.cca.data[[x]][1], ]
-                sample.annot.b <- all.sample.annot[all.sample.annot[[main.uv.variable]] == all.cca.data[[x]][2], ]
+                sample.annot.a <- all.sample.annot[all.sample.annot[[main.uv.variable]] == all.cca.data[[x]][1], , drop = FALSE ]
+                sample.annot.b <- all.sample.annot[all.sample.annot[[main.uv.variable]] == all.cca.data[[x]][2], , drop = FALSE]
                 all.samples <- c(row.names(sample.annot.a), row.names(sample.annot.b))
                 ## Applying a sanity check ####
                 if (isFALSE(identical(row.names(temp.cca), all.samples))){
@@ -394,7 +449,7 @@ createPrPsUnSupervisedByCca <- function(
                         )
                     all.pp <- matrix(1)
                     while(nrow(all.pp) < min.ps){
-                        ### Finding MNN using the PCA coordinates ####
+                        ### Finding MNN using the CCA coordinates ####
                         cca.mnn <- findMutualNN(
                             data1 = temp.cca[row.names(sample.annot.a) , ],
                             data2 = temp.cca[row.names(sample.annot.b) , ],
@@ -414,11 +469,11 @@ createPrPsUnSupervisedByCca <- function(
                         }
 
                         ## Finding MNN using the PCA coordinates ####
-                        printColoredMessage(
-                            message = '- Finding MNN using the PCA coordinates.',
-                            color = 'orange',
-                            verbose = verbose
-                            )
+                        # printColoredMessage(
+                        #     message = '- Finding MNN using the PCA coordinates.',
+                        #     color = 'orange',
+                        #     verbose = verbose
+                        #     )
                         ### Applying normalization, regression an log on the data ####
                         temp.data <- preProcessData(
                             se.obj = se.obj[ , all.samples],
@@ -513,6 +568,8 @@ createPrPsUnSupervisedByCca <- function(
                         scale = FALSE
                         )
                     Y0 <- fastResidop2(Y, m.matrix)
+                    # Y0 <- optimized_function(Y, m.matrix)
+
                     left.sing.value <- BiocSingular::runSVD(
                         x = Y0,
                         k = k,
@@ -573,6 +630,7 @@ createPrPsUnSupervisedByCca <- function(
                     }
                     all.pp <- all.pp.new
                 }
+
                 ## Finding the most similar samples ####
                 if (data.for.similarity == 'ruv'){
                     similarity.data <- t(ruv.adj.data)
@@ -814,14 +872,20 @@ createPrPsUnSupervisedByCca <- function(
                     prps.map
                 }
                 if (isTRUE(create.prps.map)){
-                    return(list(prps.data = prps.data, prps.map = prps.map))
-                } else return(prps.data)
+                    return(list(prps.data = prps.data, prps.map = prps.map, all.mnn = all.pp))
+                } else return(list(prps.data = prps.data, all.mnn = all.pp))
             })
 
         if (isTRUE(create.prps.map)){
-            all.prps.sets <- lapply(seq_len(length(all.cca.data)), function(x) all.prps.data[[x]]$prps.data)
+            all.prps.sets <- lapply(seq_len(length(all.prps.data)), function(x) all.prps.data[[x]]$prps.data)
             all.prps.sets <- do.call(cbind, all.prps.sets)
-        } else all.prps.sets <- do.call(cbind, all.prps.data)
+            all.mnn <- lapply(seq_len(length(all.prps.data)), function(x) all.prps.data[[x]]$all.mnn)
+            all.mnn <- do.call(rbind, all.mnn)
+        } else {
+            all.prps.sets <- do.call(cbind, all.prps.data)
+            all.mnn <- lapply(seq_len(length(all.cca.data)), function(x) all.prps.data[[x]]$all.mnn)
+            all.mnn <- do.call(rbind, all.mnn)
+        }
 
         # Plotting the PRPS map ####
         if (isTRUE(create.prps.map) & main.uv.variable.class %in% c('numeric', 'integer')){
@@ -1527,6 +1591,7 @@ createPrPsUnSupervisedByCca <- function(
             se.obj@metadata[['PRPS']][['un.supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- list()
         }
         se.obj@metadata[['PRPS']][['un.supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- all.prps.sets
+        se.obj@metadata[['PRPS']][['un.supervised']][[prps.group.name]][[prps.sets.name]][['mnn.samples']] <- all.mnn
 
         if (isTRUE(create.prps.map)){
             if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['un.supervised']][[prps.group.name]][[prps.sets.name]])) {
