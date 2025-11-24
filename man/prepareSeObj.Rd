@@ -14,6 +14,7 @@ prepareSeObj(
   minimum.proportion = 0.5,
   calculate.library.size = FALSE,
   estimate.tumor.purity = NULL,
+  gene.ids.to.estimate.tumor.purity = "hgnc_symbol",
   scale.singscore.values = TRUE,
   assay.name.to.estimate.purity = NULL,
   create.sample.annotation = FALSE,
@@ -61,6 +62,8 @@ provided in \code{raw.count.assay.name}. Library size will be computed after rem
 \item{estimate.tumor.purity}{Character. A method to estimate tumor purity. Options include: \code{estimate}, \code{singscore},
 \code{both}, and \code{NULL}. If \code{estimate}, the ESTIMATE method will be used. If \code{singscore}, the \code{singscore} method will be
 applied. If \code{both}, both methods will be applied. The default is set to \code{NULL}.}
+
+\item{gene.ids.to.estimate.tumor.purity}{TTT}
 
 \item{scale.singscore.values}{Logical. Indicating to change the range of the tumor purity estimated by the singscore
 method based on the  the one estimated by the ESTIMATE method. The default is set to \code{TRUE}.}
