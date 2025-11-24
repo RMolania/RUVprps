@@ -115,6 +115,7 @@
 #' The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before applying log
 #' transformation. The default is set to 1.
+#' @param top.ncg Numeric. Number of NCG.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
 #'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
 #' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
@@ -206,6 +207,7 @@ findNcgUnSupervised <- function(
         nb.stable.genes = 2000,
         hk.group = 'micorarray.hk.genes',
         assess.ncg = TRUE,
+        top.ncg = .7,
         variables.to.assess.ncg = NULL,
         nb.pcs = 10,
         center = TRUE,
@@ -257,6 +259,7 @@ findNcgUnSupervised <- function(
             assess.ncg = assess.ncg,
             apply.log = apply.log,
             pseudo.count = pseudo.count,
+            top.ncg = top.ncg,
             variables.to.assess.ncg = variables.to.assess.ncg,
             nb.pcs = nb.pcs,
             center = center,
