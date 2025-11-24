@@ -133,6 +133,7 @@
 #' analysis. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before log transformation.
 #' The default is set to 1.
+#' @param top.ncg Numeric. A numeric value.
 #' @param variables.to.assess.ncg Character. A character string or vector of strings indicating the column names in the sample
 #' annotation of the SummarizedExperiment object that contain variables whose association with the selected genes as
 #' NCG needs to be evaluated. The default is set to `NULL`. This means all the variables specified in the `bio.variables`
@@ -212,6 +213,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
         assess.ncg = TRUE,
         apply.log = TRUE,
         pseudo.count = 1,
+        top.ncg = .7,
         variables.to.assess.ncg = NULL,
         nb.pcs = 5,
         center = TRUE,
@@ -535,7 +537,7 @@ findNcgUnSupervisedByLinearMixedModel <- function(
             ratio = uv.var / (bio.var + 1e-6)  # Avoid divide-by-zero
             )
         all.var.result <- all.var.result[order(-all.var.result$ratio), ]
-        all.var.result <- all.var.result[all.var.result$uv.var > .7 , ]
+        all.var.result <- all.var.result[all.var.result$uv.var > top.ncg , ]
         nb.ncg.a <- round(x = nrow(se.obj) * nb.ncg, digits = 0)
         selected.ncg <- row.names(se.obj) %in% row.names(all.var.result)[1:nb.ncg.a]
 
