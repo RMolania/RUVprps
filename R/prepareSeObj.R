@@ -49,6 +49,7 @@
 #' @param estimate.tumor.purity Character. A method to estimate tumor purity. Options include: `estimate`, `singscore`,
 #' `both`, and `NULL`. If `estimate`, the ESTIMATE method will be used. If `singscore`, the `singscore` method will be
 #' applied. If `both`, both methods will be applied. The default is set to `NULL`.
+#' @param gene.ids.to.estimate.tumor.purity TTT
 #' @param scale.singscore.values Logical. Indicating to change the range of the tumor purity estimated by the singscore
 #' method based on the  the one estimated by the ESTIMATE method. The default is set to `TRUE`.
 #' @param assay.name.to.estimate.purity Character. The name of an assay within the list of assays or expression data
