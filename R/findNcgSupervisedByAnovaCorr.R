@@ -2516,20 +2516,20 @@ findNcgSupervisedByAnovaCorr <- function(
 
             if (ncg.selection.method == 'quantile'){
                 if (!is.null(uv.percentile) & !is.null(bio.percentile)){
-                    var.partition <- var.partition[var.partition$uv > quantile(x = var.partition$uv, probs = uv.percentile) , ]
+                    var.partition <- var.partition[var.partition$uv > quantile(x = var.partition$uv, probs = uv.percentile, na.rm = TRUE) , ]
                     if (quantile(x = var.partition$bio, probs = bio.percentile) == 0){
                         var.partition <- var.partition
                     } else {
-                        var.partition <- var.partition[var.partition$bio < quantile(x = var.partition$bio, probs = bio.percentile) , ]
+                        var.partition <- var.partition[var.partition$bio < quantile(x = var.partition$bio, probs = bio.percentile, na.rm = TRUE) , ]
                     }
                     nb.ncg <- round(x = nrow(se.obj) * nb.ncg, digits = 0)
                     ncg.selected <- row.names(se.obj) %in% row.names(var.partition)[1:nb.ncg]
                 } else if (!is.null(uv.percentile) & is.null(bio.percentile)){
-                    var.partition <- var.partition[var.partition$uv > quantile(x = var.partition$uv, probs = uv.percentile) , ]
+                    var.partition <- var.partition[var.partition$uv > quantile(x = var.partition$uv, probs = uv.percentile, na.rm = TRUE) , ]
                     nb.ncg <- round(x = nrow(se.obj) * nb.ncg, digits = 0)
                     ncg.selected <- row.names(se.obj) %in% row.names(var.partition)[1:nb.ncg]
                 } else if (is.null(uv.percentile) & !is.null(bio.percentile)){
-                    var.partition <- var.partition[var.partition$bio < quantile(x = var.partition$bio, probs = bio.percentile) , ]
+                    var.partition <- var.partition[var.partition$bio < quantile(x = var.partition$bio, probs = bio.percentile, na.rm = TRUE) , ]
                     nb.ncg <- round(x = nrow(se.obj) * nb.ncg, digits = 0)
                     ncg.selected <- row.names(se.obj) %in% row.names(var.partition)[1:nb.ncg]
                 } else if (is.null(uv.percentile) & is.null(bio.percentile)){
