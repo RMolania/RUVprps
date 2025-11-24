@@ -71,7 +71,8 @@ Imports:
     survminer,
     survival,
     scran,
-    GGally
+    GGally,
+    ggVennDiagram
 Suggests: 
     rmarkdown,
     testthat (>= 3.0.0),
