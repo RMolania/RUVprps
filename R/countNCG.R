@@ -16,6 +16,7 @@
 #' `TRUE`.
 #'
 #' @export
+#' @importFrom ggVennDiagram ggVennDiagram
 
 countNCG <- function(
         se.obj,
