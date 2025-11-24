@@ -617,14 +617,14 @@ findHVG <- function(
     if (approach == 'lmm'){
         ### Both biological and unwanted variable is known ####
         if (!is.null(bio.variables) & !is.null(uv.variables)){
-            expr.data <- applyLog(
-                se.obj = se.obj,
-                assay.names = assay.name,
-                pseudo.count = pseudo.count,
-                check.se.obj = FALSE,
-                remove.na = 'none',
-                verbose = TRUE
-                )[[assay.name]]
+            # expr.data <- applyLog(
+            #     se.obj = se.obj,
+            #     assay.names = assay.name,
+            #     pseudo.count = pseudo.count,
+            #     check.se.obj = FALSE,
+            #     remove.na = 'none',
+            #     verbose = TRUE
+            #     )[[assay.name]]
             sample.annotation <- as.data.frame(colData(se.obj))
             gene.var.part <- fitExtractVarPartModel(
                 exprObj = expr.data,
