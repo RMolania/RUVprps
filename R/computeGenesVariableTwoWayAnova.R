@@ -1,15 +1,15 @@
-#' Computes ANOVA between individual gene expression and a categorical variable
+#' Compute two-way ANOVA across all genes in RNA-seq data.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function calculates the ANOVA between individual gene expression of the assay(s) in a `SummarizedExperiment` object
-#' and a categorical variable as a factor.
+#' This function calculates the two-way ANOVA between individual gene expression of the dataset(s) in a `SummarizedExperiment`
+#' object and either categorical, continuous or a combination of these variable as a factor.
 #'
 #' @details
 #' ANOVA enables assessment of the effect of a given qualitative variable (factor) on gene expression measurements
-#' across groups labeled by the factor's levels. F-statistics summarize the effects of a qualitative source of unwanted
-#' variation (e.g., batch) on gene expression, with larger F-statistics indicating stronger association. P-values
+#' across groups labeled by the factor's levels. F-statistics, effect size and p-values summarize the effects of a
+#' qualitative  variation (e.g., batch) on gene expression, with larger F-statistics indicating stronger association. P-values
 #' are assigned using R's `aov()` function to quantify associations with variables such as tumor purity or molecular subtypes.
 #'
 #' @param se.obj A `SummarizedExperiment` object.
@@ -28,7 +28,8 @@
 #' @param check.se.obj Logical. If `TRUE`, validates the `SummarizedExperiment` object before analysis. Default is `TRUE`.
 #' @param remove.na Character. Specifies how to handle missing values: `"assays"`, `"sample.annotation"`, `"both"`, or `"none"`.
 #' Default is `"both"`.
-#' @param override.check Logical. If `TRUE`, recalculates ANOVA even if results already exist in the object metadata. Default is `FALSE`.
+#' @param override.check Logical. If `TRUE`, recalculates ANOVA even if results already exist in the object metadata. The
+#' default is set to `FALSE`.
 #' @param save.se.obj Logical. If `TRUE`, saves F-statistics and p-values in the metadata of the `SummarizedExperiment` object;
 #' otherwise returns results as a list. Default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages for progress and steps. Default is `TRUE`.
