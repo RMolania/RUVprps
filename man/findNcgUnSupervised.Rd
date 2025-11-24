@@ -42,6 +42,7 @@ findNcgUnSupervised(
   nb.stable.genes = 2000,
   hk.group = "micorarray.hk.genes",
   assess.ncg = TRUE,
+  top.ncg = 0.7,
   variables.to.assess.ncg = NULL,
   nb.pcs = 10,
   center = TRUE,
@@ -185,6 +186,8 @@ to \code{cancer}.}
 This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
 correlation between the first \code{nb.pcs} principal components and the biological and unwanted variables. The default is
 set to \code{TRUE}.}
+
+\item{top.ncg}{Numeric. Number of NCG.}
 
 \item{variables.to.assess.ncg}{Character. A character string or vector of strings indicating the column names in sample
 annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
