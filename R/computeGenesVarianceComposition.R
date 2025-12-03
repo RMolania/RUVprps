@@ -228,7 +228,7 @@ computeGenesVarianceComposition <- function(
                     printColoredMessage(
                         message = paste0(
                             '- Fitting linear mixed model for ',
-                            deparse(form),
+                            paste(deparse(form), collapse = ""),
                             ' to obtain gene level variance composition.'),
                         color = 'blue',
                         verbose = verbose
@@ -259,7 +259,7 @@ computeGenesVarianceComposition <- function(
                     printColoredMessage(
                         message = paste0(
                             '- Fitting linear mixed model for ',
-                            deparse(form),
+                            paste(deparse(form), collapse = ""),
                             ' to obtain gene level variance decomposition.'),
                         color = 'blue',
                         verbose = verbose
@@ -276,8 +276,8 @@ computeGenesVarianceComposition <- function(
             if (isFALSE(adjust.data)){
                 printColoredMessage(
                     message = paste0(
-                        '- Fitting linear mixed model for ',
-                        deparse(form),
+                        '- Fitting a linear mixed model for ',
+                        paste(deparse(form), collapse = ""),
                         ' to obtain gene level variance composition.'),
                     color = 'blue',
                     verbose = verbose
