@@ -100,6 +100,51 @@
 #' @import RColorBrewer
 #' @export
 
+
+
+# se.obj = ms.se.obj,
+# assay.names = 'all',
+# assessment.level = 'L1',
+# select.top.ruv = FALSE,
+# bio.variables = c("Tumour.purity", "PAM50"),
+# uv.variables = c("Studies"),
+# bio.weight = 0.6,
+# uv.weight = 0.4,
+# corr.cutoff = list(Tumour.purity = .5),
+# output.name = 'ruvprps.ms.assessNormalization.scenario1'
+#
+#
+#
+# se.obj = ms.se.obj
+# assay.names = 'all'
+# bio.variables = c("Tumour.purity", "PAM50")
+# uv.variables = c("Studies")
+# assessment.level = 'L1'
+# assessments.to.exclude = NULL
+# select.top.ruv = TRUE
+# fast.pca = TRUE
+# sil.dist.measure = 'euclidian'
+# sli.nb.pcs = 3
+# ari.clustering.method = 'hclust'
+# ari.hclust.method = 'complete'
+# ari.hclust.dist.measure = 'euclidian'
+# ari.nb.pcs = 3
+# corr.method = 'spearman'
+# corr.cutoff = list(Tumour.purity = .5)
+# anova.method = 'aov'
+# fvalue.cutoff = 1
+# vca.nb.pcs = 3
+# lra.nb.pcs = 3
+# pcorr.method = 'spearman'
+# pcorr.cutoff = 0.3
+# bio.weight = 0.6
+# uv.weight = 0.4
+# plot.output = TRUE
+# save.se.obj = TRUE
+# output.name = NULL
+# verbose = TRUE
+
+
 assessNormalization <- function(
         se.obj,
         assay.names = 'all',
@@ -137,6 +182,12 @@ assessNormalization <- function(
     if (length(assay.names) == 1 && assay.names != 'all') {
         if (!assay.names %in% names(assays(se.obj)))
             stop('The "assay.names" cannot be found in the SummarizedExperiment object.')
+    }
+    if (length(assessment.level) > 1 | !is.character(assessment.level)){
+        stop('The "assessment.level" must be one of the "L1" or "L2".')
+    }
+    if (!assessment.level %in% c('L1', 'L2')){
+        stop('The "assessment.level" must be one of the "L1" or "L2".')
     }
     if (length(assay.names) > 1) {
         if (length(setdiff(assay.names, names(assays(se.obj)))) > 0)
@@ -237,7 +288,6 @@ assessNormalization <- function(
     if (assessment.level == 'L2'){
         metrics.table <- metrics.table
     }
-
     printColoredMessage(
         message = paste0(
             '- The totall of ',
@@ -1809,30 +1859,30 @@ assessNormalization <- function(
         mutate(rank = row_number(-measurements)) %>%
         data.frame(.)
     all.measurements$rank <- as.factor(all.measurements$rank)
+
+    ram <- all.measurements
+    all.measurements <- ram
+
+    all.measurements$variable <- as.character(all.measurements$variable)
+    all.measurements$group <- as.character(all.measurements$group)
     ## plot
-    strip_background <- strip_nested(
+    strip_background <- ggh4x::strip_nested(
         text_x = elem_list_text(colour = "white", face = "bold"),
-        background_x =
-            elem_list_rect(
-                fill = c(
-                    # level1 colors
-                    case_match(
-                        unique(all.measurements$group),
-                        "Final performance" ~ "darkgreen",
-                        "Removal of unwanted variation" ~ "darkred",
-                        .default = "orange3"
-                    ),
-                    # level2 colors
-                    case_match(
-                        all.measurements$group,
-                        "RLE" ~ "grey",
-                        .default = "grey")
+        background_x = elem_list_rect(
+            fill = c(case_match(
+                    unique(all.measurements$group),
+                    "Final performance" ~ "darkgreen",
+                    "Removal of unwanted variation" ~ "darkred",
+                    "Preservation of biological variation" ~ 'orange3',
+                    .default = "orange3"),
+                case_match(unique(all.measurements$variable), "RLE" ~ "grey", .default = "grey")
                 ))
     )
     num.colors <- length(assay.names)
     original.palette <- RColorBrewer::brewer.pal(n = 8, name = 'BrBG')[8:1]
     interpolated.colors <- grDevices::colorRampPalette(original.palette)(num.colors)
     all.measurements$group[all.measurements$group == 'Final performance'] <- 'Final scores'
+
 
     assessment.plot <- ggplot(data = all.measurements, aes(x = test, y = data)) +
         geom_point(aes(size = measurements, color = rank)) +
@@ -1841,7 +1891,7 @@ assessNormalization <- function(
         theme_bw()  +
         xlab('') +
         ylab('') +
-        facet_nested(
+        ggh4x::facet_nested(
             .~ group + variable,
             strip = strip_background,
             space = 'free_x',
@@ -1860,6 +1910,15 @@ assessNormalization <- function(
         geom_stripes(odd = "#22222222", even = "#66666666") +
         guides(color = guide_legend(override.aes = list(size = 5), ncol = 3), size = guide_legend(ncol = 3))
     if (isTRUE(plot.output)) print(assessment.plot)
+
+    ggplot(all.measurements, aes(x = test, y = data)) +
+        geom_point() +
+        facet_nested(
+            . ~ group + variable,
+            strip = strip_background,
+            space = "free_x",
+            scales = "free"
+        )
 
     # Saving results ####
     ### add results to the SummarizedExperiment object ####
