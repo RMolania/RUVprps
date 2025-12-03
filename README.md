@@ -3,7 +3,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-![RUVprps workflow](figures/RUVprps_NM_Mian1)
+![RUVprps workflow](figures/RUVprps_NM_Mian1.png)
 
 **RUVprps** implements *RUV-III with pseudo-replicates of pseudo-samples (PRPS)*, a novel strategy for transcriptomics 
 data normalization when technical replicates are unavailable or poorly designed. RUVprps can also accommodate pseudo-replicate,
