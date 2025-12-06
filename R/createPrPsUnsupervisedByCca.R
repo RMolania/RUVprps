@@ -101,6 +101,8 @@
 #' The default is set to SerialParam(). We refer to the `findMutualNN()` function from the **BiocNeighbors** R package.
 #' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 #' The default is KmknnParam(). We refer to the `findMutualNN()` function from the `BiocNeighbors` R package.
+#' @param residop.fun Character. A character indicating which function to use to calculate residuals. The options are
+#' `c1`, `c2`, `lqr`, `r1` and `r2`. The default is set to `r2`.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to `TRUE`. See the checkSeObj() function for more details.
 #' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are `assays` and
@@ -123,62 +125,11 @@
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom BiocNeighbors findMutualNN
 #' @importFrom batchelor cosineNorm
+#' @importFrom Matrix solve
+#' @importFrom methods as
 #' @importFrom utils head
 #' @importFrom RANN nn2
 #' @export
-
-
-# se.obj = ms.se.obj
-# assay.name = 'FPKM'
-# main.uv.variable = 'studies'
-# reference.group = NULL
-# other.uv.variables = NULL
-# coordinates.to.use = 'both'
-# nb.cca = 2
-# nb.pcs = 5
-# samples.to.use = 'all'
-# min.sample.for.ps = 3
-# select.extreme.groups = FALSE
-# filter.prps.sets = TRUE
-# max.prps.sets = 3
-# min.batches.to.cover = 'all'
-# cover.all.batches = FALSE
-# check.prps.connectedness = FALSE
-# hvg = hvg
-# scale.cca = TRUE
-# apply.ruviii.norm = TRUE
-# use.ruviii.norm.for.mnn = TRUE
-# ncg = NULL
-# k = 2
-# nb.mnn = 3
-# min.ps = 10
-# min.nb.for.mnn =  1
-# similarity.approach = 'euclidean'
-# data.for.similarity = 'ruv'
-# clustering.method = 'cut'
-# nb.clusters = 3
-# other.uv.clustering.method = 'kmeans'
-# nb.other.uv.clusters = 2
-# nb.batches.to.cover = 2
-# normalization = NULL
-# cosine.norm = FALSE
-# regress.out.variables = NULL
-# regress.out.rle.med = FALSE
-# apply.log = FALSE
-# apply.log.for.prps = FALSE
-# pseudo.count = 1
-# assess.variables.association = TRUE
-# create.prps.map = FALSE
-# plot.output = TRUE
-# mnn.bpparam = SerialParam()
-# mnn.nbparam = KmknnParam()
-# check.se.obj = TRUE
-# remove.na = 'both'
-# cca.set.name = NULL
-# prps.group.name = NULL
-# prps.sets.name = NULL
-# save.se.obj = TRUE
-# verbose = TRUE
 
 createPrPsUnSupervisedByCca <- function(
         se.obj,
@@ -225,6 +176,7 @@ createPrPsUnSupervisedByCca <- function(
         plot.output = TRUE,
         mnn.bpparam = SerialParam(),
         mnn.nbparam = KmknnParam(),
+        residop.fun = 'r2',
         check.se.obj = TRUE,
         remove.na = 'both',
         cca.set.name = NULL,
@@ -567,9 +519,25 @@ createPrPsUnSupervisedByCca <- function(
                         center = TRUE,
                         scale = FALSE
                         )
-                    Y0 <- fastResidop2(Y, m.matrix)
-                    # Y0 <- optimized_function(Y, m.matrix)
-
+                    if (residop.fun == 'c1'){
+                        Y0 <- fastResidopC1(Y, m.matrix)
+                    } else if (residop.fun == 'c2'){
+                        Y0 <- fastResidopC2(Y, m.matrix)
+                    } else if (residop.fun == 'lqr'){
+                        Y0 <- fastResidopC1lQR(Y, m.matrix)
+                    } else if (residop.fun == 'r1'){
+                        Y0 <- ruv::residop(Y, m.matrix)
+                    } else if (residop.fun == 'r2'){
+                        fastResidopR <- function(A, B) {
+                            B <- as(B, "CsparseMatrix")
+                            BtB <- t(B) %*% B
+                            BtB.inv <- Matrix::solve(BtB)
+                            BtA <- t(B) %*% A
+                            result <- A - B %*% BtB.inv %*% BtA
+                            return(result)
+                        }
+                        Y0 <- fastResidopR(Y, m.matrix)
+                    }
                     left.sing.value <- BiocSingular::runSVD(
                         x = Y0,
                         k = k,
@@ -1297,7 +1265,25 @@ createPrPsUnSupervisedByCca <- function(
                                 center = TRUE,
                                 scale = FALSE
                             )
-                            Y0 <- fastResidop2(Y, m.matrix)
+                            if (residop.fun == 'c1'){
+                                Y0 <- fastResidopC1(Y, m.matrix)
+                            } else if (residop.fun == 'c2'){
+                                Y0 <- fastResidopC2(Y, m.matrix)
+                            } else if (residop.fun == 'lqr'){
+                                Y0 <- fastResidopC1lQR(Y, m.matrix)
+                            } else if (residop.fun == 'r1'){
+                                Y0 <- ruv::residop(Y, m.matrix)
+                            } else if (residop.fun == 'r2'){
+                                fastResidopR <- function(A, B) {
+                                    B <- as(B, "CsparseMatrix")
+                                    BtB <- t(B) %*% B
+                                    BtB.inv <- Matrix::solve(BtB)
+                                    BtA <- t(B) %*% A
+                                    result <- A - B %*% BtB.inv %*% BtA
+                                    return(result)
+                                }
+                                Y0 <- fastResidopR(Y, m.matrix)
+                            }
                             left.sing.value <- BiocSingular::runSVD(
                                 x = Y0,
                                 k = k,
