@@ -22,7 +22,7 @@ SEXP fastResidopC2(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::Matrix
 
 
 // [[Rcpp::export]]
-SEXP fastResidopC1lQR(const Eigen::Map<Eigen::MatrixXd> A,
+SEXP fastResidoplQR(const Eigen::Map<Eigen::MatrixXd> A,
                     const Eigen::Map<Eigen::MatrixXd> B) {
 
   Eigen::HouseholderQR<Eigen::MatrixXd> qr(B);

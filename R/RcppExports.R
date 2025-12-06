@@ -9,8 +9,8 @@ fastResidopC2 <- function(A, B) {
     .Call(`_RUVprps_fastResidopC2`, A, B)
 }
 
-fastResidopC1lQR <- function(A, B) {
-    .Call(`_RUVprps_fastResidopC1lQR`, A, B)
+fastResidoplQR <- function(A, B) {
+    .Call(`_RUVprps_fastResidoplQR`, A, B)
 }
 
 matrixMult <- function(A, B) {

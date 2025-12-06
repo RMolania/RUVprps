@@ -529,10 +529,10 @@ createPrPsUnSupervisedByCca <- function(
                         Y0 <- ruv::residop(Y, m.matrix)
                     } else if (residop.fun == 'r2'){
                         fastResidopR <- function(A, B) {
-                            B <- as(B, "CsparseMatrix")
-                            BtB <- t(B) %*% B
+                            B <- Matrix::Matrix(B, sparse = TRUE)
+                            BtB <- Matrix::t(B) %*% B
                             BtB.inv <- Matrix::solve(BtB)
-                            BtA <- t(B) %*% A
+                            BtA <- Matrix::t(B) %*% A
                             result <- A - B %*% BtB.inv %*% BtA
                             return(result)
                         }
@@ -1270,15 +1270,15 @@ createPrPsUnSupervisedByCca <- function(
                             } else if (residop.fun == 'c2'){
                                 Y0 <- fastResidopC2(Y, m.matrix)
                             } else if (residop.fun == 'lqr'){
-                                Y0 <- fastResidopC1lQR(Y, m.matrix)
+                                Y0 <- fastResidoplQR(Y, m.matrix)
                             } else if (residop.fun == 'r1'){
                                 Y0 <- ruv::residop(Y, m.matrix)
                             } else if (residop.fun == 'r2'){
                                 fastResidopR <- function(A, B) {
-                                    B <- as(B, "CsparseMatrix")
-                                    BtB <- t(B) %*% B
+                                    B <- Matrix::Matrix(B, sparse = TRUE)
+                                    BtB <- Matrix::t(B) %*% B
                                     BtB.inv <- Matrix::solve(BtB)
-                                    BtA <- t(B) %*% A
+                                    BtA <- Matrix::t(B) %*% A
                                     result <- A - B %*% BtB.inv %*% BtA
                                     return(result)
                                 }
