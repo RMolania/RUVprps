@@ -30,6 +30,7 @@ Imports:
     Rcpp,
     SummarizedExperiment,
     tibble,
+    methods,
     igraph,
     BiocSingular,
     BiocNeighbors,
@@ -71,8 +72,7 @@ Imports:
     survminer,
     survival,
     scran,
-    GGally,
-    ggVennDiagram
+    GGally
 Suggests: 
     rmarkdown,
     testthat (>= 3.0.0),
