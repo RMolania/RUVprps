@@ -89,6 +89,8 @@
 #' The default is set to 'TRUE'.
 #' @param return.wa Logical. If 'TRUE', additional information including the Wa matrix of the RUV-III method is returned.
 #' The default is set to 'TRUE'.
+#' @param residop.fun Character. A character indicating which function to use to calculate residuals. The options are
+#' `c1`, `c2`, `lqr`, `r1` and `r2`. The default is set to `r2`.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to 'TRUE'. Refer to the checkSeObj function for more details.
 #' @param remove.na character. A character indicating whether to remove NA or missing values from the assays
@@ -106,6 +108,7 @@
 #' @importFrom ruv replicate.matrix RUV1
 #' @importFrom BiocSingular bsparam
 #' @importFrom Matrix solve
+#' @importFrom methods as
 #' @export
 
 RUVIIIprps <- function(
@@ -127,6 +130,7 @@ RUVIIIprps <- function(
         include.intercept = TRUE,
         return.w = TRUE,
         return.wa = FALSE,
+        residop.fun = 'r2',
         check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
@@ -899,8 +903,25 @@ RUVIIIprps <- function(
             color = 'blue',
             verbose = verbose
             )
-        Y0 <- fastResidop2(Y, M)
-        # Y0 <- optimized_function(Y, M)
+        if (residop.fun == 'c1'){
+            Y0 <- fastResidopC1(Y, M)
+        } else if (residop.fun == 'c2'){
+            Y0 <- fastResidopC2(Y, M)
+        } else if (residop.fun == 'lqr'){
+            Y0 <- fastResidopC1lQR(Y, M)
+        } else if (residop.fun == 'r1'){
+            Y0 <- ruv::residop(Y, M)
+        } else if (residop.fun == 'r2'){
+            fastResidopR <- function(A, B) {
+                B <- as(B, "CsparseMatrix")
+                BtB <- t(B) %*% B
+                BtB.inv <- Matrix::solve(BtB)
+                BtA <- t(B) %*% A
+                result <- A - B %*% BtB.inv %*% BtA
+                return(result)
+            }
+            Y0 <- fastResidopR(Y, M)
+        }
         ## applying svd on the residuals and the obtain alpha ####
         printColoredMessage(
             message = '- Applying SVD on the residuals to obtain full alpha.',
@@ -1031,7 +1052,25 @@ RUVIIIprps <- function(
             color = 'blue',
             verbose = verbose
             )
-        Y0 <- fastResidop2(Y, M)
+        if (residop.fun == 'c1'){
+            Y0 <- fastResidopC1(Y, M)
+        } else if (residop.fun == 'c2'){
+            Y0 <- fastResidopC2(Y, M)
+        } else if (residop.fun == 'lqr'){
+            Y0 <- fastResidopC1lQR(Y, M)
+        } else if (residop.fun == 'r1'){
+            Y0 <- ruv::residop(Y, M)
+        } else if (residop.fun == 'r2'){
+            fastResidopR <- function(A, B) {
+                B <- as(B, "CsparseMatrix")
+                BtB <- t(B) %*% B
+                BtB.inv <- Matrix::solve(BtB)
+                BtA <- t(B) %*% A
+                result <- A - B %*% BtB.inv %*% BtA
+                return(result)
+            }
+            Y0 <- fastResidopR(Y, M)
+        }
         ## applying svd on the residuals and the obtain alpha ####
         printColoredMessage(
             message = '- Applying svd on the residuals to obtain full alpha:',
