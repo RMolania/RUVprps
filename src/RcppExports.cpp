@@ -11,27 +11,39 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// fastResidop
-SEXP fastResidop(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
-RcppExport SEXP _RUVprps_fastResidop(SEXP ASEXP, SEXP BSEXP) {
+// fastResidopC1
+SEXP fastResidopC1(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
+RcppExport SEXP _RUVprps_fastResidopC1(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
     Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastResidop(A, B));
+    rcpp_result_gen = Rcpp::wrap(fastResidopC1(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
-// fastResidop2
-SEXP fastResidop2(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
-RcppExport SEXP _RUVprps_fastResidop2(SEXP ASEXP, SEXP BSEXP) {
+// fastResidopC2
+SEXP fastResidopC2(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
+RcppExport SEXP _RUVprps_fastResidopC2(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
     Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastResidop2(A, B));
+    rcpp_result_gen = Rcpp::wrap(fastResidopC2(A, B));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fastResidopC1lQR
+SEXP fastResidopC1lQR(const Eigen::Map<Eigen::MatrixXd> A, const Eigen::Map<Eigen::MatrixXd> B);
+RcppExport SEXP _RUVprps_fastResidopC1lQR(SEXP ASEXP, SEXP BSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
+    rcpp_result_gen = Rcpp::wrap(fastResidopC1lQR(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -83,8 +95,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_RUVprps_fastResidop", (DL_FUNC) &_RUVprps_fastResidop, 2},
-    {"_RUVprps_fastResidop2", (DL_FUNC) &_RUVprps_fastResidop2, 2},
+    {"_RUVprps_fastResidopC1", (DL_FUNC) &_RUVprps_fastResidopC1, 2},
+    {"_RUVprps_fastResidopC2", (DL_FUNC) &_RUVprps_fastResidopC2, 2},
+    {"_RUVprps_fastResidopC1lQR", (DL_FUNC) &_RUVprps_fastResidopC1lQR, 2},
     {"_RUVprps_matrixMult", (DL_FUNC) &_RUVprps_matrixMult, 2},
     {"_RUVprps_matSubtraction", (DL_FUNC) &_RUVprps_matSubtraction, 2},
     {"_RUVprps_matTranspose", (DL_FUNC) &_RUVprps_matTranspose, 1},
