@@ -23,6 +23,7 @@ RUVIIIprps(
   include.intercept = TRUE,
   return.w = TRUE,
   return.wa = FALSE,
+  residop.fun = "r2",
   check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
@@ -95,6 +96,9 @@ The default is set to 'TRUE'.}
 
 \item{return.wa}{Logical. If 'TRUE', additional information including the Wa matrix of the RUV-III method is returned.
 The default is set to 'TRUE'.}
+
+\item{residop.fun}{Character. A character indicating which function to use to calculate residuals. The options are
+\code{c1}, \code{c2}, \code{lqr}, \code{r1} and \code{r2}. The default is set to \code{r2}.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to 'TRUE'. Refer to the checkSeObj function for more details.}
