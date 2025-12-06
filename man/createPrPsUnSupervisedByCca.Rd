@@ -49,6 +49,7 @@ createPrPsUnSupervisedByCca(
   plot.output = TRUE,
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
+  residop.fun = "r2",
   check.se.obj = TRUE,
   remove.na = "both",
   cca.set.name = NULL,
@@ -197,6 +198,9 @@ The default is set to SerialParam(). We refer to the \code{findMutualNN()} funct
 
 \item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 The default is KmknnParam(). We refer to the \code{findMutualNN()} function from the \code{BiocNeighbors} R package.}
+
+\item{residop.fun}{Character. A character indicating which function to use to calculate residuals. The options are
+\code{c1}, \code{c2}, \code{lqr}, \code{r1} and \code{r2}. The default is set to \code{r2}.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to \code{TRUE}. See the checkSeObj() function for more details.}
