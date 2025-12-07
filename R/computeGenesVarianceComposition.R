@@ -56,7 +56,7 @@ computeGenesVarianceComposition <- function(
         samples.to.use = 'all',
         apply.log = TRUE,
         pseudo.count = 1,
-        nb.cores = 1,
+        nb.cores = NULL,
         plot.output = TRUE,
         output.name = NULL,
         check.se.obj = TRUE,
@@ -134,6 +134,18 @@ computeGenesVarianceComposition <- function(
     if (is.logical(samples.to.use)){
         se.obj.initial <- se.obj
         se.obj <- se.obj[ , samples.to.use]
+    }
+    # Specifying cores
+    if (is.null(nb.cores)){
+        if (.Platform$OS.type == "windows") {
+            nb.cores <- as.numeric(Sys.getenv("NUMBER_OF_PROCESSORS", unset = 1))
+        } else {
+            # macOS or Unix
+            nb.cores <- as.numeric(system("sysctl -n hw.ncpu", intern = TRUE)) - 1
+            if (is.na(nb.cores) || length(nb.cores) == 0) {
+                nb.cores <- 1
+            }
+        }
     }
 
     # Checking the assays ####
