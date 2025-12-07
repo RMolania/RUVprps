@@ -72,11 +72,11 @@ Imports:
     survminer,
     survival,
     scran,
-    GGally
+    GGally,
+    ggVennDiagram
 Suggests: 
     rmarkdown,
-    testthat (>= 3.0.0),
-    ggVennDiagram
+    testthat (>= 3.0.0)
 URL: https://github.com/RMolania/RUVIIIPRPS
 BugReports: https://github.com/RMolania/RUVIIIPRPS/issues
 Config/testthat/edition: 3
