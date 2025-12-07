@@ -12,8 +12,8 @@
 #' @param normalization Character. Method of normalization to apply (e.g., `"CPM"`, `"TMM"`, `"RPKM"`). Default is `"CPM"`.
 #' @param regress.out.variables Character vector. Column names in `colData(se.obj)` representing unwanted variation variables
 #' to regress out. Default is `NULL`.
-#' @param regress.out.rle.med Logical. If `TRUE`, regress out the median relative log expression (RLE) per sample after normalization.
-#' Default is `FALSE`.
+#' @param regress.out.rle.med Logical. If `TRUE`, regress out the median relative log expression (RLE) per sample after
+#' normalization. Default is `FALSE`.
 #' @param apply.log Logical. If `TRUE`, applies log2-transformation after adding `pseudo.count`. Default is `TRUE`.
 #' @param pseudo.count Numeric. Value to add to counts before log2-transformation to avoid `-Inf`. Default is 1.
 #' @param check.se.obj Logical. If `TRUE`, validates the structure of the `SummarizedExperiment` object before preprocessing.

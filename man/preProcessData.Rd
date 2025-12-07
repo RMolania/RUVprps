@@ -27,8 +27,8 @@ preProcessData(
 \item{regress.out.variables}{Character vector. Column names in \code{colData(se.obj)} representing unwanted variation variables
 to regress out. Default is \code{NULL}.}
 
-\item{regress.out.rle.med}{Logical. If \code{TRUE}, regress out the median relative log expression (RLE) per sample after normalization.
-Default is \code{FALSE}.}
+\item{regress.out.rle.med}{Logical. If \code{TRUE}, regress out the median relative log expression (RLE) per sample after
+normalization. Default is \code{FALSE}.}
 
 \item{apply.log}{Logical. If \code{TRUE}, applies log2-transformation after adding \code{pseudo.count}. Default is \code{TRUE}.}
 
