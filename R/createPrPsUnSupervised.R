@@ -86,6 +86,11 @@
 #' @param knn.group.name Character. Name of the current KNN group. Default is auto-generated from `uv.variables`.
 #' @param knn.sets.name Character. Name of the KNN set saved in metadata. Default is constructed automatically.
 #' @param mnn.group.name Character. Name of the current MNN group. Default is auto-generated from `uv.variables`.
+#' @param residop.fun TTT
+#' @param nb.cores TTT
+#' @param use.annoy TTT
+#' @param annot.nb.trees TTT
+#' @param max.iter TTT
 #' @param mnn.sets.name Character. Name of the MNN set saved in metadata. Default is constructed automatically.
 #' @param prps.group.name Character. Name of the PRPS group. Default is auto-generated from `uv.variables`.
 #' @param prps.sets.name Character. Name of the PRPS sets saved in metadata. Default is constructed automatically.
@@ -93,7 +98,6 @@
 #' @param save.se.obj Logical. If `TRUE`, saves results in `metadata` of the SummarizedExperiment object. Otherwise,
 #' returns results as a list. Default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, prints progress messages. Default is `TRUE`.
-
 #'
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
@@ -158,6 +162,11 @@ createPrPsUnSupervised <- function(
         knn.sets.name = NULL,
         mnn.group.name = NULL,
         mnn.sets.name = NULL,
+        residop.fun = 'r2',
+        nb.cores = NULL,
+        use.annoy = FALSE,
+        annot.nb.trees = 50,
+        max.iter = 100,
         prps.group.name = NULL,
         prps.sets.name = NULL,
         plot.output = TRUE,
@@ -214,6 +223,11 @@ createPrPsUnSupervised <- function(
                 plot.output = plot.output,
                 mnn.bpparam = mnn.bpparam,
                 mnn.nbparam = mnn.nbparam,
+                residop.fun = residop.fun,
+                nb.cores = nb.cores,
+                use.annoy = use.annoy,
+                annot.nb.trees = annot.nb.trees,
+                max.iter = max.iter,
                 check.se.obj = check.se.obj,
                 remove.na = remove.na,
                 cca.set.name = cca.set.name,

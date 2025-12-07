@@ -62,6 +62,11 @@ createPrPsUnSupervised(
   knn.sets.name = NULL,
   mnn.group.name = NULL,
   mnn.sets.name = NULL,
+  residop.fun = "r2",
+  nb.cores = NULL,
+  use.annoy = FALSE,
+  annot.nb.trees = 50,
+  max.iter = 100,
   prps.group.name = NULL,
   prps.sets.name = NULL,
   plot.output = TRUE,
@@ -204,6 +209,16 @@ Default is \code{assays}.}
 \item{mnn.group.name}{Character. Name of the current MNN group. Default is auto-generated from \code{uv.variables}.}
 
 \item{mnn.sets.name}{Character. Name of the MNN set saved in metadata. Default is constructed automatically.}
+
+\item{residop.fun}{TTT}
+
+\item{nb.cores}{TTT}
+
+\item{use.annoy}{TTT}
+
+\item{annot.nb.trees}{TTT}
+
+\item{max.iter}{TTT}
 
 \item{prps.group.name}{Character. Name of the PRPS group. Default is auto-generated from \code{uv.variables}.}
 

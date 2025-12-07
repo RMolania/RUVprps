@@ -50,6 +50,10 @@ createPrPsUnSupervisedByCca(
   mnn.bpparam = SerialParam(),
   mnn.nbparam = KmknnParam(),
   residop.fun = "r2",
+  nb.cores = NULL,
+  use.annoy = FALSE,
+  annot.nb.trees = 50,
+  max.iter = 200,
   check.se.obj = TRUE,
   remove.na = "both",
   cca.set.name = NULL,
@@ -201,6 +205,14 @@ The default is KmknnParam(). We refer to the \code{findMutualNN()} function from
 
 \item{residop.fun}{Character. A character indicating which function to use to calculate residuals. The options are
 \code{c1}, \code{c2}, \code{lqr}, \code{r1} and \code{r2}. The default is set to \code{r2}.}
+
+\item{nb.cores}{TTT}
+
+\item{use.annoy}{TTT}
+
+\item{annot.nb.trees}{TTT}
+
+\item{max.iter}{rrr}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to \code{TRUE}. See the checkSeObj() function for more details.}

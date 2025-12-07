@@ -103,6 +103,10 @@
 #' The default is KmknnParam(). We refer to the `findMutualNN()` function from the `BiocNeighbors` R package.
 #' @param residop.fun Character. A character indicating which function to use to calculate residuals. The options are
 #' `c1`, `c2`, `lqr`, `r1` and `r2`. The default is set to `r2`.
+#' @param nb.cores TTT
+#' @param use.annoy TTT
+#' @param annot.nb.trees TTT
+#' @param max.iter rrr
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to `TRUE`. See the checkSeObj() function for more details.
 #' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are `assays` and
@@ -122,8 +126,8 @@
 #' @return The SummarizedExperiment object containing PRPS data and plot results in the metadata, or a list of
 #' these results.
 #'
+#' @importFrom BiocNeighbors findMutualNN AnnoyParam
 #' @importFrom SummarizedExperiment assay colData
-#' @importFrom BiocNeighbors findMutualNN
 #' @importFrom batchelor cosineNorm
 #' @importFrom Matrix solve
 #' @importFrom methods as
@@ -177,6 +181,10 @@ createPrPsUnSupervisedByCca <- function(
         mnn.bpparam = SerialParam(),
         mnn.nbparam = KmknnParam(),
         residop.fun = 'r2',
+        nb.cores = NULL,
+        use.annoy = FALSE,
+        annot.nb.trees = 50,
+        max.iter = 200,
         check.se.obj = TRUE,
         remove.na = 'both',
         cca.set.name = NULL,
@@ -200,6 +208,18 @@ createPrPsUnSupervisedByCca <- function(
     if (is.logical(samples.to.use)){
         initial.se.obj <- se.obj
         se.obj <- se.obj[ , samples.to.use]
+    }
+    # Specifying cores
+    if (is.null(nb.cores)){
+        if (.Platform$OS.type == "windows") {
+            nb.cores <- as.numeric(Sys.getenv("NUMBER_OF_PROCESSORS", unset = 1))
+        } else {
+            # macOS or Unix
+            nb.cores <- as.numeric(system("sysctl -n hw.ncpu", intern = TRUE)) - 1
+            if (is.na(nb.cores) || length(nb.cores) == 0) {
+                nb.cores <- 1
+            }
+        }
     }
     # Finding the class of the variable ####
     main.uv.variable.class <- class(se.obj[[main.uv.variable]])
@@ -400,7 +420,12 @@ createPrPsUnSupervisedByCca <- function(
                         verbose = verbose
                         )
                     all.pp <- matrix(1)
+                    iter <- 0
                     while(nrow(all.pp) < min.ps){
+                        if (iter > max.iter) {
+                            message("Stopped because maximum iterations reached.")
+                            break
+                        }
                         ### Finding MNN using the CCA coordinates ####
                         cca.mnn <- findMutualNN(
                             data1 = temp.cca[row.names(sample.annot.a) , ],
@@ -512,19 +537,23 @@ createPrPsUnSupervisedByCca <- function(
                             verbose = verbose
                         )[[assay.name]]
                     } else temp.data <- assay(se.obj[, all.samples], i = assay.name)
-
                     Y <- t(temp.data)
                     Y.stand <- scale(
                         x = Y,
                         center = TRUE,
                         scale = FALSE
                         )
+                    printColoredMessage(
+                        message = '- Applying RUV-III norm.',
+                        color = 'orange',
+                        verbose = verbose
+                    )
                     if (residop.fun == 'c1'){
                         Y0 <- fastResidopC1(Y, m.matrix)
                     } else if (residop.fun == 'c2'){
                         Y0 <- fastResidopC2(Y, m.matrix)
                     } else if (residop.fun == 'lqr'){
-                        Y0 <- fastResidopC1lQR(Y, m.matrix)
+                        Y0 <- fastResidoplQR(Y, m.matrix)
                     } else if (residop.fun == 'r1'){
                         Y0 <- ruv::residop(Y, m.matrix)
                     } else if (residop.fun == 'r2'){
@@ -538,6 +567,12 @@ createPrPsUnSupervisedByCca <- function(
                         }
                         Y0 <- fastResidopR(Y, m.matrix)
                     }
+
+                    printColoredMessage(
+                        message = '- Applying RUV-III norm22.',
+                        color = 'orange',
+                        verbose = verbose
+                    )
                     left.sing.value <- BiocSingular::runSVD(
                         x = Y0,
                         k = k,
@@ -557,12 +592,28 @@ createPrPsUnSupervisedByCca <- function(
                     ### Applying MNN ####
                     row.names(pca.ruv$x) <- colnames(temp.data)
                     ruv.adj <- pca.ruv$x
+                    printColoredMessage(
+                        message = '- Applying RUV-III norm222.',
+                        color = 'orange',
+                        verbose = verbose
+                    )
                 }
                 # Finding MNN using RUV-III normalized data ####
                 if (isTRUE(use.ruviii.norm.for.mnn)){
+                    printColoredMessage(
+                        message = '- Applying RUV-III norm222.',
+                        color = 'orange',
+                        verbose = verbose
+                    )
                     min.nb.for.mnn <- min.nb.for.mnn.initial
                     all.pp.new <- matrix(1)
-                    while(nrow(all.pp.new) < min.ps){
+                    iter <- 0
+                    while (nrow(all.pp.new) < min.ps){
+                        iter <- iter + 1
+                        if (iter > max.iter) {
+                            message("Stopped because maximum iterations reached.")
+                            break
+                        }
                         ### Applying MNN on RUV-III  ####
                         ruv.mnn <- findMutualNN(
                             data1 = ruv.adj[row.names(sample.annot.a) , ],
@@ -594,10 +645,18 @@ createPrPsUnSupervisedByCca <- function(
                             )
                         all.pp.new$left.samples <- row.names(sample.annot.a)[all.pp.new$left.index]
                         all.pp.new$right.samples <- row.names(sample.annot.b)[all.pp.new$right.index]
+                        print(dim(all.pp.new))
                         min.nb.for.mnn <- min.nb.for.mnn + 1
+
                     }
                     all.pp <- all.pp.new
                 }
+
+                printColoredMessage(
+                    message = '- Applying RUV-III norm222www.',
+                    color = 'orange',
+                    verbose = verbose
+                )
 
                 ## Finding the most similar samples ####
                 if (data.for.similarity == 'ruv'){
@@ -616,29 +675,50 @@ createPrPsUnSupervisedByCca <- function(
                         remove.na = 'none',
                         verbose = verbose)
                 }
-
                 ### Using KNN approach  ####
                 min.sample.for.ps.initial <- min.sample.for.ps
                 if (similarity.approach == 'euclidean'){
                     #### Applying KNN for first batch ####
                     min.sample.for.ps <- min.sample.for.ps - 1
-                    distance.a <- BiocNeighbors::findKNN(
-                        X = t(similarity.data[hvg, row.names(sample.annot.a) , drop = FALSE]),
-                        k = min.sample.for.ps
+                    if (isTRUE(use.annoy)){
+                        distance.a <- BiocNeighbors::findKNN(
+                            X = t(similarity.data[hvg, row.names(sample.annot.a) , drop = FALSE]),
+                            k = min.sample.for.ps,
+                            num.threads = nb.cores,
+                            BNPARAM = AnnoyParam(ntrees = annot.nb.trees)
                         )
+                    } else {
+                        distance.a <- BiocNeighbors::findKNN(
+                            X = t(similarity.data[hvg, row.names(sample.annot.a) , drop = FALSE]),
+                            k = min.sample.for.ps,
+                            num.threads = nb.cores
+                        )
+                    }
                     distance.a.index <- as.data.frame(distance.a$index)
                     colnames(distance.a.index) <- paste0('V', 2:(min.sample.for.ps + 1))
                     distance.a.index$V1 <- as.numeric(row.names(distance.a.index))
                     distance.a.index <- distance.a.index[order(colnames(distance.a.index))]
+
                     for(i in 1:ncol(distance.a.index)){
                         col.name <- paste0('Sample', i)
                         distance.a.index[col.name] <- row.names(sample.annot.a)[distance.a.index[ , i]]
                     }
                     ### Applying KNN for second batch ####
-                    distance.b <- BiocNeighbors::findKNN(
-                        X = t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE]),
-                        k = min.sample.for.ps
-                    )
+                    print(dim(t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE])))
+                    if (isTRUE(use.annoy)){
+                        distance.b <- BiocNeighbors::findKNN(
+                            X = t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE]),
+                            k = min.sample.for.ps,
+                            num.threads = nb.cores,
+                            BNPARAM = AnnoyParam(ntrees = annot.nb.trees)
+                        )
+                    } else{
+                        distance.b <- BiocNeighbors::findKNN(
+                            X = t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE]),
+                            k = min.sample.for.ps,
+                            num.threads = nb.cores
+                        )
+                    }
                     distance.b.index <- as.data.frame(distance.b$index)
                     colnames(distance.b.index) <- paste0('V', 2:(min.sample.for.ps + 1))
                     distance.b.index$V1 <- as.numeric(row.names(distance.b.index))
@@ -1161,8 +1241,13 @@ createPrPsUnSupervisedByCca <- function(
                                 verbose = verbose
                             )
                             all.pp <- matrix(1)
+                            iter <- 0
                             while(nrow(all.pp) < min.ps){
                                 ### Applying MNN ####
+                                if (iter > max.iter) {
+                                    message("Stopped because maximum iterations reached.")
+                                    break
+                                }
                                 cca.mnn <- findMutualNN(
                                     data1 = temp.cca[row.names(sample.annot.a) , ],
                                     data2 = temp.cca[row.names(sample.annot.b) , ],
@@ -1299,7 +1384,12 @@ createPrPsUnSupervisedByCca <- function(
                         if (isTRUE(use.ruviii.norm.for.mnn)){
                             min.nb.for.mnn <- min.nb.for.mnn.initial
                             all.pp.new <- matrix(1)
+                            iter <- 0
                             while(nrow(all.pp.new) < min.ps){
+                                if (iter > max.iter) {
+                                    message("Stopped because maximum iterations reached.")
+                                    break
+                                }
                                 ruv.mnn <- findMutualNN(
                                     data1 = ruv.adj[row.names(sample.annot.a) , ],
                                     data2 = ruv.adj[row.names(sample.annot.b) , ],
@@ -1348,10 +1438,21 @@ createPrPsUnSupervisedByCca <- function(
                         min.sample.for.ps.initial <- min.sample.for.ps
                         if (similarity.approach == 'euclidean'){
                             min.sample.for.ps <- min.sample.for.ps - 1
-                            distance.a <- BiocNeighbors::findKNN(
-                                X = t(similarity.data[hvg, row.names(sample.annot.a) , drop = FALSE]),
-                                k = min.sample.for.ps
-                            )
+                            if (isTRUE(use.annoy)){
+                                distance.a <- BiocNeighbors::findKNN(
+                                    X = t(similarity.data[hvg, row.names(sample.annot.a) , drop = FALSE]),
+                                    k = min.sample.for.ps,
+                                    num.threads = nb.cores,
+                                    BNPARAM = AnnoyParam(ntrees = annot.nb.trees)
+                                )
+                            } else{
+                                distance.a <- BiocNeighbors::findKNN(
+                                    X = t(similarity.data[hvg, row.names(sample.annot.a) , drop = FALSE]),
+                                    k = min.sample.for.ps,
+                                    num.threads = nb.cores
+                                )
+                            }
+
                             distance.a.index <- as.data.frame(distance.a$index)
                             colnames(distance.a.index) <- paste0('V', 2:(min.sample.for.ps + 1))
                             distance.a.index$V1 <- as.numeric(row.names(distance.a.index))
@@ -1361,10 +1462,20 @@ createPrPsUnSupervisedByCca <- function(
                                 distance.a.index[col.name] <- row.names(sample.annot.a)[distance.a.index[ , i]]
                             }
                             #### Applying KNN for second batch ####
-                            distance.b <- BiocNeighbors::findKNN(
-                                X = t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE]),
-                                k = min.sample.for.ps
-                            )
+                            if (isTRUE(use.annoy)){
+                                distance.b <- BiocNeighbors::findKNN(
+                                    X = t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE]),
+                                    k = min.sample.for.ps,
+                                    num.threads = nb.cores,
+                                    BNPARAM = AnnoyParam(ntrees = annot.nb.trees)
+                                )
+                            } else{
+                                distance.b <- BiocNeighbors::findKNN(
+                                    X = t(similarity.data[hvg, row.names(sample.annot.b) , drop = FALSE]),
+                                    k = min.sample.for.ps,
+                                    num.threads = nb.cores
+                                )
+                            }
                             distance.b.index <- as.data.frame(distance.b$index)
                             colnames(distance.b.index) <- paste0('V', 2:(min.sample.for.ps + 1))
                             distance.b.index$V1 <- as.numeric(row.names(distance.b.index))
