@@ -166,64 +166,6 @@
 #' @import ggplot2
 #' @export
 
-
-# ccle.se.obj <- prepareSeObj(
-#     data = ccle.se.obj,
-#     raw.count.assay.name = 'RawCount',
-#     remove.lowly.expressed.genes = TRUE,
-#     estimate.tumor.purity = NULL,
-#     scale.singscore.values = FALSE,
-#     calculate.library.size = TRUE,
-#     add.immun.stroma.genes = FALSE,
-#     add.gene.details = FALSE,
-#     add.housekeeping.genes = FALSE,
-#     column.name = 'gene_name',
-#     gene.group = 'hgnc_symbol'
-# )
-#
-#
-# se.obj = ccle.se.obj
-# assay.name = 'RawCount'
-# bio.variables = 'Lineage'
-# uv.variables = c('DepMapCode', 'library.size', 'Stranded', 'GrowthMedia', 'years')
-# form =  ~ (1|DepMapCode) + (1|Lineage) +  library.size + (1|Stranded) + (1|GrowthMedia) + (1|years)
-# use.rank = FALSE
-# ncg.selection.method = 'quantile'
-# adjust.data = FALSE
-# adjustment.method = 'lm'
-# adjustment.variables = 'uv'
-# samples.to.use = 'all'
-# nb.ncg = 0.1
-# top.rank.bio.genes = 0.5
-# top.rank.uv.genes = 0.5
-# bio.percentile = NULL
-# uv.percentile = 0.8
-# grid.group = 'uv'
-# grid.direction = 'increase'
-# grid.nb = 20
-# apply.log = TRUE
-# pseudo.count = 1
-# assess.ncg = TRUE
-# variables.to.assess.ncg = NULL
-# nb.pcs = 10
-# center = TRUE
-# scale = FALSE
-# svd.bsparam = bsparam()
-# plot.ncg.assessment = TRUE
-# create.ncg.rank.plot = FALSE
-# nb.cores = NULL
-# check.se.obj = TRUE
-# remove.na = 'none'
-# ncg.group.name = NULL
-# ncg.set.name = NULL
-# save.imf = FALSE
-# imf.name = NULL
-# use.imf = FALSE
-# save.se.obj = TRUE
-# verbose = TRUE
-
-
-
 findNcgSupervisedByLinearMixedModel <- function(
         se.obj,
         assay.name,
