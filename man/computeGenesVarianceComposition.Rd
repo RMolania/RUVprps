@@ -14,7 +14,7 @@ computeGenesVarianceComposition(
   samples.to.use = "all",
   apply.log = TRUE,
   pseudo.count = 1,
-  nb.cores = 1,
+  nb.cores = NULL,
   plot.output = TRUE,
   output.name = NULL,
   check.se.obj = TRUE,
