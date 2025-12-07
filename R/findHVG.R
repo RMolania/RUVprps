@@ -167,12 +167,22 @@ findHVG <- function(
     }
 
     # Checking samples to use ####
-    ### Adding the results to the SummarizedExperiment object ####
     if (is.logical(samples.to.use)){
         se.obj.initial <- se.obj
         se.obj <- se.obj[ , samples.to.use]
     }
-
+    # Specifying cores
+    if (is.null(nb.cores)){
+        if (.Platform$OS.type == "windows") {
+            nb.cores <- as.numeric(Sys.getenv("NUMBER_OF_PROCESSORS", unset = 1))
+        } else {
+            # macOS or Unix
+            nb.cores <- as.numeric(system("sysctl -n hw.ncpu", intern = TRUE)) - 1
+            if (is.na(nb.cores) || length(nb.cores) == 0) {
+                nb.cores <- 1
+            }
+        }
+    }
     # Assessing the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
@@ -630,7 +640,7 @@ findHVG <- function(
                 exprObj = expr.data,
                 formula = form,
                 data = sample.annotation,
-                BPPARAM = MulticoreParam(workers = 14)
+                BPPARAM = MulticoreParam(workers = nb.cores)
                 )
             new.form <- changeLmmFormula(
                 form = form,
