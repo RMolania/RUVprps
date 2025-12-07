@@ -26,10 +26,10 @@ countNCG <- function(
         verbose = TRUE
         ){
     if (!is.character(ncg.selection) | length(ncg.selection) > 1){
-        stop('The "ncg.selection" must be one of the "supervised" or "unsupervised".')
+        stop('The "ncg.selection" must be one of the "supervised" or "un.supervised".')
     }
-    if (!ncg.selection %in% c('supervised', 'unsupervised')){
-        stop('The "ncg.selection" must be one of the "supervised" or "unsupervised".')
+    if (!ncg.selection %in% c('supervised', 'un.supervised')){
+        stop('The "ncg.selection" must be one of the "supervised" or "un.supervised".')
     }
     if (!is.null(ncg.group.name)){
         ncgs.list <- names(se.obj@metadata$NCG[[ncg.selection]][[ncg.group.name]])
