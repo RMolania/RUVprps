@@ -291,7 +291,6 @@ computeGenesPartialCorrelation <- function(
             function(x) all.assays[[x]][ selected.genes, ])
         names(all.assays) <- levels(assay.names)
 
-
         # Computing gene-gene correlation ####
         printColoredMessage(
             message ='-- Computing all possible pairwise gene-gene correlations:',
