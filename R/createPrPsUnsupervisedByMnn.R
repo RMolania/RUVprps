@@ -96,6 +96,7 @@
 #' @importFrom irlba prcomp_irlba
 #' @importFrom RANN nn2
 #' @export
+
 createPrPsUnsupervisedByMnn <- function(
         se.obj,
         assay.name,

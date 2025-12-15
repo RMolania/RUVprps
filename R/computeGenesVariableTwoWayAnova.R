@@ -44,7 +44,6 @@
 #' @import ggplot2
 #' @export
 
-
 computeGenesVariableTwoWayAnova <- function(
         se.obj,
         assay.names,

@@ -46,11 +46,10 @@
 #' @param save.se.obj Logical. Indicates whether to save the RLE plots in the metadata of the SummarizedExperiment object
 #'  or to output the result as a list. The default, it is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
-
+#'
 #' @return A SummarizedExperiment object that contains all the RLE plot(s) in the "metadata" or a list that contains all
 #' the RLE plot(s).
-
-
+#'
 #' @importFrom matrixStats colQuantiles colMedians colIQRs
 #' @importFrom SummarizedExperiment assays
 #' @importFrom tidyr pivot_longer

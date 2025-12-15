@@ -17,7 +17,6 @@
 #'
 #' @importFrom SummarizedExperiment assays assay colData
 
-
 createLogAssays <- function(
         se.obj,
         assay.names = 'all',

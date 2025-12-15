@@ -29,8 +29,7 @@
 #'
 #' @return A SummarizedExperiment object or a list that contains all the vector correlation plots for the individual
 #' assay(s).
-
-
+#'
 #' @importFrom grDevices colorRampPalette
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr mutate

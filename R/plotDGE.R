@@ -29,8 +29,7 @@
 #' @param verbose Logical. If `TRUE`, messages for different steps of the function will be displayed.
 #'
 #' @return A SummarizedExperiment object or a list containing the computed AR
-
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom tidyr pivot_longer
 #' @importFrom ggpubr ggarrange

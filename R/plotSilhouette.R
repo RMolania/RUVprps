@@ -32,7 +32,7 @@
 #'
 #' @return A SummarizedExperiment object or a list containing all the plots of the computed average Silhouette coefficients
 #' for the categorical variables.
-
+#'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom tidyr pivot_longer
