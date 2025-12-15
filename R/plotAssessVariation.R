@@ -31,24 +31,9 @@
 #' @param pdf.width Numeric. Specifies the width (in inches) of the output PDF file. Default is typically around 8.
 #' @param pdf.height Numeric. Specifies the height (in inches) of the output PDF file. Default is typically around 6.
 #' @param verbose Logical. If `TRUE`, displays messages describing different steps of the function.
+#' @importFrom SummarizedExperiment assays
+#' @export
 
-
-# se.obj = read.se.obj
-# assay.names = 'all'
-# fast.pca = TRUE
-# anova.method = 'aov'
-# corr.method = 'spearman'
-# pcorr.method = 'spearman'
-# sil.dist.measure = 'euclidian'
-# ari.clustering.method = "hclust"
-# ari.hclust.method = "complete"
-# ari.hclust.dist.measure = "euclidian"
-# output.file.name = NULL
-# pdf.width = 12
-# pdf.height = 12
-# verbose = TRUE
-# variables =  c('CMS','Library.size','Tumour.purity','Time.interval')
-# output.file.name = paste0('../MS/Main_Figures/TCGA_READ_RNAseq/Scenario0/AssessVariation/', "TCGA_READ_AssessVariation")
 
 plotAssessVariation <- function(
         se.obj,
@@ -66,9 +51,8 @@ plotAssessVariation <- function(
         pdf.width = 12,
         pdf.height = 12,
         verbose = TRUE
-    ){
-
-    # Check the assays ####
+        ){
+    # Checking the assays ####
     if (length(assay.names) == 1 && assay.names == 'all') {
         assay.names <- factor(x = names(assays(se.obj)), levels = names(assays(se.obj)))
     } else assay.names <- factor(x = assay.names, levels = assay.names)
@@ -77,7 +61,7 @@ plotAssessVariation <- function(
     }
     metrics.table <- se.obj@metadata$AssessmentMetrics$metrics.table
 
-    # Put all plots together ####
+    # Putting all plots together ####
     ## find classes of different variables ####
     if (!is.null(variables)) {
         vars.class <- sapply(
@@ -86,7 +70,7 @@ plotAssessVariation <- function(
         categorical.vars <- names(vars.class[vars.class %in% c('character', 'factor')])
         continuous.vars <- names(vars.class[vars.class %in% c('numeric', 'integer')])
     }
-    ## select output file names ####
+    ## selecting output file names ####
     if (is.null(output.file.name)){
         output.file.name <- 'RUVIIIPRPS_AssessVariation'
     }
