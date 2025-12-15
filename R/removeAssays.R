@@ -5,7 +5,7 @@
 #' will be removed from the SummarizedExperiment object.
 #'
 #' @importFrom SummarizedExperiment assays
-#'
+#' @export
 removeAssays <- function(
         se.obj,
         assays.to.remove
