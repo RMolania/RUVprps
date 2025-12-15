@@ -100,51 +100,6 @@
 #' @import RColorBrewer
 #' @export
 
-
-
-# se.obj = ms.se.obj,
-# assay.names = 'all',
-# assessment.level = 'L1',
-# select.top.ruv = FALSE,
-# bio.variables = c("Tumour.purity", "PAM50"),
-# uv.variables = c("Studies"),
-# bio.weight = 0.6,
-# uv.weight = 0.4,
-# corr.cutoff = list(Tumour.purity = .5),
-# output.name = 'ruvprps.ms.assessNormalization.scenario1'
-#
-#
-#
-# se.obj = ms.se.obj
-# assay.names = 'all'
-# bio.variables = c("Tumour.purity", "PAM50")
-# uv.variables = c("Studies")
-# assessment.level = 'L1'
-# assessments.to.exclude = NULL
-# select.top.ruv = TRUE
-# fast.pca = TRUE
-# sil.dist.measure = 'euclidian'
-# sli.nb.pcs = 3
-# ari.clustering.method = 'hclust'
-# ari.hclust.method = 'complete'
-# ari.hclust.dist.measure = 'euclidian'
-# ari.nb.pcs = 3
-# corr.method = 'spearman'
-# corr.cutoff = list(Tumour.purity = .5)
-# anova.method = 'aov'
-# fvalue.cutoff = 1
-# vca.nb.pcs = 3
-# lra.nb.pcs = 3
-# pcorr.method = 'spearman'
-# pcorr.cutoff = 0.3
-# bio.weight = 0.6
-# uv.weight = 0.4
-# plot.output = TRUE
-# save.se.obj = TRUE
-# output.name = NULL
-# verbose = TRUE
-
-
 assessNormalization <- function(
         se.obj,
         assay.names = 'all',
@@ -175,9 +130,11 @@ assessNormalization <- function(
         output.name = NULL,
         verbose = TRUE
         ){
-    printColoredMessage(message = '------------The assessNormalization function starts:',
-                        color = 'white',
-                        verbose = verbose)
+    printColoredMessage(
+        message = '------------The assessNormalization function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # Checking the inputs of function ####
     if (length(assay.names) == 1 && assay.names != 'all') {
         if (!assay.names %in% names(assays(se.obj)))
@@ -554,7 +511,7 @@ assessNormalization <- function(
             })
         names(rle.iqr.var.corr.scores) <- selected.vars
 
-        ### put all together ####
+        ### putting all together ####
         rle.iqr.var.corr.scores <- as.data.frame(x = rle.iqr.var.corr.scores, check.names = FALSE) %>%
             dplyr::mutate(data = row.names(.)) %>%
             pivot_longer(-data, names_to = 'variable', values_to = 'measurements') %>%
@@ -1859,10 +1816,6 @@ assessNormalization <- function(
         mutate(rank = row_number(-measurements)) %>%
         data.frame(.)
     all.measurements$rank <- as.factor(all.measurements$rank)
-
-    ram <- all.measurements
-    all.measurements <- ram
-
     all.measurements$variable <- as.character(all.measurements$variable)
     all.measurements$group <- as.character(all.measurements$group)
     ## plot
@@ -1883,7 +1836,11 @@ assessNormalization <- function(
     interpolated.colors <- grDevices::colorRampPalette(original.palette)(num.colors)
     all.measurements$group[all.measurements$group == 'Final performance'] <- 'Final scores'
 
-
+    new.levels <- unique(all.measurements$variable)
+    new.levels <- c(c('Bio', 'UV', 'Final') , new.levels[!new.levels %in% c('Bio', 'UV', 'Final')])
+    all.measurements$variable <- factor(
+        all.measurements$variable,
+        levels = new.levels)
     assessment.plot <- ggplot(data = all.measurements, aes(x = test, y = data)) +
         geom_point(aes(size = measurements, color = rank)) +
         scale_color_manual(values = interpolated.colors, name = 'Rank') +
@@ -1910,16 +1867,6 @@ assessNormalization <- function(
         geom_stripes(odd = "#22222222", even = "#66666666") +
         guides(color = guide_legend(override.aes = list(size = 5), ncol = 3), size = guide_legend(ncol = 3))
     if (isTRUE(plot.output)) print(assessment.plot)
-
-    ggplot(all.measurements, aes(x = test, y = data)) +
-        geom_point() +
-        facet_nested(
-            . ~ group + variable,
-            strip = strip_background,
-            space = "free_x",
-            scales = "free"
-        )
-
     # Saving results ####
     ### add results to the SummarizedExperiment object ####
     if (is.null(output.name))

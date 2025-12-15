@@ -9,7 +9,7 @@ assessVariation(
   assay.names = "all",
   bio.variables,
   uv.variables,
-  assessment.level = "L3",
+  assessment.level = "L2",
   plots.to.exclude = NULL,
   apply.log = TRUE,
   pseudo.count = 1,
