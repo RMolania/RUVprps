@@ -177,7 +177,7 @@ assessVariation <- function(
         assay.names = 'all',
         bio.variables,
         uv.variables,
-        assessment.level = 'L3',
+        assessment.level = 'L2',
         plots.to.exclude = NULL,
         apply.log = TRUE,
         pseudo.count = 1,
@@ -273,6 +273,9 @@ assessVariation <- function(
     }
     if (is.logical(plots.to.exclude)){
         stop('The "to.exclude" must be a vector or NULL.')
+    }
+    if (!assessment.level %in% c('L1', 'L2')){
+        stop('The "assessment.level" must be one of the "L1" or "L2".')
     }
     if (isFALSE(is.logical(apply.log))) {
         stop('The "apply.log" must be "TRUE" or "FALSE".')
@@ -410,10 +413,7 @@ assessVariation <- function(
         uv.metrics.table <- do.call(rbind, uv.metrics.table)
         metrics.table <- rbind(bio.metrics.table, uv.metrics.table, metrics.table[metrics.table$Variables == 'General' , ])
     }
-    # if (assessment.level == 'L2'){
-    #
-    # }
-    if (assessment.level == 'L3'){
+    if (assessment.level == 'L2'){
         metrics.table <- metrics.table
     }
     # Excluding metrics and plots #####
