@@ -47,12 +47,12 @@ selectGenesForPPcorr <- function(
         verbose = TRUE
         ){
     names(variables) <- assay.names
-    groups <- se.obj[[groups]]
     if (!is.null(groups)){
+        groups <- se.obj[[groups]]
         all.corr <- list()
         for(i in 1:length(variables)){
             corr.genes <- sapply(
-                levels(groups),
+                unique(groups),
                 function(x){
                     gene.var.corr <- computeGenesVariableCorrelation(
                         se.obj = se.obj[ , groups == x],
@@ -66,7 +66,7 @@ selectGenesForPPcorr <- function(
                         save.se.obj = FALSE
                         )[[names(variables)[i]]]
                     if (isTRUE(abs.cor)){
-                        abs(gene.var.corr[ , 'correlation']) > cor.cutoff
+                           abs(gene.var.corr[ , 'correlation']) > cor.cutoff
                     } else gene.var.corr[ , 'correlation'] > cor.cutoff
                 })
             all.corr[[variables[i]]] <- row.names(corr.genes)[rowSums(corr.genes)!= 0]
