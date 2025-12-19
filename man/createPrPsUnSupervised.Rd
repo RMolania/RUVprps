@@ -159,7 +159,7 @@ comparisons. Default is \code{NULL} (all groups compared).}
 Default is \code{expr}.}
 
 \item{clustering.method}{Character. Clustering method for continuous \code{uv.variables}. Options: \code{kmeans}, \code{cut}, \code{quantile}.
-Default is \code{kmeans}.}
+Default is \code{cut}.}
 
 \item{nb.clusters}{Numeric. Number of clusters for continuous \code{uv.variables}. Default is 3.}
 

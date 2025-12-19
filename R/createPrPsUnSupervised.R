@@ -60,7 +60,7 @@
 #' @param data.for.similarity Character. Specifies which data representation to use for similarity (e.g., `expr`, `pcs`).
 #' Default is `expr`.
 #' @param clustering.method Character. Clustering method for continuous `uv.variables`. Options: `kmeans`, `cut`, `quantile`.
-#' Default is `kmeans`.
+#' Default is `cut`.
 #' @param nb.clusters Numeric. Number of clusters for continuous `uv.variables`. Default is 3.
 #' @param other.uv.clustering.method Character. Clustering method for `other.uv.variables`. Default matches `clustering.method`.
 #' @param nb.other.uv.clusters Numeric. Number of clusters for `other.uv.variables`. Default matches `nb.clusters`.
