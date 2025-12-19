@@ -165,7 +165,7 @@ createPrPsUnSupervisedByCca <- function(
         data.for.similarity = 'ruv',
         clustering.method = 'cut',
         nb.clusters = 3,
-        other.uv.clustering.method = 'kmeans',
+        other.uv.clustering.method = 'cut',
         nb.other.uv.clusters = 2,
         nb.batches.to.cover = 2,
         normalization = 'CPM',
@@ -543,11 +543,6 @@ createPrPsUnSupervisedByCca <- function(
                         center = TRUE,
                         scale = FALSE
                         )
-                    printColoredMessage(
-                        message = '- Applying RUV-III norm.',
-                        color = 'orange',
-                        verbose = verbose
-                    )
                     if (residop.fun == 'c1'){
                         Y0 <- fastResidopC1(Y, m.matrix)
                     } else if (residop.fun == 'c2'){
@@ -567,12 +562,6 @@ createPrPsUnSupervisedByCca <- function(
                         }
                         Y0 <- fastResidopR(Y, m.matrix)
                     }
-
-                    printColoredMessage(
-                        message = '- Applying RUV-III norm22.',
-                        color = 'orange',
-                        verbose = verbose
-                    )
                     left.sing.value <- BiocSingular::runSVD(
                         x = Y0,
                         k = k,
@@ -592,11 +581,6 @@ createPrPsUnSupervisedByCca <- function(
                     ### Applying MNN ####
                     row.names(pca.ruv$x) <- colnames(temp.data)
                     ruv.adj <- pca.ruv$x
-                    printColoredMessage(
-                        message = '- Applying RUV-III norm222.',
-                        color = 'orange',
-                        verbose = verbose
-                    )
                 }
                 # Finding MNN using RUV-III normalized data ####
                 if (isTRUE(use.ruviii.norm.for.mnn)){
@@ -651,12 +635,6 @@ createPrPsUnSupervisedByCca <- function(
                     }
                     all.pp <- all.pp.new
                 }
-
-                printColoredMessage(
-                    message = '- Applying RUV-III norm222www.',
-                    color = 'orange',
-                    verbose = verbose
-                )
 
                 ## Finding the most similar samples ####
                 if (data.for.similarity == 'ruv'){

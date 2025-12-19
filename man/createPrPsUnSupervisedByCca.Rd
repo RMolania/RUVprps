@@ -34,7 +34,7 @@ createPrPsUnSupervisedByCca(
   data.for.similarity = "ruv",
   clustering.method = "cut",
   nb.clusters = 3,
-  other.uv.clustering.method = "kmeans",
+  other.uv.clustering.method = "cut",
   nb.other.uv.clusters = 2,
   nb.batches.to.cover = 2,
   normalization = "CPM",
