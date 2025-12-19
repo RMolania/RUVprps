@@ -1054,7 +1054,25 @@ assessNormalization <- function(
                     levels(assay.names),
                     function(y){
                         corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$Correlation$spearman[[x]]$correlations.pvalues
-                        suppressWarnings(qvalue::qvalue(p = corr.results[, 'p-value'])$pi0)
+                        pvalues <- corr.results[, 'p-value']
+                        pvalues <- pvalues[!is.na(pvalues) & !is.infinite(pvalues)]
+                        result <- tryCatch({
+                            qvalue.results <- qvalue::qvalue(p = pvalues, pi0 = NULL)
+                            list(pi0 = qvalue.results$pi0)
+                        }, warning = function(w) {
+                            message("Warning occurred: ", conditionMessage(w))
+                            NULL
+                        }, error = function(e) {
+                            message("Error occurred: ", conditionMessage(e))
+                            NULL
+                        })
+                        # Check results
+                        if (!is.null(result)) {
+                            return(result$pi0)
+                        } else {
+                            message("Failed to compute q-values. q-values will be 0.")
+                            return(0)
+                        }
                     })
             })
         names(gene.var.corr.qvalue.scores) <- selected.vars
@@ -1424,7 +1442,26 @@ assessNormalization <- function(
                             names(se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values),
                             function(z){
                                 pvalue.results <- se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values[[z]]
-                                suppressWarnings(qvalue::qvalue(p = pvalue.results[, 'pvalue'])$pi0)
+                                pvalues <- pvalue.results[, 'pvalue']
+                                pvalues <- pvalues[!is.na(pvalues) & !is.infinite(pvalues)]
+                                result <- tryCatch({
+                                    qvalue.results <- qvalue::qvalue(p = pvalues, pi0 = NULL)
+                                    list(pi0 = qvalue.results$pi0)
+                                }, warning = function(w) {
+                                    message("Warning occurred: ", conditionMessage(w))
+                                    NULL
+                                }, error = function(e) {
+                                    message("Error occurred: ", conditionMessage(e))
+                                    NULL
+                                })
+                                # Check results
+                                if (!is.null(result)) {
+                                    return(result$pi0)
+                                } else {
+                                    message("Failed to compute q-values. q-values will be 0.")
+                                    return(0)
+                                }
+
                             }))
                     })
             })
