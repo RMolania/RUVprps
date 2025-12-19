@@ -994,7 +994,9 @@ assessNormalization <- function(
                     function(y){
                         corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$Correlation[[corr.method]][[x]]$correlations.pvalues
                         selected.pvalues <- corr.results[, 'p-value'][corr.results[, 'p-value'] > 0.05 ]
-                        suppressWarnings(1 - ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
+                        if (length(selected.pvalues) == 0){
+                            return(0)
+                        } else  suppressWarnings(1 - ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
                     })
             })
         names(gene.var.corr.pvalue.scores) <- selected.vars
@@ -1167,7 +1169,9 @@ assessNormalization <- function(
                     function(y){
                         anova.results <- se.obj@metadata$Metrics[[y]]$gene.level$ANOVA$aov[[x]]$fstatistics.pvalues
                         selected.pvalues <- anova.results[, 'pvalue'][anova.results[, 'pvalue'] > 0.05 ]
-                        suppressWarnings(1-ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
+                        if (length(selected.pvalues)==0){
+                            return(0)
+                        } else   suppressWarnings(1-ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
                     })
             })
         names(gene.var.anova.pvalue.scores) <- selected.vars
@@ -1360,7 +1364,9 @@ assessNormalization <- function(
                             function(z){
                                 corr.results <- se.obj@metadata$Metrics[[y]]$gene.level$DGE$limma[[x]]$p.values[[z]]
                                 selected.pvalues <- corr.results[, 'pvalue'][corr.results[, 'pvalue'] > 0.05 ]
-                                suppressWarnings(1 - ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
+                                if (length(selected.pvalues)==0){
+                                    return(0)
+                                } else suppressWarnings(1 - ks.test(x = selected.pvalues, y = "punif")$statistic[[1]])
                             }))
                     })
             })
