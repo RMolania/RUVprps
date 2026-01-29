@@ -23,7 +23,6 @@
 #' @importFrom purrr map_int
 #'
 #' @return A `SummarizedExperiment` object with TCGA RNA-seq batch information added to the `colData`.
-#'
 #' @export
 
 addTcgaBatchInfo <- function(
