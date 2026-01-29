@@ -8,6 +8,7 @@
 #'
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors DataFrame
+#' @export
 
 renameVariables <- function(
         se.obj,
