@@ -186,7 +186,7 @@ computeLisi <- function(
                 label_colnames = "selected.var",
                 perplexity = perplexity,
                 nn_eps = nn.eps
-            )
+                )
             lisi.score <- lisi.score[["selected.var"]]
             return(lisi.score)
         })
@@ -237,9 +237,11 @@ computeLisi <- function(
             color = 'blue',
             verbose = verbose
             )
-        printColoredMessage(message = '------------The computeLisi function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The computeLisi function finished.',
+            color = 'white',
+            verbose = verbose
+            )
         return(all.lisi = all.lisi)
     }
 }
