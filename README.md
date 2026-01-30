@@ -43,13 +43,16 @@ Additionally, the `assessNormalization()` function numerically summarizes result
 ---
 
 ## 📖 Citation
+If you use **RUVprps**, please cite:  
 
-A manuscript describing RUVprps will be available soon. In the meantime, if you use **RUVprps**, please cite:  
+Marie Trussart, Momeneh Foroutan, Michael Milton, Himisha Beltran, Terence P Speed, Ramyar Molania
+*Fast, accurate and scalable normalization for RNA sequencing data with the RUVprps software package* 2026
+[doi.org/10.64898/2026.01.28.702384](https://doi.org/10.64898/2026.01.28.702384) 
+
 
 Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP.  
 *Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnology.** 2023;41(1):82–95.  
 [doi:10.1038/s41587-022-01440-w](https://doi.org/10.1038/s41587-022-01440-w)  
-
 ---
 
 ## ⚙️ Installation
