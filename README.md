@@ -44,11 +44,17 @@ Additionally, the `assessNormalization()` function numerically summarizes result
 
 ## 📖 Citation
 
-A manuscript describing RUVprps will be available soon. In the meantime, if you use **RUVprps**, please cite:  
+If you use **RUVprps**, please cite:
 
-Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP. *Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnology.** 2023;41(1):82–95.[doi:10.1038/s41587-022-01440-w](https://doi.org/10.1038/s41587-022-01440-w)  
+> Trussart M, Foroutan M, Milton M, Beltran H, Speed TP, Molania R.  
+> *Fast, accurate and scalable normalization for RNA sequencing data with the RUVprps software package.* **bioRxiv**, 2026.  
+> https://doi.org/10.64898/2026.01.28.702384  
+>
+> Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP.  
+> *Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnology.** 2023;41(1):82–95.  
+> https://doi.org/10.1038/s41587-022-01440-w
 
-Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP. *Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnology.** 2023;41(1):82–95.[doi:10.1038/s41587-022-01440-w](https://doi.org/10.1038/s41587-022-01440-w)
+
 ---
 
 ## ⚙️ Installation
