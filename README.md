@@ -53,8 +53,6 @@ If you use **RUVprps**, please cite:
 > Molania R, Foroutan M, Gagnon-Bartsch JA, Gandolfo LC, Jain A, Sinha A, Olshansky G, Dobrovic A, Papenfuss AT, Speed TP.  
 > *Removing unwanted variation from large-scale RNA sequencing data with PRPS.* **Nat Biotechnology.** 2023;41(1):82–95.  
 > https://doi.org/10.1038/s41587-022-01440-w
-
-
 ---
 
 ## ⚙️ Installation

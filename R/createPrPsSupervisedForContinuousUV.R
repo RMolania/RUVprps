@@ -77,6 +77,7 @@
 #' @importFrom SummarizedExperiment assay
 #' @importFrom tidyr %>%
 #' @import ggplot2
+#'
 #' @export
 
 createPrPsSupervisedForContinuousUV <- function(

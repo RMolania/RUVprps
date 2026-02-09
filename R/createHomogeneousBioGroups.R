@@ -13,7 +13,7 @@
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param bio.variables Character. A character string or a vector of character strings specifying the column names of biological
-#' variables in the sample annotation of the 'SummarizedExperiment  object. These 'bio.variables' can be either categorical
+#' variables in the sample annotation of the 'SummarizedExperiment  object. These `bio.variables` can be either categorical
 #' or continuous variables.
 #' @param clustering.method Character. A character string specifying the clustering method to be applied for grouping each
 #' continuous biological variable. Options include `kmeans`, `cut`, and `quantile`. The default is set to `kmeans` clustering.
@@ -36,6 +36,7 @@
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom stats kmeans quantile
 #' @importFrom knitr kable
+#'
 #' @export
 
 createHomogeneousBioGroups <- function(

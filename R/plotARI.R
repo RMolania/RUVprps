@@ -24,9 +24,9 @@
 #' @param plot.type Character. Specifies the plot type for the Adjusted Rand Index. Options are `"single.plot"` and
 #' `"combined.plot"`. If one variable is provided in `variables`, `plot.type` must be set to `"single.plot"` to generate
 #' a barplot. If two variables are provided and `plot.type` is set to `"combined.plot"`, the function generates a scatter
-#' plot comparing the ARIs. The default is `"single.plot"`.
+#' plot comparing the ARIs. The default is set to `"single.plot"`.
 #' @param plot.output Logical. If `TRUE`, the individual barplots or scatter plots will be printed during function execution.
-#' Default is `TRUE`.
+#' The default is to `TRUE`.
 #' @param save.se.obj Logical. Indicates whether to save the plots in the metadata of the `SummarizedExperiment` object
 #' or return them as a list. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, messages for different steps of the function will be displayed.
@@ -38,6 +38,7 @@
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom tidyr pivot_longer
 #' @import ggplot2
+#'
 #' @export
 
 plotARI <- function(

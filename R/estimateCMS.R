@@ -1,4 +1,4 @@
-#' Estimates the CMS subtypes of colorectal cancer RNA-seq data.
+#' Estimate the CMS subtypes of colorectal cancer RNA-seq data.
 #'
 #' @author Ramyar Molania
 #'

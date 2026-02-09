@@ -20,44 +20,8 @@
 #' biological variation. The higher the ranks, the greater the impact of biological variation on genes. The options are
 #' `prod`, `sum`, `average`, `auto` or `non.overlap` and `quantile`.
 #'
-#' If `prod`, `sum` and `average` is set:
-#'
-#' The product, sum or average of ranks of F-statistics is calculated. Then, the function selects `nb.ncg` `numbers of
-#' genes as negative control genes that have the lowest ranks.
-#'
-#' If `non.overlap` is selected:
-#' \enumerate{
-#'    \item The function selects the top `top.rank.bio.genes` genes that have the highest ranks of F-statistics
-#'    for biological variation.
-#'    \item The function selects the top `top.rank.uv.genes` genes that have the lowest ranks of F-statistics for
-#'    unwanted variation.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1. This will be a set of genes as
-#'    negative control genes.
-#' }
-#'
-#' If `auto` is selected:
-#' \enumerate{
-#'    \item The function selects the top `top.rank.bio.genes` genes that have the highest ranks of F-statistics for
-#'    biological variation.
-#'    \item  The function selects the top `top.rank.uv.genes` genes that have the lowest ranks of F-statistics  for
-#'    unwanted variation.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1.
-#'    \item If the number of selected genes is larger or smaller than the specified `nb.ncg`, the function applies an
-#'    auto search to find approximate `nb.ncg` of genes as negative control genes as follow. The auto search will either
-#'    decrease or increase the values of either `top.rank.bio.genes` or `top.rank.uv.genes` or both till to find
-#'    approximate `nb.ncg` of genes as negative control genes.
-#' }
-#' If `quantile` is selected:
-#' \enumerate{
-#'    \item The function selects the `bio.percentile` percentile of F-statistics for biological variation. Then, selects
-#'    all the genes that have F-statistics larger the calculated percentile.
-#'    \item The function selects the `uv.percentile` percentile of F-statistics for unwanted variation. Then, selects
-#'    all the genes that have F-statistics larger the calculated percentile.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1.
-#' }
-#'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character. A character that indicates the name of an data (assay) in the `SummarizedExperiment` object.
+#' @param assay.name Character. A character string that indicates the name of an data (assay) in the `SummarizedExperiment` object.
 #' The selected assay should be the one that will be used for the RUV-III-PRPS normalization.
 #' @param bio.variables Character. A character string or vector of strings indicating the column name(s) of the biological
 #' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination. This
@@ -65,14 +29,18 @@
 #' @param uv.variables Character. A character string or vector of strings indicating the column name(s) of the unwanted
 #' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
 #'  argument cannot be `NULL`.
-#' @param approach TTT
-#' @param use.rank TTT
-#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
-#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
-#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' @param approach Character. A character string indicating which approach is used to select NCG. The options are
+#' `AnovaCorr.AcrossAllSamples` and `AnovaCorr.PerBatchPerBiology`. The default is set to `AnovaCorr.AcrossAllSamples`.
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param samples.to.use Logical. A logical vector to specifies which samples to use for the analysis. If `NULL`, all samples
+#' will be used.
+#' @param use.rank Logical. Specifies whether to use a rank-based approach to summarize statistical tests for selecting genes
+#' as NCG. The default is set to `FALSE`.
+#' @param ncg.selection.method Character. A character string that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
+#' The default is set to `non.overlap`. For more information, refer to the details of the function.
 #' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
 #' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
 #' or `non.overlap`. The default is set to 0.2.
@@ -88,8 +56,6 @@
 #' @param grid.group Character. A character that indicates whether the grid search should be performed on biological,
 #' unwanted, or both factors when the `ncg.selection.method` is set to `auto`. The options are `bio`, `uv`, or `both`.
 #' The default is set to `uv`. For more details, refer to the function documentation.
-#' @param  rank.continuous.var TTTT
-#' @param  rank.categorical.var TTTT
 #' @param filter.ncgs Logical. Whether to filter selected NCGs based on public human housekeeping gene sets. The default
 #' is set to `FALSE`.
 #' @param common.hk Character. Specifies group of housekeeping genes to use: `cancer` or `non.cancer`. The default is set
@@ -124,6 +90,21 @@
 #' unwanted variables in the SummarizedExperiment object that will be regressed out from the data before performing
 #' correlation and ANOVA. Regressing out unwanted variables might help better identify genes that are highly affected by
 #' biological variation. The default is set to `NULL`.
+#' @param bio.groups Character. A character string or vector of strings indicating the column name(s) of the biological
+#' variable(s) in the SummarizedExperiment object. The default is set to `NULL`, then variables specified in `bio.variables` will
+#' be used.
+#' @param bio.clustering.method Character. A character string specifying the clustering method to be applied for grouping each
+#' continuous biological variable. Options include `kmeans`, `cut`, and `quantile`. The default is set to `kmeans` clustering.
+#' @param nb.bio.clusters Numeric. A value indicating the number of groups for continuous sources of biological variation.
+#' The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
+#' `clustering.method`.
+#' @param uv.groups Character. A character string or vector of strings indicating the column name(s) of the unwanted
+#' variable(s) in the SummarizedExperiment object. The default is set to `NULL`, then variables specified in `uv.variables`
+#' will be used.
+#' @param uv.clustering.method Character. A character string specifying the clustering method to be applied for grouping each
+#' continuous unwanted variable. Options include `kmeans`, `cut`, and `quantile`. The default is set to `kmeans` clustering.
+#' @param nb.uv.clusters Numeric. A value indicating the number of groups for continuous sources of biological variation.
+#' The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
 #' @param normalization Character. A character that indicates which normalization method should be use to mitigate the
 #' variation in library size before finding genes that are highly affected by biological variation. The options are :
 #' `CPM`, `TMM`, `VST`, `upper`, `full` and `medium`. The default is set to  `CPM`. Refer to the `applyOtherNormalization()`
@@ -156,6 +137,9 @@
 #' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing the
 #' (centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square otherwise.
 #' The default is set to `FALSE`.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+#' PCA using SVD. The default is set to `bsparam()`. We refer to the `runSVD()` function from the **BiocSingular** R package
+#' for further details.
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
@@ -180,14 +164,6 @@
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the SummarizedExperiment
 #' object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-#' @param samples.to.use TTTT
-#' @param bio.clustering.method TTTT
-#' @param bio.groups TTTT
-#' @param nb.bio.clusters TTTT
-#' @param uv.groups TTTT
-#' @param uv.clustering.method TTTT
-#' @param nb.uv.clusters TTTT
-#' @param svd.bsparam TTTT
 #'
 #' @return Either the SummarizedExperiment object containing a set of negative control genes in the metadata or a
 #' logical vector of the selected negative control genes.
@@ -202,6 +178,7 @@
 #' @importFrom Rfast correls
 #' @importFrom dplyr mutate
 #' @import ggplot2
+#'
 #' @export
 
 findNcgSupervisedByAnovaCorr <- function(
@@ -213,8 +190,6 @@ findNcgSupervisedByAnovaCorr <- function(
         nb.ncg = 0.1,
         samples.to.use = 'all',
         use.rank = FALSE,
-        rank.continuous.var = 'correlation',
-        rank.categorical.var = 'fvalue',
         ncg.selection.method = 'non.overlap',
         top.rank.bio.genes = 0.5,
         top.rank.uv.genes = 0.5,

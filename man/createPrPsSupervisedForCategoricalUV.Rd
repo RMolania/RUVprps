@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsSupervisedForCategoricalUV.R
 \name{createPrPsSupervisedForCategoricalUV}
 \alias{createPrPsSupervisedForCategoricalUV}
-\title{Creates PRPS for a categorical source of unwanted variation.}
+\title{Create PRPS for a categorical source of unwanted variation.}
 \usage{
 createPrPsSupervisedForCategoricalUV(
   se.obj,

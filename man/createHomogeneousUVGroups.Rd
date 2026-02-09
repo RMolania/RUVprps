@@ -2,7 +2,7 @@
 % Please edit documentation in R/createHomogeneousUVGroups.R
 \name{createHomogeneousUVGroups}
 \alias{createHomogeneousUVGroups}
-\title{Creates all possible homogeneous groups with respect to unwanted variables.}
+\title{Create all possible homogeneous groups with respect to unwanted variables.}
 \usage{
 createHomogeneousUVGroups(
   se.obj,

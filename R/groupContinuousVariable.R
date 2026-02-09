@@ -1,4 +1,4 @@
-#' Groups a continuous variable.
+#' Group a continuous variable.
 #'
 #' @author Ramyar Molania
 #'
@@ -13,6 +13,8 @@
 #' @param perfix Symbol. A symbol to add to each groups.
 #' @param plot.output Logical. If it is set to `TRUE`, the function plots the variable values colored by the groups.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
+#'
+#' @export
 
 groupContinuousVariable <- function(
         se.obj,

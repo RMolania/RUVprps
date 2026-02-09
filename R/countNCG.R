@@ -15,8 +15,9 @@
 #' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
 #' `TRUE`.
 #'
-#' @export
 #' @importFrom ggVennDiagram ggVennDiagram
+#'
+#' @export
 
 countNCG <- function(
         se.obj,

@@ -1,4 +1,4 @@
-#' Plots gene-gene partial correlation results.
+#' Plot gene-gene partial correlation results.
 #'
 #' @author Ramyar Molania
 #'

@@ -22,7 +22,7 @@ computeARI(
 
 \item{assay.names}{character or character vector. A character or a vector of characters of name(s) of the data(assay)
 in the SummarizedExperiment object to use for ARI computation. The default is set to \code{all}, meaning all assays in the
-object will be selected.}
+SummarizedExperiment object will be selected.}
 
 \item{variable}{character. The name of the column containing the categorical variable in the SummarizedExperiment object.
 This variable can represent either a biological or an unwanted factor.}
@@ -38,11 +38,11 @@ components to calculate the ARI. Options are \code{mclust} or \code{hclust}. The
 when applying hierarchical clustering. Options are: \code{euclidean}, \code{maximum}, \code{manhattan}, \code{canberra}, \code{binary}, or
 \code{minkowski}. See the \code{dist} function in the \strong{stats} package for more details.}
 
-\item{fast.pca}{Logical. Indicates whether to use principal components computed via fast PCA by the \code{comptePCA} function
+\item{fast.pca}{Logical. Indicates whether to use principal components computed via fast PCA by the \code{computePCA} function
 The default is set to \code{TRUE}. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
 See details for more information.}
 
-\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The efault
+\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The default
 is to 3.}
 
 \item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment object; otherwise,
@@ -54,7 +54,7 @@ returns the result as list. The default is set to \code{TRUE}.}
 A SummarizedExperiment object or a list containing the computed ARI for specified categorical variable.
 }
 \description{
-This functions computes the adjusted rand index(ARI) for given a categorical variable using the first n PCs of the
+This functions computes the Adjusted Rand Index(ARI) for given a categorical variable using the first n PCs of the
 specified dataset(s) in a SummarizedExperiment object.
 }
 \details{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeKbet.R
 \name{computeKbet}
 \alias{computeKbet}
-\title{Compute k-nearest neighbour batch effect test (kBET).}
+\title{Compute k-nearest neighbor batch effect test (kBET).}
 \usage{
 computeKbet(
   se.obj,
@@ -36,10 +36,10 @@ This variable can represent either a biological or an unwanted factor.}
 The default is set to \code{TRUE}. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
 See details for more information.}
 
-\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The efault
-is to 3.}
+\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The default
+is set to 3.}
 
-\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment object; otherwise,
 returns the result as list. The default is set to \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, displays messages for each step of the function.}

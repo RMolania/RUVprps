@@ -1,4 +1,4 @@
-#' Plots a variable against the medians and IQRs of relative log expression (RLE) plot.
+#' Plot a variable against the medians and IQRs of relative log expression (RLE) plot.
 #'
 #' @author Ramyar Molania
 #'
@@ -48,6 +48,7 @@
 #' @importFrom ggpubr ggarrange stat_cor stat_compare_means
 #' @importFrom SummarizedExperiment assays
 #' @import ggplot2
+#'
 #' @export
 
 plotRleVariable <- function(

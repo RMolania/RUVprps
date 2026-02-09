@@ -35,10 +35,10 @@ nearest neighbor search.}
 The default is set to \code{TRUE}. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
 See details for more information.}
 
-\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The efault
+\item{nb.pcs}{Numeric. Number of first principal components to use when calculating distances between samples. The default
 is to 3.}
 
-\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the metadata of the SummarizedExperiment object; otherwise,
 returns the result as list. The default is set to \code{TRUE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, displays messages for each step of the function.}

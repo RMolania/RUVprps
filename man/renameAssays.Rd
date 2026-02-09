@@ -2,7 +2,7 @@
 % Please edit documentation in R/renameAssays.R
 \name{renameAssays}
 \alias{renameAssays}
-\title{Removes datasets (assays) from a SummarizedExperiment object}
+\title{Remove datasets (assays) from a SummarizedExperiment object}
 \usage{
 renameAssays(se.obj, new.names)
 }
@@ -13,5 +13,5 @@ renameAssays(se.obj, new.names)
 will be removed from the SummarizedExperiment object.}
 }
 \description{
-Removes datasets (assays) from a SummarizedExperiment object
+Remove datasets (assays) from a SummarizedExperiment object
 }

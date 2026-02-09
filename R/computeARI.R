@@ -7,7 +7,7 @@
 #' Nature Biotechnology, 2023
 #'
 #' @description
-#' This functions computes the adjusted rand index(ARI) for given a categorical variable using the first n PCs of the
+#' This functions computes the Adjusted Rand Index(ARI) for given a categorical variable using the first n PCs of the
 #' specified dataset(s) in a SummarizedExperiment object.
 #'
 #' @details
@@ -18,7 +18,7 @@
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.names character or character vector. A character or a vector of characters of name(s) of the data(assay)
 #' in the SummarizedExperiment object to use for ARI computation. The default is set to `all`, meaning all assays in the
-#' object will be selected.
+#' SummarizedExperiment object will be selected.
 #' @param variable character. The name of the column containing the categorical variable in the SummarizedExperiment object.
 #' This variable can represent either a biological or an unwanted factor.
 #' @param clustering.method character. A character that indicates which clustering method to be applied on the principal
@@ -29,10 +29,10 @@
 #' @param hclust.dist.measure Character. A character string specifying which distance measure to be used in the `dist` function
 #' when applying hierarchical clustering. Options are: `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or
 #' `minkowski`. See the `dist` function in the **stats** package for more details.
-#' @param fast.pca Logical. Indicates whether to use principal components computed via fast PCA by the `comptePCA` function
+#' @param fast.pca Logical. Indicates whether to use principal components computed via fast PCA by the `computePCA` function
 #' The default is set to `TRUE`. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
 #' See details for more information.
-#' @param nb.pcs Numeric. Number of first principal components to use when calculating distances between samples. The efault
+#' @param nb.pcs Numeric. Number of first principal components to use when calculating distances between samples. The default
 #' is to 3.
 #' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the SummarizedExperiment object; otherwise,
 #' returns the result as list. The default is set to `TRUE`.
@@ -44,6 +44,7 @@
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom stats cutree hclust dist
 #' @import ggplot2
+#'
 #' @export
 
 computeARI <- function(

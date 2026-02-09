@@ -12,6 +12,7 @@ findNcgSupervisedByTwoWayAnova(
   nb.ncg = 0.05,
   samples.to.use = "all",
   use.rank = FALSE,
+  use.fvalues = FALSE,
   ratio.variable = "eta.squared",
   ncg.selection.method = "non.overlap",
   rank.variable = "fvalue",
@@ -27,7 +28,6 @@ findNcgSupervisedByTwoWayAnova(
   nb.stable.genes = 2000,
   hk.group = "micorarray.hk.genes",
   create.ncg.rank.plot = FALSE,
-  use.fvalues = FALSE,
   plot.ncg.rank = FALSE,
   bio.clustering.method = "kmeans",
   nb.bio.clusters = 3,
@@ -72,11 +72,18 @@ argument cannot be \code{NULL}.}
 when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
 genes in the SummarizedExperiment object. The default is set to 0.1.}
 
-\item{samples.to.use}{TTT}
+\item{samples.to.use}{Logical. A logical vector specifying which samples to use for the analysis. If \code{all}, all samples
+will be used.}
 
-\item{use.rank}{TTT}
+\item{use.rank}{Logical. If \code{TRUE}, a rank-based analysis is used to summarize statistical tests for selecting genes as
+NCG. The default is set to \code{FALSE}.}
 
-\item{ratio.variable}{TTT}
+\item{use.fvalues}{Logical. If \code{TRUE}, the f-statistic from ANOVA will be used for rank based analysis. The default is
+set to \code{FALSE}.}
+
+\item{ratio.variable}{Character. When \code{use.rank} is set to \code{FALSE}, a ratio-based analysis is used to select genes as NCG.
+This parameter specifies which statistic is used for the ratio-based analysis. The options are \code{eta.squared}, \code{variance},
+and \code{fvalue}. The default is set to \code{eta.squared}.}
 
 \item{ncg.selection.method}{Character. A character that indicates how to summarize different statistics and select a
 set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
@@ -129,8 +136,6 @@ to \code{cancer}.}
 \item{create.ncg.rank.plot}{Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
 with respect to their biological and unwanted variation effects. The default is set to \code{FALSE}.}
 
-\item{use.fvalues}{TTT}
-
 \item{plot.ncg.rank}{Logical. Indicates whether to plot a heatmap that shows the rank of the all genes
 with respect to their biological and unwanted variation effects, while function is running. The default is set to \code{FALSE}.}
 
@@ -174,7 +179,9 @@ the column means of the assay from their corresponding columns. The default is s
 the(centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square
 otherwise. The default is set to \code{FALSE}.}
 
-\item{svd.bsparam}{TTTT}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+PCA using SVD. The default is set to \code{bsparam()}. We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package
+for further details.}
 
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
@@ -227,52 +234,6 @@ negative of F-statistics values for unwanted variation. The lower the ranks, the
 variation on genes. The function ranks the F-statistics for biological variation. The higher the ranks, the greater
 the impact of biological variation on genes. The options are \code{prod}, \code{sum}, \code{average}, \code{auto}, \code{non.overlap} and
 \code{quantile}.
-
-If \code{prod}, \code{sum} and \code{average} is set:
-\itemize{
-\item The product, sum or average of ranks of F-statistics is calculated. Then, the function selects \code{nb.ncg} numbers of
-genes as negative control genes that have the lowest ranks.
-}
-
-If \code{non.overlap} is selected:
-\enumerate{
-\item The function selects the top \code{top.rank.bio.genes} genes that have the highest ranks of F-statistics
-for biological variation.
-\item The function selects the top \code{top.rank.uv.genes} genes that have the lowest ranks of F-statistics for
-unwanted variation.
-\item The function excludes all genes obtained in 2 from the ones obtained 1. This will be a set of genes as
-negative control genes.
-}
-
-If \code{auto} is selected:
-\enumerate{
-\item The function selects the top \code{top.rank.bio.genes} genes that have the highest ranks of F-statistics for
-biological variation.
-\item The function selects the top \code{top.rank.uv.genes} genes that have the lowest ranks of F-statistics for
-unwanted variation.
-\item The function excludes all genes obtained in 2 from the ones obtained 1.
-\item If the number of selected genes is larger or smaller than the specified \code{nb.ncg}, the function applies an
-auto search to find approximate \code{nb.ncg} of genes as negative control genes as follow. The auto search will either
-decrease or increase the values of either \code{top.rank.bio.genes} or \code{top.rank.uv.genes} or both till to find
-approximate \code{nb.ncg} of genes as negative control genes.
-}
-
-If \code{quantile} is selected:
-\enumerate{
-\item The function selects the \code{bio.percentile} percentile of F-statistics for biological variation. Then, selects
-all the genes that have F-statistics larger the calculated percentile.
-\item The function selects the \code{uv.percentile} percentile of F-statistics for unwanted variation. Then, selects
-all the genes that have F-statistics larger the calculated percentile.
-\item The function excludes all genes obtained in 2 from the ones obtained 1.
-}
-
-Assess the performance of NCGS:
-\itemize{
-\item The function can assess the initial performance of selected NCGs. This analysis involves principal component analysis
-on only the selected NCG and then explore the R^2 or vector correlation between the \code{nb.pcs} first principal components
-and with the specified variables. Ideal NCGS, should show high and low R^2 or vector correlation for unwanted and
-biological variation respectively.
-}
 }
 \references{
 \itemize{

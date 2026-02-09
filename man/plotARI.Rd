@@ -33,10 +33,10 @@ in \code{computeARI}. See the \code{computeARI} function documentation for more 
 \item{plot.type}{Character. Specifies the plot type for the Adjusted Rand Index. Options are \code{"single.plot"} and
 \code{"combined.plot"}. If one variable is provided in \code{variables}, \code{plot.type} must be set to \code{"single.plot"} to generate
 a barplot. If two variables are provided and \code{plot.type} is set to \code{"combined.plot"}, the function generates a scatter
-plot comparing the ARIs. The default is \code{"single.plot"}.}
+plot comparing the ARIs. The default is set to \code{"single.plot"}.}
 
 \item{plot.output}{Logical. If \code{TRUE}, the individual barplots or scatter plots will be printed during function execution.
-Default is \code{TRUE}.}
+The default is to \code{TRUE}.}
 
 \item{save.se.obj}{Logical. Indicates whether to save the plots in the metadata of the \code{SummarizedExperiment} object
 or return them as a list. The default is \code{TRUE}.}

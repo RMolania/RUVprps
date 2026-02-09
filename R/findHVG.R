@@ -3,10 +3,7 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' A short description...
-#'
-#' @details
-#' Additional details...
+#' This function finds highly variable genes in RNA-seq data using different approaches.
 #'
 #' @param se.obj SummarizedExperiment. A SummarizedExperiment object.
 #' @param assay.name Character. A character specifying the name of the data within the SummarizedExperiment object
@@ -76,6 +73,7 @@
 #' @importFrom parallel mclapply
 #' @importFrom stats loess
 #' @importFrom limma lmFit
+#'
 #' @export
 
 findHVG <- function(

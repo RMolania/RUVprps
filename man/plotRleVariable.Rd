@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotRleVariable.R
 \name{plotRleVariable}
 \alias{plotRleVariable}
-\title{Plots a variable against the medians and IQRs of relative log expression (RLE) plot.}
+\title{Plot a variable against the medians and IQRs of relative log expression (RLE) plot.}
 \usage{
 plotRleVariable(
   se.obj,

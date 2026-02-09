@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsUnSupervised.R
 \name{createPrPsUnSupervised}
 \alias{createPrPsUnSupervised}
-\title{Creates unsupervised PRPS data.}
+\title{Create unsupervised PRPS data.}
 \usage{
 createPrPsUnSupervised(
   se.obj,
@@ -89,58 +89,67 @@ These may provide alternative axes of unwanted variation. Default is \code{NULL}
 
 \item{approach}{Character. Indicates which method to be used. Options are \code{anchor} or \code{mnn}.}
 
-\item{data.input}{Character. Indicates which data should be used as input for finding nearest neighbors. Options:
-\code{expr} or \code{pcs}. If \code{pcs} is selected, the first PCs of the data will be used as input. If \code{expr} is selected,
-expression values will be used directly.}
+\item{data.input}{Character. A character string indicates which data should be used as input for finding nearest neighbors.
+Options: \code{expr} or \code{pcs}. If \code{pcs} is selected, the first PCs of the data will be used as input. If \code{expr} is selected,
+expression values will be used directly. The default is set to \code{pcs}.}
 
 \item{coordinates.to.use}{Character or integer. Specifies which dimensions (e.g., PCs or CCA components) to use
-for neighbor search. Default is \code{NULL} (use all available).}
+for neighbor search across batches. Options are \code{pca}, \code{cca} or \code{both}. The default is set to \code{cca}.}
 
-\item{nb.cca}{Numeric. Number of canonical correlation components to compute when using the anchor approach. Default is 10.}
+\item{nb.cca}{Numeric. A numeric value specifying the number of first canonical components to compute when using the \code{cca}
+approach. The default is set to 2.}
 
-\item{nb.pcs}{Numeric. Number of principal components to use as input for nearest neighbor search. Must be set if
-\code{data.input = pcs}. Default is 2.}
+\item{nb.pcs}{Numeric. A numeric value specifying the number of first canonical components to compute when using the \code{pca}
+approach. The default is set to 2.}
 
-\item{samples.to.use}{Character, logical, or numeric. A subset of samples to be included in PRPS construction.
-Default is \code{all}.}
+\item{samples.to.use}{Logical. A logical vector that indicates which subset of samp;es should be used for the analysis.
+The default is set to \code{all}. This means all samples will be used.}
 
-\item{min.sample.for.ps}{Numeric. Minimum number of samples to average to create a pseudo-sample. Default is 3 (minimum 2).}
+\item{min.sample.for.ps}{Numeric. Minimum number of samples to average to create a pseudo-sample. The default is set
+to 3. The minimum is 2.}
 
 \item{max.sample.for.ps}{Numeric. Maximum number of samples to average for creating a pseudo-sample.
-Default is \code{Inf}. Larger values may dilute unwanted variation signals.}
+The default is set to \code{Inf}. Larger values may dilute unwanted variation signals.}
 
 \item{select.extreme.groups}{Logical. If \code{TRUE}, selects only extreme groups (e.g., lowest and highest clusters) when
-\code{uv.variables} is continuous. Default is \code{TRUE}.}
+\code{uv.variables} is continuous. The default is set to \code{TRUE}.}
 
-\item{filter.prps.sets}{Logical. Indicates whether to filter PRPS sets based on size or variability before saving.
-Default is \code{FALSE}.}
+\item{filter.prps.sets}{Logical. Indicates whether to filter PRPS sets based on their similarities. The default is to
+\code{FALSE}. All possible PRPS will be selected.}
 
-\item{max.prps.sets}{Numeric. Maximum number of PRPS sets across batches. Default is 10.}
+\item{max.prps.sets}{Numeric. Maximum number of PRPS sets across each pair of batches. The default is set to 3.}
 
-\item{min.batches.to.cover}{Numeric. Minimum number of batches each PRPS set must cover to be retained. Default is 2.}
+\item{min.batches.to.cover}{Numeric. Minimum number of batches to consider to create PRPS The default is \code{all}. This
+means PRPS data will be created for all current batches in the data.}
 
-\item{cover.all.batches}{Logical. If \code{TRUE}, requires each PRPS set to cover all batches. Default is \code{FALSE}.}
+\item{cover.all.batches}{Logical. If \code{TRUE}, requires each PRPS set to cover all batches across each sources of
+unwanted variation. The default is set to \code{FALSE}.}
 
 \item{check.prps.connectedness}{Logical. If \code{TRUE}, checks whether PRPS sets form a connected structure across batches.
 Default is \code{TRUE}. See \code{checkPRPSconnectedness()}.}
 
 \item{reference.group}{Character. Specifies a group within \code{uv.variables} to be used as the reference in pairwise
-comparisons. Default is \code{NULL} (all groups compared).}
+comparisons to create PRPS. The default is set \code{NULL}, then PRPS will be created across all possible pairs of batches.}
 
-\item{hvg}{Character vector. Names of highly variable genes to use in anchor/MNN identification. Default is \code{NULL}
-(all genes used).}
+\item{hvg}{Character vector. Names of highly variable genes to use in dimentionality reduction. The default is set to
+\code{NULL}, then all genes will be used.}
 
-\item{scale.cca}{Logical. Indicates whether to scale features before applying CCA. Default is \code{TRUE}.}
+\item{scale.cca}{Logical. Indicates whether to scale features before applying CCA. The default is set to \code{TRUE}.}
 
-\item{apply.ruviii.norm}{Logical. If \code{TRUE}, applies RUV-III normalization to pseudo-samples. Default is \code{FALSE}.}
+\item{apply.ruviii.norm}{Logical. If \code{TRUE}, applies RUV-III normalization to pseudo-samples as initial normalization.
+Then the normalized data will be used to find KNN per batches. The default is set to \code{FALSE}.}
 
-\item{use.ruviii.norm.for.mnn}{Logical. If \code{TRUE}, applies RUV-III normalization prior to MNN search. Default is \code{FALSE}.}
+\item{use.ruviii.norm.for.mnn}{Logical. If \code{TRUE}, applies RUV-III normalization prior as initial normalization. Then
+using the normalized data for MNN across batches. The default is se to \code{FALSE}.}
 
-\item{ncg}{Numeric. Number of negative control genes to include for RUV-III normalization. Default is \code{NULL}.}
+\item{ncg}{Numeric. Number of negative control genes to include for initial RUV-III normalization. The default is set
+to \code{NULL}, then all genes will be used.}
 
-\item{k}{Numeric. Number of nearest neighbors for kNN-based similarity. Default is 20.}
+\item{k}{Numeric. Number of unwanted variation to be estimated and used for initial RUV-III normalization. The default
+is set to 20.}
 
-\item{min.ps}{Numeric. Minimum number of pseudo-samples required per group. Default is 1.}
+\item{min.ps}{Numeric. Minimum number of pseudo-samples to be used for initial RUV-III normalization. The default is
+set to 10.}
 
 \item{bio.dims}{Numeric. Number of biological dimensions to retain after removing unwanted variation. Default is \code{NULL}.}
 
@@ -210,15 +219,17 @@ Default is \code{assays}.}
 
 \item{mnn.sets.name}{Character. Name of the MNN set saved in metadata. Default is constructed automatically.}
 
-\item{residop.fun}{TTT}
+\item{residop.fun}{Character. A character string shows which algorithm should be used ro residual calculation in
+RUV-III normalization. The default is set to \code{r2}. See \code{RUVIIIprps()} for more details.}
 
-\item{nb.cores}{TTT}
+\item{nb.cores}{Numeric. A numeric value specifying the number for cores to be used to find KNN and MNN. The defualt
+is set to \code{NULL}. The maximum number of available cores - 1 will be then used.}
 
-\item{use.annoy}{TTT}
+\item{use.annoy}{Logical. If \code{TRUE}, the function uses annoy to find KNN and MNN. The default is set to \code{FALSE}.}
 
-\item{annot.nb.trees}{TTT}
+\item{annot.nb.trees}{Numeric. A number of trees for annoy search. The default is set to 50}
 
-\item{max.iter}{TTT}
+\item{max.iter}{Numeric. A numeric value indicating the maximum of iteration to find common PRPS set/}
 
 \item{prps.group.name}{Character. Name of the PRPS group. Default is auto-generated from \code{uv.variables}.}
 
@@ -232,11 +243,8 @@ returns results as a list. Default is \code{TRUE}.}
 \item{verbose}{Logical. If \code{TRUE}, prints progress messages. Default is \code{TRUE}.}
 }
 \description{
-This function uses the \code{createUnSupervisedPRPSbyAnchors()} or \code{createUnSupervisedPRPSbyMNN()} to create PRPS sets of all
-the unwanted variables in situations when the biological variation is unknown.
-}
-\details{
-Additional details...
+This function uses the \code{createPrPsUnSupervisedByCca()},  \code{createPrPsUnsupervisedByMnn()} and  \code{createPrPsUnsupervisedByKnnMnn()}
+to create PRPS sets of all the unwanted variables in situations when the biological variation is unknown.
 }
 \author{
 Ramyar Molania

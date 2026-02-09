@@ -17,6 +17,7 @@
 #'
 #' @return Either a SummarizedExperiment object containing the log2 F-statistics and p-values of ANOVA for the continuous
 #' variable or a list of these results.
+#'
 #' @export
 
 obtainMetric <- function(

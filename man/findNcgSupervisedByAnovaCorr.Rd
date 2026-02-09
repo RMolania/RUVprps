@@ -13,8 +13,6 @@ findNcgSupervisedByAnovaCorr(
   nb.ncg = 0.1,
   samples.to.use = "all",
   use.rank = FALSE,
-  rank.continuous.var = "correlation",
-  rank.categorical.var = "fvalue",
   ncg.selection.method = "non.overlap",
   top.rank.bio.genes = 0.5,
   top.rank.uv.genes = 0.5,
@@ -67,7 +65,7 @@ findNcgSupervisedByAnovaCorr(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A character that indicates the name of an data (assay) in the \code{SummarizedExperiment} object.
+\item{assay.name}{Character. A character string that indicates the name of an data (assay) in the \code{SummarizedExperiment} object.
 The selected assay should be the one that will be used for the RUV-III-PRPS normalization.}
 
 \item{bio.variables}{Character. A character string or vector of strings indicating the column name(s) of the biological
@@ -78,21 +76,20 @@ argument cannot be \code{NULL}.}
 variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
 argument cannot be \code{NULL}.}
 
-\item{approach}{TTT}
+\item{approach}{Character. A character string indicating which approach is used to select NCG. The options are
+\code{AnovaCorr.AcrossAllSamples} and \code{AnovaCorr.PerBatchPerBiology}. The default is set to \code{AnovaCorr.AcrossAllSamples}.}
 
 \item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
 genes in the SummarizedExperiment object. The default is set to 0.1.}
 
-\item{samples.to.use}{TTTT}
+\item{samples.to.use}{Logical. A logical vector to specifies which samples to use for the analysis. If \code{NULL}, all samples
+will be used.}
 
-\item{use.rank}{TTT}
+\item{use.rank}{Logical. Specifies whether to use a rank-based approach to summarize statistical tests for selecting genes
+as NCG. The default is set to \code{FALSE}.}
 
-\item{rank.continuous.var}{TTTT}
-
-\item{rank.categorical.var}{TTTT}
-
-\item{ncg.selection.method}{Character. A character that indicates how to summarize different statistics and select a
+\item{ncg.selection.method}{Character. A character string that indicates how to summarize different statistics and select a
 set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
 The default is set to \code{non.overlap}. For more information, refer to the details of the function.}
 
@@ -162,17 +159,26 @@ unwanted variables in the SummarizedExperiment object that will be regressed out
 correlation and ANOVA. Regressing out unwanted variables might help better identify genes that are highly affected by
 biological variation. The default is set to \code{NULL}.}
 
-\item{bio.groups}{TTTT}
+\item{bio.groups}{Character. A character string or vector of strings indicating the column name(s) of the biological
+variable(s) in the SummarizedExperiment object. The default is set to \code{NULL}, then variables specified in \code{bio.variables} will
+be used.}
 
-\item{bio.clustering.method}{TTTT}
+\item{bio.clustering.method}{Character. A character string specifying the clustering method to be applied for grouping each
+continuous biological variable. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans} clustering.}
 
-\item{nb.bio.clusters}{TTTT}
+\item{nb.bio.clusters}{Numeric. A value indicating the number of groups for continuous sources of biological variation.
+The default is 3. This implies that each continuous variable will be split into 3 groups using the specified
+\code{clustering.method}.}
 
-\item{uv.groups}{TTTT}
+\item{uv.groups}{Character. A character string or vector of strings indicating the column name(s) of the unwanted
+variable(s) in the SummarizedExperiment object. The default is set to \code{NULL}, then variables specified in \code{uv.variables}
+will be used.}
 
-\item{uv.clustering.method}{TTTT}
+\item{uv.clustering.method}{Character. A character string specifying the clustering method to be applied for grouping each
+continuous unwanted variable. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans} clustering.}
 
-\item{nb.uv.clusters}{TTTT}
+\item{nb.uv.clusters}{Numeric. A value indicating the number of groups for continuous sources of biological variation.
+The default is 3. This implies that each continuous variable will be split into 3 groups using the specified}
 
 \item{normalization}{Character. A character that indicates which normalization method should be use to mitigate the
 variation in library size before finding genes that are highly affected by biological variation. The options are :
@@ -218,7 +224,9 @@ the column means of the assay from their corresponding columns. The default is s
 (centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square otherwise.
 The default is set to \code{FALSE}.}
 
-\item{svd.bsparam}{TTTT}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+PCA using SVD. The default is set to \code{bsparam()}. We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package
+for further details.}
 
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
@@ -274,42 +282,6 @@ of F-statistics values for unwanted variation.
 The lower the ranks, the greater the impact of unwanted variation on genes. The function ranks the F-statistics for
 biological variation. The higher the ranks, the greater the impact of biological variation on genes. The options are
 \code{prod}, \code{sum}, \code{average}, \code{auto} or \code{non.overlap} and \code{quantile}.
-
-If \code{prod}, \code{sum} and \code{average} is set:
-
-The product, sum or average of ranks of F-statistics is calculated. Then, the function selects \code{nb.ncg} `numbers of
-genes as negative control genes that have the lowest ranks.
-
-If \code{non.overlap} is selected:
-\enumerate{
-\item The function selects the top \code{top.rank.bio.genes} genes that have the highest ranks of F-statistics
-for biological variation.
-\item The function selects the top \code{top.rank.uv.genes} genes that have the lowest ranks of F-statistics for
-unwanted variation.
-\item The function excludes all genes obtained in 2 from the ones obtained 1. This will be a set of genes as
-negative control genes.
-}
-
-If \code{auto} is selected:
-\enumerate{
-\item The function selects the top \code{top.rank.bio.genes} genes that have the highest ranks of F-statistics for
-biological variation.
-\item  The function selects the top \code{top.rank.uv.genes} genes that have the lowest ranks of F-statistics  for
-unwanted variation.
-\item The function excludes all genes obtained in 2 from the ones obtained 1.
-\item If the number of selected genes is larger or smaller than the specified \code{nb.ncg}, the function applies an
-auto search to find approximate \code{nb.ncg} of genes as negative control genes as follow. The auto search will either
-decrease or increase the values of either \code{top.rank.bio.genes} or \code{top.rank.uv.genes} or both till to find
-approximate \code{nb.ncg} of genes as negative control genes.
-}
-If \code{quantile} is selected:
-\enumerate{
-\item The function selects the \code{bio.percentile} percentile of F-statistics for biological variation. Then, selects
-all the genes that have F-statistics larger the calculated percentile.
-\item The function selects the \code{uv.percentile} percentile of F-statistics for unwanted variation. Then, selects
-all the genes that have F-statistics larger the calculated percentile.
-\item The function excludes all genes obtained in 2 from the ones obtained 1.
-}
 }
 \author{
 Ramyar Molania

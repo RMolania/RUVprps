@@ -1,4 +1,4 @@
-#' Assesses SummarizedExperiment object.
+#' Assess SummarizedExperiment object.
 #'
 #' @author Ramyar Molania
 #'

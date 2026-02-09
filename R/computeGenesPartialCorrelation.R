@@ -60,6 +60,7 @@
 #'
 #' @importFrom Rfast correls
 #' @importFrom stats cor
+#'
 #' @export
 
 computeGenesPartialCorrelation <- function(

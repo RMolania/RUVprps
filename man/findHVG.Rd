@@ -133,10 +133,7 @@ SummarizedExperiment object (\code{TRUE}) or to return them as a list (\code{FAL
 function. The default is set to \code{TRUE}.}
 }
 \description{
-A short description...
-}
-\details{
-Additional details...
+This function finds highly variable genes in RNA-seq data using different approaches.
 }
 \author{
 Ramyar Molania

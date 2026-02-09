@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimateCMS.R
 \name{estimateCMS}
 \alias{estimateCMS}
-\title{Estimates the CMS subtypes of colorectal cancer RNA-seq data.}
+\title{Estimate the CMS subtypes of colorectal cancer RNA-seq data.}
 \usage{
 estimateCMS(
   se.obj,

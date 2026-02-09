@@ -1,4 +1,4 @@
-#' Plots the score of the gene set enrichment analysis.
+#' Plot the score of the gene set enrichment analysis.
 #'
 #' @author Ramyar Molania
 #'
@@ -25,6 +25,7 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom GGally ggpairs
 #' @import ggplot2
+#'
 #' @export
 
 plotGeneSetScore <- function(

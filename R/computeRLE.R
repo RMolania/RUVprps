@@ -56,6 +56,7 @@
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom stats median
 #' @import ggplot2
+#'
 #' @export
 
 computeRLE <- function(

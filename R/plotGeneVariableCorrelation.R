@@ -1,4 +1,4 @@
-#' Plots Spearman or Pearson correlations coefficients obtained from gene-level analysis.
+#' Plot Spearman or Pearson correlations coefficients obtained from gene-level analysis.
 #'
 #' @author Ramyar Molania
 #'
@@ -29,6 +29,7 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr everything
 #' @import ggplot2
+#'
 #' @export
 
 plotGenesVariableCorrelation <- function(

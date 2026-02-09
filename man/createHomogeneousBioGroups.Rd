@@ -19,7 +19,7 @@ createHomogeneousBioGroups(
 \item{se.obj}{A SummarizedExperiment object.}
 
 \item{bio.variables}{Character. A character string or a vector of character strings specifying the column names of biological
-variables in the sample annotation of the 'SummarizedExperiment  object. These 'bio.variables' can be either categorical
+variables in the sample annotation of the 'SummarizedExperiment  object. These \code{bio.variables} can be either categorical
 or continuous variables.}
 
 \item{clustering.method}{Character. A character string specifying the clustering method to be applied for grouping each

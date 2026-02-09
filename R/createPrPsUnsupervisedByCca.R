@@ -1,12 +1,12 @@
-#' Creates PRPS sets using mutual nearest neighbors in RNA-seq data.
+#' Create PRPS sets using CCA and MNN.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function uses mutual nearest neighbors approach to create PRPS in the RNA-seq data. This function can be used in
-#' situation where the biological variation are entirely unknown.
+#' This function uses canonical correlation analysis (CCA) and mutual nearest neighbors (MNN) approach to create PRPS data
+#' in the RNA-seq data. This function can be used in situation where the biological variation are entirely unknown.
 #'
-#' @param se.obj A SummarizedExperiment object.
+#' @param se.obj A `SummarizedExperiment` object.
 #' @param assay.name Character. A character indicating the name of the data (assay) in the SummarizedExperiment object.
 #' This data will be used to create PRPS data for RUV-III normalization. This data must be the one that will be
 #' used for the RUV-III normalization.
@@ -19,7 +19,7 @@
 #' unwanted variable(s) within the sample annotation (colData) of the SummarizedExperiment object. These can be categorical,
 #' continuous, or a combination. These variables will be considered when generating PRPS sets for the `main.uv.variable`
 #' to help avoid potential contamination. The default is set to `NULL`
-#' @param coordinates.to.use Character. Indicates which coordinates (e.g., PCA or CCA embeddings) should be used to
+#' @param coordinates.to.use Character. Indicates which coordinates (e.g., PCA or CCA embedding) should be used to
 #' identify mutual nearest neighbors. Default is set to `NULL`, meaning the raw assay data is used.
 #' @param nb.cca Numeric. Number of canonical correlation components to use for constructing PRPS. Default is set to 20.
 #' @param nb.pcs Numeric. Number of principal components to use for constructing PRPS. Default is set to 20.
@@ -103,10 +103,13 @@
 #' The default is KmknnParam(). We refer to the `findMutualNN()` function from the `BiocNeighbors` R package.
 #' @param residop.fun Character. A character indicating which function to use to calculate residuals. The options are
 #' `c1`, `c2`, `lqr`, `r1` and `r2`. The default is set to `r2`.
-#' @param nb.cores TTT
-#' @param use.annoy TTT
-#' @param annot.nb.trees TTT
-#' @param max.iter rrr
+#' @param nb.cores Numeric. The number of CPU cores to use for computation. The default is `NULL`, which automatically
+#' uses the maximum number of available cores minus one.
+#' @param use.annoy Logical. If `TRUE`, the Annoy algorithm is used for approximate nearest-neighbor (kNN) search. The
+#' default is `FALSE`.
+#' @param annot.nb.trees Numeric. The number of trees used in the Annoy index, corresponding to \code{AnnoyParam(ntrees = annot.nb.trees)}.
+#' The default is set to 50.
+#' @param max.iter Numeric. The maximum number of iterations allowed for the optimization or iterative procedure.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to `TRUE`. See the checkSeObj() function for more details.
 #' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are `assays` and

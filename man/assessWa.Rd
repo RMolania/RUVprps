@@ -33,7 +33,7 @@ object. These can be categorical, continuous, or a combination of both. The defe
 \item{compare.wa}{Logical. If \code{TRUE} and both 'bio.variables' and 'uv.variables' are provided, the function generates
 performance scores for each W matrix of RUV-III normalized data. The default is set to \code{FALSE}.}
 
-\item{nb.pcs}{TTTT}
+\item{nb.pcs}{Numeric. A numeric value indicates the number of PCs to be used.}
 
 \item{plot.output}{Logical. If \code{TRUE}, the function will show the output plots while is running. The default is set
 to \code{TRUE}.}

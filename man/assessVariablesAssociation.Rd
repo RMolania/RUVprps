@@ -28,7 +28,9 @@ variables.}
 the sample annotation of the SummarizedExperiment object. These \code{uv.variables} can be either categorical or continuous
 variables.}
 
-\item{variables}{TTTT}
+\item{variables}{Character or character vector. Specifies the column names of any variables in
+the sample annotation of the SummarizedExperiment object. These \code{variables} can be either categorical or continuous
+variables.}
 
 \item{cat.cor.coef}{Numeric vector. A vector of two numerical values indicating the cut-off for the correlation coefficient
 between each pair of categorical variables. The first value applies to each pair of 'uv.variables' and the second value

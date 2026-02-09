@@ -23,6 +23,7 @@
 #'
 #' @importFrom stats model.matrix residuals
 #' @importFrom limma lmFit
+#'
 #' @export
 
 regressOutVariables <- function(

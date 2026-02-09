@@ -1,4 +1,4 @@
-#' Finds highly variable genes.
+#' Find highly variable genes.
 #'
 #' @author Ramyar Molania
 #'
@@ -103,10 +103,10 @@
 #' such as paste0(assay.name, '|TwoWayAnova|'). The default is 'NULL'.
 #' @param use.imf Logical. Indicates whether to use the intermediate file. The default is 'FALSE'.
 #' @param verbose Logical. If 'TRUE', displays messages about the steps being executed.
-
+#'
 #' @importFrom SummarizedExperiment assay SummarizedExperiment
+#'
 #' @export
-
 
 findBioGenes <- function(
         se.obj,

@@ -1,4 +1,4 @@
-#' Creates pseudo-replicates of pseudo-samples (PRPS) in supervised manner.
+#' Create PRPS in supervised manner.
 #'
 #' @author Ramyar Molania
 #'
@@ -46,14 +46,15 @@
 #' We refer to the `createHomogeneousUVGroups()` function for more details.
 #' @param nb.other.uv.clusters Numeric. A numeric value to specify the number of clusters/groups for each continuous
 #' unwanted variable. The default is set to 3.
-#' @param samples.to.use TTTT
+#' @param samples.to.use Logical. A logical vector to restrict the analysis to a subset of samples. The default is set to
+#'  `all`, meaning all samples in the SummarizedExperiment object will be used.
 #' @param check.prps.connectedness Logical. Indicates whether to assess the connectedness between the PRPS sets or not.
 #' The default is set to `TRUE`. See the details for more information.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
 #' @param plot.output Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-#' The default is se to `TRUE`.
+#' The default is set to `TRUE`.
 #' @param prps.group.name Character. A character specifying a name for the PRPS data sets created for a specific group.
 #' The default is set to `NULL`.
 #' @param prps.sets.name Character. A character to specify the name of all PRPS sets that will be created for all
@@ -75,6 +76,7 @@
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
 #' @importFrom tidyr %>%
+#'
 #' @export
 
 createPrPsSupervised <- function(

@@ -7,7 +7,7 @@
 #' using the `genefu` package. It supports preprocessing steps such as normalization, log-transformation, and regression
 #' of unwanted variables.
 #'
-#' @param se.obj A `SummarizedExperiment` object containing gene expression data.
+#' @param se.obj A SummarizedExperiment object.
 #' @param assay.names Character or character vector. The name(s) of the assay(s) in `se.obj` to use. Default is `"all"`.
 #' @param entrez.gene.id Character. Column name in `rowData(se.obj)` containing Entrez gene IDs for mapping to PAM50 genes.
 #' @param probe Character. Column name in `rowData(se.obj)` containing probe or gene symbols if Entrez IDs are not used.
@@ -27,6 +27,7 @@
 #'
 #' @importFrom SummarizedExperiment colData
 #' @import genefu
+#'
 #' @export
 
 estimatePAM50 <- function(

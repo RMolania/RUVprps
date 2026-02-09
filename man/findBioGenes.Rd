@@ -2,7 +2,7 @@
 % Please edit documentation in R/findBioGenes.R
 \name{findBioGenes}
 \alias{findBioGenes}
-\title{Finds highly variable genes.}
+\title{Find highly variable genes.}
 \usage{
 findBioGenes(
   se.obj,

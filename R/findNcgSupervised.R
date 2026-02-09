@@ -3,12 +3,13 @@
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function includes three different functions incuding `findNcgByTwoWayAnova()`, `findNcgAcrossSamples()`, and
-#' `findNcgPerBiologyPerBatch()`, to identify a set of negative control genes (NCG) for `RUV-III-PRPS` normalization.
-#' See each function's documentation for additional details.
+#' This function includes three different functions including `findNcgSupervisedByAnovaCorr()`, `findNcgSupervisedByTwoWayAnova`
+#' and  `findNcgSupervisedByLinearMixedModel()`,to identify a set of negative control genes (NCG) in supervised way for
+#' `RUV-III-PRPS` normalization. See each function's
+#'  documentation for additional details.
 #'
 #' @param se.obj A SummarizedExperiment object.
-#' @param assay.name Character. A character that indicates the name of an data (assay) in the SummarizedExperiment object.
+#' @param assay.name Character. A character string that indicates the name of an data (assay) in the SummarizedExperiment object.
 #' The selected assay should be the one that will be used for the RUV-III-PRPS normalization.
 #' @param bio.variables Character. A character string or vector of strings indicating the column name(s) of the biological
 #' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination. This
@@ -17,23 +18,24 @@
 #' variable(s) in the SummarizedExperiment object. These variable can be categorical or continuous or a combination.This
 #'  argument cannot be `NULL`.
 #' @param approach Character. A character that indicates which NCG approaches should be used. The options are :
-#' `AnovaCorr.PerBatchPerBiology`, `AnovaCorr.AcrossAllSamples` and  `TwoWayAnova`. The default is set to `AnovaCorr.AcrossAllSamples`.
-#' See the details for mroe information.
+#' `LinearMixedModel`, `AnovaCorr.AcrossAllSamples`, `AnovaCorr.PerBatchPerBiology`,  and `TwoWayAnova`. The default is
+#' set to `LinearMixedModel`.
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
-#' @param samples.to.use TTTT
+#' @param samples.to.use Logical. A logical vector to specifies which samples to use for the analysis. If `NULL`, all samples
+#' will be used.
 #' @param use.rank TTTT
 #' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
 #' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
 #' The default is set to `non.overlap`. For more information, refer to the details of the function.
-#' @param form TTTT
-#' @param ratio.variable TTTT
+#' @param form Character. A character string specifying the form of variables  for linear mixed model analysis when `approach`
+#' is set to `"LinearMixedModel"`.
+#' @param ratio.variable TTT
 #' @param rank.variable TTTT
-#' @param rank.continuous.var TTTTT
-#' @param rank.categorical.var TTTT
-#' @param adjust.data TTT
-#' @param adjustment.method TTT
+#' @param adjust.data Logical. Indicates whether to perform any data adjustment, mainly regressing out variables, before finding NCG.
+#' @param adjustment.method Character. A character string indicating the method used to adjust the data when `adjust.data`
+#'  is set to `TRUE`. The options are `lm` and `lmm`. The default is set to `lm`.
 #' @param adjustment.variables TTT
 #' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
 #' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
@@ -61,11 +63,11 @@
 #' is set to `FALSE`.
 #' @param common.hk Character. Specifies group of housekeeping genes to use: `cancer` or `non.cancer`. The default is set
 #' to `cancer`.
-#' @param nb.stable.genes Numeric. A numeric value that specifies the number of top stable genes to be obtained from the
-#' `getStableGenes()` function in the **singescore** R package. The default is set to 2000.
 #' @param hk.group Character. Column name in the gene annotation containing non-cancer housekeeping genes. Options include:
 #' `bulk.rnaseq.hk.genes.v1`, `bulk.rnaseq.hk.genes.v2`, `micorarray.hk.genes`, `nanostring.pan.cancer.hk.genes`,
 #' `singscore.pan.cancer.hk.genes`. The default is set to `micorarray.hk.genes`.
+#' @param nb.stable.genes Numeric. A numeric value that specifies the number of top stable genes to be obtained from the
+#' `getStableGenes()` function in the **singescore** R package. The default is set to 2000.
 #' @param create.ncg.rank.plot Logical. Indicates whether to generate a heatmap that shows the rank of the all genes
 #' with respect to their biological and unwanted variation effects. The default is set to `FALSE`.
 #' @param plot.ncg.rank Logical. Indicates whether to plot a heatmap that shows the rank of the all genes
@@ -83,12 +85,6 @@
 #' sources of unwanted variation. The default is set to 'kmeans' clustering.
 #' @param nb.uv.clusters Numeric. Indicates the number of clusters for each continuous source of unwanted variation (UV).
 #' By default, it is set to 2.
-#' @param min.sample.for.aov Numeric. A numeric value that indicates the minimum number of samples that are required to
-#' perform ANOVA analyses between continuous sources of variation (biological and unwanted variation) with individual
-#' gene expression. The default is set to 3. The minimum value is 3.
-#' @param min.sample.for.correlation Numeric. A numeric value that indicates the minimum number of samples that are required
-#' to perform correlation analyses between continuous sources of variation (biological and unwanted variation) with
-#'individual gene expression. The default is set to 10. The minimum value can be 3.
 #' @param regress.out.bio.variables Character. A character string or vector of strings that indicate the column names of
 #' biological variables in the SummarizedExperiment object that will be regressed out from the data before performing
 #' correlation and ANOVA. Regressing out biological variables might help better identify genes that are highly affected
@@ -135,7 +131,6 @@
 #' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing the
 #' (centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square otherwise.
 #' The default is set to `FALSE`.
-#' @param nb.cores TTT
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
 #' @param ncg.group.name Character. A character to be used as name of the group of NCG. The default is set to `NULL`, then
@@ -151,6 +146,8 @@
 #' re-calculated. The default is set to `FALSE`.
 #' @param use.imf Logical. Indicates whether to use the intermediate file. The default is set to `FALSE`.
 #' @param imf.name Character string. A name to save the intermediate file. If `NULL`, the function generates a name.
+#' @param nb.cores Numeric. A numeric value indicating the number of cores to use for computation. If set to `NULL`, the
+#' maximum available number of cores minus one will be used.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
 #'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
 #' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
@@ -180,8 +177,6 @@ findNcgSupervised <- function(
         form = NULL,
         ratio.variable = 'eta.squared',
         rank.variable = "fvalue",
-        rank.continuous.var = "correlation",
-        rank.categorical.var = "fvalue",
         adjust.data = FALSE,
         adjustment.method = 'lm',
         adjustment.variables = NULL,
@@ -220,13 +215,13 @@ findNcgSupervised <- function(
         nb.pcs = 10,
         center = TRUE,
         scale = FALSE,
-        nb.cores = 1,
         plot.ncg.assessment = TRUE,
         ncg.group.name = NULL,
         ncg.set.name = NULL,
         save.imf = FALSE,
         use.imf = FALSE,
         imf.name = NULL,
+        nb.cores = 1,
         check.se.obj = TRUE,
         remove.na = 'none',
         save.se.obj = TRUE,
@@ -252,8 +247,6 @@ findNcgSupervised <- function(
             nb.ncg = nb.ncg,
             use.rank = use.rank,
             samples.to.use = samples.to.use,
-            rank.continuous.var = rank.continuous.var,
-            rank.categorical.var = rank.categorical.var,
             ncg.selection.method = ncg.selection.method,
             top.rank.bio.genes = top.rank.bio.genes,
             top.rank.uv.genes = top.rank.uv.genes,
@@ -312,8 +305,6 @@ findNcgSupervised <- function(
             nb.ncg = nb.ncg,
             use.rank = use.rank,
             samples.to.use = samples.to.use,
-            rank.continuous.var = rank.continuous.var,
-            rank.categorical.var = rank.categorical.var,
             ncg.selection.method = ncg.selection.method,
             top.rank.bio.genes = top.rank.bio.genes,
             top.rank.uv.genes = top.rank.uv.genes,

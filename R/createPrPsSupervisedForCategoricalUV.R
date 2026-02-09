@@ -1,4 +1,4 @@
-#' Creates PRPS for a categorical source of unwanted variation.
+#' Create PRPS for a categorical source of unwanted variation.
 #'
 #' @author Ramyar Molania
 #'
@@ -75,6 +75,7 @@
 #' @importFrom dplyr count n
 #' @importFrom tidyr %>%
 #' @import ggplot2
+#'
 #' @export
 
 createPrPsSupervisedForCategoricalUV <- function(

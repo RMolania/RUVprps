@@ -28,7 +28,7 @@
 #' object. These can be categorical, continuous, or a combination of both. The defeat is set to `NULL`.
 #' @param compare.wa Logical. If `TRUE` and both 'bio.variables' and 'uv.variables' are provided, the function generates
 #' performance scores for each W matrix of RUV-III normalized data. The default is set to `FALSE`.
-#' @param nb.pcs TTTT
+#' @param nb.pcs Numeric. A numeric value indicates the number of PCs to be used.
 #' @param plot.output Logical. If `TRUE`, the function will show the output plots while is running. The default is set
 #' to `TRUE`.
 #' @param save.se.obj Logical. If `TRUE`, the plots will be saved to the metadata of the SummarizedExperiment object. The

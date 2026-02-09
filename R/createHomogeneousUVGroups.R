@@ -1,4 +1,4 @@
-#' Creates all possible homogeneous groups with respect to unwanted variables.
+#' Create all possible homogeneous groups with respect to unwanted variables.
 #'
 #' @author Ramyar Molania
 #'
@@ -36,6 +36,7 @@
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom stats kmeans quantile
 #' @importFrom knitr kable
+#'
 #' @export
 
 createHomogeneousUVGroups <- function(

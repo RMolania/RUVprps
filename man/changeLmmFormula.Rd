@@ -7,11 +7,13 @@
 changeLmmFormula(form, out.put = "character", sub.set = NULL)
 }
 \arguments{
-\item{form}{TTT}
+\item{form}{Character. A character string specifying linear mixed model form.}
 
-\item{out.put}{TTTT}
+\item{out.put}{Character. A character string specifying the type of output of function. The options are \code{character}
+and \code{sub.formula}. The default is set to \code{character}.}
 
-\item{sub.set}{TTTT}
+\item{sub.set}{Character. A character string specifying which subset of the form should be extracted. The defulat is
+set to \code{NULL}.}
 }
 \description{
 Changes the formula for linear mixed model

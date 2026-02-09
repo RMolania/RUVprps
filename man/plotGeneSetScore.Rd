@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotGeneSetScore.R
 \name{plotGeneSetScore}
 \alias{plotGeneSetScore}
-\title{Plots the score of the gene set enrichment analysis.}
+\title{Plot the score of the gene set enrichment analysis.}
 \usage{
 plotGeneSetScore(
   se.obj,

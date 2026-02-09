@@ -50,6 +50,7 @@
 #' @importFrom Rfast correls
 #' @importFrom stats var
 #' @import ggplot2
+#'
 #' @export
 
 computeGenesVariableCorrelation <- function(

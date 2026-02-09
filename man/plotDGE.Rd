@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotDGE.R
 \name{plotDGE}
 \alias{plotDGE}
-\title{Plot p-values histograms of DGE analysis.}
+\title{Plot histograms of p-values from differential gene expression analysis}
 \usage{
 plotDGE(
   se.obj,
@@ -17,42 +17,56 @@ plotDGE(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object containing expression
+data and sample-level metadata.}
 
-\item{assay.names}{Character or character vector. Specifies the name(s) of the assay(s) in the
-SummarizedExperiment object to compute DGE. The default is set to \code{all}, indicating all assays of the
-SummarizedExperiment object will be selected.}
+\item{assay.names}{Character vector specifying the name(s) of assay(s) in
+the \code{SummarizedExperiment} object to be used for DGE analysis.
+The default is \code{"all"}, indicating that all available assays will be
+evaluated.}
 
-\item{variable}{Character. Specifies the column name in the SummarizedExperiment object containing a categorical variable,
-such as sample types or batches.}
+\item{variable}{Character string specifying the column name in
+\code{colData(se.obj)} containing the categorical variable of interest
+(e.g., batch, condition, or sample type).}
 
-\item{method}{Character. Specifies the differential expression method to be used.}
+\item{method}{Character string specifying the differential expression method
+to be used.}
 
-\item{plot.ncol}{Numeric. A numeric value indicating the number of columns in the plot grid. This setting applies when
-more than one data set is provided. The default is set to 1.}
+\item{plot.ncol}{Numeric. Number of columns in the plot grid when multiple
+datasets are provided (default: 1).}
 
-\item{plot.nrow}{Numeric. A numeric value indicating the number of rows in the plot grid. This setting applies when
-more than one data set is provided. The default is set to 1.}
+\item{plot.nrow}{Numeric. Number of rows in the plot grid when multiple
+datasets are provided (default: 1).}
 
-\item{plot.output}{Logical. Indicates whether to plot the p-values histograms while the function is running. The default
-is set to \code{FALSE}.}
+\item{plot.output}{Logical. If \code{TRUE}, p-value histograms are displayed
+during execution. Default is \code{FALSE}.}
 
-\item{save.se.obj}{Logical. Indicates whether to save the result in the metadata of the SummarizedExperiment object
-(\code{se.obj}) or to output the result. By default, it is set to \code{TRUE}.}
+\item{save.se.obj}{Logical. If \code{TRUE}, the results are stored in the
+metadata of the input \code{SummarizedExperiment} object and returned.
+If \code{FALSE}, the function returns the results as a separate object.
+Default is \code{TRUE}.}
 
-\item{verbose}{Logical. If \code{TRUE}, messages for different steps of the function will be displayed.}
+\item{verbose}{Logical. If \code{TRUE}, informative messages describing
+function progress are printed.}
 }
 \value{
-A SummarizedExperiment object or a list containing the computed AR
+A \code{SummarizedExperiment} object with appended metadata or a
+list containing the computed assessment results.
 }
 \description{
-This function plots the p-values histograms of the DGE analysis.
+Generates histograms of p-values obtained from differential gene expression
+(DGE) analyses to assess the presence and impact of unwanted sources of
+variation, such as batch effects, across multiple assays.
 }
 \details{
-Differential expression (DE) analysis is performed using the Wilcoxon signed-rank test with log-transformed data
-(e.g., raw counts, normalized data, etc.). To evaluate the effects of different sources of unwanted variation,
-DE analysis is performed across batches. In the absence of batch effects, the histogram of the resulting unadjusted
-p-values should be uniformly distributed.
+Differential gene expression (DGE) analysis is performed using the Wilcoxon
+signed-rank test on log-transformed expression values (e.g., raw counts,
+normalized data, or batch-corrected data). To evaluate the influence of
+unwanted variation, DGE analysis is conducted across batches or other
+categorical variables. In the absence of systematic bias or batch effects,
+the histogram of unadjusted p-values is expected to follow a uniform
+distribution. Deviations from uniformity may indicate the presence of
+technical artifacts or confounding factors.
 }
 \author{
 Ramyar Molania

@@ -19,49 +19,6 @@
 #' the impact of biological variation on genes. The options are `prod`, `sum`, `average`, `auto`, `non.overlap` and
 #' `quantile`.
 #'
-#' If `prod`, `sum` and `average` is set:
-#'
-#' * The product, sum or average of ranks of F-statistics is calculated. Then, the function selects `nb.ncg` numbers of
-#' genes as negative control genes that have the lowest ranks.
-#'
-#' If `non.overlap` is selected:
-#' \enumerate{
-#'    \item The function selects the top `top.rank.bio.genes` genes that have the highest ranks of F-statistics
-#'    for biological variation.
-#'    \item The function selects the top `top.rank.uv.genes` genes that have the lowest ranks of F-statistics for
-#'    unwanted variation.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1. This will be a set of genes as
-#'    negative control genes.
-#' }
-#'
-#' If `auto` is selected:
-#' \enumerate{
-#'    \item The function selects the top `top.rank.bio.genes` genes that have the highest ranks of F-statistics for
-#'    biological variation.
-#'    \item The function selects the top `top.rank.uv.genes` genes that have the lowest ranks of F-statistics for
-#'    unwanted variation.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1.
-#'    \item If the number of selected genes is larger or smaller than the specified `nb.ncg`, the function applies an
-#'    auto search to find approximate `nb.ncg` of genes as negative control genes as follow. The auto search will either
-#'    decrease or increase the values of either `top.rank.bio.genes` or `top.rank.uv.genes` or both till to find
-#'    approximate `nb.ncg` of genes as negative control genes.
-#' }
-#'
-#' If `quantile` is selected:
-#' \enumerate{
-#'    \item The function selects the `bio.percentile` percentile of F-statistics for biological variation. Then, selects
-#'    all the genes that have F-statistics larger the calculated percentile.
-#'    \item The function selects the `uv.percentile` percentile of F-statistics for unwanted variation. Then, selects
-#'    all the genes that have F-statistics larger the calculated percentile.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1.
-#' }
-#'
-#' Assess the performance of NCGS:
-#' * The function can assess the initial performance of selected NCGs. This analysis involves principal component analysis
-#' on only the selected NCG and then explore the R^2 or vector correlation between the `nb.pcs` first principal components
-#' and with the specified variables. Ideal NCGS, should show high and low R^2 or vector correlation for unwanted and
-#' biological variation respectively.
-#'
 #' @references
 #' * Gandolfo L. C. & Speed, T. P., RLE plots: visualizing unwanted variation in high dimensional data. PLoS ONE, 2018.
 #' * Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
@@ -79,14 +36,19 @@
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
-#' @param samples.to.use TTT
-#' @param use.rank TTT
-#' @param ratio.variable TTT
+#' @param samples.to.use Logical. A logical vector specifying which samples to use for the analysis. If `all`, all samples
+#' will be used.
+#' @param use.rank Logical. If `TRUE`, a rank-based analysis is used to summarize statistical tests for selecting genes as
+#' NCG. The default is set to `FALSE`.
+#' @param rank.variable TTTT
+#' @param use.fvalues Logical. If `TRUE`, the f-statistic from ANOVA will be used for rank based analysis. The default is
+#' set to `FALSE`.
+#' @param ratio.variable Character. When `use.rank` is set to `FALSE`, a ratio-based analysis is used to select genes as NCG.
+#' This parameter specifies which statistic is used for the ratio-based analysis. The options are `eta.squared`, `variance`,
+#' and `fvalue`. The default is set to `eta.squared`.
 #' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
 #' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
 #' The default is set to `non.overlap`. For more information, refer to the details of the function.
-#' @param rank.variable TTTT
-
 #' @param top.rank.bio.genes Numeric. A numeric value that indicates the percentage of top-ranked genes that are highly
 #' affected by biological variation. This is required to be specified when the `ncg.selection.method` is either `auto`
 #' or `non.overlap`. The default is set to 0.2.
@@ -151,7 +113,9 @@
 #' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing
 #' the(centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square
 #' otherwise. The default is set to `FALSE`.
-#' @param svd.bsparam TTTT
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+#' PCA using SVD. The default is set to `bsparam()`. We refer to the `runSVD()` function from the **BiocSingular** R package
+#' for further details.
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
 #' @param nb.cores Numeric. A numeric value to specify number of cores for palatalization. The default is set to 1.
@@ -177,7 +141,6 @@
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the SummarizedExperiment
 #' object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-#' @param use.fvalues TTT
 #'
 #' @importFrom dplyr mutate progress_estimated
 #' @importFrom BiocSingular runSVD bsparam
@@ -189,6 +152,7 @@
 #' @importFrom stats aov
 #' @importFrom car Anova
 #' @import ggplot2
+#'
 #' @export
 
 findNcgSupervisedByTwoWayAnova <- function(
@@ -199,6 +163,7 @@ findNcgSupervisedByTwoWayAnova <- function(
         nb.ncg = 0.05,
         samples.to.use = 'all',
         use.rank = FALSE,
+        use.fvalues = FALSE,
         ratio.variable = 'eta.squared',
         ncg.selection.method = 'non.overlap',
         rank.variable = 'fvalue',
@@ -214,7 +179,6 @@ findNcgSupervisedByTwoWayAnova <- function(
         nb.stable.genes = 2000,
         hk.group = 'micorarray.hk.genes',
         create.ncg.rank.plot = FALSE,
-        use.fvalues = FALSE,
         plot.ncg.rank = FALSE,
         bio.clustering.method = 'kmeans',
         nb.bio.clusters = 3,
@@ -302,8 +266,8 @@ findNcgSupervisedByTwoWayAnova <- function(
         }
     }
     if (ncg.selection.method == 'ratio'){
-        if (!ratio.variable %in% c('fvalue', 'variance')){
-            stop('The "ratio.variable" must be one of the "fvalue" or "variance".')
+        if (!ratio.variable %in% c('fvalue', 'variance', 'eta.squared')){
+            stop('The "ratio.variable" must be one of the "fvalue",  "variance" or "eta.squared".')
         }
     }
     if (isTRUE(apply.log)){

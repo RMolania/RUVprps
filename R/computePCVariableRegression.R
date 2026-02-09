@@ -29,6 +29,7 @@
 #'
 #' @importFrom stats lm var
 #' @import ggplot2
+#'
 #' @export
 
 computePCVariableRegression <- function(

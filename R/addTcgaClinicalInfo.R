@@ -1,4 +1,4 @@
-#' Adds the TCGA RNA-seq batch information
+#' Add the TCGA RNA-seq batch information
 #'
 #' @author Ramyar Molania
 #'
@@ -15,16 +15,17 @@
 #' batch information is missing. If `FALSE`, samples without batch annotations are removed. The default is `TRUE`.
 #' @param missing.samples.name Character. A label to assign to samples without batch information. The default is
 #' `"Unknown"`.
-#' @param verbose UUU
+#' @param verbose Logical. Indicates whether to display output messages during function execution. The default is set to
+#' `TRUE`.
 #'
 #' @importFrom stringr str_split
 #' @importFrom tidyr separate
 #' @importFrom purrr map_int
 #'
-#' @return A `SummarizedExperiment` object with TCGA RNA-seq batch information added to the `colData`.
+#' @return A `SummarizedExperiment` object with TCGA RNA-seq batch information added to the sample annotation (`colData`) of
+#' `SummarizedExperiment` object.
 #'
 #' @export
-
 
 addTcgaClinicalInfo <- function(
         se.obj,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/groupContinuousVariable.R
 \name{groupContinuousVariable}
 \alias{groupContinuousVariable}
-\title{Groups a continuous variable.}
+\title{Group a continuous variable.}
 \usage{
 groupContinuousVariable(
   se.obj,
@@ -34,7 +34,7 @@ source of unwanted variables. Options include \code{kmeans}, \code{cut}, and \co
 \item{verbose}{Logical. If \code{TRUE}, shows the messages of different steps of the function.}
 }
 \description{
-Groups a continuous variable.
+Group a continuous variable.
 }
 \author{
 Ramyar Molania

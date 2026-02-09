@@ -1,4 +1,4 @@
-#' Finds mutual nearest neighbors in RNA-seq data.
+#' Find mutual nearest neighbors in RNA-seq data.
 #'
 #' @author Ramyar Molania
 #'
@@ -75,6 +75,7 @@
 #' @importFrom BiocNeighbors findMutualNN KmknnParam
 #' @importFrom BiocParallel SerialParam
 #' @importFrom utils setTxtProgressBar
+#'
 #' @export
 
 findMnn <- function(

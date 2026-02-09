@@ -41,6 +41,7 @@
 #' @importFrom fastDummies dummy_cols
 #' @importFrom stats cancor
 #' @import ggplot2
+#'
 #' @export
 
 computePCVariableCorrelation <- function(

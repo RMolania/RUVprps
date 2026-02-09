@@ -17,8 +17,6 @@ findNcgSupervised(
   form = NULL,
   ratio.variable = "eta.squared",
   rank.variable = "fvalue",
-  rank.continuous.var = "correlation",
-  rank.categorical.var = "fvalue",
   adjust.data = FALSE,
   adjustment.method = "lm",
   adjustment.variables = NULL,
@@ -57,13 +55,13 @@ findNcgSupervised(
   nb.pcs = 10,
   center = TRUE,
   scale = FALSE,
-  nb.cores = 1,
   plot.ncg.assessment = TRUE,
   ncg.group.name = NULL,
   ncg.set.name = NULL,
   save.imf = FALSE,
   use.imf = FALSE,
   imf.name = NULL,
+  nb.cores = 1,
   check.se.obj = TRUE,
   remove.na = "none",
   save.se.obj = TRUE,
@@ -73,7 +71,7 @@ findNcgSupervised(
 \arguments{
 \item{se.obj}{A SummarizedExperiment object.}
 
-\item{assay.name}{Character. A character that indicates the name of an data (assay) in the SummarizedExperiment object.
+\item{assay.name}{Character. A character string that indicates the name of an data (assay) in the SummarizedExperiment object.
 The selected assay should be the one that will be used for the RUV-III-PRPS normalization.}
 
 \item{bio.variables}{Character. A character string or vector of strings indicating the column name(s) of the biological
@@ -85,14 +83,15 @@ variable(s) in the SummarizedExperiment object. These variable can be categorica
 argument cannot be \code{NULL}.}
 
 \item{approach}{Character. A character that indicates which NCG approaches should be used. The options are :
-\code{AnovaCorr.PerBatchPerBiology}, \code{AnovaCorr.AcrossAllSamples} and  \code{TwoWayAnova}. The default is set to \code{AnovaCorr.AcrossAllSamples}.
-See the details for mroe information.}
+\code{LinearMixedModel}, \code{AnovaCorr.AcrossAllSamples}, \code{AnovaCorr.PerBatchPerBiology},  and \code{TwoWayAnova}. The default is
+set to \code{LinearMixedModel}.}
 
 \item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
 genes in the SummarizedExperiment object. The default is set to 0.1.}
 
-\item{samples.to.use}{TTTT}
+\item{samples.to.use}{Logical. A logical vector to specifies which samples to use for the analysis. If \code{NULL}, all samples
+will be used.}
 
 \item{use.rank}{TTTT}
 
@@ -100,19 +99,17 @@ genes in the SummarizedExperiment object. The default is set to 0.1.}
 set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
 The default is set to \code{non.overlap}. For more information, refer to the details of the function.}
 
-\item{form}{TTTT}
+\item{form}{Character. A character string specifying the form of variables  for linear mixed model analysis when \code{approach}
+is set to \code{"LinearMixedModel"}.}
 
-\item{ratio.variable}{TTTT}
+\item{ratio.variable}{TTT}
 
 \item{rank.variable}{TTTT}
 
-\item{rank.continuous.var}{TTTTT}
+\item{adjust.data}{Logical. Indicates whether to perform any data adjustment, mainly regressing out variables, before finding NCG.}
 
-\item{rank.categorical.var}{TTTT}
-
-\item{adjust.data}{TTT}
-
-\item{adjustment.method}{TTT}
+\item{adjustment.method}{Character. A character string indicating the method used to adjust the data when \code{adjust.data}
+is set to \code{TRUE}. The options are \code{lm} and \code{lmm}. The default is set to \code{lm}.}
 
 \item{adjustment.variables}{TTT}
 
@@ -245,8 +242,6 @@ the column means of the assay from their corresponding columns. The default is s
 (centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square otherwise.
 The default is set to \code{FALSE}.}
 
-\item{nb.cores}{TTT}
-
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
 
@@ -267,6 +262,9 @@ re-calculated. The default is set to \code{FALSE}.}
 
 \item{imf.name}{Character string. A name to save the intermediate file. If \code{NULL}, the function generates a name.}
 
+\item{nb.cores}{Numeric. A numeric value indicating the number of cores to use for computation. If set to \code{NULL}, the
+maximum available number of cores minus one will be used.}
+
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
 the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}
 
@@ -285,9 +283,10 @@ Either the SummarizedExperiment object containing a set of negative control gene
 logical vector of the selected negative control genes.
 }
 \description{
-This function includes three different functions incuding \code{findNcgByTwoWayAnova()}, \code{findNcgAcrossSamples()}, and
-\code{findNcgPerBiologyPerBatch()}, to identify a set of negative control genes (NCG) for \code{RUV-III-PRPS} normalization.
-See each function's documentation for additional details.
+This function includes three different functions including \code{findNcgSupervisedByAnovaCorr()}, \code{findNcgSupervisedByTwoWayAnova}
+and  \code{findNcgSupervisedByLinearMixedModel()},to identify a set of negative control genes (NCG) in supervised way for
+\code{RUV-III-PRPS} normalization. See each function's
+documentation for additional details.
 }
 \author{
 Ramyar Molania

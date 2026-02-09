@@ -9,16 +9,16 @@ findNcgUnSupervised(
   assay.name,
   uv.variables,
   approach = "LinearMixedModel",
-  clustering.method = "kmeans",
-  nb.clusters = 3,
   ncg.idenfitication.approach = "LMM.BioUvAdjustment",
   form,
+  nb.ncg = 0.1,
   nb.bio.pcs = 3,
   nb.uv.pcs = 3,
   use.rank = FALSE,
   ncg.selection.method = "non.overlap",
-  nb.ncg = 0.1,
   samples.to.use = NULL,
+  clustering.method = "kmeans",
+  nb.clusters = 3,
   hvg.method = "mad",
   top.rank.bio.genes = 0.8,
   top.rank.uv.genes = 0.2,
@@ -73,37 +73,44 @@ findNcgUnSupervised(
 The selected assay should be the one that will be used for the RUV-III-PRPS normalization.}
 
 \item{uv.variables}{Character. A character or a vector of characters indicating the name of the columns in the
-SummarizedExperiment object that contain unwanted variables. These variables can be both categorical or continouse or
+SummarizedExperiment object that contain unwanted variables. These variables can be both categorical or continuous or
 a combination of these. If all unwanted variation is unknown, use the  \code{identifyUnknownUV()} function to estimate them
 first, then run \code{findNcgsUnSupervised()}.}
 
-\item{approach}{TTT}
+\item{approach}{Character. A character string indicating which major NCG method should be used. The options are
+\code{LinearMixedModel} and \code{AnovaCorr}. The default is set to \code{LinearMixedModel}}
+
+\item{ncg.idenfitication.approach}{Character. A character string showing which approach should be used for the selected
+method in \code{approach}.}
+
+\item{form}{Formula. A formula describing the relationship between biological and unwanted variation to be modeled
+(e.g., \code{~ bio.variables + uv.variables}).}
+
+\item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
+when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
+genes in the SummarizedExperiment object. The default is set to 0.1.}
+
+\item{nb.bio.pcs}{Numeric. A numeric value specifying the number of principal components of biological variation to be
+included in the model. The default is set to 3.}
+
+\item{nb.uv.pcs}{Numeric. A numeric value specifying the number of principal components of unwanted variation to be
+included in the model. The default is set to 3.}
+
+\item{use.rank}{Logical. Indicates whether to use rank-based statistics for selecting negative control genes. The
+default is set to \code{FALSE}.}
+
+\item{ncg.selection.method}{Character. A character that indicates how to summarize different statistics and select a
+set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
+The default is set to \code{non.overlap}. For more information, refer to the details of the function.}
+
+\item{samples.to.use}{Logical. A logical vector  specifying which samples to include in the analysis. If \code{all}, all
+samples will be used.}
 
 \item{clustering.method}{Character. The clustering method that should be used to group any continuous unwanted variable.
 The options are: \code{kmeans}, \code{cut}, and \code{quantile}. The default is set to \code{kmeans}.}
 
 \item{nb.clusters}{Numeric. A numeric value that indicates the number of clusters for grouping continuous unwanted
 variation. The default is set to 3.}
-
-\item{ncg.idenfitication.approach}{TTT}
-
-\item{form}{TTT}
-
-\item{nb.bio.pcs}{TTT}
-
-\item{nb.uv.pcs}{TTT}
-
-\item{use.rank}{TTT}
-
-\item{ncg.selection.method}{Character. A character that indicates how to summarize different statistics and select a
-set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
-The default is set to \code{non.overlap}. For more information, refer to the details of the function.}
-
-\item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
-when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
-genes in the SummarizedExperiment object. The default is set to 0.1.}
-
-\item{samples.to.use}{TTT}
 
 \item{hvg.method}{Character. A character indicating the method to select highly variable genes. The options are: \code{var}
 and \code{mad}. \code{var} models gene variance based on a mean-variance trend. \code{mad} uses the median absolute deviation. The
@@ -204,7 +211,9 @@ the column means of the assay from their corresponding columns. The default is s
 (centered) columns of the assays by their standard deviations if centering is \code{TRUE}, and by the root mean square otherwise.
 The default is set to \code{FALSE}.}
 
-\item{svd.bsparam}{TTT}
+\item{svd.bsparam}{Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+PCA using SVD. The default is set to \code{bsparam()}. We refer to the \code{runSVD()} function from the \strong{BiocSingular} R package
+for further details.}
 
 \item{plot.ncg.assessment}{Logical. Indicates whether to plot the output of the NCG assessment while function is running
 . The default is set to \code{TRUE}.}
@@ -213,7 +222,8 @@ The default is set to \code{FALSE}.}
 the SummarizedExperiment object that contain variables to be regressed out from the data before identifying biologically
 variable genes. The default is set to \code{NULL}.}
 
-\item{regress.out.rle.med}{TTT}
+\item{regress.out.rle.med}{Logical. Indicates whether to regress out the RLE medians of the expression data during
+pre-processing. The default is set to \code{TRUE}.}
 
 \item{normalization}{Character. A character that indicates which normalization method should be use to mitigate the
 variation in library size before finding genes that are highly affected by biological variation. The options are :
@@ -226,7 +236,8 @@ The default is set to \code{TRUE}.}
 \item{pseudo.count}{Numeric. A numeric value to be added as a pseudo count to all measurements before applying log
 transformation. The default is set to 1.}
 
-\item{nb.cores}{TTT}
+\item{nb.cores}{#' @param nb.cores #' Numeric. A numeric value specifying the number of CPU cores to use for parallel
+computation. If \code{NULL}, the maximum number of available CPU cores minus one will be used.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
 the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}

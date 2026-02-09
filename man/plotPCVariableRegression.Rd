@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotPCVariableRegression.R
 \name{plotPCVariableRegression}
 \alias{plotPCVariableRegression}
-\title{Generates line-dot plot of the PCs-variable regression analysis.}
+\title{Generate line-dot plot of the PCs-variable regression analysis.}
 \usage{
 plotPCVariableRegression(
   se.obj,

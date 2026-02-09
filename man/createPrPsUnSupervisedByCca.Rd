@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsUnsupervisedByCca.R
 \name{createPrPsUnSupervisedByCca}
 \alias{createPrPsUnSupervisedByCca}
-\title{Creates PRPS sets using mutual nearest neighbors in RNA-seq data.}
+\title{Create PRPS sets using CCA and MNN.}
 \usage{
 createPrPsUnSupervisedByCca(
   se.obj,
@@ -64,7 +64,7 @@ createPrPsUnSupervisedByCca(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
 \item{assay.name}{Character. A character indicating the name of the data (assay) in the SummarizedExperiment object.
 This data will be used to create PRPS data for RUV-III normalization. This data must be the one that will be
@@ -82,7 +82,7 @@ unwanted variable(s) within the sample annotation (colData) of the SummarizedExp
 continuous, or a combination. These variables will be considered when generating PRPS sets for the \code{main.uv.variable}
 to help avoid potential contamination. The default is set to \code{NULL}}
 
-\item{coordinates.to.use}{Character. Indicates which coordinates (e.g., PCA or CCA embeddings) should be used to
+\item{coordinates.to.use}{Character. Indicates which coordinates (e.g., PCA or CCA embedding) should be used to
 identify mutual nearest neighbors. Default is set to \code{NULL}, meaning the raw assay data is used.}
 
 \item{nb.cca}{Numeric. Number of canonical correlation components to use for constructing PRPS. Default is set to 20.}
@@ -206,13 +206,16 @@ The default is KmknnParam(). We refer to the \code{findMutualNN()} function from
 \item{residop.fun}{Character. A character indicating which function to use to calculate residuals. The options are
 \code{c1}, \code{c2}, \code{lqr}, \code{r1} and \code{r2}. The default is set to \code{r2}.}
 
-\item{nb.cores}{TTT}
+\item{nb.cores}{Numeric. The number of CPU cores to use for computation. The default is \code{NULL}, which automatically
+uses the maximum number of available cores minus one.}
 
-\item{use.annoy}{TTT}
+\item{use.annoy}{Logical. If \code{TRUE}, the Annoy algorithm is used for approximate nearest-neighbor (kNN) search. The
+default is \code{FALSE}.}
 
-\item{annot.nb.trees}{TTT}
+\item{annot.nb.trees}{Numeric. The number of trees used in the Annoy index, corresponding to \code{AnnoyParam(ntrees = annot.nb.trees)}.
+The default is set to 50.}
 
-\item{max.iter}{rrr}
+\item{max.iter}{Numeric. The maximum number of iterations allowed for the optimization or iterative procedure.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to \code{TRUE}. See the checkSeObj() function for more details.}
@@ -241,8 +244,8 @@ The SummarizedExperiment object containing PRPS data and plot results in the met
 these results.
 }
 \description{
-This function uses mutual nearest neighbors approach to create PRPS in the RNA-seq data. This function can be used in
-situation where the biological variation are entirely unknown.
+This function uses canonical correlation analysis (CCA) and mutual nearest neighbors (MNN) approach to create PRPS data
+in the RNA-seq data. This function can be used in situation where the biological variation are entirely unknown.
 }
 \author{
 Ramyar Molania

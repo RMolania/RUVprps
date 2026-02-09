@@ -13,7 +13,7 @@
 #'
 #' @details
 #' The function performs linear regression between each individual continuous variable specified by users and the columns
-#' of the W matrix in a cumulative manner, and then computes R^2 .For categorical variables, the function applies vector
+#' of the W matrix in a cumulative manner, and then computes R^2. For categorical variables, the function applies vector
 #' correlation between the variables and the columns of the W matrix. Ideally, the columns of the W matrix should show a
 #' strong correlation with unwanted variation and no or a weak correlation with biological variation. To compare the
 #' performance of different $k$ values, the correlations obtained for biological variables are subtracted from 1, and then

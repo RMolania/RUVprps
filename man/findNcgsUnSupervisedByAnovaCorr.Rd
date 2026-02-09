@@ -73,9 +73,10 @@ first, then run \code{findNcgsUnSupervised()}.}
 set of genes as negative control genes. The options are: \code{prod}, \code{average}, \code{sum}, \code{non.overlap}, \code{auto}, and \code{quantile}.
 The default is set to \code{non.overlap}. For more information, refer to the details of the function.}
 
-\item{use.rank}{TTTT}
+\item{use.rank}{Logical. If \code{TRUE}, the function use the rank based approach to select NCG.}
 
-\item{samples.to.use}{TTTT}
+\item{samples.to.use}{Logical. A logical vector indicating wghich samples to be used for analysis. The defualt is set
+to \code{all}, this means all samples be used.}
 
 \item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
@@ -191,7 +192,8 @@ The default is set to \code{FALSE}.}
 the SummarizedExperiment object that contain variables to be regressed out from the data before identifying biologically
 variable genes. The default is set to \code{NULL}.}
 
-\item{regress.out.rle.med}{TTT}
+\item{regress.out.rle.med}{Logical. If \code{TRUE}, the RLE medians will be regressed out from the data in data-preprocessing
+steps}
 
 \item{normalization}{Character. A character that indicates which normalization method should be use to mitigate the
 variation in library size before finding genes that are highly affected by biological variation. The options are :

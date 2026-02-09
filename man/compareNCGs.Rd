@@ -2,7 +2,7 @@
 % Please edit documentation in R/compareNCGs.R
 \name{compareNCGs}
 \alias{compareNCGs}
-\title{Assesses and compares the performance of NCGs gene sets.}
+\title{Assess and compares the performance of NCGs gene sets.}
 \usage{
 compareNCGs(
   se.obj,

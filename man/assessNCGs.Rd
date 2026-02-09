@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessNCGs.R
 \name{assessNCGs}
 \alias{assessNCGs}
-\title{Assess performance of NCG.}
+\title{Assess the performance of NCG.}
 \usage{
 assessNCGs(
   se.obj,
@@ -65,10 +65,10 @@ or \code{none}. Default is \code{assays}. Refer to the \code{checkSeObj()} funct
 \item{verbose}{Logical. Indicates whether to display messages during function execution. The default is set \code{TRUE}.}
 }
 \value{
-A line-dot plot show the association between the first few PCs and the variables
+A line-dot plot show the association between the first \code{nb.pcs} PCs and the variables specified by \code{variables.to.assess.ncg}.
 }
 \description{
-Assess performance of NCG.
+Assess the performance of NCG.
 }
 \author{
 Ramyar Molania

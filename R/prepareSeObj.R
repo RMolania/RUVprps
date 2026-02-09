@@ -1,4 +1,4 @@
-#' Prepares a SummarizedExperiment object from tabular data.
+#' Prepare a SummarizedExperiment object from tabular data.
 #'
 #' @author Ramyar Molania
 #'
@@ -85,68 +85,8 @@
 #' @importFrom dplyr left_join
 #' @importFrom knitr kable
 #' @importFrom edgeR cpm
+#'
 #' @export
-
-# raw.count <- data.table::fread(
-#     '/Users/molania.r/Documents/Current_Projects/Project_DFCI_2_RUVprpsApplication/Application_RUVprps/data/Tumor-25.01-Polya_ensembl_counts_60499genes_2025-03-03.tsv')
-# raw.count <- as.data.frame(raw.count)
-# gene.names <- raw.count$Gene
-# raw.count <- raw.count[ , -1]
-# raw.count <- data.matrix(raw.count)
-# row.names(raw.count) <- gene.names
-#
-#
-# sample.annot <- read.delim('/Users/molania.r/Documents/Current_Projects/Project_DFCI_2_RUVprpsApplication/Application_RUVprps/data/GSE294351_clinical_Treehouse-Tumor-Compendium-25.01-PolyA_20250131v1.tsv')
-# row.names(sample.annot) <- sample.annot$th_dataset_id
-# dim(sample.annot)
-# common.samples <- intersect(sample.annot$th_dataset_id, colnames(raw.count))
-# sample.annot <- sample.annot[common.samples , ]
-# raw.count <- raw.count[ , common.samples ]
-# all.equal(colnames(raw.count), sample.annot$th_dataset_id)
-#
-# row.names(raw.count) <- sub("\\..*$", "", row.names(raw.count))
-#
-# data = raw.count
-# sample.annotation = sample.annot
-# raw.count.assay.name = 'RawCount'
-# remove.lowly.expressed.genes = FALSE
-# count.cutoff = 10
-# biological.group = NULL
-# minimum.proportion = 0.5
-# calculate.library.size = TRUE
-# estimate.tumor.purity = 'both'
-# scale.singscore.values = TRUE
-# assay.name.to.estimate.purity = 'RawCount'
-# create.sample.annotation = FALSE
-# gene.annotation = NULL
-# create.gene.annotation = TRUE
-# add.gene.details = TRUE
-# gene.group = 'ensembl_gene_id'
-# column.name = NULL
-# gene.details = NULL
-# add.housekeeping.genes = TRUE
-# add.immun.stroma.genes = TRUE
-# metaData = NULL
-# verbose = TRUE
-# gene.ids.to.estimate.tumor.purity = 'hgnc_symbol'
-# gene.group = 'ensembl_gene_id'
-#
-# se.obj <- prepareSeObj(
-#     data = raw.count,
-#     sample.annotation = sample.annot,
-#     raw.count.assay.name = 'RawCount',
-#     remove.lowly.expressed.genes = FALSE,
-#     calculate.library.size = TRUE,
-#     estimate.tumor.purity = 'both',
-#     gene.ids.to.estimate.tumor.purity = 'ensembl_gene_id',
-#     scale.singscore.values = TRUE,
-#     gene.annotation = NULL,
-#     create.gene.annotation = TRUE,
-#     add.gene.details = TRUE,
-#     add.housekeeping.genes = TRUE,
-#     assay.name.to.estimate.purity = 'RawCount',
-#     gene.group = 'ensembl_gene_id')
-
 
 prepareSeObj <- function(
         data = NULL,

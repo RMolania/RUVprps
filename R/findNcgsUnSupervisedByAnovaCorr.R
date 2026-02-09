@@ -29,6 +29,9 @@
 #' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
 #' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
 #' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#' @param use.rank Logical. If `TRUE`, the function use the rank based approach to select NCG.
+#' @param samples.to.use Logical. A logical vector indicating wghich samples to be used for analysis. The defualt is set
+#' to `all`, this means all samples be used.
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
@@ -107,6 +110,8 @@
 #' @param regress.out.variables Character. A character or a vector of character indicating the names of the columns in
 #' the SummarizedExperiment object that contain variables to be regressed out from the data before identifying biologically
 #' variable genes. The default is set to `NULL`.
+#' @param regress.out.rle.med Logical. If `TRUE`, the RLE medians will be regressed out from the data in data-preprocessing
+#' steps
 #' @param normalization Character. A character that indicates which normalization method should be use to mitigate the
 #' variation in library size before finding genes that are highly affected by biological variation. The options are :
 #' `CPM`, `TMM`, `VST`, `upper`, `full` and `medium`. The default is set to  `CPM`. Refer to the `applyOtherNormalization()`
@@ -137,9 +142,6 @@
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the
 #' SummarizedExperiment object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-#' @param use.rank TTTT
-#' @param samples.to.use TTTT
-#' @param regress.out.rle.med TTT
 #'
 #' @return A `SummarizedExperiment` object containing the selected negative control genes and optional assessment plots,
 #' or a list of the results.
@@ -158,6 +160,7 @@
 #' @importFrom Biobase rowMax
 #' @importFrom stats aov
 #' @import ggplot2
+#'
 #' @export
 
 findNcgsUnSupervisedByAnovaCorr <- function(

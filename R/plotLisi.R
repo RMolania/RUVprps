@@ -28,6 +28,7 @@
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom tidyr pivot_longer
 #' @import ggplot2
+#'
 #' @export
 
 plotLisi <- function(

@@ -85,8 +85,8 @@ default is set to \code{FALSE}.}
 \item{regress.out.rle.med}{Logical. Indicates whether to regress out the median of the RLE (Relative Log Expression)
 per sample after normalization. The default is set to \code{FALSE}.}
 
-\item{samples.to.use}{Logical or numeric. A logical vector or numeric index specifying which samples to include in the
-analysis. If \code{NULL}, all samples will be used.}
+\item{samples.to.use}{Logical. A logical vector  specifying which samples to include in the analysis. If \code{all}, all
+samples will be used.}
 
 \item{nb.ncg}{Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 when the \code{ncg.selection.method} parameter is set to \code{auto}. This value, \code{nb.ncg}, corresponds to a fraction of the total
@@ -173,8 +173,8 @@ The default is set to \code{TRUE}.}
 \item{use.fvalues}{Logical. Indicates whether to use F-statistics (instead of correlation) for assessing the relationship
 between negative control genes and biological/unwanted variables. The default is set to \code{FALSE}.}
 
-\item{nb.cores}{Numeric. A numeric value specifying the number of CPU cores to use for parallel computation. The default
-is set to 1.}
+\item{nb.cores}{#' Numeric. A numeric value specifying the number of CPU cores to use for parallel computation. If \code{NULL},
+the maximum number of available CPU cores minus one will be used.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If \code{TRUE},
 the function \code{checkSeObj()} will be used. The default is set to \code{TRUE}.}
@@ -210,65 +210,6 @@ object or output the result. The default is \code{TRUE}.}
 \description{
 This function utilizes two-way ANOVA to identify a set of suitable genes as negative control genes (NCG) for RUV-III
 normalization. Both biological and unwanted variation sources is necessary and should be specified.
-}
-\details{
-The function begins by creating all possible sample groups based on biological and unwanted variation separately.
-Subsequently, these groups are used as factors in two-way ANOVA to identify genes highly influenced by biological and
-unwanted variation. Finally, the function selects genes with the possible highest F-statistics for unwanted variation and
-lowest F-statistics for biological variation. Various approaches are employed for the final gene selection; please refer
-to the details for more information.
-The function uses 5 ways to summarize two gene-level F-statistics obtained for the biological and unwanted variation.
-The function uses either the values or the ranks of F-statistics for NCGs selection. The function ranks the
-negative of F-statistics values for unwanted variation. The lower the ranks, the greater the impact of unwanted
-variation on genes. The function ranks the F-statistics for biological variation. The higher the ranks, the greater
-the impact of biological variation on genes. The options are \code{prod}, \code{sum}, \code{average}, \code{auto}, \code{non.overlap} and
-\code{quantile}.
-
-If \code{prod}, \code{sum} and \code{average} is set:
-\itemize{
-\item The product, sum or average of ranks of F-statistics is calculated. Then, the function selects \code{nb.ncg} numbers of
-genes as negative control genes that have the lowest ranks.
-}
-
-If \code{non.overlap} is selected:
-\enumerate{
-\item The function selects the top \code{top.rank.bio.genes} genes that have the highest ranks of F-statistics
-for biological variation.
-\item The function selects the top \code{top.rank.uv.genes} genes that have the lowest ranks of F-statistics for
-unwanted variation.
-\item The function excludes all genes obtained in 2 from the ones obtained 1. This will be a set of genes as
-negative control genes.
-}
-
-If \code{auto} is selected:
-\enumerate{
-\item The function selects the top \code{top.rank.bio.genes} genes that have the highest ranks of F-statistics for
-biological variation.
-\item The function selects the top \code{top.rank.uv.genes} genes that have the lowest ranks of F-statistics for
-unwanted variation.
-\item The function excludes all genes obtained in 2 from the ones obtained 1.
-\item If the number of selected genes is larger or smaller than the specified \code{nb.ncg}, the function applies an
-auto search to find approximate \code{nb.ncg} of genes as negative control genes as follow. The auto search will either
-decrease or increase the values of either \code{top.rank.bio.genes} or \code{top.rank.uv.genes} or both till to find
-approximate \code{nb.ncg} of genes as negative control genes.
-}
-
-If \code{quantile} is selected:
-\enumerate{
-\item The function selects the \code{bio.percentile} percentile of F-statistics for biological variation. Then, selects
-all the genes that have F-statistics larger the calculated percentile.
-\item The function selects the \code{uv.percentile} percentile of F-statistics for unwanted variation. Then, selects
-all the genes that have F-statistics larger the calculated percentile.
-\item The function excludes all genes obtained in 2 from the ones obtained 1.
-}
-
-Assess the performance of NCGS:
-\itemize{
-\item The function can assess the initial performance of selected NCGs. This analysis involves principal component analysis
-on only the selected NCG and then explore the R^2 or vector correlation between the \code{nb.pcs} first principal components
-and with the specified variables. Ideal NCGS, should show high and low R^2 or vector correlation for unwanted and
-biological variation respectively.
-}
 }
 \references{
 \itemize{

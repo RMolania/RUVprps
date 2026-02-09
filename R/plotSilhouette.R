@@ -1,4 +1,4 @@
-#' Computes the average Silhouette coefficients.
+#' Compute the average Silhouette coefficients.
 #'
 #' @author Ramyar Molania
 #'
@@ -37,6 +37,7 @@
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom tidyr pivot_longer
 #' @import ggplot2
+#'
 #' @export
 
 plotSilhouette <- function(

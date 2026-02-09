@@ -44,6 +44,7 @@
 #' @importFrom variancePartition fitVarPartModel
 #' @importFrom BiocParallel MulticoreParam
 #' @importFrom limma lmFit
+#'
 #' @export
 
 computeGenesVarianceComposition <- function(

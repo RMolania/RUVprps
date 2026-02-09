@@ -23,7 +23,7 @@ estimatePAM50(
 )
 }
 \arguments{
-\item{se.obj}{A \code{SummarizedExperiment} object containing gene expression data.}
+\item{se.obj}{A SummarizedExperiment object.}
 
 \item{assay.names}{Character or character vector. The name(s) of the assay(s) in \code{se.obj} to use. Default is \code{"all"}.}
 

@@ -1,5 +1,4 @@
-#' Renames variable in SummarizedExperiment
-#'
+#' Rename variable in SummarizedExperiment
 #'
 #' @param se.obj description
 #' @param current.names description
@@ -8,6 +7,7 @@
 #'
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors DataFrame
+#'
 #' @export
 
 renameVariables <- function(

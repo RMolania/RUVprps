@@ -1,4 +1,4 @@
-#' Assess performance of NCG.
+#' Assess the performance of NCG.
 #'
 #' @author Ramyar Molania
 #'
@@ -31,7 +31,9 @@
 #' or `none`. Default is `assays`. Refer to the `checkSeObj()` function for more details.
 #' @param verbose Logical. Indicates whether to display messages during function execution. The default is set `TRUE`.
 #'
-#' @return A line-dot plot show the association between the first few PCs and the variables
+#' @return A line-dot plot show the association between the first `nb.pcs` PCs and the variables specified by `variables.to.assess.ncg`.
+#'
+#' @export
 
 assessNCGs <- function(
         se.obj,

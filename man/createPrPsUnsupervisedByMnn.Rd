@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsUnsupervisedByMnn.R
 \name{createPrPsUnsupervisedByMnn}
 \alias{createPrPsUnsupervisedByMnn}
-\title{Creates PRPS sets using mutual nearest neighbors in RNA-seq data.}
+\title{Create PRPS sets using mutual nearest neighbors in RNA-seq data.}
 \usage{
 createPrPsUnsupervisedByMnn(
   se.obj,
@@ -59,11 +59,13 @@ unwanted variable(s) within the sample annotation (colData) of the SummarizedExp
 continuous, or a combination. These variables will be considered when generating PRPS sets for the \code{main.uv.variable}
 to help avoid potential contamination. The default is set to \code{NULL}}
 
-\item{data.input}{TTT}
+\item{data.input}{Character. Specifies the data type used to identify nearest neighbours. The options are \code{pcs} and
+\code{expr}. \code{pcs} refers to principal components, while \code{expr} refers to gene expression data. The default is set to \code{pcs}.}
 
-\item{bio.dims}{TTT}
+\item{bio.dims}{Numeric. A numeric value specifying the number of leading principal components to use for identifying
+nearest neighbours when \code{data.input} is set to \code{pcs}. The default is set to 5.}
 
-\item{clustering.method}{Character. A character indicating the choice of clustering method for grouping the
+\item{clustering.method}{Character. A character string indicating the choice of clustering method for grouping the
 \code{uv.variable} if a continuous variable is provided. Options include \code{kmeans}, \code{cut}, and \code{quantile}. The default is set
 to \code{kmeans}.}
 
@@ -105,12 +107,12 @@ default is set to 1.}
 will be used to prepare the input data for knn and mnn analysis. The default is set to \code{NULL}, this means all genes
 will be used.}
 
-\item{samples.to.use}{TTT}
+\item{samples.to.use}{Logical, Character, or Integer. Specifies which samples to use for the analysis. If \code{all}, all
+samples are used.}
 
 \item{normalization}{Character. A character that indicates which normalization method should be applied on the
 data before finding the knn. Options are: \code{CPM}, \code{TMM}, \code{upper}, \code{median}, \code{full}, and \code{VST}. The default is set to
-\code{cpm}.
-If set to \code{NULL}, no normalization will be applied. See the applyOtherNormalizations() function for more details.}
+\code{cpm}. If set to \code{NULL}, no normalization will be applied. See the applyOtherNormalizations() function for more details.}
 
 \item{apply.cosine.norm}{Logical. Indicates whether cosine normalization should be applied before finding MNN. Default
 is set to \code{TRUE}.}
@@ -119,24 +121,27 @@ is set to \code{TRUE}.}
 sample annotation in the SummarizedExperiment object. These variables will be regressed out from the data before
 finding MNN. The default is set to \code{NULL}, indicating that regression will not be applied.}
 
-\item{regress.out.rle.med}{TTTT}
+\item{regress.out.rle.med}{Logical. Indicates whether to regress out the RLE medians of the expression data during data
+pre-processing. The default is set to \code{FALSE}.}
 
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 The default is set to \code{TRUE}.}
 
-\item{apply.log.for.prps}{TTT}
+\item{apply.log.for.prps}{Logical. Indicates whether to apply log transformation to gene expression data before averaging
+to create pseudo-samples (PS). The default is set to \code{FALSE}. Note that if the selected data (assay) specified in
+\code{assay.name} is already log-transformed, this argument must be set to \code{FALSE}.}
 
 \item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
 to 1.}
 
 \item{mnn.bpparam}{Character. A BiocParallelParam object specifying how palatalization should be performed to find MNN.
-The default is set to SerialParam(). We refer to the \code{findMutualNN()} function from the \strong{BiocNeighbors} R package.}
+The default is set to \code{SerialParam()}. We refer to the \code{findMutualNN()} function from the \strong{BiocNeighbors} R package.}
 
 \item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
-The default is KmknnParam(). We refer to the \code{findMutualNN()} function from the \code{BiocNeighbors} R package.}
+The default is set to \code{KmknnParam()}. We refer to the \code{findMutualNN()} function from the \code{BiocNeighbors} R package.}
 
-\item{create.prps.map}{TTT}
+\item{create.prps.map}{Logical. Whether to create a PRPS map. The default is set to \code{TRUE}.}
 
 \item{plot.output}{Logical. If \code{TRUE}, the function plots the distribution of MNN across the batches and PRPS sets
 across the \code{main.uv.variable}.}
@@ -149,7 +154,7 @@ of the SummarizedExperiment object. If set to \code{NULL}, the function will sel
 \code{paste0(uv.variable, '|', assay.name)}.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
-to \code{TRUE}. See the checkSeObj() function for more details.}
+to \code{TRUE}. See the \code{checkSeObj()} function for more details.}
 
 \item{remove.na}{Character. To remove NA or missing values from the assay (data) or not. The options are \code{assays} and
 \code{none}. The default is set to \code{assays}, so all the NA or missing values from the assay(s) will be removed before computing

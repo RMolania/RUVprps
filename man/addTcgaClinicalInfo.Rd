@@ -2,7 +2,7 @@
 % Please edit documentation in R/addTcgaClinicalInfo.R
 \name{addTcgaClinicalInfo}
 \alias{addTcgaClinicalInfo}
-\title{Adds the TCGA RNA-seq batch information}
+\title{Add the TCGA RNA-seq batch information}
 \usage{
 addTcgaClinicalInfo(
   se.obj,
@@ -28,10 +28,12 @@ batch information is missing. If \code{FALSE}, samples without batch annotations
 \item{missing.samples.name}{Character. A label to assign to samples without batch information. The default is
 \code{"Unknown"}.}
 
-\item{verbose}{UUU}
+\item{verbose}{Logical. Indicates whether to display output messages during function execution. The default is set to
+\code{TRUE}.}
 }
 \value{
-A \code{SummarizedExperiment} object with TCGA RNA-seq batch information added to the \code{colData}.
+A \code{SummarizedExperiment} object with TCGA RNA-seq batch information added to the sample annotation (\code{colData}) of
+\code{SummarizedExperiment} object.
 }
 \description{
 This function adds the TCGA RNA-seq batch information to a \code{SummarizedExperiment} object, using metadata

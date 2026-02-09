@@ -29,7 +29,9 @@
 #' @param uv.variables Character or character vector. Specifies the column names of unwanted variables in
 #' the sample annotation of the SummarizedExperiment object. These `uv.variables` can be either categorical or continuous
 #' variables.
-#' @param variables TTTT
+#' @param variables Character or character vector. Specifies the column names of any variables in
+#' the sample annotation of the SummarizedExperiment object. These `variables` can be either categorical or continuous
+#' variables.
 #' @param cat.cor.coef Numeric vector. A vector of two numerical values indicating the cut-off for the correlation coefficient
 #' between each pair of categorical variables. The first value applies to each pair of 'uv.variables' and the second value
 #' applies to each pair of `bio.variables`. The correlation is computed using the `ContCoef()`function from the **DescTools**

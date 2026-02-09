@@ -142,7 +142,8 @@ finding KNN and MNN. The default is set to \code{NULL}, indicating that regressi
 \item{apply.log}{Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 The default is set to \code{TRUE}.}
 
-\item{apply.log.for.prps}{TTTT}
+\item{apply.log.for.prps}{Logical. Indicates whether to apply a log-transformation to the data before averaging samples
+to create PS or not The default is set to \code{TRUE}.}
 
 \item{pseudo.count}{Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
@@ -154,7 +155,8 @@ The default is SerialParam(). We refer to the \strong{\code{findMutualNN()}} fun
 \item{mnn.nbparam}{Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 The default is KmknnParam(). We refer to the \code{findMutualNN()} function from the \strong{BiocNeighbors} R package.}
 
-\item{samples.to.use}{TTT}
+\item{samples.to.use}{Logical. A logifcal vector specifiyung wich samples should be used for the analysis. The default
+is set to \code{all}, then all samples will be used.}
 
 \item{check.se.obj}{Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 to TRUE. See the checkSeObj() function for more details.}

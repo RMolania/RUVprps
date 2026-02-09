@@ -29,7 +29,7 @@ batch information is missing. If \code{FALSE}, samples without batch annotations
 If \code{TRUE}, batch identifiers are parsed from the TCGA sample barcodes.}
 
 \item{missing.samples.name}{Character. A label to assign to samples without batch information. By default,
-\code{"Unknown"}.}
+\code{Unknown}.}
 }
 \value{
 A \code{SummarizedExperiment} object with TCGA RNA-seq batch information added to the \code{colData}.

@@ -16,6 +16,8 @@
 #' @param verbose Logical. If `TRUE`, the function will display messages about the different steps being executed.
 #'
 #' @importFrom SummarizedExperiment assays assay colData
+#'
+#' @export
 
 createLogAssays <- function(
         se.obj,
@@ -50,7 +52,11 @@ createLogAssays <- function(
         ## log transformation ####
         if (!is.null(pseudo.count)){
             printColoredMessage(
-                message = paste0('Applying log2 + ', pseudo.count,' (pseudo.count) on the ', x,' data.'),
+                message = paste0(
+                    'Applying log2 + ',
+                    pseudo.count,' (pseudo.count) on the ',
+                    x,
+                    ' data.'),
                 color = 'blue',
                 verbose = verbose
                 )
@@ -59,13 +65,14 @@ createLogAssays <- function(
             printColoredMessage(
                 message = paste0('Applying log2 on the', x, ' data.'),
                 color = 'blue',
-                verbose = verbose)
+                verbose = verbose
+                )
             temp.data <- log2(assay(x = se.obj, i = x))
         }
-        ## round the data ####
+        ## rounding the data ####
         if(isTRUE(apply.round))
             temp.data <- round(x = temp.data, digits = 2)
-        ## save the data ####
+        ## saving the data ####
         new.assay.name <- paste0(new.name, x)
         if(isTRUE(replace.assays)){
             se.obj@assays@data[x] <- NULL

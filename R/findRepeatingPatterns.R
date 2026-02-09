@@ -6,6 +6,8 @@
 #' @param n.repeat Numeric. Indicates the minimum repeat of individual factors ro characters in the vector.
 
 #' @return A vector of factors or characters that are repeated at least "n.repeat" times.
+#'
+#' @export
 
 findRepeatingPatterns <- function(vec, n.repeat) {
     char.counts <- table(vec)

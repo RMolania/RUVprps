@@ -16,7 +16,7 @@
 #' @param use.lables Logical. Indicates whether to use TCGA barcode labels to infer batch information directly.
 #' If `TRUE`, batch identifiers are parsed from the TCGA sample barcodes.
 #' @param missing.samples.name Character. A label to assign to samples without batch information. By default,
-#' `"Unknown"`.
+#' `Unknown`.
 #'
 #' @importFrom stringr str_split
 #' @importFrom tidyr separate

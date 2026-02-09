@@ -27,6 +27,7 @@
 #'
 #' @importFrom variancePartition canCorPairs
 #' @importFrom ComplexHeatmap Heatmap
+#'
 #' @export
 
 

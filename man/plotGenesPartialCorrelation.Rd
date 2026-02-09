@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotGenesPartialCorrelation.R
 \name{plotGenesPartialCorrelation}
 \alias{plotGenesPartialCorrelation}
-\title{Plots gene-gene partial correlation results.}
+\title{Plot gene-gene partial correlation results.}
 \usage{
 plotGenesPartialCorrelation(
   se.obj,

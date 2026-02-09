@@ -76,7 +76,8 @@
 #' finding KNN and MNN. The default is set to `NULL`, indicating that regression will not be applied.
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data or not for down-stream analysis.
 #' The default is set to `TRUE`.
-#' @param apply.log.for.prps TTTT
+#' @param apply.log.for.prps Logical. Indicates whether to apply a log-transformation to the data before averaging samples
+#' to create PS or not The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A positive numeric value as a pseudo count to be added to all measurements of the specified
 #' assay(data) before applying log transformation to avoid -Inf for measurements that are equal to 0. The default is set
 #' to 1.
@@ -84,6 +85,8 @@
 #' The default is SerialParam(). We refer to the **`findMutualNN()`** function from the **BiocNeighbors** R package.
 #' @param mnn.nbparam Character. A BiocParallelParam object specifying how parallelization should be performed to find MNN.
 #' The default is KmknnParam(). We refer to the `findMutualNN()` function from the **BiocNeighbors** R package.
+#' @param samples.to.use Logical. A logifcal vector specifiyung wich samples should be used for the analysis. The default
+#' is set to `all`, then all samples will be used.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object or not. The default is set
 #' to TRUE. See the checkSeObj() function for more details.
 #' @param remove.na Character. To remove NA or missing values from the assay (data) or not. The options are `assays` and
@@ -109,7 +112,6 @@
 #' @param save.se.obj Logical. Indicates whether to save the KNN results in the metadata of the SummarizedExperiment object
 #' or to output the result as a list. By default, it is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows the messages of different steps of the function.
-#' @param samples.to.use TTT
 #'
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom BiocNeighbors findMutualNN KmknnParam
@@ -117,6 +119,7 @@
 #' @importFrom BiocParallel SerialParam
 #' @importFrom stats dist
 #' @importFrom RANN nn2
+#'
 #' @export
 
 createPrPsUnsupervisedByKnnMnn <- function(

@@ -1,4 +1,4 @@
-#' Generates line-dot plot of the PCs-variable vector correlation analysis.
+#' Generate line-dot plot of the PCs-variable vector correlation analysis.
 #'
 #' @author Ramyar Molania
 #'
@@ -35,6 +35,7 @@
 #' @importFrom dplyr mutate
 #' @import RColorBrewer
 #' @import ggplot2
+#'
 #' @export
 
 plotPCVariableCorrelation <- function(

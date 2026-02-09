@@ -2,7 +2,7 @@
 % Please edit documentation in R/computeDGE.R
 \name{computeDGE}
 \alias{computeDGE}
-\title{Performs differential gene expression analysis.}
+\title{Perform differential gene expression analysis.}
 \usage{
 computeDGE(
   se.obj,

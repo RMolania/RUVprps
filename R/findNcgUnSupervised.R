@@ -19,19 +19,35 @@
 #' @param assay.name Character. A character that indicates the name of an data (assay) in the SummarizedExperiment object.
 #' The selected assay should be the one that will be used for the RUV-III-PRPS normalization.
 #' @param uv.variables Character. A character or a vector of characters indicating the name of the columns in the
-#' SummarizedExperiment object that contain unwanted variables. These variables can be both categorical or continouse or
+#' SummarizedExperiment object that contain unwanted variables. These variables can be both categorical or continuous or
 #' a combination of these. If all unwanted variation is unknown, use the  `identifyUnknownUV()` function to estimate them
 #' first, then run `findNcgsUnSupervised()`.
+#' @param approach  Character. A character string indicating which major NCG method should be used. The options are
+#' `LinearMixedModel` and `AnovaCorr`. The default is set to `LinearMixedModel`
+#' @param ncg.idenfitication.approach Character. A character string showing which approach should be used for the selected
+#' method in `approach`.
+#' @param form Formula. A formula describing the relationship between biological and unwanted variation to be modeled
+#' (e.g., `~ bio.variables + uv.variables`).
+#' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
+#' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
+#' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param nb.bio.pcs Numeric. A numeric value specifying the number of principal components of biological variation to be
+#' included in the model. The default is set to 3.
+#' @param nb.uv.pcs  Numeric. A numeric value specifying the number of principal components of unwanted variation to be
+#' included in the model. The default is set to 3.
+#' @param use.rank Logical. Indicates whether to use rank-based statistics for selecting negative control genes. The
+#' default is set to `FALSE`.
+#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
+#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
+#' The default is set to `non.overlap`. For more information, refer to the details of the function.
+#'
+#'
 #' @param clustering.method Character. The clustering method that should be used to group any continuous unwanted variable.
 #' The options are: `kmeans`, `cut`, and `quantile`. The default is set to `kmeans`.
 #' @param nb.clusters Numeric. A numeric value that indicates the number of clusters for grouping continuous unwanted
 #' variation. The default is set to 3.
-#' @param ncg.selection.method Character. A character that indicates how to summarize different statistics and select a
-#' set of genes as negative control genes. The options are: `prod`, `average`, `sum`, `non.overlap`, `auto`, and `quantile`.
-#' The default is set to `non.overlap`. For more information, refer to the details of the function.
-#' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
-#' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
-#' genes in the SummarizedExperiment object. The default is set to 0.1.
+#' @param samples.to.use  Logical. A logical vector  specifying which samples to include in the analysis. If `all`, all
+#' samples will be used.
 #' @param hvg.method Character. A character indicating the method to select highly variable genes. The options are: `var`
 #' and `mad`. `var` models gene variance based on a mean-variance trend. `mad` uses the median absolute deviation. The
 #' default is set to `var`.
@@ -91,6 +107,7 @@
 #' This analysis involves principal component analysis on the selected genes, followed by exploration of the R^2 or vector
 #' correlation between the first `nb.pcs` principal components and the biological and unwanted variables. The default is
 #' set to `TRUE`.
+#' @param top.ncg Numeric. Number of NCG.
 #' @param variables.to.assess.ncg Character. A character string or vector of strings indicating the column names in sample
 #' annotation of of the  SummarizedExperiment object that contain variables whose association with the selected genes as
 #' NCG needs to be evaluated. The default is set to `NULL`. This means all the variables specified in the `bio.variables`
@@ -102,11 +119,16 @@
 #' @param scale Logical. Indicates whether to scale the data before applying SVD. If `TRUE`, scaling is done by dividing the
 #' (centered) columns of the assays by their standard deviations if centering is `TRUE`, and by the root mean square otherwise.
 #' The default is set to `FALSE`.
+#' @param svd.bsparam Character. A BiocParallelParam object specifying how palatalization should be performed for performing
+#' PCA using SVD. The default is set to `bsparam()`. We refer to the `runSVD()` function from the **BiocSingular** R package
+#' for further details.
 #' @param plot.ncg.assessment Logical. Indicates whether to plot the output of the NCG assessment while function is running
 #' . The default is set to `TRUE`.
 #' @param regress.out.variables Character. A character or a vector of character indicating the names of the columns in
 #' the SummarizedExperiment object that contain variables to be regressed out from the data before identifying biologically
 #' variable genes. The default is set to `NULL`.
+#' @param regress.out.rle.med Logical. Indicates whether to regress out the RLE medians of the expression data during
+#' pre-processing. The default is set to `TRUE`.
 #' @param normalization Character. A character that indicates which normalization method should be use to mitigate the
 #' variation in library size before finding genes that are highly affected by biological variation. The options are :
 #' `CPM`, `TMM`, `VST`, `upper`, `full` and `medium`. The default is set to  `CPM`. Refer to the `applyOtherNormalization()`
@@ -115,7 +137,8 @@
 #' The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value to be added as a pseudo count to all measurements before applying log
 #' transformation. The default is set to 1.
-#' @param top.ncg Numeric. Number of NCG.
+#' @param nb.cores #' @param nb.cores #' Numeric. A numeric value specifying the number of CPU cores to use for parallel
+#' computation. If `NULL`, the maximum number of available CPU cores minus one will be used.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
 #'  the function `checkSeObj()` will be used. The default is set to `TRUE`.
 #' @param remove.na Character set. Indicates whether to remove NA or missing values from the SummarizedExperiment object
@@ -138,19 +161,6 @@
 #' @param save.se.obj Logical. Indicates whether to save the result of the function in the metadata of the
 #' SummarizedExperiment object or output the result. The default is `TRUE`.
 #' @param verbose Logical. If `TRUE`, shows messages of different steps of the function.
-#' @param ncg.idenfitication.approach TTT
-#' @param form TTT
-#' @param nb.bio.pcs TTT
-#' @param nb.uv.pcs TTT
-#' @param use.rank TTT
-#' @param samples.to.use TTT
-#' @param svd.bsparam TTT
-#' @param svd.bsparam TTT
-#' @param regress.out.rle.med TTT
-#' @param nb.cores TTT
-#' @param approach TTT
-#'
-#'
 #'
 #' @return A `SummarizedExperiment` object containing the selected negative control genes and optional assessment plots,
 #' or a list of the results.
@@ -167,6 +177,7 @@
 #' @importFrom Rfast correls
 #' @importFrom stats aov
 #' @import ggplot2
+#'
 #' @export
 
 findNcgUnSupervised <- function(
@@ -174,16 +185,16 @@ findNcgUnSupervised <- function(
         assay.name,
         uv.variables,
         approach = 'LinearMixedModel',
-        clustering.method = 'kmeans',
-        nb.clusters = 3,
         ncg.idenfitication.approach = 'LMM.BioUvAdjustment',
         form,
+        nb.ncg = 0.1,
         nb.bio.pcs = 3,
         nb.uv.pcs = 3,
         use.rank = FALSE,
         ncg.selection.method = 'non.overlap',
-        nb.ncg = 0.1,
         samples.to.use = NULL,
+        clustering.method = 'kmeans',
+        nb.clusters = 3,
         hvg.method = 'mad',
         top.rank.bio.genes = 0.8,
         top.rank.uv.genes = 0.2,

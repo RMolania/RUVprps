@@ -18,6 +18,7 @@
 #' `TRUE`.
 #'
 #' @return The function returns a log2 transformed of all specified data sets as a list object.
+#'
 #' @export
 
 applyLog <- function(

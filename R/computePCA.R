@@ -12,10 +12,10 @@
 #' standardized to be of unit length and orthogonal to the preceding components. Each will give a single value for
 #' each sample.
 #'
-#' @param se.obj A SummarizedExperiment object.
+#' @param se.obj A `SummarizedExperiment` object.
 #' @param assay.names Character. A character string or a vector of character strings for selecting the name(s) of the
-#' assay(s) in the SummarizedExperiment object to compute PCA. The default is set to "all", which indicates all the
-#' assays in the SummarizedExperiment object will be selected.
+#' assay(s) in the `SummarizedExperiment` object to compute PCA. The default is set to `all`, which indicates all the
+#' assays in the `SummarizedExperiment` object will be selected.
 #' @param fast.pca Logical. Indicates whether to calculate a specific number of left singular vectors instead of the
 #' full set of vectors to speed up the process. The default is set to `TRUE`.
 #' @param nb.pcs Numeric. The number of first left singular vectors to be calculated for the fast PCA process.
@@ -51,6 +51,7 @@
 #' @importFrom BiocSingular runSVD bsparam
 #' @importFrom matrixStats colVars
 #' @import ggplot2
+#'
 #' @export
 
 computePCA <- function(

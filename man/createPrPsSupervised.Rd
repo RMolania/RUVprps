@@ -2,7 +2,7 @@
 % Please edit documentation in R/createPrPsSupervised.R
 \name{createPrPsSupervised}
 \alias{createPrPsSupervised}
-\title{Creates pseudo-replicates of pseudo-samples (PRPS) in supervised manner.}
+\title{Create PRPS in supervised manner.}
 \usage{
 createPrPsSupervised(
   se.obj,
@@ -52,7 +52,8 @@ We refer to the \code{createHomogeneousUVGroups()} function for more details.}
 \item{nb.other.uv.clusters}{Numeric. A numeric value to specify the number of clusters/groups for each continuous
 unwanted variable. The default is set to 3.}
 
-\item{samples.to.use}{TTTT}
+\item{samples.to.use}{Logical. A logical vector to restrict the analysis to a subset of samples. The default is set to
+\code{all}, meaning all samples in the SummarizedExperiment object will be used.}
 
 \item{min.sample.for.ps}{Numeric. Indicates the minimum number of biologically homogeneous samples to be averaged
 to create one pseudo-sample. The default is set to 3.}
@@ -73,7 +74,7 @@ The default is set to \code{TRUE}. See the details for more information.}
 The default is set to 1.}
 
 \item{plot.output}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
-The default is se to \code{TRUE}.}
+The default is set to \code{TRUE}.}
 
 \item{prps.group.name}{Character. A character specifying a name for the PRPS data sets created for a specific group.
 The default is set to \code{NULL}.}

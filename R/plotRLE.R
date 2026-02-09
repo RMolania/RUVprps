@@ -1,4 +1,4 @@
-#' Generates boxplot of the relative log expression (RLE) data of RNA-seq data.
+#' Generate boxplot of the relative log expression (RLE) data of RNA-seq data.
 #'
 #' @author Ramyar Molania
 #'
@@ -56,6 +56,7 @@
 #' @importFrom ggpubr ggarrange
 #' @importFrom scales hue_pal
 #' @import ggplot2
+#'
 #' @export
 
 plotRLE <- function(

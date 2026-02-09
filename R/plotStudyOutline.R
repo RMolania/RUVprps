@@ -1,4 +1,4 @@
-#' Generates study outline of a SummarizedExperiment object.
+#' Generate study outline of a SummarizedExperiment object.
 #'
 #' @author Ramyar Molania
 #'
@@ -47,6 +47,7 @@
 #' @importFrom dplyr arrange pick
 #' @import RColorBrewer
 #' @import viridis
+#'
 #' @export
 
 plotStudyOutline <- function(

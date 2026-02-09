@@ -27,6 +27,7 @@
 #' @importFrom SummarizedExperiment assays colData
 #' @importFrom CMScaller CMScaller
 #' @importFrom parallel mclapply
+#'
 #' @export
 
 

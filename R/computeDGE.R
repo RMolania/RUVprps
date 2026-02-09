@@ -1,4 +1,4 @@
-#' Performs differential gene expression analysis.
+#' Perform differential gene expression analysis.
 #'
 #' @author Ramyar Molania
 #'
@@ -46,6 +46,7 @@
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom matrixTests row_wilcoxon_twosample
 #' @importFrom stats model.matrix
+#'
 #' @export
 
 computeDGE <- function(

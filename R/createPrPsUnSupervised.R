@@ -1,13 +1,10 @@
-#' Creates unsupervised PRPS data.
+#' Create unsupervised PRPS data.
 #'
 #' @author Ramyar Molania
 #'
 #' @description
-#' This function uses the `createUnSupervisedPRPSbyAnchors()` or `createUnSupervisedPRPSbyMNN()` to create PRPS sets of all
-#' the unwanted variables in situations when the biological variation is unknown.
-#'
-#' @details
-#' Additional details...
+#' This function uses the `createPrPsUnSupervisedByCca()`,  `createPrPsUnsupervisedByMnn()` and  `createPrPsUnsupervisedByKnnMnn()`
+#' to create PRPS sets of all the unwanted variables in situations when the biological variation is unknown.
 #'
 #' @param se.obj A SummarizedExperiment object.
 #' @param assay.name Character. A character indicating the assay name within the SummarizedExperiment object for
@@ -18,42 +15,51 @@
 #' @param other.uv.variables Character. Additional unwanted variables to be included alongside `uv.variables`.
 #' These may provide alternative axes of unwanted variation. Default is `NULL`.
 #' @param approach Character. Indicates which method to be used. Options are `anchor` or `mnn`.
-#' @param nb.pcs Numeric. Number of principal components to use as input for nearest neighbor search. Must be set if
-#' `data.input = pcs`. Default is 2.
-#' @param nb.cca Numeric. Number of canonical correlation components to compute when using the anchor approach. Default is 10.
-#' @param data.input Character. Indicates which data should be used as input for finding nearest neighbors. Options:
-#' `expr` or `pcs`. If `pcs` is selected, the first PCs of the data will be used as input. If `expr` is selected,
-#' expression values will be used directly.
+#' @param data.input Character. A character string indicates which data should be used as input for finding nearest neighbors.
+#' Options: `expr` or `pcs`. If `pcs` is selected, the first PCs of the data will be used as input. If `expr` is selected,
+#' expression values will be used directly. The default is set to `pcs`.
 #' @param coordinates.to.use Character or integer. Specifies which dimensions (e.g., PCs or CCA components) to use
-#' for neighbor search. Default is `NULL` (use all available).
-#' @param samples.to.use Character, logical, or numeric. A subset of samples to be included in PRPS construction.
-#' Default is `all`.
-#' @param min.sample.for.ps Numeric. Minimum number of samples to average to create a pseudo-sample. Default is 3 (minimum 2).
+#' for neighbor search across batches. Options are `pca`, `cca` or `both`. The default is set to `cca`.
+#' @param nb.cca Numeric. A numeric value specifying the number of first canonical components to compute when using the `cca`
+#'  approach. The default is set to 2.
+#' @param nb.pcs Numeric. A numeric value specifying the number of first canonical components to compute when using the `pca`
+#'  approach. The default is set to 2.
+#' @param samples.to.use Logical. A logical vector that indicates which subset of samp;es should be used for the analysis.
+#' The default is set to `all`. This means all samples will be used.
+#' @param min.sample.for.ps Numeric. Minimum number of samples to average to create a pseudo-sample. The default is set
+#' to 3. The minimum is 2.
 #' @param max.sample.for.ps Numeric. Maximum number of samples to average for creating a pseudo-sample.
-#' Default is `Inf`. Larger values may dilute unwanted variation signals.
+#' The default is set to `Inf`. Larger values may dilute unwanted variation signals.
 #' @param select.extreme.groups Logical. If `TRUE`, selects only extreme groups (e.g., lowest and highest clusters) when
-#' `uv.variables` is continuous. Default is `TRUE`.
-#' @param filter.prps.sets Logical. Indicates whether to filter PRPS sets based on size or variability before saving.
-#' Default is `FALSE`.
-#' @param max.prps.sets Numeric. Maximum number of PRPS sets across batches. Default is 10.
-#' @param min.batches.to.cover Numeric. Minimum number of batches each PRPS set must cover to be retained. Default is 2.
-#' @param cover.all.batches Logical. If `TRUE`, requires each PRPS set to cover all batches. Default is `FALSE`.
+#' `uv.variables` is continuous. The default is set to `TRUE`.
+#' @param filter.prps.sets Logical. Indicates whether to filter PRPS sets based on their similarities. The default is to
+#' `FALSE`. All possible PRPS will be selected.
+#' @param max.prps.sets Numeric. Maximum number of PRPS sets across each pair of batches. The default is set to 3.
+#' @param min.batches.to.cover Numeric. Minimum number of batches to consider to create PRPS The default is `all`. This
+#' means PRPS data will be created for all current batches in the data.
+#' @param cover.all.batches Logical. If `TRUE`, requires each PRPS set to cover all batches across each sources of
+#' unwanted variation. The default is set to `FALSE`.
 #' @param check.prps.connectedness Logical. If `TRUE`, checks whether PRPS sets form a connected structure across batches.
 #' Default is `TRUE`. See `checkPRPSconnectedness()`.
 #' @param reference.group Character. Specifies a group within `uv.variables` to be used as the reference in pairwise
-#' comparisons. Default is `NULL` (all groups compared).
-#' @param hvg Character vector. Names of highly variable genes to use in anchor/MNN identification. Default is `NULL`
-#' (all genes used).
-#' @param scale.cca Logical. Indicates whether to scale features before applying CCA. Default is `TRUE`.
-#' @param apply.ruviii.norm Logical. If `TRUE`, applies RUV-III normalization to pseudo-samples. Default is `FALSE`.
-#' @param use.ruviii.norm.for.mnn Logical. If `TRUE`, applies RUV-III normalization prior to MNN search. Default is `FALSE`.
-#' @param ncg Numeric. Number of negative control genes to include for RUV-III normalization. Default is `NULL`.
-#' @param k Numeric. Number of nearest neighbors for kNN-based similarity. Default is 20.
-#' @param center Logical. Whether to mean-center features before dimension reduction. Default is `TRUE`.
+#' comparisons to create PRPS. The default is set `NULL`, then PRPS will be created across all possible pairs of batches.
+#' @param hvg Character vector. Names of highly variable genes to use in dimentionality reduction. The default is set to
+#' `NULL`, then all genes will be used.
+#' @param scale.cca Logical. Indicates whether to scale features before applying CCA. The default is set to `TRUE`.
+#' @param apply.ruviii.norm Logical. If `TRUE`, applies RUV-III normalization to pseudo-samples as initial normalization.
+#' Then the normalized data will be used to find KNN per batches. The default is set to `FALSE`.
+#' @param use.ruviii.norm.for.mnn Logical. If `TRUE`, applies RUV-III normalization prior as initial normalization. Then
+#' using the normalized data for MNN across batches. The default is se to `FALSE`.
+#' @param ncg Numeric. Number of negative control genes to include for initial RUV-III normalization. The default is set
+#' to `NULL`, then all genes will be used.
+#' @param k Numeric. Number of unwanted variation to be estimated and used for initial RUV-III normalization. The default
+#' is set to 20.
+#' @param min.ps Numeric. Minimum number of pseudo-samples to be used for initial RUV-III normalization. The default is
+#' set to 10.
 #' @param bio.dims Numeric. Number of biological dimensions to retain after removing unwanted variation. Default is `NULL`.
-#' @param min.ps Numeric. Minimum number of pseudo-samples required per group. Default is 1.
-#' @param nb.knn Numeric. Number of nearest neighbors to compute. Default is 3.
 #' @param nb.mnn Numeric. Number of mutual nearest neighbors to compute. Default is 3.
+#' @param nb.knn Numeric. Number of nearest neighbors to compute. Default is 3.
+#' @param center Logical. Whether to mean-center features before dimension reduction. Default is `TRUE`.
 #' @param min.nb.for.mnn Numeric. Minimum number of mutual nearest neighbors required to establish an anchor link. Default is 1.
 #' @param similarity.approach Character. Method to compute similarity between samples/anchors. Options: `correlation`,
 #' `euclidean`, or `cosine`. Default is `correlation`.
@@ -85,13 +91,15 @@
 #' @param cca.set.name Character. Name to assign to CCA results in metadata. Default is constructed automatically.
 #' @param knn.group.name Character. Name of the current KNN group. Default is auto-generated from `uv.variables`.
 #' @param knn.sets.name Character. Name of the KNN set saved in metadata. Default is constructed automatically.
-#' @param mnn.group.name Character. Name of the current MNN group. Default is auto-generated from `uv.variables`.
-#' @param residop.fun TTT
-#' @param nb.cores TTT
-#' @param use.annoy TTT
-#' @param annot.nb.trees TTT
-#' @param max.iter TTT
 #' @param mnn.sets.name Character. Name of the MNN set saved in metadata. Default is constructed automatically.
+#' @param mnn.group.name Character. Name of the current MNN group. Default is auto-generated from `uv.variables`.
+#' @param residop.fun Character. A character string shows which algorithm should be used ro residual calculation in
+#' RUV-III normalization. The default is set to `r2`. See `RUVIIIprps()` for more details.
+#' @param nb.cores Numeric. A numeric value specifying the number for cores to be used to find KNN and MNN. The defualt
+#' is set to `NULL`. The maximum number of available cores - 1 will be then used.
+#' @param use.annoy Logical. If `TRUE`, the function uses annoy to find KNN and MNN. The default is set to `FALSE`.
+#' @param annot.nb.trees Numeric. A number of trees for annoy search. The default is set to 50
+#' @param max.iter Numeric. A numeric value indicating the maximum of iteration to find common PRPS set/
 #' @param prps.group.name Character. Name of the PRPS group. Default is auto-generated from `uv.variables`.
 #' @param prps.sets.name Character. Name of the PRPS sets saved in metadata. Default is constructed automatically.
 #' @param plot.output Logical. Whether to generate diagnostic plots of PRPS sets. Default is `FALSE`.
@@ -102,6 +110,7 @@
 #' @importFrom SummarizedExperiment assay colData
 #' @importFrom dplyr count
 #' @importFrom tidyr %>%
+#'
 #' @export
 
 createPrPsUnSupervised <- function(

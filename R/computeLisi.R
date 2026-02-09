@@ -27,9 +27,9 @@
 #' @param fast.pca Logical. Indicates whether to use principal components computed via fast PCA by the `comptePCA` function
 #' The default is set to `TRUE`. Note that using fast PCA or standard PCA does not affect silhouette coefficient calculation.
 #' See details for more information.
-#' @param nb.pcs Numeric. Number of first principal components to use when calculating distances between samples. The efault
+#' @param nb.pcs Numeric. Number of first principal components to use when calculating distances between samples. The default
 #' is to 3.
-#' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the SummarizedExperiment objet; otherwise,
+#' @param save.se.obj Logical. If `TRUE`, saves the results in the metadata of the SummarizedExperiment object; otherwise,
 #' returns the result as list. The default is set to `TRUE`.
 #' @param verbose Logical. If `TRUE`, displays messages for each step of the function.
 #'
@@ -37,8 +37,9 @@
 #'
 #' @importFrom SummarizedExperiment assays assay
 #' @importFrom lisi compute_lisi
-#' @export
 #'
+#' @export
+
 computeLisi <- function(
         se.obj,
         assay.names = 'all',

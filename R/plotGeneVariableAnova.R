@@ -1,4 +1,4 @@
-#' Plots F-statistics obtained from ANOVA.
+#' Plot F-statistics obtained from ANOVA.
 #'
 #' @author Ramyar Molania
 #'

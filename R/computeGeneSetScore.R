@@ -37,6 +37,7 @@
 #' @importFrom fastDummies dummy_cols
 #' @importFrom stats cor.test cancor
 #' @import ggplot2
+#'
 #' @export
 
 computeGeneSetScore <- function(

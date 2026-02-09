@@ -17,6 +17,7 @@
 #' @param verbose Logical. If 'TRUE', shows the messages of different steps of the function.
 #'
 #' @importFrom SummarizedExperiment assays
+#'
 #' @export
 
 overrideCheck <- function(

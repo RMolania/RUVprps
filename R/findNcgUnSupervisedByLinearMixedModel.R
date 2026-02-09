@@ -6,62 +6,6 @@
 #' This function utilizes two-way ANOVA to identify a set of suitable genes as negative control genes (NCG) for RUV-III
 #' normalization. Both biological and unwanted variation sources is necessary and should be specified.
 #'
-#' @details
-#' The function begins by creating all possible sample groups based on biological and unwanted variation separately.
-#' Subsequently, these groups are used as factors in two-way ANOVA to identify genes highly influenced by biological and
-#' unwanted variation. Finally, the function selects genes with the possible highest F-statistics for unwanted variation and
-#' lowest F-statistics for biological variation. Various approaches are employed for the final gene selection; please refer
-#' to the details for more information.
-#' The function uses 5 ways to summarize two gene-level F-statistics obtained for the biological and unwanted variation.
-#' The function uses either the values or the ranks of F-statistics for NCGs selection. The function ranks the
-#' negative of F-statistics values for unwanted variation. The lower the ranks, the greater the impact of unwanted
-#' variation on genes. The function ranks the F-statistics for biological variation. The higher the ranks, the greater
-#' the impact of biological variation on genes. The options are `prod`, `sum`, `average`, `auto`, `non.overlap` and
-#' `quantile`.
-#'
-#' If `prod`, `sum` and `average` is set:
-#'
-#' * The product, sum or average of ranks of F-statistics is calculated. Then, the function selects `nb.ncg` numbers of
-#' genes as negative control genes that have the lowest ranks.
-#'
-#' If `non.overlap` is selected:
-#' \enumerate{
-#'    \item The function selects the top `top.rank.bio.genes` genes that have the highest ranks of F-statistics
-#'    for biological variation.
-#'    \item The function selects the top `top.rank.uv.genes` genes that have the lowest ranks of F-statistics for
-#'    unwanted variation.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1. This will be a set of genes as
-#'    negative control genes.
-#' }
-#'
-#' If `auto` is selected:
-#' \enumerate{
-#'    \item The function selects the top `top.rank.bio.genes` genes that have the highest ranks of F-statistics for
-#'    biological variation.
-#'    \item The function selects the top `top.rank.uv.genes` genes that have the lowest ranks of F-statistics for
-#'    unwanted variation.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1.
-#'    \item If the number of selected genes is larger or smaller than the specified `nb.ncg`, the function applies an
-#'    auto search to find approximate `nb.ncg` of genes as negative control genes as follow. The auto search will either
-#'    decrease or increase the values of either `top.rank.bio.genes` or `top.rank.uv.genes` or both till to find
-#'    approximate `nb.ncg` of genes as negative control genes.
-#' }
-#'
-#' If `quantile` is selected:
-#' \enumerate{
-#'    \item The function selects the `bio.percentile` percentile of F-statistics for biological variation. Then, selects
-#'    all the genes that have F-statistics larger the calculated percentile.
-#'    \item The function selects the `uv.percentile` percentile of F-statistics for unwanted variation. Then, selects
-#'    all the genes that have F-statistics larger the calculated percentile.
-#'    \item The function excludes all genes obtained in 2 from the ones obtained 1.
-#' }
-#'
-#' Assess the performance of NCGS:
-#' * The function can assess the initial performance of selected NCGs. This analysis involves principal component analysis
-#' on only the selected NCG and then explore the R^2 or vector correlation between the `nb.pcs` first principal components
-#' and with the specified variables. Ideal NCGS, should show high and low R^2 or vector correlation for unwanted and
-#' biological variation respectively.
-#'
 #' @references
 #' * Molania R., ..., Speed, T. P., Removing unwanted variation from large-scale RNA sequencing data with PRPS,
 #' Nature Biotechnology, 2023
@@ -88,8 +32,8 @@
 #' default is set to `FALSE`.
 #' @param regress.out.rle.med Logical. Indicates whether to regress out the median of the RLE (Relative Log Expression)
 #' per sample after normalization. The default is set to `FALSE`.
-#' @param samples.to.use Logical or numeric. A logical vector or numeric index specifying which samples to include in the
-#' analysis. If `NULL`, all samples will be used.
+#' @param samples.to.use Logical. A logical vector  specifying which samples to include in the analysis. If `all`, all
+#' samples will be used.
 #' @param nb.ncg Numeric. A numeric value that specifies the number of genes to be chosen as negative control genes (NCG)
 #' when the `ncg.selection.method` parameter is set to `auto`. This value, `nb.ncg`, corresponds to a fraction of the total
 #' genes in the SummarizedExperiment object. The default is set to 0.1.
@@ -151,8 +95,8 @@
 #' The default is set to `TRUE`.
 #' @param use.fvalues Logical. Indicates whether to use F-statistics (instead of correlation) for assessing the relationship
 #' between negative control genes and biological/unwanted variables. The default is set to `FALSE`.
-#' @param nb.cores Numeric. A numeric value specifying the number of CPU cores to use for parallel computation. The default
-#' is set to 1.
+#' @param nb.cores #' Numeric. A numeric value specifying the number of CPU cores to use for parallel computation. If `NULL`,
+#' the maximum number of available CPU cores minus one will be used.
 #' @param check.se.obj Logical. Indicates whether to assess the SummarizedExperiment object before any analysis. If `TRUE`,
 #' the function `checkSeObj()` will be used. The default is set to `TRUE`.
 #' @param remove.na Character. Indicates whether to remove NA or missing values from the SummarizedExperiment object.

@@ -36,24 +36,28 @@ assessNormalization(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
-\item{assay.names}{character or character vector. One or more names of assays to select from the SummarizedExperiment
-object.
-The default is 'all', which selects all assays in the object.}
+\item{assay.names}{Character. A character string or a vector of character strings for selecting the name(s) of the
+assay(s) in the \code{SummarizedExperiment} object to compute PCA. The default is set to \code{all}, which indicates all the
+assays in the \code{SummarizedExperiment} object will be selected.}
 
-\item{bio.variables}{character or character vector. One or more column names indicating known biological variables
-(categorical or continuous) in the SummarizedExperiment object.}
+\item{bio.variables}{Character or character vector. One or more column names of the sample annotation indicating known
+biological variables (categorical, continuous or both) in the \code{SummarizedExperiment} object.}
 
 \item{uv.variables}{character or character vector. One or more column names indicating unwanted variables
 (categorical or continuous) in the SummarizedExperiment object.}
 
-\item{assessment.level}{TTT}
+\item{assessment.level}{A character string specifying the assessment level. Options are \code{L1} and \code{L2}. The default
+is set to \code{L1}. The two levels differ in the number of normalization assessment metrics applied: \code{L2} uses the full
+set of assessment metrics implemented in \pkg{RUVprps}, whereas \code{L1} uses a reduced subset of these metrics.}
 
-\item{assessments.to.exclude}{character or character vector. Names of assessment metrics to exclude, as returned by
+\item{assessments.to.exclude}{A character or character vector. Names of assessment metrics to exclude, as returned by
 the \code{getAssessmentMetrics()} function. Default is NULL.}
 
-\item{select.top.ruv}{TTTT}
+\item{select.top.ruv}{A logical indicating whether to return only the top-performing RUV-III–normalized dataset based
+on the final assessment. If \code{TRUE}, only the best-performing normalized dataset is returned in the final assessment
+table. If \code{FALSE}, all RUV-III–normalized datasets are returned in the \code{SummarizedExperiment} object.}
 
 \item{fast.pca}{Logical. Whether to use fast PCA. The default is to \code{TRUE}.}
 
@@ -103,21 +107,21 @@ partial correlations is less than this value.}
 \item{uv.weight}{Numeric. Weight for the removal of unwanted variation score. Default is 0.4. See details for more
 information.}
 
-\item{plot.output}{Logical. If TRUE, displays the final assessment plot.}
+\item{plot.output}{Logical. If \code{TRUE}, displays the final assessment plot.}
 
-\item{save.se.obj}{Logical. If TRUE, saves the results in the SummarizedExperiment object. Default is TRUE.}
+\item{save.se.obj}{Logical. If \code{TRUE}, saves the results in the SummarizedExperiment object. Default is set to \code{TRUE}.}
 
-\item{output.name}{character. File name for the results stored in the SummarizedExperiment. If NULL, the function creates
+\item{output.name}{A character. File name for the results stored in the SummarizedExperiment. If \code{NULL}, the function creates
 a default name using \code{paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays.')}.}
 
-\item{verbose}{Logical. If TRUE, displays messages during function execution.}
+\item{verbose}{Logical. If \code{TRUE}, displays messages during function execution.}
 }
 \value{
-A SummarizedExperiment object containing the assessment matrix, plot, and table, or a list containing all results.
+A \code{SummarizedExperiment} object containing the assessment matrix, plot, and table, or a list containing all results.
 }
 \description{
-This function summarizes a range of global and gene level metrics obtained using the \code{assessVariation} function for
-individual biological and unwanted variables. The functions returns numerical assessments in a table to assess the
+This function summarizes a range of gene-level and global metrics obtained using the \code{assessVariation} function for
+individual biological and unwanted variables. The function returns numerical assessments in a table to assess the
 performance of difference normalization. Refer to details for more information.
 }
 \details{
@@ -129,12 +133,12 @@ Several assessment will be performed:
 For each categorical variable:
 \itemize{
 \item PCA plot of the categorical variable.
-\item Silhouette and ARI computed on the categorical variable.
+\item Silhouette, ARI, LISI, kBET computed on categorical variables.
 \item Differential analysis based ANOVA between the gene expression and the categorical variable.
 \item Vector correlation between the first cumulative PCs of the gene expression and the categorical variable.
-For each continous variable:
-\item Linear regression between the first cumulative PC and continuous variable.
-\item Correlation between gene expression and continuous variable.
+For each continuous variable:
+\item Linear regression between the first several (cumulatively) PCs and continuous variable.
+\item Partial and ordinary correlation between gene expression and continuous variables separately.
 }
 
 It will output the following plots:

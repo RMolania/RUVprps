@@ -40,6 +40,7 @@
 #' @importFrom cluster silhouette
 #' @importFrom stats dist
 #' @import ggplot2
+#'
 #' @export
 
 computeSilhouette <- function(

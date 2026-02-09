@@ -42,6 +42,7 @@
 #' @importFrom tidyr pivot_longer %>%
 #' @importFrom dplyr mutate
 #' @import ggplot2
+#'
 #' @export
 
 computeGenesVariableTwoWayAnova <- function(

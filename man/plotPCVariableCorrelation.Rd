@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotPCVariableCorrelation.R
 \name{plotPCVariableCorrelation}
 \alias{plotPCVariableCorrelation}
-\title{Generates line-dot plot of the PCs-variable vector correlation analysis.}
+\title{Generate line-dot plot of the PCs-variable vector correlation analysis.}
 \usage{
 plotPCVariableCorrelation(
   se.obj,

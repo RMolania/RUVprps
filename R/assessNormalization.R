@@ -9,8 +9,8 @@
 #' Nature Biotechnology, 2023
 #'
 #' @description
-#' This function summarizes a range of global and gene level metrics obtained using the `assessVariation` function for
-#' individual biological and unwanted variables. The functions returns numerical assessments in a table to assess the
+#' This function summarizes a range of gene-level and global metrics obtained using the `assessVariation` function for
+#' individual biological and unwanted variables. The function returns numerical assessments in a table to assess the
 #' performance of difference normalization. Refer to details for more information.
 #'
 #' @details
@@ -21,12 +21,12 @@
 #' Several assessment will be performed:
 #' For each categorical variable:
 #' - PCA plot of the categorical variable.
-#' - Silhouette and ARI computed on the categorical variable.
+#' - Silhouette, ARI, LISI, kBET computed on categorical variables.
 #' - Differential analysis based ANOVA between the gene expression and the categorical variable.
 #' - Vector correlation between the first cumulative PCs of the gene expression and the categorical variable.
-#' For each continous variable:
-#' - Linear regression between the first cumulative PC and continuous variable.
-#' - Correlation between gene expression and continuous variable.
+#' For each continuous variable:
+#' - Linear regression between the first several (cumulatively) PCs and continuous variable.
+#' - Partial and ordinary correlation between gene expression and continuous variables separately.
 #'
 #' It will output the following plots:
 #' - PCA plot of each categorical variable.
@@ -37,19 +37,23 @@
 #' - Boxplot of the correlation between gene expression and continuous variable.
 #' - It will also output the RLE plot distribution.
 #'
-#' @param se.obj A SummarizedExperiment object.
-#' @param assay.names character or character vector. One or more names of assays to select from the SummarizedExperiment
-#' object.
-#' The default is 'all', which selects all assays in the object.
-#' @param bio.variables character or character vector. One or more column names indicating known biological variables
-#' (categorical or continuous) in the SummarizedExperiment object.
+#' @param se.obj A `SummarizedExperiment` object.
+#' @param assay.names Character. A character string or a vector of character strings for selecting the name(s) of the
+#' assay(s) in the `SummarizedExperiment` object to compute PCA. The default is set to `all`, which indicates all the
+#' assays in the `SummarizedExperiment` object will be selected.
+#' @param bio.variables Character or character vector. One or more column names of the sample annotation indicating known
+#' biological variables (categorical, continuous or both) in the `SummarizedExperiment` object.
 #' @param uv.variables character or character vector. One or more column names indicating unwanted variables
 #' (categorical or continuous) in the SummarizedExperiment object.
-#' @param assessment.level TTT
-#' @param assessments.to.exclude character or character vector. Names of assessment metrics to exclude, as returned by
+#' @param assessment.level A character string specifying the assessment level. Options are `L1` and `L2`. The default
+#' is set to `L1`. The two levels differ in the number of normalization assessment metrics applied: `L2` uses the full
+#' set of assessment metrics implemented in \pkg{RUVprps}, whereas `L1` uses a reduced subset of these metrics.
+#' @param assessments.to.exclude A character or character vector. Names of assessment metrics to exclude, as returned by
 #' the `getAssessmentMetrics()` function. Default is NULL.
 #' @param fast.pca Logical. Whether to use fast PCA. The default is to `TRUE`.
-#' @param select.top.ruv TTTT
+#' @param select.top.ruv A logical indicating whether to return only the top-performing RUV-III–normalized dataset based
+#' on the final assessment. If `TRUE`, only the best-performing normalized dataset is returned in the final assessment
+#' table. If `FALSE`, all RUV-III–normalized datasets are returned in the `SummarizedExperiment` object.
 #' @param sil.dist.measure character. Distance measure to use for silhouette analysis. Options: 'euclidean', 'maximum',
 #' 'manhattan', 'canberra', 'binary', or 'minkowski'. Default is 'euclidean'.
 #' @param ari.clustering.method character. Clustering method for ARI computation. Options: 'mclust' or 'hclust'. Default
@@ -72,11 +76,11 @@
 #' @param bio.weight Numeric. Weight for the biological preservation score. Default is 0.6. See details for more information.
 #' @param uv.weight Numeric. Weight for the removal of unwanted variation score. Default is 0.4. See details for more
 #' information.
-#' @param plot.output Logical. If TRUE, displays the final assessment plot.
-#' @param save.se.obj Logical. If TRUE, saves the results in the SummarizedExperiment object. Default is TRUE.
-#' @param output.name character. File name for the results stored in the SummarizedExperiment. If NULL, the function creates
+#' @param plot.output Logical. If `TRUE`, displays the final assessment plot.
+#' @param save.se.obj Logical. If `TRUE`, saves the results in the SummarizedExperiment object. Default is set to `TRUE`.
+#' @param output.name A character. File name for the results stored in the SummarizedExperiment. If `NULL`, the function creates
 #' a default name using `paste0('RUVprps_assessNormalization', length(assays(se.obj)), '_assays.')`.
-#' @param verbose Logical. If TRUE, displays messages during function execution.
+#' @param verbose Logical. If `TRUE`, displays messages during function execution.
 #' @param sli.nb.pcs Numeric. Number of principal components to use for silhouette analysis. Default is 3. Must not exceed
 #' `compute.nb.pcs`.
 #' @param ari.nb.pcs Numeric. Number of principal components to use for ARI analysis. Default is 3. Must not exceed
@@ -85,7 +89,7 @@
 #' not exceed `compute.nb.pcs`.
 #' @param lra.nb.pcs Numeric. Number of principal components to use for latent representation analysis. Default is 3.
 #' Must not exceed `compute.nb.pcs`.
-#' @return A SummarizedExperiment object containing the assessment matrix, plot, and table, or a list containing all results.
+#' @return A `SummarizedExperiment` object containing the assessment matrix, plot, and table, or a list containing all results.
 #'
 #' @importFrom ggh4x strip_nested elem_list_text elem_list_rect facet_nested
 #' @importFrom dplyr summarise_at case_match row_number
@@ -98,6 +102,7 @@
 #' @importFrom stats kruskal.test
 #' @importFrom qvalue qvalue
 #' @import RColorBrewer
+#'
 #' @export
 
 assessNormalization <- function(

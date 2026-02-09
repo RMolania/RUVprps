@@ -22,11 +22,11 @@ computePCA(
 )
 }
 \arguments{
-\item{se.obj}{A SummarizedExperiment object.}
+\item{se.obj}{A \code{SummarizedExperiment} object.}
 
 \item{assay.names}{Character. A character string or a vector of character strings for selecting the name(s) of the
-assay(s) in the SummarizedExperiment object to compute PCA. The default is set to "all", which indicates all the
-assays in the SummarizedExperiment object will be selected.}
+assay(s) in the \code{SummarizedExperiment} object to compute PCA. The default is set to \code{all}, which indicates all the
+assays in the \code{SummarizedExperiment} object will be selected.}
 
 \item{fast.pca}{Logical. Indicates whether to calculate a specific number of left singular vectors instead of the
 full set of vectors to speed up the process. The default is set to \code{TRUE}.}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotStudyOutline.R
 \name{plotStudyOutline}
 \alias{plotStudyOutline}
-\title{Generates study outline of a SummarizedExperiment object.}
+\title{Generate study outline of a SummarizedExperiment object.}
 \usage{
 plotStudyOutline(
   se.obj,

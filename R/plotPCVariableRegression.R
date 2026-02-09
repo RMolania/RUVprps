@@ -1,4 +1,4 @@
-#' Generates line-dot plot of the PCs-variable regression analysis.
+#' Generate line-dot plot of the PCs-variable regression analysis.
 #'
 #' @author Ramyar Molania
 #'
@@ -29,6 +29,7 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom RColorBrewer brewer.pal
 #' @import ggplot2
+#'
 #' @export
 
 plotPCVariableRegression <- function(

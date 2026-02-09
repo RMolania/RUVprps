@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotRLE.R
 \name{plotRLE}
 \alias{plotRLE}
-\title{Generates boxplot of the relative log expression (RLE) data of RNA-seq data.}
+\title{Generate boxplot of the relative log expression (RLE) data of RNA-seq data.}
 \usage{
 plotRLE(
   se.obj,

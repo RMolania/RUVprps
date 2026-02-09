@@ -1,4 +1,4 @@
-#' Assesses and compares the performance of NCGs gene sets.
+#' Assess and compares the performance of NCGs gene sets.
 #'
 #' @author Ramyar Molania
 #'
