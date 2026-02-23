@@ -22,7 +22,6 @@ Imports:
     ggrepel,
     ggplot2,
     ggh4x,
-    ggjoy,
     ComplexHeatmap,
     ggpubr,
     limma,
