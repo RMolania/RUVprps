@@ -39,7 +39,6 @@
 #' @importFrom ggpubr ggarrange annotate_figure text_grob
 #' @importFrom dplyr group_by summarise
 #' @importFrom tidyr pivot_longer
-#' @importFrom ggjoy geom_joy
 #' @import ggplot2
 #' @export
 
@@ -175,8 +174,8 @@ plotGenesPartialCorrelation <- function(
                 corr.data <- pivot_longer(corr.data, everything(), names_to = 'corr.type', values_to = 'corr')
                 corr <- corr.type <- NULL
                 p.joy <- ggplot(data = corr.data, aes(x = corr, y = corr.type)) +
-                    ggjoy::geom_joy(color = 'gray60') +
-                    xlim(-1,1) +
+                    geom_density(alpha = 0.4, color = "gray60") +
+                    coord_cartesian(xlim = c(-1, 1)) +
                     ggtitle(x) +
                     xlab('Correlation coefficients') +
                     ylab('') +
