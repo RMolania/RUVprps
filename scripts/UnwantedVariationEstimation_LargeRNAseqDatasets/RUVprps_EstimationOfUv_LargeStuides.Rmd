@@ -1,0 +1,2086 @@
+---
+title: "Estimated Unwanted Variation in Large Scale Cancer RNA-seq data"
+output: html_document
+date: "2025-10-17"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Required libraries
+The following packages are loaded for this analysis.
+```{r}
+library(SummarizedExperiment)
+library(matrixStats)
+library(data.table)
+library(DescTools)
+library(singscore)
+library(parallel)
+library(RUVprps)
+library(ggplot2)
+library(edgeR)
+library(ggpubr)
+library(dplyr)
+library(grid)
+library(uwot)
+```
+
+# TCGA Pan-Cancer RNA-seq 
+## Data sets
+The TCGA harmonized RNA-seq data files are listed from the specified directory. Each file corresponds to one of the 33 TCGA cancer types. The file names are filtered to retain only those that contain "TCGA", and the count is verified to be 33.
+```{r}
+data.path <- '/Users/molania.r/Documents/Projects/Project_DFCI_1_TissueBackGroundCorrection/Data/Transcriptomics/Cancer/Primary/Bulk-seq/TCGA_RNAseq_Harmonized/'
+all.tcga <- grep('TCGA', list.files(data.path), value = TRUE)
+length(all.tcga) == 33
+```
+
+## Selecting cancer types
+here we select cancer types that were profiled across different batches including plates, times and TSS.
+For each cancer type, the data is preprocessed by removing unwanted assays, renaming assays to standard names, retaining only protein-coding genes, adding TCGA-specific batch metadata (year, plate, TSS, center), and ordering samples chronologically. A combined batch label is constructed from year, plate, and TSS, and `findRepeatingPatterns` is used to check whether at least 3 recurring combinations exist, a proxy for meaningful batch structure. Only cancer types meeting this criterion are retained for downstream analysis.
+```{r}
+all.known.batch <- lapply(
+  all.tcga,
+  function(x) {
+    message("Processing: ", x)
+    tcga.se.obj <- qs::qread(paste0(data.path, x))
+    tcga.se.obj <- RUVprps:::removeAssays(
+      se.obj = tcga.se.obj, 
+      assays.to.remove = c('stranded_first', 'stranded_second')
+      )
+    tcga.se.obj <- RUVprps:::renameAssays(
+      se.obj = tcga.se.obj, 
+      new.names = c('RawCount', 'TPM', 'FPKM', 'FPKM.UQ')
+      )
+    tcga.se.obj <- tidyGenes(
+      se.obj = tcga.se.obj,
+      keep.gene.type = 'protein_coding',
+      gene.type.col.name = 'gene_type',
+      remove.duplicates.ids = TRUE,
+      ids.col.name = 'gene_name',
+      change.row.names = TRUE,
+      new.row.names = 'gene_name'
+      )
+    tcga.se.obj <- addTcgaBatchInfo(se.obj = tcga.se.obj)
+    tcga.se.obj <- orderSeObj(
+      se.obj = tcga.se.obj,
+      factors.to.order = c('Years', 'Months', 'Days', 'Plates', 'TSS', 'Center')
+      )
+    tcga.se.obj$Years <- as.factor(tcga.se.obj$Years)
+    all.var <- paste0(
+        tcga.se.obj$Years, 
+        tcga.se.obj$Plates, 
+        tcga.se.obj$TSS
+        )
+    m <- RUVprps:::findRepeatingPatterns(vec = all.var, n.repeat = 3)
+    if (length(m) > 1){
+        return(x)
+    } else {
+        return(NA)
+    }
+  })
+all.tcga <- all.tcga[!is.na(unlist(all.known.batch))]
+length(all.tcga) == 33
+```
+
+# Estimate batch effects using RLE medians
+## Estimating year effects
+For each cancer type, this chunk estimates how strongly the RUVprps-detected unknown variation (unwanted variation; UV) is associated with the year of sample sequencing. Each dataset is loaded, preprocessed (assay cleanup, gene filtering, batch metadata addition, sample ordering), and prepared with `prepareSeObj` to compute library size, tumor purity, and housekeeping gene scores. The `identifyUnknownUV` function then applies an RLE-based approach to detect batch structure chronologically and assigns estimated batch labels. Association between estimated batches and sequencing year is quantified using Cramér's V (effect size) and a chi-squared test (p-value). Results are compiled into a data frame with one row per cancer type.
+```{r}
+all.esti.years <- lapply(
+  all.tcga,
+  function(x) {
+    message("Processing: ", x)
+    tcga.se.obj <- qs::qread(paste0(data.path, x))
+    tcga.se.obj <- RUVprps:::removeAssays(
+      se.obj = tcga.se.obj, 
+      assays.to.remove = c('stranded_first', 'stranded_second')
+      )
+    tcga.se.obj <- RUVprps:::renameAssays(
+      se.obj = tcga.se.obj, 
+      new.names = c('RawCount', 'TPM', 'FPKM', 'FPKM.UQ')
+      )
+    tcga.se.obj <- tidyGenes(
+      se.obj = tcga.se.obj,
+      keep.gene.type = 'protein_coding',
+      gene.type.col.name = 'gene_type',
+      remove.duplicates.ids = TRUE,
+      ids.col.name = 'gene_name',
+      change.row.names = TRUE,
+      new.row.names = 'gene_name'
+      )
+    tcga.se.obj <- addTcgaBatchInfo(se.obj = tcga.se.obj)
+    tcga.se.obj <- orderSeObj(
+      se.obj = tcga.se.obj,
+      factors.to.order = c('Years', 'Months', 'Days', 'Plates', 'TSS', 'Center')
+    )
+    tcga.se.obj$Years <- as.factor(tcga.se.obj$Years)
+    tcga.se.obj <- prepareSeObj(
+      data = tcga.se.obj,
+      raw.count.assay.name = 'RawCount',
+      remove.lowly.expressed.genes = TRUE,
+      assay.name.to.estimate.purity = 'FPKM.UQ',
+      estimate.tumor.purity = 'both',
+      scale.singscore.values = TRUE,
+      calculate.library.size = TRUE,
+      add.immun.stroma.genes = TRUE,
+      add.gene.details = FALSE,
+      add.housekeeping.genes = TRUE,
+      column.name = 'gene_name',
+      gene.group = 'hgnc_symbol'
+      )
+    tcga.se.obj <- RUVprps:::renameVariables(
+      se.obj = tcga.se.obj,
+      current.names = c('tissue_type', 'tumour.purity.estimate', 'library.size'),
+      new.names = c('Tissues', 'Tumour.purity', 'Library.size')
+      )
+    # Safe wrapper for identifyUnknownUV
+    tcga.se.obj <- tryCatch({
+      identifyUnknownUV(
+        se.obj = tcga.se.obj,
+        assay.name = 'RawCount',
+        approach = 'rle',
+        chronological.detection = TRUE,
+        assess.bio.association = FALSE,
+        assess.uv.association = FALSE,
+        generate.association.plot = FALSE,
+        add.to.sample.annotation = TRUE,
+        col.name = 'Estimated.batches',
+        output.name = 'iteration1'
+      )
+    }, error = function(e) {
+      message("identifyUnknownUV failed for ", x, ": ", e$message)
+      return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(tcga.se.obj) || !"Estimated.batches" %in% colnames(colData(tcga.se.obj))) {
+      return(data.frame(pval = NA, v = NA, batch = NA))
+    }
+    all <- data.frame(
+      batch = paste0(tcga.se.obj$Years),
+      estimate.batch = tcga.se.obj$Estimated.batches
+      )
+    tbl <- table(all$batch, all$estimate.batch)
+    v <- tryCatch({
+      DescTools::CramerV(tbl, bias.correct = TRUE)
+    }, error = function(e) NA)
+    
+    chi <- tryCatch({
+      chisq.test(tbl)
+    }, error = function(e) list(p.value = NA))
+    
+    return(data.frame(
+        pval = chi$p.value, 
+        v = v, 
+        batch = length(unique(tcga.se.obj$Estimated.batches))
+        ))
+  }
+)
+all.esti.years <- do.call(rbind, all.esti.years)
+all.esti.years$Cancer <- sub("TCGA\\.([A-Z]+)\\..*", "\\1", all.tcga)
+all.esti.years$type <- 'Years'
+```
+
+## Estimating plate effects
+This chunk repeats the same UV estimation workflow as above, but evaluates the association between the estimated batch labels and sequencing plate rather than year. The preprocessing steps are identical; only the variable used in the contingency table changes from `Years` to `Plates`. This allows a direct comparison of how much of the detected UV is driven by plate-level batch effects versus temporal effects.
+```{r}
+all.esti.plates <- lapply(
+  all.tcga,
+  function(x) {
+    message("Processing: ", x)
+    tcga.se.obj <- qs::qread(paste0(data.path, x))
+    tcga.se.obj <- RUVprps:::removeAssays(
+      se.obj = tcga.se.obj, 
+      assays.to.remove = c('stranded_first', 'stranded_second')
+      )
+    tcga.se.obj <- RUVprps:::renameAssays(
+      se.obj = tcga.se.obj, 
+      new.names = c('RawCount', 'TPM', 'FPKM', 'FPKM.UQ')
+      )
+    tcga.se.obj <- tidyGenes(
+      se.obj = tcga.se.obj,
+      keep.gene.type = 'protein_coding',
+      gene.type.col.name = 'gene_type',
+      remove.duplicates.ids = TRUE,
+      ids.col.name = 'gene_name',
+      change.row.names = TRUE,
+      new.row.names = 'gene_name'
+      )
+    tcga.se.obj <- addTcgaBatchInfo(se.obj = tcga.se.obj)
+    tcga.se.obj <- orderSeObj(
+      se.obj = tcga.se.obj,
+      factors.to.order = c('Years', 'Months', 'Days', 'Plates', 'TSS', 'Center')
+      )
+    tcga.se.obj$Years <- as.factor(tcga.se.obj$Years)
+    tcga.se.obj <- prepareSeObj(
+      data = tcga.se.obj,
+      raw.count.assay.name = 'RawCount',
+      remove.lowly.expressed.genes = TRUE,
+      assay.name.to.estimate.purity = 'FPKM.UQ',
+      estimate.tumor.purity = 'both',
+      scale.singscore.values = TRUE,
+      calculate.library.size = TRUE,
+      add.immun.stroma.genes = TRUE,
+      add.gene.details = FALSE,
+      add.housekeeping.genes = TRUE,
+      column.name = 'gene_name',
+      gene.group = 'hgnc_symbol'
+      )
+    
+    tcga.se.obj <- RUVprps:::renameVariables(
+      se.obj = tcga.se.obj,
+      current.names = c('tissue_type', 'tumour.purity.estimate', 'library.size'),
+      new.names = c('Tissues', 'Tumour.purity', 'Library.size')
+    )
+    # Safe wrapper for identifyUnknownUV
+    tcga.se.obj <- tryCatch({
+      identifyUnknownUV(
+        se.obj = tcga.se.obj,
+        assay.name = 'RawCount',
+        approach = 'rle',
+        chronological.detection = TRUE,
+        assess.bio.association = FALSE,
+        assess.uv.association = FALSE,
+        generate.association.plot = FALSE,
+        add.to.sample.annotation = TRUE,
+        col.name = 'Estimated.batches',
+        output.name = 'iteration1'
+      )
+    }, error = function(e) {
+      message("identifyUnknownUV failed for ", x, ": ", e$message)
+      return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(tcga.se.obj) || !"Estimated.batches" %in% colnames(colData(tcga.se.obj))) {
+      return(data.frame(pval = NA, v = NA, batch = NA))
+    }
+    all <- data.frame(
+      batch = paste0(tcga.se.obj$Plates),
+      estimate.batch = tcga.se.obj$Estimated.batches
+      )
+    tbl <- table(all$batch, all$estimate.batch)
+    v <- tryCatch({
+      DescTools::CramerV(tbl, bias.correct = TRUE)
+    }, error = function(e) NA)
+    chi <- tryCatch({
+      chisq.test(tbl)
+    }, error = function(e) list(p.value = NA))
+    return(data.frame(
+        pval = chi$p.value, 
+        v = v, 
+        batch = length(unique(tcga.se.obj$Estimated.batches))
+        ))
+  }
+)
+all.esti.plates <- do.call(rbind, all.esti.plates)
+all.esti.plates$Cancer <- sub("TCGA\\.([A-Z]+)\\..*", "\\1", all.tcga)
+all.esti.plates$type <- 'Plates'
+```
+
+## Estimating TSS effects
+This chunk mirrors the previous two but assesses association between estimated UV batches and the Tissue Source Site (TSS), the institution or biobank from which samples were collected. TSS is a source of systematic variation in TCGA data due to differences in sample handling and processing protocols across collection sites.
+```{r}
+all.esti.tss <- lapply(
+  all.tcga,
+  function(x) {
+    message("Processing: ", x)
+    tcga.se.obj <- qs::qread(paste0(data.path, x))
+    tcga.se.obj <- RUVprps:::removeAssays(
+      se.obj = tcga.se.obj, 
+      assays.to.remove = c('stranded_first', 'stranded_second')
+      )
+    tcga.se.obj <- RUVprps:::renameAssays(
+      se.obj = tcga.se.obj, 
+      new.names = c('RawCount', 'TPM', 'FPKM', 'FPKM.UQ')
+      )
+    tcga.se.obj <- tidyGenes(
+      se.obj = tcga.se.obj,
+      keep.gene.type = 'protein_coding',
+      gene.type.col.name = 'gene_type',
+      remove.duplicates.ids = TRUE,
+      ids.col.name = 'gene_name',
+      change.row.names = TRUE,
+      new.row.names = 'gene_name'
+      )
+    tcga.se.obj <- addTcgaBatchInfo(se.obj = tcga.se.obj)
+    tcga.se.obj <- orderSeObj(
+      se.obj = tcga.se.obj,
+      factors.to.order = c('Years', 'Months', 'Days', 'Plates', 'TSS', 'Center')
+      )
+    tcga.se.obj$Years <- as.factor(tcga.se.obj$Years)
+    tcga.se.obj <- prepareSeObj(
+      data = tcga.se.obj,
+      raw.count.assay.name = 'RawCount',
+      remove.lowly.expressed.genes = TRUE,
+      assay.name.to.estimate.purity = 'FPKM.UQ',
+      estimate.tumor.purity = 'both',
+      scale.singscore.values = TRUE,
+      calculate.library.size = TRUE,
+      add.immun.stroma.genes = TRUE,
+      add.gene.details = FALSE,
+      add.housekeeping.genes = TRUE,
+      column.name = 'gene_name',
+      gene.group = 'hgnc_symbol'
+      )
+    tcga.se.obj <- RUVprps:::renameVariables(
+      se.obj = tcga.se.obj,
+      current.names = c('tissue_type', 'tumour.purity.estimate', 'library.size'),
+      new.names = c('Tissues', 'Tumour.purity', 'Library.size')
+      )
+    # Safe wrapper for identifyUnknownUV
+    tcga.se.obj <- tryCatch({
+      identifyUnknownUV(
+        se.obj = tcga.se.obj,
+        assay.name = 'RawCount',
+        approach = 'rle',
+        chronological.detection = TRUE,
+        assess.bio.association = FALSE,
+        assess.uv.association = FALSE,
+        generate.association.plot = FALSE,
+        add.to.sample.annotation = TRUE,
+        col.name = 'Estimated.batches',
+        output.name = 'iteration1'
+      )
+    }, error = function(e) {
+      message("identifyUnknownUV failed for ", x, ": ", e$message)
+      return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(tcga.se.obj) || !"Estimated.batches" %in% colnames(colData(tcga.se.obj))) {
+      return(data.frame(pval = NA, v = NA, batch = NA))
+    }
+    all <- data.frame(
+      batch = paste0(tcga.se.obj$TSS),
+      estimate.batch = tcga.se.obj$Estimated.batches
+      )
+    tbl <- table(all$batch, all$estimate.batch)
+    v <- tryCatch({
+      DescTools::CramerV(tbl, bias.correct = TRUE)
+    }, error = function(e) NA)
+    chi <- tryCatch({
+      chisq.test(tbl)
+    }, error = function(e) list(p.value = NA))
+    return(data.frame(
+        pval = chi$p.value, 
+        v = v, 
+        batch = length(unique(tcga.se.obj$Estimated.batches))
+        ))
+  })
+all.esti.tss <- do.call(rbind, all.esti.tss)
+all.esti.tss$Cancer <- sub("TCGA\\.([A-Z]+)\\..*", "\\1", all.tcga)
+all.esti.tss$type <- 'TSS'
+```
+
+## Visualization of all the estimated UV
+The three result data frames (years, plates, TSS) are combined, filtered to remove non-finite or missing Cramér's V values, and sorted by association strength. Cancer types are ordered along the x-axis by decreasing overall association. A dot-line plot is produced using `ggplot2`, where each point represents one cancer type and batch variable combination, colored by batch variable type, and connected by gray lines to facilitate cross-variable comparison within each cancer type.
+```{r}
+all.esti.batch <- rbind(all.esti.years, all.esti.plates, all.esti.tss)
+all.esti.batch <- all.esti.batch[all.esti.batch$v != 'Inf' , ]
+all.esti.batch <- all.esti.batch[!is.na(all.esti.batch$v) , ]
+all.esti.batch <- all.esti.batch[order(all.esti.batch$v, decreasing = TRUE) , ]
+all.esti.batch$Cancer <- factor(all.esti.batch$Cancer, levels = unique(all.esti.batch$Cancer))
+ggplot(all.esti.batch, aes(x = Cancer, y = v, group = Cancer, color = type)) +
+    geom_line(color = 'gray', size= 2) + 
+    geom_point(size = 5) +
+    xlab('') +
+    ylab('Association') +
+    scale_color_manual(values = c('darkgreen', 'orange', 'purple4' ))+
+    labs(size = "Batches", color = 'Batches') +
+     theme(
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 20),
+        plot.title = element_text(size = 14),
+        axis.text.x = element_text(size = 13, angle = 35, hjust = 1),
+        axis.text.y = element_text(size = 15, angle = 90, hjust = 1),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 16),
+        legend.background = element_blank(),
+        legend.position = 'bottom',
+        legend.key = element_blank()) +
+    guides(color = guide_legend(byrow = TRUE, direction = "vertical", ncol = 3, override.aes = list(size = 6, alpha = 1)))
+```
+
+# GTEx
+## Reading the data
+The GTEx v10 RNA-seq raw count matrix is loaded using `data.table::fread` for efficiency. Gene annotation is extracted from the first two columns, and duplicate gene names are disambiguated by appending their Ensembl ID. The expression matrix is then row-named with these unique identifiers. Sample annotation is loaded separately, and the two objects are aligned on their common sample identifiers. Samples missing the `SMTSISCH` (ischemic time) variable are removed, as this is used later as a technical covariate. Samples are then ordered by ischemic time and that variable is discretized into 6 bins for categorical association testing.
+```{r}
+gtex.expr <- data.table::fread('GTEx_Analysis_2022-06-06_v10_RNASeQCv2.4.2_gene_reads.gct')
+gene.annot <- gtex.expr[, c(1:2)]
+gene.annot$gene.names <- gene.annot$Description
+index <- duplicated(gene.annot$Description)
+gene.annot$gene.names[index] <- paste0(
+    gene.annot$Description[index], 
+    '|', 
+    gene.annot$Name[index]
+    )
+gtex.expr <- gtex.expr[ ,-(1:2) ]
+gtex.expr <- as.matrix(gtex.expr)
+row.names(gtex.expr) <- gene.annot$gene.names
+
+sample.annot <- read.delim(
+    'Gtex_SampleAnnot_V10.txt',
+    row.names = 1
+    )
+common.samples <- intersect(
+    colnames(gtex.expr), 
+    row.names(sample.annot)
+    ) # 19788
+length(common.samples) == 19788
+sample.annot <- sample.annot[common.samples , ]
+all.equal(colnames(gtex.expr), row.names(sample.annot))
+
+sum(is.na(sample.annot$SMTSISCH))
+index <- !is.na(sample.annot$SMTSISCH)
+sample.annot <- sample.annot[index , ]
+gtex.expr <- gtex.expr[ , index]
+all.equal(colnames(gtex.expr), row.names(sample.annot))
+
+sample.annot <- arrange(sample.annot, SMTSISCH)
+gtex.expr <- gtex.expr[ , row.names(sample.annot)]
+sample.annot$SMTSISCH.g <- cut(sample.annot$SMTSISCH, 6)
+sample.annot$SMRIN <- cut(sample.annot$SMRIN, 6)
+```
+
+## Assessing all variation
+### Immune genes-RLE approach
+A curated set of housekeeping and immune genes is loaded from the `kh.im.genes` object. Housekeeping genes (`norm.hk`) and immune gene signatures (`pp.hk`) are identified by their respective flags and combined into a single gene list `all.hk`. Only GTEx tissue types with more than 20 samples are retained for analysis, yielding 56 tissue types to be processed.
+For each GTEx tissue type, this chunk builds a `SummarizedExperiment` from the subset of samples, preprocesses the data (filtering lowly expressed genes, computing library size, estimating tumor purity), and converts raw counts to log-CPM. Immune scores are computed using `singscore` on the ranked expression data and discretized into 3 bins, which are used as the ordering variable for chronological UV detection. The `identifyUnknownUV` function is applied to detect unknown batch structure via RLE, and the resulting estimated batch labels are compared to immune score groups using Cramér's V and a chi-squared test. Results are compiled across all tissue types.
+```{r}
+load('kh.im.genes.rda')
+norm.hk <- kh.im.genes$hgnc_symbol[kh.im.genes$single.cell.rnaseq.hk.genes == 'yes']
+pp.hk <- kh.im.genes$hgnc_symbol[kh.im.genes$immune.gene.signature == 'yes']
+all.hk <- c(norm.hk, pp.hk)
+length(all.hk) == 1172
+
+tissues <- names(table(sample.annot$SMTSD)[table(sample.annot$SMTSD) > 20])
+length(tissues) == 56
+
+all.esti.immune <- lapply(
+    tissues,
+    function(x) {
+        message("Processing: ", x)
+        sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+        sub.data <- gtex.expr[, row.names(sub.info)]
+        se.obj <- SummarizedExperiment(
+            assays = list(RawCount = sub.data),
+            colData = sub.info
+            )
+        gtex.se.obj <- prepareSeObj(
+            data = se.obj,
+            raw.count.assay.name = 'RawCount',
+            remove.lowly.expressed.genes = TRUE,
+            estimate.tumor.purity = 'both',
+            assay.name.to.estimate.purity = 'RawCount',
+            scale.singscore.values = FALSE,
+            calculate.library.size = TRUE,
+            add.immun.stroma.genes = FALSE,
+            add.gene.details = FALSE,
+            add.housekeeping.genes = FALSE,
+            column.name = 'gene_name',
+            gene.group = 'hgnc_symbol'
+            )
+        ncg <- intersect(all.hk, row.names(gtex.se.obj))
+        gtex.se.obj <- applyOtherNormalizations(
+            se.obj = gtex.se.obj,
+            assay.name = 'RawCount',
+            new.assay.name = 'cpm',
+            apply.log = TRUE
+            )
+        temp.data <- assay(x = gtex.se.obj, 'cpm')
+        temp.data <- singscore::rankGenes(temp.data)
+        immune.scores <- singscore::simpleScore(
+            rankData = temp.data, 
+            upSet = pp.hk
+            )
+        immune.scores <- cut(immune.scores$TotalScore, breaks = 3)
+        gtex.se.obj$immune.scores <- immune.scores
+        gtex.se.obj <- orderSeObj(
+            se.obj = gtex.se.obj, 
+            factors.to.order = 'immune.scores'
+            )
+        gtex.se.obj <- tryCatch({
+            identifyUnknownUV(
+                se.obj = gtex.se.obj,
+                assay.name = 'cpm',
+                approach = 'rle',
+                apply.log = FALSE,
+                ncg = NULL ,
+                chronological.detection = TRUE,
+                clustering.methods = 'mclust',
+                assess.bio.association = FALSE,
+                assess.uv.association = FALSE,
+                generate.association.plot = FALSE,
+                add.to.sample.annotation = TRUE,
+                col.name = 'Estimated.batches',
+                output.name = 'iteration1'
+            )
+        }, error = function(e) {
+            message("identifyUnknownUV failed for ", x, ": ", e$message)
+            return(NULL)
+        })
+        # If identifyUnknownUV() failed, skip association part
+        if (is.null(gtex.se.obj) ||
+            !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+            return(data.frame(
+                pval = NA,
+                sig.test = NA,
+                batches = NA
+            ))
+        }
+        conf.mat <- data.frame(
+            batch = paste0(gtex.se.obj$immune.scores),
+            estimate.batch = gtex.se.obj$Estimated.batches
+            )
+        conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+        sig.test <- tryCatch({
+            DescTools::CramerV(conf.mat, bias.correct = TRUE)
+        }, error = function(e)
+            NA)
+        chi <- tryCatch({
+            chisq.test(conf.mat)
+        }, error = function(e)
+            list(p.value = NA))
+        return(data.frame(
+            pval = chi$p.value,
+            sig.test = sig.test,
+            batches = length(unique(gtex.se.obj$Estimated.batches))
+        ))
+    })
+all.esti.immune <- do.call(rbind, all.esti.immune)
+all.esti.immune$cancer <- tissues
+all.esti.immune$type <- 'immune'
+```
+
+### Immune genes with RLE ncg approach
+This chunk repeats the immune score-based UV estimation, but this time the `identifyUnknownUV` call explicitly passes immune genes as negative control genes (`ncg`) to the RLE approach. This tests whether using known immune genes as reference genes — rather than all genes — changes the UV detection sensitivity or specificity across tissue types.
+```{r}
+all.esti.immune.ncg <- lapply(
+    tissues,
+    function(x) {
+        message("Processing: ", x)
+        sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+        sub.data <- gtex.expr[, row.names(sub.info)]
+        gtex.se.obj <- SummarizedExperiment(
+            assays = list(RawCount = sub.data),
+            colData = sub.info
+            )
+        gtex.se.obj <- prepareSeObj(
+            data = gtex.se.obj,
+            raw.count.assay.name = 'RawCount',
+            remove.lowly.expressed.genes = TRUE,
+            estimate.tumor.purity = NULL,
+            assay.name.to.estimate.purity = 'RawCount',
+            scale.singscore.values = FALSE,
+            calculate.library.size = TRUE,
+            add.immun.stroma.genes = FALSE,
+            add.gene.details = FALSE,
+            add.housekeeping.genes = FALSE,
+            column.name = 'gene_name',
+            gene.group = 'hgnc_symbol'
+            )
+        gtex.se.obj <- applyOtherNormalizations(
+            se.obj = gtex.se.obj,
+            assay.name = 'RawCount',
+            new.assay.name = 'cpm',
+            apply.log = TRUE
+            )
+        temp.data <- assay(x = gtex.se.obj, 'cpm')
+        ranked.data <- singscore::rankGenes(temp.data)
+        immune.scores <- singscore::simpleScore(
+            rankData = ranked.data, 
+            upSet = pp.hk
+            )
+        immune.scores <- cut(immune.scores$TotalScore, breaks = 3)
+        gtex.se.obj$immune.scores <- immune.scores
+        gtex.se.obj <- orderSeObj(
+            se.obj = gtex.se.obj, 
+            factors.to.order = 'immune.scores'
+            )
+        gtex.se.obj <- tryCatch({
+            identifyUnknownUV(
+                se.obj = gtex.se.obj,
+                assay.name = 'cpm',
+                approach = 'rle',
+                apply.log = FALSE,
+                ncg = intersect(row.names(gtex.se.obj), pp.hk) ,
+                chronological.detection = TRUE,
+                clustering.methods = 'mclust',
+                assess.bio.association = FALSE,
+                assess.uv.association = FALSE,
+                generate.association.plot = FALSE,
+                add.to.sample.annotation = TRUE,
+                col.name = 'Estimated.batches',
+                output.name = 'iteration1'
+            )
+        }, error = function(e) {
+            message("identifyUnknownUV failed for ", x, ": ", e$message)
+            return(NULL)
+        })
+        # If identifyUnknownUV() failed, skip association part
+        if (is.null(gtex.se.obj) ||
+            !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+            return(data.frame(
+                pval = NA,
+                sig.test = NA,
+                batches = NA
+            ))
+        }
+        conf.mat <- data.frame(
+            batch = paste0(gtex.se.obj$immune.scores),
+            estimate.batch = gtex.se.obj$Estimated.batches
+            )
+        conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+        sig.test <- tryCatch({
+            DescTools::CramerV(conf.mat, bias.correct = TRUE)
+        }, error = function(e)
+            NA)
+        chi <- tryCatch({
+            chisq.test(conf.mat)
+        }, error = function(e)
+            list(p.value = NA))
+        return(data.frame(
+            pval = chi$p.value,
+            sig.test = sig.test,
+            batches = length(unique(gtex.se.obj$Estimated.batches))
+        ))
+    })
+all.esti.immune.ncg <- do.call(rbind, all.esti.immune.ncg)
+all.esti.immune.ncg$cancer <- tissues
+all.esti.immune.ncg$type <- 'immune.rle.ncg'
+```
+
+### Smrin factor
+This chunk estimates UV association with RNA integrity number (RIN), recorded in GTEx as `SMRIN`. Samples are ordered by binned RIN values before calling `identifyUnknownUV` with the RLE approach on log-CPM data. The estimated batch labels are then compared to the RIN bin categories using Cramér's V and a chi-squared test. This tests whether RIN-driven RNA quality degradation is a detectable source of unwanted variation in GTEx data.
+```{r}
+all.esti.smrin <- lapply(
+    tissues, 
+    function(x) {
+    message("Processing: ", x)
+    sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+    sub.data <- gtex.expr[, row.names(sub.info)]
+    gtex.se.obj <- SummarizedExperiment(
+        assays = list(RawCount = sub.data),
+        colData = sub.info
+        )
+    gtex.se.obj <- prepareSeObj(
+        data = gtex.se.obj,
+        raw.count.assay.name = 'RawCount',
+        remove.lowly.expressed.genes = TRUE,
+        estimate.tumor.purity = 'both',
+        assay.name.to.estimate.purity = 'RawCount',
+        scale.singscore.values = FALSE,
+        calculate.library.size = TRUE,
+        add.immun.stroma.genes = FALSE,
+        add.gene.details = FALSE,
+        add.housekeeping.genes = FALSE,
+        column.name = 'gene_name',
+        gene.group = 'hgnc_symbol'
+        )
+    gtex.se.obj <- applyOtherNormalizations(
+        se.obj = gtex.se.obj,
+        assay.name = 'RawCount',
+        new.assay.name = 'cpm',
+        apply.log = TRUE
+        )
+    gtex.se.obj <- orderSeObj(
+        se.obj = gtex.se.obj, 
+        factors.to.order = c('SMRIN')
+        )
+    gtex.se.obj <- tryCatch({
+        identifyUnknownUV(
+            se.obj = gtex.se.obj,
+            assay.name = 'cpm',
+            approach = 'rle',
+            ncg = NULL,
+            apply.log = FALSE,
+            chronological.detection = TRUE,
+            clustering.methods = 'mclust',
+            assess.bio.association = FALSE,
+            assess.uv.association = FALSE,
+            generate.association.plot = FALSE,
+            add.to.sample.annotation = TRUE,
+            col.name = 'Estimated.batches',
+            output.name = 'iteration1'
+        )
+    }, error = function(e) {
+        message("identifyUnknownUV failed for ", x, ": ", e$message)
+        return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(gtex.se.obj) ||
+        !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+        return(data.frame(
+            pval = NA,
+            sig.test = NA,
+            batches = NA
+        ))
+    }
+    conf.mat <- data.frame(
+        batch = droplevels(gtex.se.obj$SMRIN),
+        estimate.batch = gtex.se.obj$Estimated.batches
+        )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+        DescTools::CramerV(conf.mat, bias.correct = TRUE)
+    }, error = function(e)
+        NA)
+    chi <- tryCatch({
+        chisq.test(tbl)
+    }, error = function(e)
+        list(p.value = NA))
+    return(data.frame(
+        pval = chi$p.value,
+        sig.test = sig.test,
+        batches = length(unique(gtex.se.obj$Estimated.batches))
+    ))
+})
+all.esti.smrin <- do.call(rbind, all.esti.smrin)
+all.esti.smrin$cancer <- tissues
+all.esti.smrin$type <- 'smrin'
+```
+
+### Smtsisch factor
+This chunk evaluates the association between estimated UV and ischemic time (`SMTSISCH`), which measures the time elapsed between sample collection and preservation. Ischemic time can affect RNA quality and expression profiles. The variable is discretized into 6 bins, and samples are ordered by these bins before UV detection. Three principal components are used for the RLE approach here (`nb.pcs = 3`), and the same association testing framework (Cramér's V, chi-squared) is applied.
+```{r}
+sample.annot$SMTSISCH.g <- cut(sample.annot$SMTSISCH, 6)
+all.esti.smtsisch <- lapply(
+    tissues, 
+    function(x) {
+    message("Processing: ", x)
+    sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+    sub.data <- gtex.expr[, row.names(sub.info)]
+    gtex.se.obj <- SummarizedExperiment(
+        assays = list(RawCount = sub.data),
+        colData = sub.info
+        )
+    gtex.se.obj <- prepareSeObj(
+        data = gtex.se.obj,
+        raw.count.assay.name = 'RawCount',
+        remove.lowly.expressed.genes = TRUE,
+        estimate.tumor.purity = NULL,
+        assay.name.to.estimate.purity = 'RawCount',
+        scale.singscore.values = FALSE,
+        calculate.library.size = TRUE,
+        add.immun.stroma.genes = FALSE,
+        add.gene.details = FALSE,
+        add.housekeeping.genes = FALSE,
+        column.name = 'gene_name',
+        gene.group = 'hgnc_symbol'
+        )
+    gtex.se.obj <- applyOtherNormalizations(
+        se.obj = gtex.se.obj,
+        assay.name = 'RawCount',
+        new.assay.name = 'cpm',
+        apply.log = TRUE
+        )
+    gtex.se.obj <- orderSeObj(
+        se.obj = gtex.se.obj, 
+        factors.to.order = c('SMTSISCH.g')
+        )
+    gtex.se.obj <- tryCatch({
+        identifyUnknownUV(
+            se.obj = gtex.se.obj,
+            assay.name = 'cpm',
+            approach = 'rle',
+            nb.pcs = 3,
+            ncg = NULL,
+            apply.log = FALSE,
+            chronological.detection = TRUE,
+            clustering.methods = 'mclust',
+            assess.bio.association = FALSE,
+            assess.uv.association = FALSE,
+            generate.association.plot = FALSE,
+            add.to.sample.annotation = TRUE,
+            col.name = 'Estimated.batches',
+            output.name = 'iteration1'
+        )
+    }, error = function(e) {
+        message("identifyUnknownUV failed for ", x, ": ", e$message)
+        return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(gtex.se.obj) ||
+        !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+        return(data.frame(
+            pval = NA,
+            sig.test = NA,
+            batches = NA
+        ))
+    }
+    conf.mat <- data.frame(
+        batch = droplevels(gtex.se.obj$SMTSISCH.g),
+        estimate.batch = gtex.se.obj$Estimated.batches
+    )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+        DescTools::CramerV(conf.mat, bias.correct = FALSE)
+    }, error = function(e)
+        NA)
+    
+    chi <- tryCatch({
+        chisq.test(conf.mat)
+    }, error = function(e)
+        list(p.value = NA))
+    
+    return(data.frame(
+        pval = chi$p.value,
+        sig.test = sig.test,
+        batches = length(unique(gtex.se.obj$Estimated.batches))
+    ))
+})
+all.esti.smtsisch <- do.call(rbind, all.esti.smtsisch)
+all.esti.smtsisch$cancer <- tissues
+all.esti.smtsisch$type <- 'smtsisch'
+```
+
+### Vizualization
+The four result data frames from the GTEx analysis (immune scores with full gene set, immune scores with NCG, SMRIN, and SMTSISCH) are combined and cleaned. Tissue labels are reformatted for readability (capitalized, parenthetical details removed), and tissues are ordered by decreasing Cramér's V. A dot-line plot is produced, with each point representing one tissue–variable combination and gray lines connecting estimates within a tissue type across the four UV factors.
+```{r}
+all.res <- rbind(
+    all.esti.immune, 
+    all.esti.immune.ncg, 
+    all.esti.smrin, 
+    all.esti.smtsisch
+    )
+all.res <- all.res[order(all.res$sig.test, decreasing = TRUE) , ]
+all.res$cancer <- gsub(' - ', '-', all.res$cancer)
+
+all.res$cancer <- paste0(
+  toupper(substring(all.res$cancer, 1, 1)),
+  tolower(substring(all.res$cancer, 2))
+  )
+all.res$cancer <- gsub("\\s*\\([^\\)]*\\)", "", all.res$cancer)
+all.res$cancer <- factor(all.res$cancer, levels = unique(all.res$cancer))
+all.res <- all.res[all.res$sig.test != 'Inf' , ]
+
+## changing names
+all.res$type[all.res$type == 'immune'] <- 'Immune scores-a'
+all.res$type[all.res$type == 'smrin'] <- 'Smrin'
+all.res$type[all.res$type == 'smtsisch'] <- 'Smtsisch'
+all.res$type[all.res$type == 'immune.rle.ncg'] <- 'Immune scores-b'
+all.res <- all.res[!is.na(all.res$type) , ]
+
+ggplot(all.res, aes(x = cancer, y = sig.test, group = cancer, color = type)) +
+    geom_line(color = 'gray', size= 2) + 
+    geom_point(size = 5) +
+    xlab('Tissue types') +
+    ylab('Association') +
+    scale_color_manual(values = c('darkgreen', 'orange', 'purple4', 'cyan'))+
+    labs(size = "Batches", color = 'Batches') +
+     theme(
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 14),
+        axis.text.x = element_text(size = 13, angle = 35, hjust = 1),
+        axis.text.y = element_text(size = 15),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.background = element_blank(),
+        legend.key = element_blank()
+        )
+```
+
+
+# CCLE
+## Reading the data
+### Cell annotation
+The CCLE sample metadata is loaded from the DepMap omics profiles file and filtered to retain only RNA-seq entries. Sequencing dates are parsed to extract year, month, and day as separate columns. Samples are then sorted by lineage (cancer type), cell format, strandedness, and year to establish a consistent ordering for subsequent UV detection.
+```{r}
+omics.profile <- read.csv('OmicsProfiles.csv')
+omics.profile <- omics.profile[omics.profile$DataType == 'rna' , ]
+length(unique(omics.profile$ModelID)) == 1699
+omics.profile$years <- substr(
+    x = omics.profile$SequencingDate, 
+    start = 1, 
+    stop = 4
+    )
+omics.profile$months <- substr(
+    x = omics.profile$SequencingDate, 
+    start = 6, 
+    stop = 7
+    )
+omics.profile$days <- substr(
+    x = omics.profile$SequencingDate, 
+    start = 9, 
+    stop = 10
+    )
+omics.profile <- dplyr::arrange(
+    omics.profile, 
+    Lineage, 
+    CellFormat, 
+    Stranded, years
+    )
+```
+
+### Gene expression
+The CCLE raw read count matrix is loaded, and the first 6 metadata columns are separated from the expression data. The matrix is transposed so that rows are genes and columns are cell lines. Column names are set to DepMap model IDs, and samples are reordered to match the sorted annotation table from the previous chunk.
+```{r}
+expr.data <- as.data.frame(
+    data.table::fread('OmicsExpressionRawReadCountHumanAllGenes.csv')
+    )
+cell.info <- expr.data[, 1:6]
+expr.data <- expr.data[ , -c(1:6)]
+expr.data <- t(expr.data)
+colnames(expr.data) <- cell.info$ModelID
+all.equal(colnames(expr.data), omics.profile$ModelID)
+expr.data <- expr.data[ , omics.profile$ModelID]
+all.equal(colnames(expr.data), omics.profile$ModelID)
+```
+
+## Estimating unknown variation
+### Growth media variable
+Stable housekeeping genes are retrieved using `singscore::getStableGenes` to serve as negative control genes (NCG). Cancer lineages with at least 13 cell lines are selected to ensure sufficient sample size for UV detection. For each lineage, a `SummarizedExperiment` is constructed from the subset of cells, preprocessed, and passed to `identifyUnknownUV` using a PCA-based approach (rather than RLE). The estimated batch labels are compared to growth media categories — a known source of systematic variation in cell line experiment
+```{r}
+pan.ncg <- singscore::getStableGenes(n_stable = 1000)
+cancers <- RUVprps:::findRepeatingPatterns(
+    vec = omics.profile$Lineage, 
+    n.repeat = 13
+    )
+length(cancers) == 25
+esti.gm <- lapply(
+  cancers,
+  function(x) {
+    message("Processing: ", x)
+      sub.info <- omics.profile[omics.profile$Lineage == x , ]
+      sub.info <- arrange(sub.info, GrowthPattern, years, Stranded)
+      sub.data <- expr.data[ , sub.info$ModelID]
+      se.obj <- SummarizedExperiment(
+          assays = list(RawCount = sub.data), 
+          colData = sub.info
+          )
+      tcga.se.obj <- prepareSeObj(
+          data = se.obj,
+          raw.count.assay.name = 'RawCount',
+          remove.lowly.expressed.genes = TRUE,
+          estimate.tumor.purity = NULL,
+          scale.singscore.values = FALSE,
+          calculate.library.size = TRUE,
+          add.immun.stroma.genes = FALSE,
+          add.gene.details = FALSE,
+          add.housekeeping.genes = FALSE,
+          column.name = 'gene_name',
+          gene.group = 'hgnc_symbol'
+          )
+      row.names(tcga.se.obj) <- gsub(" \\(.*\\)", "", row.names(tcga.se.obj))
+      ncg <- intersect(pan.ncg, row.names(tcga.se.obj))
+      tcga.se.obj <- tryCatch({
+          identifyUnknownUV(
+              se.obj = tcga.se.obj,
+              assay.name = 'RawCount',
+              approach = 'pca',
+              nb.pcs = 3,
+              ncg = ncg,
+              chronological.detection = FALSE,
+              clustering.methods = 'mclust',
+              assess.bio.association = FALSE,
+              assess.uv.association = FALSE,
+              generate.association.plot = FALSE,
+              add.to.sample.annotation = TRUE,
+              col.name = 'Estimated.batches',
+              output.name = 'iteration1'
+          )
+    }, error = function(e) {
+      message("identifyUnknownUV failed for ", x, ": ", e$message)
+      return(NULL)
+    })
+    if (is.null(tcga.se.obj) || !"Estimated.batches" %in% colnames(colData(tcga.se.obj))) {
+      return(data.frame(pval = NA, sig.test = NA, batch = NA))
+    }
+    conf.mat <- data.frame(
+      batch = paste0(tcga.se.obj$GrowthMedia),
+      estimate.batch = tcga.se.obj$Estimated.batches
+      )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+      DescTools::CramerV(conf.mat, bias.correct = TRUE)
+    }, error = function(e) NA)
+    chi <- tryCatch({
+      chisq.test(conf.mat)
+    }, error = function(e) list(p.value = NA))
+    return(data.frame(
+        pval = chi$p.value, 
+        sig.test = sig.test, 
+        batch = length(unique(tcga.se.obj$Estimated.batches))
+        ))
+  })
+esti.gm <- do.call(rbind, esti.gm)
+esti.gm$cancer <- cancers
+esti.gm$type <- 'Growth.media'
+```
+
+### Years variable
+This chunk repeats the PCA-based UV estimation for each CCLE cancer lineage, this time testing association between estimated batch labels and sequencing year. Samples are ordered by growth pattern, year, and strandedness before UV detection, so temporal trends can be captured chronologically.
+```{r}
+esti.years <- lapply(
+    cancers, 
+    function(x) {
+        message("Processing: ", x)
+        sub.info <- omics.profile[omics.profile$Lineage == x , ]
+        sub.info <- arrange(
+            sub.info, 
+            GrowthPattern, 
+            years, 
+            Stranded
+            )
+        sub.data <- expr.data[, sub.info$ModelID]
+        ccl.se.obj <- SummarizedExperiment(
+            assays = list(RawCount = sub.data),
+            colData = sub.info
+            )
+        ccl.se.obj <- prepareSeObj(
+            data = ccl.se.obj,
+            raw.count.assay.name = 'RawCount',
+            remove.lowly.expressed.genes = TRUE,
+            estimate.tumor.purity = NULL,
+            scale.singscore.values = FALSE,
+            calculate.library.size = TRUE,
+            add.immun.stroma.genes = FALSE,
+            add.gene.details = FALSE,
+            add.housekeeping.genes = FALSE,
+            column.name = 'gene_name',
+            gene.group = 'hgnc_symbol'
+            )
+        row.names(ccl.se.obj) <- gsub(" \\(.*\\)", "", row.names(ccl.se.obj))
+        ncg <- intersect(pan.ncg, row.names(ccl.se.obj))
+        ccl.se.obj <- tryCatch({
+            identifyUnknownUV(
+                se.obj = ccl.se.obj,
+                assay.name = 'RawCount',
+                approach = 'pca',
+                nb.pcs = 3,
+                ncg = ncg,
+                chronological.detection = FALSE,
+                clustering.methods = 'mclust',
+                assess.bio.association = FALSE,
+                assess.uv.association = FALSE,
+                generate.association.plot = FALSE,
+                add.to.sample.annotation = TRUE,
+                col.name = 'Estimated.batches',
+                output.name = 'iteration1'
+            )
+        }, error = function(e) {
+            message("identifyUnknownUV failed for ", x, ": ", e$message)
+            return(NULL)
+        })
+        if (is.null(ccl.se.obj) ||
+            !"Estimated.batches" %in% colnames(colData(ccl.se.obj))) {
+            return(data.frame(
+                pval = NA,
+                sig.test = NA,
+                batch = NA
+            ))
+        }
+        conf.mat <- data.frame(
+            batch = paste0(ccl.se.obj$years),
+            estimate.batch = ccl.se.obj$Estimated.batches
+            )
+        conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+        sig.test <- tryCatch({
+            DescTools::CramerV(conf.mat, bias.correct = TRUE)
+        }, error = function(e)
+            NA)
+        
+        chi <- tryCatch({
+            chisq.test(conf.mat)
+        }, error = function(e)
+            list(p.value = NA))
+        
+        return(data.frame(
+            pval = chi$p.value,
+            sig.test = sig.test,
+            batch = length(unique(ccl.se.obj$Estimated.batches))
+        ))
+    })
+esti.years <- do.call(rbind, esti.years)
+esti.years$cancer <- cancers
+esti.years$type <- 'Years'
+```
+
+### Stranded variable
+Here, UV association is assessed against the library preparation strandedness (`Stranded`), which indicates whether the RNA-seq libraries were strand-specific. This is another technical variable that may introduce systematic differences in expression profiles across CCLE cell lines, especially when data from different DepMap releases are combined.
+```{r}
+esti.stranded <- lapply(
+  cancers,
+  function(x) {
+    message("Processing: ", x)
+      sub.info <- omics.profile[omics.profile$Lineage == x , ]
+      sub.info <- arrange(sub.info, GrowthPattern, years, Stranded)
+      sub.data <- expr.data[ , sub.info$ModelID]
+      ccl.se.obj <- SummarizedExperiment(assays = list(RawCount = sub.data), colData = sub.info)
+      ccl.se.obj <- prepareSeObj(
+          data = ccl.se.obj,
+          raw.count.assay.name = 'RawCount',
+          remove.lowly.expressed.genes = TRUE,
+          estimate.tumor.purity = NULL,
+          scale.singscore.values = FALSE,
+          calculate.library.size = TRUE,
+          add.immun.stroma.genes = FALSE,
+          add.gene.details = FALSE,
+          add.housekeeping.genes = FALSE,
+          column.name = 'gene_name',
+          gene.group = 'hgnc_symbol'
+          )
+      row.names(ccl.se.obj) <- gsub(" \\(.*\\)", "", row.names(ccl.se.obj))
+      ncg <- intersect(pan.ncg, row.names(ccl.se.obj))
+    
+    # Safe wrapper for identifyUnknownUV
+    ccl.se.obj <- tryCatch({
+      identifyUnknownUV(
+        se.obj = ccl.se.obj,
+        assay.name = 'RawCount',
+        approach = 'pca', 
+        nb.pcs = 3,
+        ncg = ncg,
+        chronological.detection = F, 
+        clustering.methods = 'mclust',
+        assess.bio.association = FALSE,
+        assess.uv.association = FALSE,
+        generate.association.plot = FALSE,
+        add.to.sample.annotation = TRUE,
+        col.name = 'Estimated.batches',
+        output.name = 'iteration1'
+        )
+    }, error = function(e) {
+      message("identifyUnknownUV failed for ", x, ": ", e$message)
+      return(NULL)
+    })
+    if (is.null(ccl.se.obj) || !"Estimated.batches" %in% colnames(colData(ccl.se.obj))) {
+      return(data.frame(pval = NA, sig.test = NA, batch = NA))
+    }
+    
+    conf.mat <- data.frame(
+      batch = paste0(ccl.se.obj$Stranded),
+      estimate.batch = ccl.se.obj$Estimated.batches
+      )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+      DescTools::CramerV(conf.mat, bias.correct = TRUE)
+    }, error = function(e) NA
+    )
+    chi <- tryCatch({
+      chisq.test(conf.mat)
+    }, error = function(e) list(p.value = NA))
+    
+    return(data.frame(
+        pval = chi$p.value, 
+        sig.test = sig.test, 
+        batch = length(unique(ccl.se.obj$Estimated.batches))
+        ))
+  })
+
+esti.stranded <- do.call(rbind, esti.stranded)
+esti.stranded$cancer <- cancers
+esti.stranded$type <- 'stranded'
+```
+
+### Dep map code variable
+
+This chunk evaluates UV association with the DepMap release code (`DepMapCode`), which identifies which DepMap data release a cell line's measurements belong to. Different releases may have been processed at different times or with slightly different pipelines, potentially introducing systematic batch effects across releases.
+```{r}
+esti.depmapcode <- lapply(
+  cancers,
+  function(x) {
+    message("Processing: ", x)
+      sub.info <- omics.profile[omics.profile$Lineage == x , ]
+      sub.info <- arrange(
+          sub.info, 
+          GrowthPattern, 
+          years, 
+          Stranded
+          )
+      sub.data <- expr.data[ , sub.info$ModelID]
+      ccl.se.obj <- SummarizedExperiment(
+          assays = list(RawCount = sub.data), 
+          colData = sub.info
+          )
+      ccl.se.obj <- prepareSeObj(
+          data = ccl.se.obj,
+          raw.count.assay.name = 'RawCount',
+          remove.lowly.expressed.genes = TRUE,
+          estimate.tumor.purity = NULL,
+          scale.singscore.values = FALSE,
+          calculate.library.size = TRUE,
+          add.immun.stroma.genes = FALSE,
+          add.gene.details = FALSE,
+          add.housekeeping.genes = FALSE,
+          column.name = 'gene_name',
+          gene.group = 'hgnc_symbol'
+      )
+      row.names(ccl.se.obj) <- gsub(" \\(.*\\)", "", row.names(ccl.se.obj))
+      ncg <- intersect(pan.ncg, row.names(ccl.se.obj))
+      
+    ccl.se.obj <- tryCatch({
+      identifyUnknownUV(
+        se.obj = ccl.se.obj,
+        assay.name = 'RawCount',
+        approach = 'pca', 
+        nb.pcs = 3,
+        ncg = ncg,
+        chronological.detection = FALSE, 
+        clustering.methods = 'mclust',
+        assess.bio.association = FALSE,
+        assess.uv.association = FALSE,
+        generate.association.plot = FALSE,
+        add.to.sample.annotation = TRUE,
+        col.name = 'Estimated.batches',
+        output.name = 'iteration1'
+      )
+    }, error = function(e) {
+      message("identifyUnknownUV failed for ", x, ": ", e$message)
+      return(NULL)
+    })
+    if (is.null(ccl.se.obj) || !"Estimated.batches" %in% colnames(colData(ccl.se.obj))) {
+      return(data.frame(pval = NA, sig.test = NA, batch = NA))
+    }
+    conf.mat <- data.frame(
+      batch = paste0(ccl.se.obj$DepMapCode),
+      estimate.batch = ccl.se.obj$Estimated.batches
+      )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+      DescTools::CramerV(conf.mat, bias.correct = TRUE)
+    }, error = function(e) NA)
+    
+    chi <- tryCatch({
+      chisq.test(conf.mat)
+    }, error = function(e) list(p.value = NA))
+    
+    return(data.frame(
+        pval = chi$p.value, 
+        sig.test = sig.test, 
+        batch = length(unique(ccl.se.obj$Estimated.batches))
+        ))
+  })
+esti.depmapcode <- do.call(rbind, esti.depmapcode)
+esti.depmapcode$cancer <- cancers
+esti.depmapcode$type <- 'depmapcode'
+```
+
+## Visualization
+
+The four CCLE result tables (DepMap code, years, growth media, strandedness) are merged and sorted by Cramér's V. Variable names are relabeled for clarity and infinite values are removed. A dot-line plot is produced with cancer lineages on the x-axis ordered by overall UV association strength, colored by variable type, to enable visual comparison of which technical factors drive the most variation within each lineage.
+```{r}
+all.res <- rbind(
+    esti.depmapcode, 
+    esti.years, 
+    esti.gm, 
+    esti.stranded
+    )
+all.res <- all.res[order(all.res$sig.test, decreasing = TRUE) , ]
+all.res$cancer <- factor(all.res$cancer, levels = unique(all.res$cancer))
+all.res <- all.res[all.res$sig.test != 'Inf' , ]
+all.res$type[all.res$type == 'stranded'] <- 'Sequencing type'
+all.res$type[all.res$type == 'Growth.media'] <- 'Growth media'
+all.res$type[all.res$type == 'depmapcode'] <- 'DepMap code'
+
+ggplot(all.res, aes(
+    x = cancer,
+    y = sig.test,
+    group = cancer,
+    color = type)) +
+    geom_line(color = 'gray', size = 2) +
+    geom_point(size = 5) +
+    xlab('') +
+    ylab('Association') +
+    scale_color_manual(values = c('darkgreen', 'orange', 'purple4', 'red')) +
+    labs(size = "Batches", color = 'Batches') +
+    theme(
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 20),
+        plot.title = element_text(size = 14),
+        axis.text.x = element_text(
+            size = 13,
+            angle = 35,
+            hjust = 1
+        ),
+        axis.text.y = element_text(size = 15, angle = 90, hjust = 1),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.background = element_blank(),
+        legend.position = 'bottom',
+        legend.key = element_blank()) +
+    guides(color = guide_legend(
+        byrow = TRUE, 
+        direction = "vertical", 
+        ncol = 2, 
+        override.aes = list(size = 6, alpha = 1))
+        )
+```
+
+# TreeHouse
+## Reading the data
+The TreeHouse pediatric cancer compendium raw count matrix is loaded from a TSV file. Gene names are stored separately and assigned as row names after converting the data to a matrix. Sample annotations are loaded from a clinical metadata file and aligned with the expression data by matching sample identifiers. Samples without a matching ID in both objects are excluded, and the final dimensions are verified.
+```{r}
+# expression data
+raw.count <- data.table::fread('Tumor-25.01-Polya_ensembl_counts_60499genes_2025-03-03.tsv')
+raw.count <- as.data.frame(raw.count)
+gene.names <- raw.count$Gene
+raw.count <- raw.count[ , -1]
+raw.count <- data.matrix(raw.count)
+row.names(raw.count) <- gene.names
+dim(raw.count) # 60498 13355
+max(raw.count) == 42808467
+
+# sample annotation
+sample.annot <- read.delim('GSE294351_clinical_Treehouse-Tumor-Compendium-25.01-PolyA_20250131v1.tsv')
+row.names(sample.annot) <- sample.annot$th_dataset_id
+dim(sample.annot) # 13359    12
+common.samples <- intersect(
+    sample.annot$th_dataset_id, 
+    colnames(raw.count)
+    ) #13355
+sample.annot <- sample.annot[common.samples , ]
+raw.count <- raw.count[ , common.samples ]
+all.equal(colnames(raw.count), sample.annot$th_dataset_id)
+dim(raw.count) # 60498 13355
+dim(sample.annot) # 13355  12
+length(table(sample.annot$source_name)) == 8
+length(table(sample.annot$icd_disease)) == 102
+```
+
+## Removing some biological groups
+Disease groups with fewer than 10 samples are excluded using `findRepeatingPatterns`, ensuring that only disease categories with sufficient representation are retained for downstream analysis. Both the expression matrix and sample annotation are subset accordingly and verified to remain aligned.
+```{r}
+keep.samples <- RUVprps:::findRepeatingPatterns(
+    vec = sample.annot$disease, 
+    n.repeat = 10
+    )
+sample.annot <- sample.annot[sample.annot$disease %in% keep.samples ,  ]
+raw.count <- raw.count[ , row.names(sample.annot)]
+all.equal(colnames(raw.count), sample.annot$th_dataset_id) # 60498 13171
+```
+
+## Create SE object
+Ensembl version suffixes (e.g., `.1`, `.2`) are stripped from gene IDs, and the raw count matrix is wrapped in a list. A `SummarizedExperiment` is then built using `prepareSeObj`, which filters lowly expressed genes (minimum proportion 0.001, count cutoff 20), computes library size, estimates tumor purity from raw counts, adds housekeeping genes, and retrieves gene-level annotation from BioMart. Samples are then ordered by data source, study ID, and disease type.
+```{r}
+row.names(raw.count) <- sub("\\..*$", "", row.names(raw.count))
+raw.count <- list(RawCount = raw.count)
+se.obj <- prepareSeObj(
+    data = raw.count, 
+    sample.annotation = sample.annot, 
+    raw.count.assay.name = 'RawCount',
+    remove.lowly.expressed.genes = TRUE, 
+    minimum.proportion = 0.001, 
+    count.cutoff = 20,
+    calculate.library.size = TRUE, 
+    estimate.tumor.purity = 'both', 
+    gene.ids.to.estimate.tumor.purity = 'hgnc_symbol', 
+    scale.singscore.values = TRUE, 
+    gene.annotation = NULL, 
+    create.gene.annotation = TRUE, 
+    add.gene.details = TRUE, 
+    add.housekeeping.genes = TRUE, 
+    assay.name.to.estimate.purity = 'RawCount', 
+    gene.group = 'ensembl_gene_id')
+se.obj <- orderSeObj(
+    se.obj = se.obj, 
+    factors.to.order = c('source_name', 'study_id', 'disease')
+    )
+# dim: 40460 13171
+```
+
+## Estimate unwanted variation
+Two thousand stable housekeeping genes are retrieved and intersected with the genes in the SE object to serve as negative control genes. `identifyUnknownUV` is then applied with the RLE approach and chronological detection enabled, storing estimated batch labels in the `EstimatedBatches` column. The resulting RLE median batch plot is extracted from the object metadata and styled for publication, with y-axis limits set to ±3.
+```{r}
+hk <- singscore::getStableGenes(n_stable = 2000, id = 'ensembl')
+hk <- intersect(hk, row.names(se.obj))
+length(hk) == 2000
+se.obj.a <- identifyUnknownUV(
+    se.obj = se.obj[hk, ], 
+    assay.name = 'RawCount', 
+    approach = 'rle', 
+    chronological.detection = TRUE, 
+    add.to.sample.annotation = TRUE, 
+    col.name = 'EstimatedBatches',
+    plot.output = FALSE
+    )
+se.obj.a@metadata$UnKnownUV$RawCount$`57batches|rle.median|AllGenes|nbClust.kmeansClustering`$plots$batch.plot +
+    ylim(c(-3,3)) +
+    ylab('RLE median') +
+    theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1.5),
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    axis.text.x = element_text(size = 20 ),
+    axis.text.y = element_text(size = 20),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none'
+  )
+```
+
+## Consusion matrix
+A confusion matrix is built between the estimated batch labels and the data source variable (`source_name`). Rows (datasets) are ordered by the column with their maximum count to highlight dominant batch-source alignments. A `ComplexHeatmap` heatmap is rendered using log2-transformed frequencies with a white-to-tomato color scale, making it easy to identify which estimated batches correspond to which data sources.
+```{r}
+con.table <- table(
+    se.obj.a$EstimatedBatches, 
+    se.obj.a$source_name
+    )
+con.table <- as.matrix(con.table)
+colnames(con.table)[4] <- 'SRA'
+df <- as.data.frame.matrix(con.table)
+priority.cols <- c(
+    "TCGA", "TARGET", "EGA", "ICGC", "SRA", "St. Jude Cloud", "CBTN", "unavailable")
+df.ordered <- df %>%
+  arrange(across(all_of(priority.cols), dplyr::desc))
+df.ordered <- df.ordered[ , priority.cols]
+
+ComplexHeatmap::Heatmap(
+    matrix = t(log2(df.ordered + 1)) , 
+    name = 'Frequency',
+    cluster_columns = F,
+    cluster_rows = F,
+    show_row_dend = F, 
+    show_column_dend = F,
+    column_names_rot = 90, 
+    row_names_gp = gpar(fontsize = 18),
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title = "Frequency",
+    direction = "horizontal",
+    title_gp = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp = gpar(fontsize = 14),
+    legend_height = unit(5, "cm"),
+    legend_width = unit(1.2, "cm")
+  ))
+
+```
+
+## UMAP of all the data
+A global UMAP is computed on all TreeHouse samples to visualize the overall structure of the compendium. Log2-transformed counts are first reduced to 20 principal components using fast truncated PCA (`irlba`), and UMAP is then applied with cosine distance, 30 nearest neighbors, and a minimum distance of 0.3. Two UMAP plots are generated: one colored by data source (repository of origin) and one colored by disease type, both using small semi-transparent points to handle the large sample size.
+```{r}
+expr.data <- log2(raw.count$RawCount + 1)
+set.seed(2233)
+pca.all <- irlba::prcomp_irlba(x = t(expr.data), n = 20)
+set.seed(2234)
+umap.all <- uwot::umap(
+    pca.all$x, 
+    n_neighbors = 30, 
+    min_dist = 0.3, 
+    metric = "cosine"
+    )
+new.ids <- sample.annot$source_name
+new.ids[new.ids == 'Sequence Read Archive'] <- 'SRA'
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = new.ids ) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = .3) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 3:10,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)
+
+
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = sample.annot$disease) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = .3) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 1:length(unique(sample.annot$disease)),
+    group = 'pan.selection.c'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = "none"
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)))   # ← enlarge legend points
+```
+
+## Subset of samples
+To visualize batch structure within individual disease groups, UMAPs are computed on subsets of the data. The top 10 most frequent diseases are inspected, and two disease groups — glioma and acute lymphoblastic leukemia — are selected as examples due to their large sample sizes and multi-source contributions. For each, a 10-PC PCA is computed on the disease-specific subset, followed by UMAP with the same parameters as above. Points are colored by data source to reveal whether samples cluster by biology or by repository of origin.
+```{r}
+sort(table(sample.annot$disease), decreasing = TRUE)[1:10]
+table(sample.annot$source_name[sample.annot$disease == 'glioma'])
+index <- sample.annot$disease == 'glioma'
+set.seed(223)
+pca.sub <- irlba::prcomp_irlba(
+    x = t(expr.data[ , index]), 
+    n = 10
+    )
+set.seed(123)
+umap.sub <- umap(
+    pca.sub$x,
+    n_neighbors = 30, 
+    min_dist = 0.3, 
+    metric = "cosine"
+    )
+new.ids <- sample.annot$source_name
+new.ids[new.ids == 'Sequence Read Archive'] <- 'SRA'
+data.frame(
+  umap1 = umap.sub[, 1],
+  umap2 = umap.sub[, 2],
+  group = new.ids[index] ) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .6, size = 1) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 3:10,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none',
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), color = guide_legend(ncol = 2))
+
+###
+table(sample.annot$source_name[sample.annot$disease == 'acute lymphoblastic leukemia'])
+index <- sample.annot$disease == 'acute lymphoblastic leukemia'
+set.seed(223)
+pca.sub <- irlba::prcomp_irlba(
+    x = t(expr.data[ , index]), 
+    n = 10
+    )
+set.seed(123)
+umap.sub <- umap(
+    pca.sub$x,
+    n_neighbors = 30, 
+    min_dist = 0.3, 
+    metric = "cosine"
+    )
+new.ids <- sample.annot$source_name
+new.ids[new.ids == 'Sequence Read Archive'] <- 'SRA'
+data.frame(
+  umap1 = umap.sub[, 1],
+  umap2 = umap.sub[, 2],
+  group = new.ids[index]) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .6, size = 1) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 3:10,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none',
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4), ncol = 4))   # ← enlarge legend points
+```
+
+
+# Prostate cancer atlas
+## Reading gene expression
+The Prostate Cancer Atlas raw count matrix is loaded from an FST file for fast I/O. Precision is set to 22 digits to preserve integer count values. Gene IDs are loaded from a companion CSV file, version suffixes are stripped from Ensembl IDs, and genes with version-annotated suffixes (containing underscores) are excluded. The expression matrix rows are then reindexed to the cleaned Ensembl gene IDs.
+```{r}
+options(digits = 22)
+expr.data <- as.matrix(fst::read_fst('gc_txi.counts.fst'))
+dim(expr.data) # 61533  1365
+all.equal(max(expr.data), 21744542)
+all.equal(min(expr.data), 0)
+gene.annot <- read.csv(
+    'genes.csv', 
+    header = FALSE
+    ) %>%  # 61533 1
+    dplyr::rename('ensembl_gene_id_initial' = V1) %>% 
+    mutate(ensembl_gene_id = sub("\\..*", "", ensembl_gene_id_initial))
+row.names(expr.data) <- gene.annot$ensembl_gene_id
+gene.annot <- gene.annot[-grep('_', gene.annot$ensembl_gene_id_initial) , ]
+expr.data <- expr.data[gene.annot$ensembl_gene_id , ]
+length(unique(gene.annot$ensembl_gene_id)) == 61487
+```
+
+## Annotating ENS transcripts
+Ensembl gene IDs are mapped to HGNC symbols and other attributes using `biomaRt`. The BioMart database (Ensembl, August 2022) is queried for gene biotype, description, Entrez ID, and chromosome. Duplicate Ensembl IDs are removed. The annotation is joined to the local gene list, and a composite gene identifier (`ensembl_id||symbol`) is created. For genes with unique HGNC symbols, only the symbol is used as the row name; for duplicates, the composite ID is retained to avoid ambiguity.
+```{r}
+library(biomaRt) # 2.62.1
+ensembl <- useMart('ensembl') # 21 Agust 2022
+ensembl <- useDataset(mart = ensembl, 'hsapiens_gene_ensembl')
+bioMart.geneAnnot <- biomaRt::getBM(
+    attributes = c(
+        'entrezgene_id',
+        'hgnc_symbol',
+        'gene_biotype',
+        'ensembl_gene_id',
+        'description',
+        'chromosome_name'
+    ),
+    mart = ensembl
+) # 91702     6
+bioMart.geneAnnot <- bioMart.geneAnnot[-duplicated(bioMart.geneAnnot$ensembl_gene_id) , ]
+
+gene.annotation <- dplyr::left_join(
+    x = gene.annot,
+    y = bioMart.geneAnnot,
+    by = 'ensembl_gene_id',
+    multiple = 'first'
+    )
+all.equal(
+    gene.annotation$ensembl_gene_id_initial, 
+    gene.annot$ensembl_gene_id_initial
+    )
+gene.annotation$gene_ids <- paste0(
+    gene.annotation$ensembl_gene_id, 
+    '||', 
+    gene.annotation$hgnc_symbol
+    )
+gene.annotation$gene_ids_new <- gene.annotation$gene_ids
+index <- duplicated(gene.annotation$hgnc_symbol)
+gene.annotation$gene_ids_new[index] <- gene.annotation$gene_ids[index]
+gene.annotation$gene_ids_new[!index] <- gene.annotation$hgnc_symbol[!index]
+row.names(expr.data) <- gene.annotation$gene_ids_new
+sum(duplicated(row.names(expr.data)))
+rm(gene.annot)
+```
+
+## Sample annotation
+Sample metadata is loaded and assigned synthetic sample IDs to avoid issues with special characters in original identifiers. Samples are sorted by dataset, library type, body site, pathological cell type, and molecular type to impose a meaningful ordering for downstream UV detection. The expression matrix columns are reordered to match, and the joint data object is saved and reloaded from disk using `qs` for efficient serialization.
+```{r}
+sample.annot <- read.csv('filtered_samples.csv.csv') # 1365 30
+sample.annot$sample.ids <- paste0('sample', 1:nrow(sample.annot))
+colnames(expr.data) <- sample.annot$sample.ids
+
+sample.annot <- dplyr::arrange(
+    sample.annot, 
+    dataset, 
+    Library.type, 
+    Body.site, 
+    PC.type, 
+    Molecular.Type
+    )
+plot(sample.annot$totalcounts)
+expr.data <- expr.data[ , sample.annot$sample.ids]
+table(sample.annot$dataset , sample.annot$Molecular.Type)
+```
+
+# Batch effects for RUVprps paper
+## Removing lowly expressed genes
+Genes with zero counts across all samples of any dataset are first removed to eliminate genes that are entirely absent in at least one study. A second filter using `edgeR::filterByExpr` then removes genes with counts too low to be reliably measured across the full cohort, using molecular type as the grouping variable. This reduces the gene set from ~61,000 to ~32,300 genes.
+
+```{r}
+## Not detected genes
+expressed.genes <- sapply(
+    unique(sample.annot$dataset), 
+    function(x){
+        rowSums(expr.data[ ,sample.annot$dataset == x ])
+    })
+expr.data <- expr.data[rowSums(expressed.genes == 0) == 0 , ] # 33937  1365
+
+## lowly expressed genes
+keep.genes <- filterByExpr(
+    y = expr.data, 
+    group = sample.annot$Molecular.Type
+    )
+sum(keep.genes) # 32300
+expr.data <- expr.data[keep.genes , ] # 21744542
+```
+
+## Rename variables
+Molecular type labels are standardized across the atlas: "NORMAL" becomes "Normal", "PRIMARY" becomes "Primary", and GTEx normal samples are relabeled as "Healthy" to distinguish them from matched normal tissue controls from oth
+```{r}
+sample.annot$Molecular.Type[sample.annot$Molecular.Type == 'NORMAL'] <- 'Normal'
+sample.annot$Molecular.Type[sample.annot$Molecular.Type == 'PRIMARY'] <- 'Primary'
+sample.annot$Molecular.Type[sample.annot$Molecular.Type == 'Normal' & sample.annot$dataset == 'GTEx'] <- 'Healthy'
+sample.annot$Tissues <- 'Cancer'
+sample.annot$Tissues[sample.annot$Molecular.Type == 'PRIMARY'] <- 'Cancer'
+sample.annot$Tissues[sample.annot$Molecular.Type == 'Healthy'] <- 'Normal'
+sample.annot$Tissues[sample.annot$Molecular.Type == 'Normal'] <- 'Normal'
+```
+
+## Estimate unwanted variation
+One thousand stable housekeeping genes are retrieved and intersected with those present in the expression matrix to define negative control genes. A `SummarizedExperiment` is assembled from the filtered expression data and sample annotation, enriched with tumor purity estimates, library size, immune/stromal gene scores, and housekeeping gene flags via `prepareSeObj`. The `identifyUnknownUV` function is then run using the RLE approach with chronological detection, Mclust-based clustering, and a minimum segment length of 3. The resulting RLE median batch plot is retrieved from the object's metadata and styled for publication.
+```{r}
+### Selecting NCG genes using HK
+ncg <- singscore::getStableGenes(n_stable = 1000)
+ncg <- intersect(ncg, row.names(expr.data)) # 994
+length(ncg) == 994
+
+### creating SE obj
+row.names(sample.annot) <- sample.annot$sample.ids
+row.names(expr.data)[is.na(row.names(expr.data))] <- 'na.genes'
+all.equal(colnames(expr.data), row.names(sample.annot))
+gene.annot <- data.frame(hgnc_symbol = row.names(expr.data))
+pad.se <- SummarizedExperiment::SummarizedExperiment(
+    assays = list(RawCount = expr.data), 
+    colData = sample.annot, 
+    rowData = gene.annot
+    )
+pad.se <- prepareSeObj(
+    data = pad.se,
+    raw.count.assay.name = 'RawCount',
+    remove.lowly.expressed.genes = FALSE,
+    estimate.tumor.purity = 'both',
+    assay.name.to.estimate.purity = 'RawCount',
+    scale.singscore.values = FALSE,
+    calculate.library.size = TRUE,
+    create.gene.annotation = TRUE,
+    add.immun.stroma.genes = TRUE,
+    add.gene.details = TRUE,
+    add.housekeeping.genes = TRUE,
+    column.name = 'gene_name',
+    gene.group = 'hgnc_symbol'
+    ) # dim: 32300 1365 
+pad.se <- identifyUnknownUV(
+    se.obj = pad.se,
+    assay.name = 'RawCount',
+    approach = 'rle',
+    nb.pcs = 3,
+    apply.log = TRUE,
+    ncg = ncg,
+    chronological.detection = TRUE,
+    clustering.methods = 'mclust',
+    assess.bio.association = FALSE,
+    assess.uv.association = FALSE,
+    generate.association.plot = FALSE,
+    add.to.sample.annotation = TRUE,
+    col.name = 'Estimated.batches',
+    output.name = 'iteration1',
+    cpt.minseglen = 3
+    )
+
+pad.se@metadata$UnKnownUV$RawCount$iteration1$plots$batch.plot + ylab('RLE medians') + 
+    ylim(-4,4) +
+        theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'right') +
+    guides(color = guide_legend(ncol = 2, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+```
+
+## Confusion matrix
+Three confusion matrices are generated to characterize the estimated batch structure. The first cross-tabulates estimated batches with dataset of origin, ordering datasets by which batch they predominantly fall into to produce an interpretable heatmap. The second compares estimated batches with library type (e.g., poly-A vs. ribo-depletion). The third compares dataset and molecular type (normal, primary, healthy) to understand how biological and technical variables co-vary across studies. All heatmaps use log2-transformed frequencies and a white-to-tomato color gradient.
+
+```{r}
+conf.mat <- table(
+    pad.se$dataset,
+    pad.se@metadata$UnKnownUV$RawCount$iteration1$batches
+    )
+conf.mat <- as.matrix(conf.mat)
+max.col <- apply(conf.mat, 1, which.max)
+df <- data.frame(
+  batch = rownames(conf.mat),
+  matched.col = colnames(conf.mat)[max.col],
+  value = mapply(function(r, c) conf.mat[r, c], rownames(conf.mat), max.col)
+  )
+df <- df[order(df$value, decreasing = TRUE), ]
+conf.mat.ordered <- conf.mat[df$batch, unique(df$matched.col), drop = FALSE]
+
+ComplexHeatmap::Heatmap(
+    matrix = log2(conf.mat.ordered + 1),
+    name = 'Frequency',
+    cluster_columns = F,
+    cluster_rows = F,
+    show_row_dend = F,
+    show_column_dend = F,
+    row_names_gp = gpar(fontsize = 17),
+    column_names_gp = gpar(fontsize = 17),
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+        title = "Frequency",
+        title_gp = gpar(fontsize = 18, fontface = "bold"),
+        labels_gp = gpar(fontsize = 14),
+        legend_height = unit(5, "cm"),
+        legend_width = unit(1.2, "cm")
+    )
+)
+
+conf.mat <- table(
+    pad.se$Library.type,
+    pad.se@metadata$UnKnownUV$RawCount$iteration1$batches
+    )
+ComplexHeatmap::Heatmap(
+    matrix = log2(conf.mat + 1),
+    name = 'Frequency',
+    cluster_columns = T,
+    cluster_rows = F,
+    show_row_dend = F,
+    show_column_dend = F,
+    row_names_gp = gpar(fontsize = 17),
+    column_names_gp = gpar(fontsize = 17),
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+        title = "Frequency",
+        title_gp = gpar(fontsize = 18, fontface = "bold"),
+        labels_gp = gpar(fontsize = 14),
+        legend_height = unit(5, "cm"),
+        legend_width = unit(1.2, "cm")
+    )
+)
+
+## confusion matrix
+conf.mat <- table(pad.se$dataset, pad.se$Molecular.Type)
+conf.mat <- as.matrix(conf.mat)
+ComplexHeatmap::Heatmap(
+    matrix = log2(conf.mat + 1) ,
+    name = 'Frequency',
+    cluster_columns = T,
+    cluster_rows = T,
+    show_row_dend = F,
+    show_column_dend = F,
+     row_names_gp = gpar(fontsize = 17),
+    column_names_gp = gpar(fontsize = 17),
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+        title = "Frequency",
+        title_gp = gpar(fontsize = 18, fontface = "bold"),
+        labels_gp = gpar(fontsize = 14),
+        legend_height = unit(5, "cm"),
+        legend_width = unit(1.2, "cm")
+    )
+)
+
+conf.mat <- table(pad.se$Library.type, pad.se$Molecular.Type)
+conf.mat <- as.matrix(conf.mat)
+ComplexHeatmap::Heatmap(
+    matrix = log2(conf.mat + 1) ,
+    name = 'Frequency',
+    cluster_columns = T,
+    cluster_rows = T,
+    show_row_dend = F,
+    show_column_dend = F,
+    row_names_gp = gpar(fontsize = 17),
+    column_names_gp = gpar(fontsize = 17),
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+        title = "Frequency",
+        title_gp = gpar(fontsize = 18, fontface = "bold"),
+        labels_gp = gpar(fontsize = 14),
+        legend_height = unit(5, "cm"),
+        legend_width = unit(1.2, "cm")
+    )
+)
+```
+
+## PCA plots
+Ten principal components are computed on the log2-transformed expression data using fast truncated PCA (`irlba`). The proportion of variance explained by each PC is calculated from the eigenvalues. Three pairs of PCs (PC1 vs PC2, PC1 vs PC3, PC2 vs PC3) are then plotted as scatter plots, colored separately by library type, molecular type, and dataset, to visualize how much of the global structure is attributable to technical versus biological sources of variation.
+```{r}
+pp <- irlba::prcomp_irlba(
+    x = t(log2(expr.data[ncg,] + 1)),
+    n = 10
+    )
+total.var <- sum(apply(t(log2(expr.data[ncg,] + 1)), 2, var))
+pca.var <- (pp$sdev^2) / total.var * 100
+
+### Library type
+df <- data.frame(
+    pc1 = pp$x[,1], 
+    pc2 = pp$x[,2], 
+    pc3 = pp$x[,3], 
+    group = sample.annot$Library.type
+    )
+p1 <- ggplot(df, aes(x = pc1, y = pc2, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC1 (82.5%)') +
+  ylab('PC2 (4.1%)') +
+  scale_color_manual(values = c('darkgreen', 'cyan3'), name = 'Library types') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 4, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+
+p2 <- ggplot(df, aes(x = pc1, y = pc3, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC1 (82.5%)') +
+  ylab('PC3 (2.2%)') +
+  scale_color_manual(values = c('darkgreen', 'cyan3'), name = 'Library types')+
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 4, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+
+p3 <- ggplot(df, aes(x = pc2, y = pc3, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC2 (4.1%)') +
+  ylab('PC3 (2.2%)') +
+  scale_color_manual(values = c('darkgreen', 'cyan3'), name = 'Library types') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 4, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+ggpubr::ggarrange(p1 ,p2 ,p3, common.legend = TRUE, ncol = 1, legend = 'bottom')
+
+
+### Molecular type
+df <- data.frame(
+    pc1 = pp$x[,1], 
+    pc2 = pp$x[,2], 
+    pc3 = pp$x[,3], 
+    group = sample.annot$Molecular.Type
+    )
+p1 <- ggplot(df, aes(x = pc1, y = pc2, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC1 (82.5%)') +
+  ylab('PC2 (4.1%)') +
+  scale_color_manual(values = selectColors(nb.color = 1:6), name = 'Molecular type') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0))+
+    guides(color = guide_legend(nrow = 4, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+
+p2 <- ggplot(df, aes(x = pc1, y = pc3, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC1 (82.5%)') +
+  ylab('PC3 (2.2%)') +
+  scale_color_manual(values = selectColors(nb.color = 1:6), name = 'Molecular type') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 4, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+
+p3 <- ggplot(df, aes(x = pc2, y = pc3, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC2 (4.1%)') +
+  ylab('PC3 (2.2%)') +
+  scale_color_manual(values = selectColors(nb.color = 1:6), name = 'Molecular type') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 4, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+ggpubr::ggarrange(p1 ,p2 ,p3, common.legend = TRUE, ncol = 1, legend = 'bottom')
+
+### Data sets
+df <- data.frame(
+    pc1 = pp$x[,1], 
+    pc2 = pp$x[,2], 
+    pc3 = pp$x[,3], 
+    group = sample.annot$dataset
+    )
+p1 <- ggplot(df, aes(x = pc1, y = pc2, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC1 (82.5%)') +
+  ylab('PC2 (4.1%)') +
+  scale_color_manual(values = selectColors(nb.color = 6:19), name = 'Studies') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),   
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 7, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+
+p2 <- ggplot(df, aes(x = pc1, y = pc3, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC1 (82.5%)') +
+  ylab('PC3 (2.2%)') +
+  scale_color_manual(values = selectColors(nb.color = 6:19), name = 'Studies') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 7, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+
+p3 <- ggplot(df, aes(x = pc2, y = pc3, color = group)) +
+  geom_point(size = 2, alpha = .6) +  # increase point size
+  xlab('PC2 (4.1%)') +
+  ylab('PC3 (2.2%)') +
+  scale_color_manual(values = selectColors(nb.color = 6:19), name = 'Studies') +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    plot.title = element_text(size = 15),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 0)) +
+    guides(color = guide_legend(nrow = 7, byrow = TRUE, override.aes = list(size = 4, alpha = 1)))
+ggpubr::ggarrange(p1 ,p2 ,p3, common.legend = TRUE, ncol = 1, legend = 'bottom')
+
+```
+
+
+
