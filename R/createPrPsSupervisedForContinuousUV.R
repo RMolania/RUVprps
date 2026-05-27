@@ -85,26 +85,28 @@ createPrPsSupervisedForContinuousUV <- function(
         assay.name,
         main.uv.variable,
         bio.variables,
-        other.uv.variables = NULL,
-        samples.to.use = 'all',
-        min.sample.for.ps = 3,
-        bio.clustering.method = 'kmeans',
-        nb.bio.clusters = 2,
+        other.uv.variables         = NULL,
+        samples.to.use             = 'all',
+        min.sample.for.ps          = 3,
+        bio.clustering.method      = 'kmeans',
+        nb.bio.clusters            = 2,
         other.uv.clustering.method = 'kmeans',
-        nb.other.uv.clusters = 2,
-        apply.log = TRUE,
-        pseudo.count = 1,
-        plot.prps.map = TRUE,
-        prps.group.name = NULL,
-        prps.sets.name = NULL,
-        check.se.obj = TRUE,
-        remove.na = 'both',
-        save.se.obj = TRUE,
-        verbose = TRUE
+        nb.other.uv.clusters       = 2,
+        apply.log                  = TRUE,
+        pseudo.count               = 1,
+        plot.prps.map              = TRUE,
+        prps.group.name            = NULL,
+        prps.sets.name             = NULL,
+        check.se.obj               = TRUE,
+        remove.na                  = 'both',
+        save.se.obj                = TRUE,
+        verbose                    = TRUE
         ){
-    printColoredMessage(message = '------------The createPrPsForContinuousUV function starts.',
-                        color = 'white',
-                        verbose = verbose)
+    printColoredMessage(
+        message = '------------The createPrPsForContinuousUV function starts.',
+        color   = 'white',
+        verbose = verbose
+        )
     # Checking the function inputs ####
     if (length(assay.name) > 1) {
         stop('The "assay.name" must be a single assay name.')
@@ -157,18 +159,18 @@ createPrPsSupervisedForContinuousUV <- function(
     # Assessing the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
-            se.obj = se.obj,
+            se.obj      = se.obj,
             assay.names = assay.name,
-            variables = c(main.uv.variable, bio.variables, other.uv.variables),
-            remove.na = remove.na,
-            verbose = verbose
+            variables   = c(main.uv.variable, bio.variables, other.uv.variables),
+            remove.na   = remove.na,
+            verbose     = verbose
             )
     }
 
     # Selecting the current specified samples ####
     if (is.logical(samples.to.use)) {
         se.obj.all <- se.obj
-        se.obj <- se.obj[, samples.to.use]
+        se.obj     <- se.obj[, samples.to.use]
     }
 
     # Applying data transformation ####
@@ -179,12 +181,12 @@ createPrPsSupervisedForContinuousUV <- function(
         )
     if (isTRUE(apply.log)){
         expr.data <- applyLog(
-            se.obj = se.obj,
-            assay.names = assay.name,
+            se.obj       = se.obj,
+            assay.names  = assay.name,
             pseudo.count = pseudo.count,
             check.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
+            remove.na    = 'none',
+            verbose      = verbose
             )[[assay.name]]
     }
     if (isFALSE(apply.log)){
@@ -202,7 +204,7 @@ createPrPsSupervisedForContinuousUV <- function(
     # Creating PRPS data sets ####
     printColoredMessage(
         message = '-- Creating PRPS sets:',
-        color = 'magenta',
+        color   = 'magenta',
         verbose = verbose
         )
     ## Creating PRPS with considering other uv variables ####
@@ -214,14 +216,14 @@ createPrPsSupervisedForContinuousUV <- function(
             verbose = verbose
             )
         homo.bio.groups <- createHomogeneousBioGroups(
-            se.obj = se.obj,
-            bio.variables = bio.variables,
+            se.obj            = se.obj,
+            bio.variables     = bio.variables,
             clustering.method = bio.clustering.method,
-            nb.clusters = nb.bio.clusters,
-            check.se.obj = FALSE,
-            remove.na = 'none',
-            save.se.obj = FALSE,
-            verbose = verbose
+            nb.clusters       = nb.bio.clusters,
+            check.se.obj      = FALSE,
+            remove.na         = 'none',
+            save.se.obj       = FALSE,
+            verbose           = verbose
             )
         ## Creating homogeneous groups of samples with respect to unwanted variation ####
         printColoredMessage(
@@ -233,18 +235,18 @@ createPrPsSupervisedForContinuousUV <- function(
             verbose = verbose
             )
         homo.uv.groups <- createHomogeneousUVGroups(
-            se.obj = se.obj,
-            uv.variables = other.uv.variables,
+            se.obj            = se.obj,
+            uv.variables      = other.uv.variables,
             clustering.method = other.uv.clustering.method,
-            nb.clusters = nb.other.uv.clusters,
-            check.se.obj = FALSE,
-            remove.na = 'none',
-            save.se.obj = FALSE,
-            verbose = verbose
+            nb.clusters       = nb.other.uv.clusters,
+            check.se.obj      = FALSE,
+            remove.na         = 'none',
+            save.se.obj       = FALSE,
+            verbose           = verbose
             )
         annot.data <- data.frame(
-            uv.variable = se.obj[[main.uv.variable]],
-            homo.uv.groups = homo.uv.groups,
+            uv.variable     = se.obj[[main.uv.variable]],
+            homo.uv.groups  = homo.uv.groups,
             homo.bio.groups = homo.bio.groups
             )
         ## Putting all biological and unwanted groups together ####
@@ -340,8 +342,8 @@ createPrPsSupervisedForContinuousUV <- function(
             prps.sets.plot <- sapply(
                 selected.groups,
                 function(x) {
-                    index.top <- top$sOrder[top$bio.batch == x]
-                    index.bot <- bot$sOrder[bot$bio.batch == x]
+                    index.top   <- top$sOrder[top$bio.batch == x]
+                    index.bot   <- bot$sOrder[bot$bio.batch == x]
                     top.samples <- se.obj[[main.uv.variable]][index.top]
                     bot.samples <- se.obj[[main.uv.variable]][index.bot]
                     c(top.samples, bot.samples) }) %>%
@@ -350,31 +352,31 @@ createPrPsSupervisedForContinuousUV <- function(
                 arrange(bio.batch, uv.var) %>%
                 mutate(groups = rep(rep(c('bottom', 'top'), each = min.sample.for.ps), length(selected.groups)))
             prps.map.plot <- data.frame(
-                bio.batch = rep(main.uv.variable, ncol(se.obj)),
-                uv.var = se.obj[[main.uv.variable]],
-                groups = main.uv.variable) %>%
+                bio.batch     = rep(main.uv.variable, ncol(se.obj)),
+                uv.var        = se.obj[[main.uv.variable]],
+                groups        = main.uv.variable) %>%
                 rbind(., prps.sets.plot) %>%
                 mutate(groups = factor(groups, levels= c(main.uv.variable, unique(prps.sets.plot$groups)))) %>%
-                mutate(new.g = ifelse(groups == main.uv.variable, 'UV', 'PRPS sets')) %>%
-                mutate(new.g = factor(new.g, levels = c('UV', 'PRPS sets')))
+                mutate(new.g  = ifelse(groups == main.uv.variable, 'UV', 'PRPS sets')) %>%
+                mutate(new.g  = factor(new.g, levels = c('UV', 'PRPS sets')))
             prps.map.plot <- ggplot(data = prps.map.plot, aes(x = uv.var , y = bio.batch , color = groups)) +
                 geom_boxplot() +
                 geom_point() +
-                scale_color_manual(values = c('darkgreen', 'tomato', 'navy')) +
+                scale_color_manual(values  = c('darkgreen', 'tomato', 'navy')) +
                 facet_grid(new.g~., scales = 'free', space = 'free') +
-                scale_x_discrete(expand = c(0, 0.5)) +
+                scale_x_discrete(expand    = c(0, 0.5)) +
                 xlab(main.uv.variable) +
                 ylab('Homogeneous groups') +
                 xlim(c(min(se.obj[[main.uv.variable]]), max(se.obj[[main.uv.variable]]))) +
                 theme_bw() +
                 theme(
-                    legend.key = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
+                    legend.key   = element_blank(),
+                    axis.line    = element_line(colour = 'black', linewidth = 1),
                     axis.title.x = element_text(size = 16),
                     axis.title.y = element_text(size = 16),
-                    axis.text.y = element_text(size = 14),
-                    axis.text.x = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
-                    legend.text = element_text(size = 14),
+                    axis.text.y  = element_text(size = 14),
+                    axis.text.x  = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
+                    legend.text  = element_text(size = 14),
                     legend.title = element_text(size = 18),
                     strip.text.y = element_text(size = 15)
                 )
@@ -390,14 +392,14 @@ createPrPsSupervisedForContinuousUV <- function(
             verbose = verbose
             )
         homo.bio.groups <- createHomogeneousBioGroups(
-            se.obj = se.obj,
-            bio.variables = bio.variables,
-            nb.clusters = nb.bio.clusters,
+            se.obj            = se.obj,
+            bio.variables     = bio.variables,
+            nb.clusters       = nb.bio.clusters,
             clustering.method = bio.clustering.method,
-            check.se.obj = FALSE,
-            save.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
+            check.se.obj      = FALSE,
+            save.se.obj       = FALSE,
+            remove.na         = 'none',
+            verbose           = verbose
             )
         printColoredMessage(
             message = paste0(
@@ -479,8 +481,8 @@ createPrPsSupervisedForContinuousUV <- function(
             prps.sets.plot <- sapply(
                 selected.groups,
                 function(x) {
-                    index.top <- top$sOrder[top$bio.variable == x]
-                    index.bot <- bot$sOrder[bot$bio.variable == x]
+                    index.top   <- top$sOrder[top$bio.variable == x]
+                    index.bot   <- bot$sOrder[bot$bio.variable == x]
                     top.samples <- se.obj[[main.uv.variable]][index.top]
                     bot.samples <- se.obj[[main.uv.variable]][index.bot]
                     c(top.samples, bot.samples)
@@ -490,13 +492,13 @@ createPrPsSupervisedForContinuousUV <- function(
                 arrange(bio.variable, uv.var) %>%
                 mutate(groups = rep(rep(c('bottom', 'top'), each = min.sample.for.ps), length(selected.groups)))
             prps.map.plot <- data.frame(
-                bio.variable = rep(main.uv.variable, ncol(se.obj)),
-                uv.var = se.obj[[main.uv.variable]],
-                groups = main.uv.variable) %>%
+                bio.variable  = rep(main.uv.variable, ncol(se.obj)),
+                uv.var        = se.obj[[main.uv.variable]],
+                groups        = main.uv.variable) %>%
                 rbind(., prps.sets.plot) %>%
                 mutate(groups = factor(groups, levels= c(main.uv.variable, unique(prps.sets.plot$groups)))) %>%
-                mutate(new.g = ifelse(groups == main.uv.variable, 'UV', 'PRPS sets')) %>%
-                mutate(new.g = factor(new.g, levels = c('UV', 'PRPS sets')))
+                mutate(new.g  = ifelse(groups == main.uv.variable, 'UV', 'PRPS sets')) %>%
+                mutate(new.g  = factor(new.g, levels = c('UV', 'PRPS sets')))
             prps.map.plot <- ggplot(data = prps.map.plot, aes(x = uv.var , y = bio.variable , color = groups)) +
                 geom_boxplot() +
                 geom_point() +
@@ -507,13 +509,13 @@ createPrPsSupervisedForContinuousUV <- function(
                 xlim(c(min(se.obj[[main.uv.variable]]),max(se.obj[[main.uv.variable]]))) +
                 theme_bw() +
                 theme(
-                    legend.key = element_blank(),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
+                    legend.key   = element_blank(),
+                    axis.line    = element_line(colour = 'black', linewidth = 1),
                     axis.title.x = element_text(size = 16),
                     axis.title.y = element_text(size = 16),
-                    axis.text.y = element_text(size = 12),
-                    axis.text.x = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
-                    legend.text = element_text(size = 14),
+                    axis.text.y  = element_text(size = 12),
+                    axis.text.x  = element_text(size = 12, angle = 35, hjust = 1, vjust = 1),
+                    legend.text  = element_text(size = 14),
                     legend.title = element_text(size = 18),
                     strip.text.y = element_text(size = 15)
                     )
@@ -571,7 +573,7 @@ createPrPsSupervisedForContinuousUV <- function(
         se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- prps.sets
 
         ## plot
-        if (isTRUE(plot.prps.map)){
+        if (isTRUE(save.se.obj)){
             if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]])) {
                 se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.map.plot']] <- list()
             }
@@ -579,12 +581,12 @@ createPrPsSupervisedForContinuousUV <- function(
         }
         printColoredMessage(
             message = 'The PRPS data and PRPS map plot are saved to th metdata in the SummarizedExperiment object.',
-            color = 'blue',
+            color   = 'blue',
             verbose = verbose
             )
         printColoredMessage(
             message = '------------The createPrPsForContinuousUV function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
         return(se.obj)
@@ -592,12 +594,12 @@ createPrPsSupervisedForContinuousUV <- function(
     if(isFALSE(save.se.obj)){
         printColoredMessage(
             message = 'The PRPS data and PRPS map plots are outputed as a list.',
-            color = 'blue',
+            color   = 'blue',
             verbose = verbose
             )
         printColoredMessage(
             message = '------------The createPrPsForContinuousUV function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
         return(list(prps.sets = prps.sets, prps.map.plot = prps.map.plot))

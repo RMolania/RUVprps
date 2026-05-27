@@ -394,14 +394,14 @@ createPrPsSupervisedForCategoricalUV <- function(
             verbose = verbose
             )
         homo.bio.groups <- createHomogeneousBioGroups(
-            se.obj = se.obj,
-            bio.variables = bio.variables,
-            nb.clusters = nb.bio.clusters,
+            se.obj            = se.obj,
+            bio.variables     = bio.variables,
+            nb.clusters       = nb.bio.clusters,
             clustering.method = bio.clustering.method,
-            check.se.obj = check.se.obj,
-            save.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
+            check.se.obj      = check.se.obj,
+            save.se.obj       = FALSE,
+            remove.na         = 'none',
+            verbose           = verbose
             )
         if (sum(table(homo.bio.groups) == 1) == length(unique(homo.bio.groups)))
             stop('All the homogeneous biological group of samples have only 1 sample. PRPS cannot be created.')
@@ -433,8 +433,8 @@ createPrPsSupervisedForCategoricalUV <- function(
             color = 'magenta',
             verbose = verbose
             )
-        samples.dis <- samples.dis[rowSums(samples.dis >= min.sample.for.ps) > 1 , ]
-        samples.dis <- samples.dis[rowSums(samples.dis >= min.sample.for.ps) > 1 , ]
+        samples.dis  <- samples.dis[rowSums(samples.dis >= min.sample.for.ps) > 1 , ]
+        samples.dis  <- samples.dis[rowSums(samples.dis >= min.sample.for.ps) > 1 , ]
         mean.samples <- round(mean(samples.dis[samples.dis >= min.sample.for.ps]), digits = 0)
         printColoredMessage(
             message = paste0(
@@ -530,7 +530,7 @@ createPrPsSupervisedForCategoricalUV <- function(
                 axis.text.y = element_text(size = 12),
                 legend.position = 'right') +
             guides(color = guide_legend(title = "PS"))
-        if (isTRUE(verbose)) print(prps.map.plot)
+        if (isTRUE(plot.prps.map)) print(prps.map.plot)
     }
     # Saving the results ####
     ## Selecting output name ####
@@ -582,7 +582,7 @@ createPrPsSupervisedForCategoricalUV <- function(
         se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- prps.sets
 
         ## plot
-        if (isTRUE(plot.prps.map)){
+        if (isTRUE(save.se.obj)){
             if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]])) {
                 se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.map.plot']] <- list()
             }
@@ -590,21 +590,21 @@ createPrPsSupervisedForCategoricalUV <- function(
         }
         printColoredMessage(
             message = 'The PRPS data and PRPS map plot are saved to th metdata in the SummarizedExperiment object.',
-            color = 'blue',
+            color   = 'blue',
             verbose = verbose
             )
         printColoredMessage(
             message = '------------The createPrPsForCategoricalUV function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
-        )
+            )
         return(se.obj)
     }
     ## Saving the output in as data frame ####
     if (isFALSE(save.se.obj)) {
         printColoredMessage(
             message = '------------The createPrPsForCategoricalUV function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
         if (isTRUE(plot.prps.map)){
