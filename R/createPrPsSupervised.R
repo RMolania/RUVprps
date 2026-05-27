@@ -84,27 +84,27 @@ createPrPsSupervised <- function(
         assay.name,
         bio.variables,
         uv.variables,
-        apply.other.uv.variables = TRUE,
+        apply.other.uv.variables   = TRUE,
         other.uv.clustering.method = 'kmeans',
-        nb.other.uv.clusters = 2,
-        samples.to.use = 'all',
-        min.sample.for.ps = 3,
-        bio.clustering.method = 'kmeans',
-        nb.bio.clusters = 2,
-        check.prps.connectedness = TRUE,
-        apply.log = TRUE,
-        pseudo.count = 1,
-        plot.output = TRUE,
-        prps.group.name = NULL,
-        prps.sets.name = NULL,
-        check.se.obj = TRUE,
-        remove.na = 'both',
-        save.se.obj = TRUE,
-        verbose = TRUE
+        nb.other.uv.clusters       = 2,
+        samples.to.use             = 'all',
+        min.sample.for.ps          = 3,
+        bio.clustering.method      = 'kmeans',
+        nb.bio.clusters            = 2,
+        check.prps.connectedness   = TRUE,
+        apply.log                  = TRUE,
+        pseudo.count               = 1,
+        plot.output                = TRUE,
+        prps.group.name            = NULL,
+        prps.sets.name             = NULL,
+        check.se.obj               = TRUE,
+        remove.na                  = 'both',
+        save.se.obj                = TRUE,
+        verbose                    = TRUE
         ){
     printColoredMessage(
         message = '------------The createPrPsSupervised function starts:',
-        color = 'white',
+        color   = 'white',
         verbose = verbose
         )
     # Checking the function input ####
@@ -137,26 +137,27 @@ createPrPsSupervised <- function(
                         other.uv.variables <- uv.variables[!uv.variables %in% x]
                     } else other.uv.variables <- NULL
                     createPrPsSupervisedForCategoricalUV(
-                        se.obj = se.obj,
-                        assay.name = assay.name,
-                        bio.variables = bio.variables,
-                        main.uv.variable = x,
-                        other.uv.variables = other.uv.variables,
-                        samples.to.use = samples.to.use,
-                        min.sample.for.ps = min.sample.for.ps,
-                        bio.clustering.method = bio.clustering.method,
-                        nb.bio.clusters = nb.bio.clusters,
+                        se.obj                     = se.obj,
+                        assay.name                 = assay.name,
+                        bio.variables              = bio.variables,
+                        main.uv.variable           = x,
+                        other.uv.variables         = other.uv.variables,
+                        samples.to.use             = samples.to.use,
+                        min.sample.for.ps          = min.sample.for.ps,
+                        bio.clustering.method      = bio.clustering.method,
+                        nb.bio.clusters            = nb.bio.clusters,
                         other.uv.clustering.method = other.uv.clustering.method,
-                        nb.other.uv.clusters = nb.other.uv.clusters,
-                        apply.log = apply.log,
-                        pseudo.count = pseudo.count,
-                        check.prps.connectedness = check.prps.connectedness,
-                        check.se.obj = FALSE,
-                        save.se.obj = save.se.obj,
-                        remove.na = remove.na,
-                        prps.group.name = prps.group.name,
-                        prps.sets.name = prps.sets.name,
-                        verbose = verbose
+                        nb.other.uv.clusters       = nb.other.uv.clusters,
+                        apply.log                  = apply.log,
+                        pseudo.count               = pseudo.count,
+                        check.prps.connectedness   = check.prps.connectedness,
+                        check.se.obj               = FALSE,
+                        save.se.obj                = save.se.obj,
+                        remove.na                  = remove.na,
+                        prps.group.name            = prps.group.name,
+                        prps.sets.name             = prps.sets.name,
+                        plot.prps.map              = plot.output,
+                        verbose                    = verbose
                     )
                 })
             names(categorical.uv.prps) <- categorical.uv
@@ -167,26 +168,27 @@ createPrPsSupervised <- function(
                     other.uv.variables <- uv.variables[!uv.variables %in% x]
                 } else other.uv.variables <- NULL
                 se.obj <- createPrPsSupervisedForCategoricalUV(
-                    se.obj = se.obj,
-                    assay.name = assay.name,
-                    bio.variables = bio.variables,
-                    main.uv.variable = x,
-                    other.uv.variables = other.uv.variables,
-                    samples.to.use = samples.to.use,
-                    min.sample.for.ps = min.sample.for.ps,
-                    bio.clustering.method = bio.clustering.method,
-                    nb.bio.clusters = nb.bio.clusters,
+                    se.obj                     = se.obj,
+                    assay.name                 = assay.name,
+                    bio.variables              = bio.variables,
+                    main.uv.variable           = x,
+                    other.uv.variables         = other.uv.variables,
+                    samples.to.use             = samples.to.use,
+                    min.sample.for.ps          = min.sample.for.ps,
+                    bio.clustering.method      = bio.clustering.method,
+                    nb.bio.clusters            = nb.bio.clusters,
                     other.uv.clustering.method = other.uv.clustering.method,
-                    nb.other.uv.clusters = nb.other.uv.clusters,
-                    apply.log = apply.log,
-                    pseudo.count = pseudo.count,
-                    check.prps.connectedness = check.prps.connectedness,
-                    check.se.obj = FALSE,
-                    save.se.obj = save.se.obj,
-                    remove.na = remove.na,
-                    prps.sets.name = prps.sets.name,
-                    prps.group.name = prps.group.name,
-                    verbose = verbose
+                    nb.other.uv.clusters       = nb.other.uv.clusters,
+                    apply.log                  = apply.log,
+                    pseudo.count               = pseudo.count,
+                    check.prps.connectedness   = check.prps.connectedness,
+                    check.se.obj               = FALSE,
+                    save.se.obj                = save.se.obj,
+                    remove.na                  = remove.na,
+                    prps.sets.name             = prps.sets.name,
+                    prps.group.name            = prps.group.name,
+                    plot.prps.map              = plot.output,
+                    verbose                    = verbose
                 )
             }
         }
@@ -206,25 +208,26 @@ createPrPsSupervised <- function(
                         other.uv.variables <- uv.variables[!uv.variables %in% x]
                     } else other.uv.variables <- NULL
                     createPrPsSupervisedForContinuousUV(
-                        se.obj = se.obj,
-                        assay.name = assay.name,
-                        bio.variables = bio.variables,
-                        main.uv.variable = x,
-                        samples.to.use = samples.to.use,
-                        other.uv.variables = other.uv.variables,
-                        min.sample.for.ps = min.sample.for.ps,
-                        bio.clustering.method = bio.clustering.method,
-                        nb.bio.clusters = nb.bio.clusters,
+                        se.obj                     = se.obj,
+                        assay.name                 = assay.name,
+                        bio.variables              = bio.variables,
+                        main.uv.variable           = x,
+                        samples.to.use             = samples.to.use,
+                        other.uv.variables         = other.uv.variables,
+                        min.sample.for.ps          = min.sample.for.ps,
+                        bio.clustering.method      = bio.clustering.method,
+                        nb.bio.clusters            = nb.bio.clusters,
                         other.uv.clustering.method = other.uv.clustering.method,
-                        nb.other.uv.clusters = nb.other.uv.clusters,
-                        apply.log = apply.log,
-                        check.se.obj = FALSE,
-                        save.se.obj = save.se.obj,
-                        pseudo.count = pseudo.count,
-                        remove.na = remove.na,
-                        prps.sets.name = prps.sets.name,
-                        prps.group.name = prps.group.name,
-                        verbose = verbose
+                        nb.other.uv.clusters       = nb.other.uv.clusters,
+                        apply.log                  = apply.log,
+                        check.se.obj               = FALSE,
+                        save.se.obj                = save.se.obj,
+                        pseudo.count               = pseudo.count,
+                        remove.na                  = remove.na,
+                        prps.sets.name             = prps.sets.name,
+                        prps.group.name            = prps.group.name,
+                        plot.prps.map              = plot.output,
+                        verbose                    = verbose
                     )
                 })
             names(continuous.uv.prps) <- continuous.uv
@@ -235,25 +238,26 @@ createPrPsSupervised <- function(
                     other.uv.variables <- uv.variables[!uv.variables %in% x]
                 } else other.uv.variables <- NULL
                 se.obj <- createPrPsSupervisedForContinuousUV(
-                    se.obj = se.obj,
-                    assay.name = assay.name,
-                    bio.variables = bio.variables,
-                    main.uv.variable = x,
-                    other.uv.variables = other.uv.variables,
-                    min.sample.for.ps = min.sample.for.ps,
-                    samples.to.use = samples.to.use,
-                    bio.clustering.method = bio.clustering.method,
-                    nb.bio.clusters = nb.bio.clusters,
+                    se.obj                     = se.obj,
+                    assay.name                 = assay.name,
+                    main.uv.variable           = x,
+                    bio.variables              = bio.variables,
+                    other.uv.variables         = other.uv.variables,
+                    min.sample.for.ps          = min.sample.for.ps,
+                    samples.to.use             = samples.to.use,
+                    bio.clustering.method      = bio.clustering.method,
+                    nb.bio.clusters            = nb.bio.clusters,
                     other.uv.clustering.method = other.uv.clustering.method,
-                    nb.other.uv.clusters = nb.other.uv.clusters,
-                    apply.log = apply.log,
-                    check.se.obj = FALSE,
-                    save.se.obj = save.se.obj,
-                    pseudo.count = pseudo.count,
-                    remove.na = remove.na,
-                    prps.sets.name = prps.sets.name,
-                    prps.group.name = prps.group.name,
-                    verbose = verbose
+                    nb.other.uv.clusters       = nb.other.uv.clusters,
+                    apply.log                  = apply.log,
+                    check.se.obj               = FALSE,
+                    save.se.obj                = save.se.obj,
+                    pseudo.count               = pseudo.count,
+                    remove.na                  = remove.na,
+                    prps.sets.name             = prps.sets.name,
+                    prps.group.name            = prps.group.name,
+                    plot.prps.map              = plot.output,
+                    verbose                    = verbose
                 )
             }
         }
@@ -262,31 +266,28 @@ createPrPsSupervised <- function(
     if (isTRUE(save.se.obj)) {
         printColoredMessage(
             message = '------------The createPrPsSupervised function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
         return(se.obj)
     } else{
         printColoredMessage(
             message = '------------The createPrPsSupervised function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
-        if (length(continuous.uv) > 0 &
-            length(categorical.uv) > 0) {
+        if (length(continuous.uv) > 0 & length(categorical.uv) > 0) {
             return(
                 list(
                     categorical.uv.prps = categorical.uv.prps,
-                    continuous.uv.prps = continuous.uv.prps,
-                    all.prps = cbind(categorical.uv.prps.all, continuous.uv.prps.all))
+                    continuous.uv.prps  = continuous.uv.prps,
+                    all.prps            = cbind(categorical.uv.prps.all, continuous.uv.prps.all))
             )
-        } else if (length(continuous.uv) > 0 &
-                   length(categorical.uv) == 0) {
+        } else if (length(continuous.uv) > 0 & length(categorical.uv) == 0) {
             return(
                 list(continuous.uv.prps = continuous.uv.prps,
                      all.prps = continuous.uv.prps.all))
-        } else if (length(continuous.uv) == 0 &
-                   length(categorical.uv) > 0) {
+        } else if (length(continuous.uv) == 0 & length(categorical.uv) > 0) {
             return(
                 list(categorical.uv.prps = categorical.uv.prps,
                      all.prps = categorical.uv.prps.all))
