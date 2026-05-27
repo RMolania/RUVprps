@@ -54,21 +54,23 @@ plotStudyOutline <- function(
         se.obj,
         variables,
         assess.variables.association = TRUE,
-        variable.to.sort = NULL,
-        plot.output = TRUE,
-        legend.font.size = 14,
-        legend.ncol = 4,
-        legend.direction = 'horizontal',
-        heatmap.legend.side = 'bottom',
-        column.names.rot = 25,
-        check.se.obj = TRUE,
-        remove.na = 'none',
-        save.se.obj = TRUE,
-        verbose = TRUE
+        variable.to.sort             = NULL,
+        plot.output                  = TRUE,
+        legend.font.size             = 14,
+        legend.ncol                  = 4,
+        legend.direction             = 'horizontal',
+        heatmap.legend.side          = 'bottom',
+        column.names.rot             = 25,
+        check.se.obj                 = TRUE,
+        remove.na                    = 'none',
+        save.se.obj                  = TRUE,
+        verbose                      = TRUE
         ){
-    printColoredMessage(message = '------------The plotStudyOutline function starts:',
-                        color = 'white',
-                        verbose = verbose)
+    printColoredMessage(
+        message = '------------The plotStudyOutline function starts:',
+        color = 'white',
+        verbose = verbose
+        )
     # checking the function input
     if (is.null(se.obj) | is.logical(se.obj)){
         stop('The "se.obj" cannot be NULL or logical. A SummarizedExperiment object must be provided.')
@@ -110,18 +112,18 @@ plotStudyOutline <- function(
         arrange(dplyr::pick(variable.to.sort))
 
     var.class <- sapply(variables, function(x) class(sample.info[[x]]))
-    cat.var <- var.class %in% c('factor', 'character')
-    cont.var <- var.class %in% c('integer', 'numeric')
+    cat.var   <- var.class %in% c('factor', 'character')
+    cont.var  <- var.class %in% c('integer', 'numeric')
 
-    # # Select colors ####
+    # Select colors ####
     # ## Categorical
     # palette.colors <- brewer.pal.info
     # palette.colors <- palette.colors[order(palette.colors$category, decreasing = FALSE) , ]
     # names(variables)[cat.var] <- seq(sum(cat.var))
     #
     # ## Continuous
-    viridis.colors <- c('plasma', 'cividis', 'inferno', 'magma', 'mako','rocket', 'turbo', 'viridis')
-    viridis.colors <- rep(viridis.colors, c(ceiling(sum(cont.var) /8 )))
+    viridis.colors             <- c('plasma', 'cividis', 'inferno', 'magma', 'mako','rocket', 'turbo', 'viridis')
+    viridis.colors             <- rep(viridis.colors, c(ceiling(sum(cont.var) /8 )))
     names(variables)[cont.var] <- seq(sum(cont.var))
     # # Generate heatmaps ####
     # ht.list <- NULL
@@ -189,25 +191,25 @@ plotStudyOutline <- function(
             names(color.plates) <- sample.info[ , selected.variable]
             ht.list <-  ht.list + ComplexHeatmap::Heatmap(
                 sample.info[ , selected.variable],
-                cluster_rows = FALSE,
-                name = selected.variable,
-                column_names_rot = column.names.rot,
-                col = color.plates,
+                cluster_rows         = FALSE,
+                name                 = selected.variable,
+                column_names_rot     = column.names.rot,
+                col                  = color.plates,
                 heatmap_legend_param = list(
-                    title_gp = grid::gpar(fontsize = legend.font.size),
-                    by_row = TRUE,
-                    ncol = legend.ncol)
+                    title_gp         = grid::gpar(fontsize = legend.font.size),
+                    by_row           = TRUE,
+                    ncol             = legend.ncol)
                 )
             currentCols <- currentCols[-seq(num.colors)]
         } else if (class(sample.info[ , selected.variable])  %in% c('integer', 'numeric')){
             ht.list <-  ht.list + ComplexHeatmap::Heatmap(
                 sample.info[ , selected.variable],
-                cluster_rows = FALSE,
-                name = selected.variable,
-                column_names_rot = column.names.rot,
-                col = viridis(n = 10, option = viridis.colors[as.numeric(names(selected.variable))]),
+                cluster_rows         = FALSE,
+                name                 = selected.variable,
+                column_names_rot     = column.names.rot,
+                col                  = viridis(n = 10, option = viridis.colors[as.numeric(names(selected.variable))]),
                 heatmap_legend_param = list(
-                    title_gp = grid::gpar(fontsize = legend.font.size),
+                    title_gp         = grid::gpar(fontsize = legend.font.size),
                     legend_direction = legend.direction)
                 )
         }
@@ -215,9 +217,9 @@ plotStudyOutline <- function(
     if(isTRUE(plot.output)){
         ht_opt$message = FALSE
         print(draw(
-            object = ht.list,
+            object              = ht.list,
             heatmap_legend_side = heatmap.legend.side,
-            auto_adjust = TRUE))
+            auto_adjust         = TRUE))
     }
     if (isTRUE(assess.variables.association)){
         sample.annotation <- colData(se.obj)
@@ -227,8 +229,8 @@ plotStudyOutline <- function(
             paste0(variables, collapse = '+')
             ))
         var.association <- canCorPairs(
-            formula = form,
-            data = sample.annotation,
+            formula      = form,
+            data         = sample.annotation,
             showWarnings = FALSE
             )
         ht.vars <- ComplexHeatmap::Heatmap(
@@ -242,34 +244,35 @@ plotStudyOutline <- function(
     ## add results to the SummarizedExperiment object ####
     printColoredMessage(
         message = '-- Save the study outline plot:',
-        color = 'magenta',
-        verbose = verbose)
+        color   = 'magenta',
+        verbose = verbose
+        )
     ## check if metadata metric already exist
     if(isTRUE(save.se.obj)){
         if (!'StudyOutline' %in% names(se.obj@metadata)) {
             se.obj@metadata[['StudyOutline']] <- list()
         }
-        se.obj@metadata[['StudyOutline']] <- draw(
-            object = ht.list,
-            heatmap_legend_side = heatmap.legend.side,
-            auto_adjust = TRUE
-            )
+        se.obj@metadata[['StudyOutline']] <- ht.list
 
         if (isTRUE(assess.variables.association)){
             if (!'VariablesAssociation' %in% names(se.obj@metadata)) {
                 se.obj@metadata[['VariablesAssociation']] <- list()
             }
-            se.obj@metadata[['VariablesAssociation']] <- draw(ht.vars)
+            se.obj@metadata[['VariablesAssociation']] <- ht.vars
         }
-        printColoredMessage(message = '------------The plotStudyOutline function finished.',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The plotStudyOutline function finished.',
+            color   = 'white',
+            verbose = verbose
+            )
         return(se.obj)
     }
     if(isFALSE(save.se.obj)){
-        printColoredMessage(message = '------------The plotStudyOutline function finished.:',
-                            color = 'white',
-                            verbose = verbose)
+        printColoredMessage(
+            message = '------------The plotStudyOutline function finished.',
+            color   = 'white',
+            verbose = verbose
+            )
         return(ht.list)
     }
 }
