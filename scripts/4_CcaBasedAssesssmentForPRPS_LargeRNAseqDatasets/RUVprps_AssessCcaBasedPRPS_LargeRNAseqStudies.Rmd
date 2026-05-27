@@ -1,0 +1,1111 @@
+---
+title: "Assess CCA-based approach to create PRPS"
+output: html_document
+date: "2026-05-26"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(SummarizedExperiment)
+library(matrixStats)
+library(parallel)
+library(RUVprps)
+library(cluster)
+library(mclust)
+library(ggpubr)
+library(irlba)
+library(dplyr)
+library(edgeR)
+library(tidyr)
+library(grid)
+```
+
+# CLLE
+## Reading the data
+```{r}
+omics.profile <- read.csv('OmicsProfiles.csv')
+omics.profile <- omics.profile[omics.profile$DataType == 'rna' , ]
+length(unique(omics.profile$ModelID)) # 1699
+omics.profile$years <- substr(
+    x     = omics.profile$SequencingDate, 
+    start = 1, 
+    stop  = 4
+    )
+omics.profile$months <- substr(
+    x     = omics.profile$SequencingDate, 
+    start = 6, 
+    stop  = 7
+    )
+omics.profile$days <- substr(
+    x     = omics.profile$SequencingDate, 
+    start = 9, 
+    stop  = 10
+    )
+omics.profile <- dplyr::arrange(
+    omics.profile, 
+    Lineage, 
+    CellFormat, 
+    Stranded, years
+    )
+
+expr.data           <- as.data.frame(data.table::fread('OmicsExpressionRawReadCountHumanAllGenes.csv'))
+cell.info           <- expr.data[, 1:6]
+expr.data           <- expr.data[ , -c(1:6)]
+expr.data           <- t(expr.data)
+colnames(expr.data) <- cell.info$ModelID
+all.equal(colnames(expr.data), omics.profile$ModelID)
+expr.data           <- expr.data[ , omics.profile$ModelID]
+all.equal(colnames(expr.data), omics.profile$ModelID)
+```
+
+
+# Assessing PRPS using CCA
+### Reading the data
+```{r}
+cell.annot <- omics.profile
+all.equal(colnames(expr.data), cell.annot$ModelID)
+
+remov.cells <- !cell.annot$Lineage == "" # 1742
+cell.annot  <- cell.annot[remov.cells , ]
+expr.data   <- expr.data[ , remov.cells ]
+
+remove.cells <- !duplicated(cell.annot$ModelID)
+cell.annot   <- cell.annot[remove.cells , ]
+expr.data    <- expr.data[ , remove.cells ]
+
+remove.cells <- cell.annot$Lineage %in% RUVprps:::findRepeatingPatterns(
+    vec = cell.annot$Lineage, 
+    n.repeat = 10
+    )
+cell.annot            <- cell.annot[remove.cells , ]
+expr.data             <- expr.data[ , remove.cells ]
+all.equal(colnames(expr.data), cell.annot$ModelID)
+row.names(cell.annot) <- cell.annot$ModelID
+```
+
+### Prepare SE object and find HVG
+```{r}
+raw.data <- list(RawCount = expr.data)
+se.obj <- prepareSeObj(
+    data                          = raw.data, 
+    sample.annotation             = cell.annot, 
+    raw.count.assay.name          = 'RawCount', 
+    remove.lowly.expressed.genes  = TRUE, 
+    biological.group              = 'Lineage', 
+    count.cutoff                  = 20,
+    calculate.library.size        = TRUE, 
+    estimate.tumor.purity         = NULL, 
+    assay.name.to.estimate.purity = 'RawCount'
+    )
+se.obj$library.size <- log2(se.obj$library.size)
+se.obj <- findHVG(
+    se.obj     = se.obj, 
+    assay.name = 'RawCount', 
+    nb.cores   = 14
+    )
+hvg <- se.obj@metadata$HVG$hvg_vst$`3638|acrossAllSamples|RawCount`$hvg.set
+sum(hvg) == 3638
+```
+
+### Plotting uMAP raw data
+```{r}
+set.seed(2234)
+pca.all <- irlba::prcomp_irlba(
+    x = t(log2(expr.data+1)), 
+    n = 20
+    )
+set.seed(2234)
+umap.all <- uwot::umap(
+    pca.all$x, 
+    n_neighbors = 30, 
+    min_dist    = 0.3, 
+    metric      = "cosine"
+    )
+# plotting
+data.frame(
+  umap1                     = umap.all[, 1],
+  umap2                     = umap.all[, 2],
+  group                     = cell.annot$Lineage) %>%
+  ggplot(aes(x              = umap1, y = umap2, color = group)) +
+  geom_point(alpha          = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color                =1:34,
+    group                   = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 10),
+    legend.position  = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+
+
+data.frame(
+  umap1            = umap.all[, 1],
+  umap2            = umap.all[, 2],
+  group            = cell.annot$Stranded) %>%
+  ggplot(aes(x     = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c('darkgreen', 'cyan')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 10),
+    legend.position  = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+```
+
+### Finding PRPS using CCA
+#### Using 40 CCA
+##### PRPS
+```{r}
+set.seed(4040)
+se.obj <- createPrPsUnSupervisedByCca(
+    se.obj             = se.obj, 
+    assay.name         = 'RawCount', 
+    main.uv.variable   = 'Stranded', 
+    nb.cca             = 40, 
+    hvg                = hvg,
+    coordinates.to.use = 'cca', 
+    max.prps.sets      = 50,
+    )
+mnn          <- se.obj@metadata$PRPS$un.supervised$Stranded$`Stranded|CcaPca|RawCount`$mnn.samples
+dim(mnn) # 23 4
+sample.annot <- as.data.frame(colData(se.obj))
+a            <- sample.annot[mnn$left.samples, ]$Lineage
+b            <- sample.annot[mnn$right.samples, ]$Lineage
+tbl          <- table(a, b)
+
+ComplexHeatmap::Heatmap(
+    matrix = tbl , 
+    name = 'Frequency',
+    cluster_columns = F,
+    cluster_rows = F,
+    show_row_dend = F, 
+    show_column_dend = F,
+    column_names_rot = 90,
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title = "Frequency",
+    direction = "horizontal",
+    title_gp = gpar(fontsize = 14, fontface = "bold"),  # legend title size
+    labels_gp = gpar(fontsize = 14),                     # legend label size
+    legend_height = unit(5, "cm"),                       # make legend taller
+    legend_width = unit(1.2, "cm")                       # make legend wider (if horizontal)
+    ))
+```
+
+##### Plotting umap using CCA
+```{r}
+set.seed(4040)
+se.obj <- RUVprps:::computeCCA(
+    se.obj     = se.obj, 
+    assay.name = 'RawCount', 
+    nb.cca     = 40, 
+    variable   = 'Stranded', 
+    hvg        = hvg
+    )
+cca.corr <- se.obj@metadata$CCA$RawCount$Stranded$`Cca:40|HVG:36380|Scale:TRUE|Norm:CPM`$False_True
+cca.corr <- cca.corr[cell.annot$ModelID , ]
+set.seed(4040)
+umap.all <- uwot::umap(
+    cca.corr, 
+    n_neighbors = 30, 
+    min_dist    = 0.3, 
+    metric      = "cosine"
+    )
+# plotting
+data.frame(
+  umap1                     = umap.all[, 1],
+  umap2                     = umap.all[, 2],
+  group                     = cell.annot$Lineage) %>%
+  ggplot(aes(x              = umap1, y = umap2, color = group)) +
+  geom_point(alpha          = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color                =1:34,
+    group                   = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 10),
+    legend.position  = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+
+
+data.frame(
+  umap1            = umap.all[, 1],
+  umap2            = umap.all[, 2],
+  group            = cell.annot$Stranded) %>%
+  ggplot(aes(x     = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c('darkgreen', 'cyan')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 10),
+    legend.position  = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+```
+
+##### Silhouette plot
+```{r}
+## silhouette
+set.seed(2234)
+pca.all           <- irlba::prcomp_irlba(x = t(log2(expr.data+1)), n = 40)
+d.matrix          <- as.matrix(dist(pca.all$x[,1:40]))
+avg.width.biology <- summary(silhouette(as.numeric(as.factor(se.obj$Lineage)), d.matrix))$avg.width
+avg.width.strand  <- summary(silhouette(as.numeric(as.factor(se.obj$Stranded)), d.matrix))$avg.width
+
+all.equal(row.names(cca.corr), cell.annot$ModelID)
+d.matrix              <- as.matrix(dist(cca.corr[,1:40]))
+avg.width.biology.cca <- summary(silhouette(as.numeric(as.factor(cell.annot$Lineage)), d.matrix))$avg.width
+avg.width.strand.caa  <- summary(silhouette(as.numeric(as.factor(cell.annot$Stranded)), d.matrix))$avg.width
+
+data.frame(
+    'Lineage\n(PCA)'                     = avg.width.biology, 
+    'Stranded\n(PCA)'                    = avg.width.strand, 
+    'Lineage\n(CCA)'                     = avg.width.biology.cca,
+    'Stranded\n(CCA)'                    = avg.width.strand.caa ,
+    check.names                          = FALSE) %>% 
+    pivot_longer(everything(), values_to = 'val', names_to = 'method') %>% 
+    ggplot(., aes(x                      = method, y = val)) +
+    ylab('Silhouette\ncoefficient') +
+    xlab('') +
+    geom_col() +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 16),
+        axis.title.y     = element_text(size = 16),
+        axis.text.x      = element_text(size = 12),
+        axis.text.y      = element_text(size = 12),
+        legend.title     = element_blank(),
+        legend.text      = element_text(size = 10),
+        legend.position  = 'none'
+    )
+```
+
+#### Using 30 CCA
+##### PRPS
+```{r}
+set.seed(3030)
+se.obj <- createPrPsUnSupervisedByCca(
+    se.obj             = se.obj, 
+    assay.name         = 'RawCount', 
+    main.uv.variable   = 'Stranded', 
+    nb.cca             = 30, 
+    hvg                = hvg,
+    coordinates.to.use = 'cca', 
+    max.prps.sets      = 50,
+    )
+mnn          <- se.obj@metadata$PRPS$un.supervised$Stranded$`Stranded|CcaPca|RawCount`$mnn.samples
+dim(mnn) # 21 4
+sample.annot <- as.data.frame(colData(se.obj))
+a            <- sample.annot[mnn$left.samples, ]$Lineage
+b            <- sample.annot[mnn$right.samples, ]$Lineage
+tbl          <- table(a, b)
+
+ComplexHeatmap::Heatmap(
+    matrix               = tbl , 
+    name                 = 'Frequency',
+    cluster_columns      = F,
+    cluster_rows         = F,
+    show_row_dend        = F, 
+    show_column_dend     = F,
+    column_names_rot     = 90,
+    col                  = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title                = "Frequency",
+    direction            = "horizontal",
+    title_gp             = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp            = gpar(fontsize = 14),
+    legend_height        = unit(5, "cm"),
+    legend_width         = unit(1.2, "cm") 
+    ))
+```
+
+##### Plotting umap using CCA
+```{r}
+set.seed(3030)
+se.obj <- RUVprps:::computeCCA(
+    se.obj     = se.obj, 
+    assay.name = 'RawCount', 
+    nb.cca     = 30, 
+    variable   = 'Stranded', 
+    hvg        = hvg
+    )
+cca.corr <- se.obj@metadata$CCA$RawCount$Stranded$`Cca:30|HVG:36380|Scale:TRUE|Norm:CPM`$False_True
+cca.corr <- cca.corr[cell.annot$ModelID , ]
+set.seed(3030)
+umap.all <- uwot::umap(
+    cca.corr, 
+    n_neighbors = 30, 
+    min_dist = 0.3, 
+    metric = "cosine"
+    )
+# plotting
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = cell.annot$Lineage) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color =1:34,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+
+
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = cell.annot$Stranded) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c('darkgreen', 'cyan')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+```
+
+##### Silhouette plot
+```{r}
+## silhouette
+d.matrix          <- as.matrix(dist(pca.all$x[,1:30]))
+avg.width.biology <- summary(silhouette(as.numeric(as.factor(se.obj$Lineage)), d.matrix))$avg.width
+avg.width.strand  <- summary(silhouette(as.numeric(as.factor(se.obj$Stranded)), d.matrix))$avg.width
+
+all.equal(row.names(cca.corr), cell.annot$ModelID)
+d.matrix              <- as.matrix(dist(cca.corr[,1:30]))
+avg.width.biology.cca <- summary(silhouette(as.numeric(as.factor(cell.annot$Lineage)), d.matrix))$avg.width
+avg.width.strand.caa  <- summary(silhouette(as.numeric(as.factor(cell.annot$Stranded)), d.matrix))$avg.width
+
+data.frame(
+    'Lineage\n(PCA)'                     = avg.width.biology, 
+    'Stranded\n(PCA)'                    = avg.width.strand, 
+    'Lineage\n(CCA)'                     = avg.width.biology.cca,
+    'Stranded\n(CCA)'                    = avg.width.strand.caa ,
+    check.names                          = FALSE) %>% 
+    pivot_longer(everything(), values_to = 'val', names_to = 'method') %>% 
+    ggplot(., aes(x                      = method, y = val)) +
+    ylab('Silhouette\ncoefficient') +
+    xlab('') +
+    geom_col() +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 16),
+        axis.title.y     = element_text(size = 16),
+        axis.text.x      = element_text(size = 12),
+        axis.text.y      = element_text(size = 12),
+        legend.title     = element_blank(),
+        legend.text      = element_text(size = 10),
+        legend.position  = 'none'
+    )
+```
+
+#### Using 20 CCA
+##### PRPS
+```{r}
+set.seed(2020)
+se.obj <- createPrPsUnSupervisedByCca(
+    se.obj             = se.obj, 
+    assay.name         = 'RawCount', 
+    main.uv.variable   = 'Stranded', 
+    nb.cca             = 20, 
+    hvg                = hvg,
+    coordinates.to.use = 'cca', 
+    max.prps.sets      = 50,
+    )
+mnn          <- se.obj@metadata$PRPS$un.supervised$Stranded$`Stranded|CcaPca|RawCount`$mnn.samples
+sample.annot <- as.data.frame(colData(se.obj))
+a            <- sample.annot[mnn$left.samples, ]$Lineage
+b            <- sample.annot[mnn$right.samples, ]$Lineage
+tbl          <- table(a, b)
+
+ComplexHeatmap::Heatmap(
+    matrix               = tbl , 
+    name                 = 'Frequency',
+    cluster_columns      = F,
+    cluster_rows         = F,
+    show_row_dend        = F, 
+    show_column_dend     = F,
+    column_names_rot     = 90,
+    col                  = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title                = "Frequency",
+    direction            = "horizontal",
+    title_gp             = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp            = gpar(fontsize = 14),
+    legend_height        = unit(5, "cm"),
+    legend_width         = unit(1.2, "cm")
+    ))
+```
+
+##### Plotting umap using CCA
+```{r}
+set.seed(2020)
+se.obj <- RUVprps:::computeCCA(
+    se.obj     = se.obj, 
+    assay.name = 'RawCount', 
+    nb.cca     = 20, 
+    variable   = 'Stranded', 
+    hvg        = hvg
+    )
+cca.corr <- se.obj@metadata$CCA$RawCount$Stranded$`Cca:20|HVG:36380|Scale:TRUE|Norm:CPM`$False_True
+cca.corr <- cca.corr[cell.annot$ModelID , ]
+set.seed(2020)
+umap.all <- uwot::umap(
+    cca.corr, 
+    n_neighbors = 30, 
+    min_dist    = 0.3, 
+    metric      = "cosine"
+    )
+# plotting
+data.frame(
+  umap1                     = umap.all[, 1],
+  umap2                     = umap.all[, 2],
+  group                     = cell.annot$Lineage) %>%
+  ggplot(aes(x              = umap1, y = umap2, color = group)) +
+  geom_point(alpha          = .4, size = 2, shape = 19, stroke = NA) +
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color                =1:34,
+    group                   = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 10),
+    legend.position  = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)
+
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = cell.annot$Stranded) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c('darkgreen', 'cyan')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = 'none'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4)), ncol = 2)   # enlarge legend points
+```
+
+##### Silhouette plot
+```{r}
+## silhouette
+d.matrix          <- as.matrix(dist(pca.all$x[,1:20]))
+avg.width.biology <- summary(silhouette(as.numeric(as.factor(se.obj$Lineage)), d.matrix))$avg.width
+avg.width.strand  <- summary(silhouette(as.numeric(as.factor(se.obj$Stranded)), d.matrix))$avg.width
+
+all.equal(row.names(cca.corr), cell.annot$ModelID)
+d.matrix              <- as.matrix(dist(cca.corr[,1:20]))
+avg.width.biology.cca <- summary(silhouette(as.numeric(as.factor(cell.annot$Lineage)), d.matrix))$avg.width
+avg.width.strand.caa  <- summary(silhouette(as.numeric(as.factor(cell.annot$Stranded)), d.matrix))$avg.width
+
+data.frame(
+    'Lineage\n(PCA)' = avg.width.biology, 
+    'Stranded\n(PCA)' = avg.width.strand, 
+    'Lineage\n(CCA)' = avg.width.biology.cca,
+    'Stranded\n(CCA)' = avg.width.strand.caa ,
+    check.names = FALSE) %>% 
+    pivot_longer(everything(), values_to = 'val', names_to = 'method') %>% 
+    ggplot(., aes(x = method, y = val)) +
+    ylab('Silhouette\ncoefficient') +
+    xlab('') +
+    geom_col() +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 10),
+        legend.position = 'none'
+    )
+```
+
+
+
+# Three large breast cancer
+## Reading the data
+```{r}
+ms.se.obj <- qs::qread(
+    file = 'ThreeLargeBreastCancer/Data/RUVprps_ThreeLargeBreastCancer_SEobject.qs'
+    )
+ms.se.obj <- ms.se.obj[ , !is.na(ms.se.obj$pam50)]
+```
+
+## UMAP plots of the all data
+```{r}
+expr.data <- assay(ms.se.obj, 'FPKM')
+# dim: 13665 4573 
+set.seed(2233)
+pca.all <- irlba::prcomp_irlba(x = t(expr.data), n = 5)
+set.seed(2233)
+umap.all <- uwot::umap(
+    pca.all$x, 
+    n_neighbors = 30, 
+    min_dist    = 0.3, 
+    metric      = "cosine"
+    )
+# plotting
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = ms.se.obj$pam50) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color =1:34,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16),
+    legend.position = 'bottom'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 6, alpha = 1), nrow = 1))   # enlarge legend points
+
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = ms.se.obj$studies) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c("GSE81538" = 'darkgreen', "GSE96058" = 'tomato', "TCGA" = 'darkblue')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16),
+    legend.position = 'bottom'
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 6, alpha = 1), nrow = 1))    # enlarge legend points
+```
+
+## Overall PRPS
+```{r}
+ms.se.obj <- findHVG(
+    se.obj        = ms.se.obj,
+    assay.name    = 'FPKM',
+    apply.log     = FALSE,
+    approach      = 'lmm',
+    form          = ~(1|pam50) + (1|studies),
+    bio.variables = 'pam50',
+    uv.variables  = 'studies',
+    nb.hvg        = 0.05,
+    nb.cores      = 14
+    )
+hvg <- ms.se.obj@metadata$HVG$hvg_lmm$`683|Bio:pam50|Uv:studies|FPKM`$hvg.set
+sum(hvg) == 683
+```
+
+## PRPS for TCGA and GSE96058
+### UMAP plots of CCs
+```{r}
+keep.samples <- ms.se.obj$studies %in% c('TCGA', 'GSE96058')
+new.se.obj <- ms.se.obj[ , keep.samples]
+set.seed(1122)
+new.se.obj <- RUVprps:::computeCCA(
+    se.obj        = new.se.obj, 
+    assay.name    = 'FPKM', 
+    apply.log     = FALSE,  
+    normalization = NULL,
+    nb.cca        = 30, 
+    variable      = 'studies', 
+    hvg           = hvg
+    )
+cca.corr <- new.se.obj@metadata$CCA$FPKM$studies$`Cca:30|HVG:13665|Scale:TRUE|Norm:`$TCGA_GSE96058
+cca.corr <- cca.corr[colnames(new.se.obj) , ]
+
+set.seed(1122)
+umap.all <- uwot::umap(
+    cca.corr, 
+    n_neighbors = 30, 
+    min_dist = 0.3, 
+    metric = "cosine"
+    )
+# plotting
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = new.se.obj$pam50) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 1:5,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16)
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)   # enlarge legend points
+
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = new.se.obj$studies) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c("GSE81538" = 'darkgreen', "GSE96058" = 'tomato', "TCGA" = 'darkblue')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16)
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)   # enlarge legend points
+```
+
+### PAM50 distibution
+```{r}
+tbl <- table(new.se.obj$studies, new.se.obj$pam50)
+ht <- ComplexHeatmap::Heatmap(
+    matrix = tbl , 
+    name = 'Frequency',
+    cluster_columns = F,
+    cluster_rows = F,
+    show_row_dend = F, 
+    show_column_dend = F,
+    column_names_rot = 45,
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title = "Frequency",
+    direction = "horizontal",
+    title_gp = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp = gpar(fontsize = 14),
+    legend_height = unit(5, "cm"),
+    legend_width = unit(1.2, "cm")))
+ComplexHeatmap::draw(ht, heatmap_legend_side = "bottom")
+```
+
+### Create PRPS and confusion matrix
+```{r}
+new.se.obj <- createPrPsUnSupervisedByCca(
+    se.obj             = new.se.obj, 
+    assay.name         = 'FPKM',
+    main.uv.variable   = 'studies',
+    hvg                = hvg, 
+    coordinates.to.use = "cca",
+    nb.cca             = 30, 
+    nb.pcs             = 3,
+    apply.log          = F, 
+    min.nb.for.mnn     = 5,
+    apply.log.for.prps = F, 
+    normalization      = NULL,
+    max.prps.sets      = 20
+    )
+mnn          <- new.se.obj@metadata$PRPS$un.supervised$studies$`studies|CcaPca|FPKM`$mnn.samples
+dim(mnn)
+sample.annot <- as.data.frame(colData(ms.se.obj))
+a            <- sample.annot[mnn$left.samples, ]$pam50
+b            <- sample.annot[mnn$right.samples, ]$pam50
+tbl          <- table(a, b)
+
+ComplexHeatmap::Heatmap(
+    matrix               = tbl , 
+    name                 = 'Frequency',
+    cluster_columns      = F,
+    cluster_rows         = F,
+    show_row_dend        = F, 
+    show_column_dend     = F,
+    column_names_rot     = 90,
+    col                  = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title                = "Frequency",
+    direction            = "horizontal",
+    title_gp             = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp            = gpar(fontsize = 14),
+    legend_height        = unit(5, "cm"),
+    legend_width         = unit(1.2, "cm")
+    ))
+```
+
+## PRPS for TCGA and GSE81538
+### UMAP plots of CCs
+```{r}
+keep.samples <- ms.se.obj$studies %in% c('TCGA', 'GSE81538')
+new.se.obj <- ms.se.obj[ , keep.samples]
+set.seed(1133)
+new.se.obj <- RUVprps:::computeCCA(
+    se.obj        = new.se.obj, 
+    assay.name    = 'FPKM', 
+    apply.log     = FALSE,  
+    normalization = NULL,
+    nb.cca        = 30, 
+    variable      = 'studies', 
+    hvg           = hvg
+    )
+cca.corr <- new.se.obj@metadata$CCA$FPKM$studies$`Cca:30|HVG:13665|Scale:TRUE|Norm:`$TCGA_GSE81538
+cca.corr <- cca.corr[colnames(new.se.obj) , ]
+
+set.seed(1133)
+umap.all <- uwot::umap(
+    cca.corr, 
+    n_neighbors = 30, 
+    min_dist    = 0.3, 
+    metric      = "cosine"
+    )
+# plotting
+data.frame(
+  umap1            = umap.all[, 1],
+  umap2            = umap.all[, 2],
+  group            = new.se.obj$pam50) %>%
+  ggplot(aes(x     = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 1:5,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 16)
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)
+
+data.frame(
+  umap1            = umap.all[, 1],
+  umap2            = umap.all[, 2],
+  group            = new.se.obj$studies) %>%
+  ggplot(aes(x     = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+   scale_color_manual(values = c("GSE81538" = 'darkgreen', "GSE96058" = 'tomato', "TCGA" = 'darkblue')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 16)
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)   # enlarge legend points
+```
+
+### PAM50 distribution
+```{r}
+tbl <- table(new.se.obj$studies, new.se.obj$pam50)
+ht <- ComplexHeatmap::Heatmap(
+    matrix               = tbl , 
+    name                 = 'Frequency',
+    cluster_columns      = F,
+    cluster_rows         = F,
+    show_row_dend        = F, 
+    show_column_dend     = F,
+    column_names_rot     = 45,
+    col                  = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title                = "Frequency",
+    direction            = "horizontal",
+    title_gp             = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp            = gpar(fontsize = 14),
+    legend_height        = unit(5, "cm"),
+    legend_width         = unit(1.2, "cm")))
+ComplexHeatmap::draw(ht, heatmap_legend_side = "bottom")
+
+```
+
+### Create PRPS data
+```{r}
+new.se.obj <- createPrPsUnSupervisedByCca(
+    se.obj             = new.se.obj, 
+    assay.name         = 'FPKM',
+    main.uv.variable   = 'studies',
+    hvg                = hvg, 
+    coordinates.to.use = "cca",
+    nb.cca             = 30, 
+    nb.pcs             = 3,
+    apply.log          = F, 
+    min.nb.for.mnn     = 5,
+    apply.log.for.prps = F, 
+    normalization      = NULL,
+    max.prps.sets      = 20
+    )
+mnn          <- new.se.obj@metadata$PRPS$un.supervised$studies$`studies|CcaPca|FPKM`$mnn.samples
+dim(mnn) # 50 4
+sample.annot <- as.data.frame(colData(ms.se.obj))
+a            <- sample.annot[mnn$left.samples, ]$pam50
+b            <- sample.annot[mnn$right.samples, ]$pam50
+tbl          <- table(a, b)
+
+ComplexHeatmap::Heatmap(
+    matrix = tbl , 
+    name = 'Frequency',
+    cluster_columns = F,
+    cluster_rows = F,
+    show_row_dend = F, 
+    show_column_dend = F,
+    column_names_rot = 90,
+    col = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title = "Frequency",
+    direction = "horizontal",
+    title_gp = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp = gpar(fontsize = 14),
+    legend_height = unit(5, "cm"),
+    legend_width = unit(1.2, "cm")
+    ))
+```
+
+## PRPS for TCGA and GSE81538
+### UMAP plots of CCs
+```{r}
+keep.samples <- ms.se.obj$studies %in% c('GSE96058', 'GSE81538')
+new.se.obj <- ms.se.obj[ , keep.samples]
+set.seed(1133)
+new.se.obj <- RUVprps:::computeCCA(
+    se.obj        = new.se.obj, 
+    assay.name    = 'FPKM', 
+    apply.log     = FALSE,  
+    normalization = NULL,
+    nb.cca        = 30, 
+    variable      = 'studies', 
+    hvg           = hvg
+    )
+cca.corr <- new.se.obj@metadata$CCA$FPKM$studies$`Cca:30|HVG:13665|Scale:TRUE|Norm:`$GSE81538_GSE96058
+cca.corr <- cca.corr[colnames(new.se.obj) , ]
+
+set.seed(1133)
+umap.all <- uwot::umap(
+    cca.corr, 
+    n_neighbors = 30, 
+    min_dist    = 0.3, 
+    metric      = "cosine"
+    )
+# plotting
+data.frame(
+  umap1            = umap.all[, 1],
+  umap2            = umap.all[, 2],
+  group            = new.se.obj$pam50) %>%
+  ggplot(aes(x     = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = selectColors(
+    nb.color = 1:5,
+    group = 'pan.selection.a'
+  )) +
+  theme(
+    panel.background = element_blank(),
+    axis.line        = element_line(colour = 'black', linewidth = 1),
+    axis.title.x     = element_text(size = 16),
+    axis.title.y     = element_text(size = 16),
+    axis.text.x      = element_text(size = 12),
+    axis.text.y      = element_text(size = 12),
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 16)
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)   # enlarge legend points
+
+data.frame(
+  umap1 = umap.all[, 1],
+  umap2 = umap.all[, 2],
+  group = new.se.obj$studies) %>%
+  ggplot(aes(x = umap1, y = umap2, color = group)) +
+  geom_point(alpha = .4, size = 2, shape = 19, stroke = NA) +         # tiny points on plot
+  xlab('UMAP1') +
+  ylab('UMAP2') +
+  scale_color_manual(values = c("GSE81538" = 'darkgreen', "GSE96058" = 'tomato', "TCGA" = 'darkblue')) +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line(colour = 'black', linewidth = 1),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 16)
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1)), ncol = 2)   # enlarge legend points
+```
+
+### PAM50 distribution
+```{r}
+tbl <- table(new.se.obj$studies, new.se.obj$pam50)
+ht <- ComplexHeatmap::Heatmap(
+    matrix               = tbl , 
+    name                 = 'Frequency',
+    cluster_columns      = F,
+    cluster_rows         = F,
+    show_row_dend        = F, 
+    show_column_dend     = F,
+    column_names_rot     = 45,
+    col                  = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title                = "Frequency",
+    direction            = "horizontal",
+    title_gp             = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp            = gpar(fontsize = 14),
+    legend_height        = unit(5, "cm"),
+    legend_width         = unit(1.2, "cm")))
+ComplexHeatmap::draw(ht, heatmap_legend_side = "bottom")
+```
+
+### Create PRPS data
+```{r}
+new.se.obj <- createPrPsUnSupervisedByCca(
+    se.obj             = new.se.obj, 
+    assay.name         = 'FPKM',
+    main.uv.variable   = 'studies',
+    hvg                = hvg, 
+    coordinates.to.use = "cca",
+    nb.cca             = 30, 
+    nb.pcs             = 3,
+    apply.log          = F, 
+    min.nb.for.mnn     = 5,
+    apply.log.for.prps = F, 
+    normalization      = NULL,
+    max.prps.sets      = 20
+    )
+mnn          <- new.se.obj@metadata$PRPS$un.supervised$studies$`studies|CcaPca|FPKM`$mnn.samples
+dim(mnn) # 50 4
+sample.annot <- as.data.frame(colData(ms.se.obj))
+a            <- sample.annot[mnn$left.samples, ]$pam50
+b            <- sample.annot[mnn$right.samples, ]$pam50
+tbl          <- table(a, b)
+
+ComplexHeatmap::Heatmap(
+    matrix               = tbl , 
+    name                 = 'Frequency',
+    cluster_columns      = F,
+    cluster_rows         = F,
+    show_row_dend        = F, 
+    show_column_dend     = F,
+    column_names_rot     = 90,
+    col                  = c('white', 'tomato'),
+    heatmap_legend_param = list(
+    title                = "Frequency",
+    direction            = "horizontal",
+    title_gp             = gpar(fontsize = 14, fontface = "bold"),
+    labels_gp            = gpar(fontsize = 14),
+    legend_height        = unit(5, "cm"),
+    legend_width         = unit(1.2, "cm")
+    ))
+```
+
+
