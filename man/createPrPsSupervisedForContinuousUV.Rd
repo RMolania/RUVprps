@@ -18,6 +18,7 @@ createPrPsSupervisedForContinuousUV(
   nb.other.uv.clusters = 2,
   apply.log = TRUE,
   pseudo.count = 1,
+  create.prps.map = TRUE,
   plot.prps.map = TRUE,
   prps.group.name = NULL,
   prps.sets.name = NULL,
@@ -72,6 +73,9 @@ unwanted variable specified in the \code{other.uv.variables}. The default is set
 
 \item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 The default is set to 1.}
+
+\item{create.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
+The default is \code{TRUE}.}
 
 \item{plot.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
 variation. The default is set to \code{TRUE}.}

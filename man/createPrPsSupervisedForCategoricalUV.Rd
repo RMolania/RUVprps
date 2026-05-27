@@ -19,6 +19,7 @@ createPrPsSupervisedForCategoricalUV(
   check.prps.connectedness = TRUE,
   apply.log = TRUE,
   pseudo.count = 1,
+  create.prps.map = TRUE,
   plot.prps.map = TRUE,
   point.size = 4,
   prps.group.name = NULL,
@@ -77,7 +78,10 @@ is set to \code{TRUE}.}
 \item{pseudo.count}{Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 The default is set to 1.}
 
-\item{plot.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
+\item{create.prps.map}{Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
+The default is \code{TRUE}.}
+
+\item{plot.prps.map}{Logical. Indicates whether plot the PRPS map plot for individual sources of unwanted variation.
 The default is \code{TRUE}.}
 
 \item{point.size}{Numeric. A numeric value of the size of points in the PRPS map. The default is set to 4.}
