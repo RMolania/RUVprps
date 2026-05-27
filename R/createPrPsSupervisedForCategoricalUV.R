@@ -51,7 +51,9 @@
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
 #' @param point.size Numeric. A numeric value of the size of points in the PRPS map. The default is set to 4.
-#' @param plot.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
+#' @param create.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
+#' The default is `TRUE`.
+#' @param plot.prps.map Logical. Indicates whether plot the PRPS map plot for individual sources of unwanted variation.
 #' The default is `TRUE`.
 #' @param prps.group.name Character. A character specifying a name for the PRPS data sets created for a specific group.
 #' The default is set to `NULL`. Refer to the details for more information.
@@ -93,6 +95,7 @@ createPrPsSupervisedForCategoricalUV <- function(
         check.prps.connectedness = TRUE,
         apply.log = TRUE,
         pseudo.count = 1,
+        create.prps.map = TRUE,
         plot.prps.map = TRUE,
         point.size = 4,
         prps.group.name = NULL,
@@ -484,7 +487,7 @@ createPrPsSupervisedForCategoricalUV <- function(
             verbose = verbose)
     }
     # Plotting the PRPS map #####
-    if (isTRUE(plot.prps.map)) {
+    if (isTRUE(create.prps.map)) {
         ## PRPS map plot
         printColoredMessage(
             message = '-- Plotting the PRPS map:',
@@ -582,7 +585,7 @@ createPrPsSupervisedForCategoricalUV <- function(
         se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- prps.sets
 
         ## plot
-        if (isTRUE(save.se.obj)){
+        if (isTRUE(save.se.obj) & isTRUE(create.prps.map)){
             if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]])) {
                 se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.map.plot']] <- list()
             }

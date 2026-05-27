@@ -54,6 +54,8 @@
 #' @param apply.log Logical. Indicates whether to apply a log-transformation to the data. The default is set to `TRUE`.
 #' @param pseudo.count Numeric. A numeric value as a pseudo count to be added to all measurements before log transformation.
 #' The default is set to 1.
+#' @param create.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted variation.
+#' The default is `TRUE`.
 #' @param plot.prps.map Logical. Indicates whether to generate the PRPS map plot for individual sources of unwanted
 #' variation. The default is set to `TRUE`.
 #' @param prps.group.name Character. A character string specifying a name for the PRPS data sets created for a specific group.
@@ -94,6 +96,7 @@ createPrPsSupervisedForContinuousUV <- function(
         nb.other.uv.clusters       = 2,
         apply.log                  = TRUE,
         pseudo.count               = 1,
+        create.prps.map            = TRUE,
         plot.prps.map              = TRUE,
         prps.group.name            = NULL,
         prps.sets.name             = NULL,
@@ -338,7 +341,7 @@ createPrPsSupervisedForContinuousUV <- function(
             verbose = verbose
             )
         ## Plotting the PRPS map ####
-        if (isTRUE(plot.prps.map)){
+        if (isTRUE(create.prps.map)){
             prps.sets.plot <- sapply(
                 selected.groups,
                 function(x) {
@@ -380,7 +383,7 @@ createPrPsSupervisedForContinuousUV <- function(
                     legend.title = element_text(size = 18),
                     strip.text.y = element_text(size = 15)
                 )
-            print(prps.map.plot)
+            if(isTRUE(plot.prps.map)) print(prps.map.plot)
         }
     }
     ## Creating PRPS without considering other uv variables ####
@@ -477,7 +480,7 @@ createPrPsSupervisedForContinuousUV <- function(
             verbose = verbose
         )
         ## Plotting the PRPS map ####
-        if(isTRUE(plot.prps.map)){
+        if(isTRUE(create.prps.map)){
             prps.sets.plot <- sapply(
                 selected.groups,
                 function(x) {
@@ -573,7 +576,7 @@ createPrPsSupervisedForContinuousUV <- function(
         se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.data']] <- prps.sets
 
         ## plot
-        if (isTRUE(save.se.obj)){
+        if (isTRUE(save.se.obj) & isTRUE(create.prps.map)){
             if (!'prps.map.plot' %in% names(se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]])) {
                 se.obj@metadata[['PRPS']][['supervised']][[prps.group.name]][[prps.sets.name]][['prps.map.plot']] <- list()
             }
