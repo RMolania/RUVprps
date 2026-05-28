@@ -1,0 +1,1855 @@
+---
+title: "Gene-level and Global Assessment of Unwanted Variation in the Recount3 Database"
+output: html_document
+date: "2025-12-12"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Required R package
+The R package below is required to be installed for this procedure.
+```{r rPackage}
+library(SummarizedExperiment)
+library(ComplexHeatmap)
+library(patchwork)
+library(RUVprps)
+library(ggpubr)
+library(tidyr)
+```
+
+# Introduction
+In this procedure, our goal is to preserve the variation associated with tumor purity alongside other known biological 
+variation. We selected the TCGA rectum adenocarcinoma (READ) RNA-seq data for this purpose, as it is significantly 
+influenced by library size and batch effects . It should be noted that there is complete confounding between normal 
+tissues and the batches in the data, which will be explained in the subsequent sections. Normalizing RNA-seq data with such
+confounding factors proves challenging.
+
+
+# Download the data using the TCGAbiolinks R package
+
+## TCGA-READ data
+The most recent TCGA READ RNA-seq data will be obtained from the GDC data portal using the `TCGAbiolinks` R/Bioconductor 
+package. The required files will be downloaded to the current home directory.
+
+```{r downloadingTheData, message=F, warning=F}
+tcga.read.rnaseq.data <- TCGAbiolinks::GDCquery(
+    project = 'TCGA-READ',
+    data.category = 'Transcriptome Profiling',
+    data.type = 'Gene Expression Quantification'
+    )
+TCGAbiolinks::GDCdownload(tcga.read.rnaseq.data)
+read.se.obj <- TCGAbiolinks::GDCprepare(query = tcga.read.rnaseq.data)
+
+# save data for later use:
+qs::qsave(x = read.se.obj, file = 'TCGA_ReadRnaSeq_StarCounts38_TCGAbiolinks.021424.qs')
+read.se.obj <- qs::qread('TCGA_ReadRnaSeq_StarCounts38_TCGAbiolinks.021424.qs')
+```
+
+The  read.se.obj is a  `RangedSummarizedExperiment`  object with 60,660 Ensemble transcripts and 177 RNA-seq samples. 
+The object contains 6 datasets (assays) including  unstranded , stranded_first ,  stranded_second , unstrand , fpkm_unstrand
+and  fpkm_uq_unstrand.  The  unstranded ,  stranded_first  and  stranded_second  are raw count data without any transformation.
+The  `removeAssays()`  function will be used to exclude the  stranded_first ,  stranded_second  and the  unstranded  
+data will be used as raw count data for RUV-III normalization. The reason for this is that TCGA normalization, including
+TPM, FPKM, and FPKM.UQ, were performed on the unstranded data. Note that the names of the datasets in the object will be 
+replaced with  RawCount , TPM ,FPKM and FPKM.UQ .
+
+
+```{r removeData}
+# remove the 'stranded_first' and 'stranded_second ' assays
+read.se.obj <- removeAssays(
+    se.obj           = read.se.obj, 
+    assays.to.remove = c('stranded_first', 'stranded_second')
+    )
+# changing the assay names
+read.se.obj <- renameAssays(
+    se.obj    = read.se.obj, 
+    new.names = c('RawCount', 'TPM', 'FPKM', 'FPKM.UQ')
+    )
+```
+
+## Selecting the gene types of interest (optional)
+The \texttt{gene\_type} column in the gene annotation (rowData) of the `RangedSummarizedExperiment` object classifies 
+Ensembl transcripts into various gene type categories, such as `protein_coding`, `lncRNA` (long non-coding RNA), among
+others. For this analysis, only unique Ensembl transcripts annotated as `protein_coding` will be retained using the `tidyGenes()`
+function. Additionally, the row names of the `RangedSummarizedExperiment` object will be updated to display gene 
+symbols instead of Ensembl transcript IDs for down-stream analysis.
+
+```{r tidyGene message=FALSE, warning=FALSE}
+read.se.obj <- tidyGenes(
+    se.obj                = read.se.obj, 
+    keep.gene.type        = 'protein_coding', 
+    gene.type.col.name    = 'gene_type', 
+    remove.duplicates.ids = TRUE, 
+    ids.col.name          = 'gene_name', 
+    change.row.names      = TRUE, 
+    new.row.names         = 'gene_name'
+    )
+```
+
+Then a total of 19,934 genes were retained for subsequent steps. It should be noted that any gene type groups of interest
+can be kept and used for RUV-III normalization.
+
+## Adding batch details
+TCGA RNA-seq samples were collected from various tissue source sites (TSS), shipped to different genomics profiling centers
+over time, and profiled using 96-sequencing plates. These are known sources of batch information that can impact down-stream
+analysis \cite{Molania2023RemovingPRPS}. The \texttt{addTcgaBatchInfo()} function will be employed to annotate the TCGA READ 
+RNA-seq data with all available batch information. This function retrieves batch annotations from the file `41587_2022_1440_MOESM3_ESM.xlsx', 
+available from our previous study `Molania2023RemovingPRPS`. Finally, the `orderSeObj()` function will be applied to order
+the samples chronologically based on the batch information, in preparation for down-stream analysis.
+
+```{r message=FALSE, warning=F}
+read.se.obj <- addTcgaBatchInfo(se.obj = read.se.obj)
+read.se.obj <- orderSeObj(
+    se.obj           = read.se.obj, 
+    factors.to.order = c('Years','Months','Days','Plates','TSS','Center')
+    )
+read.se.obj$Years <- as.factor(x = read.se.obj$Years)
+```
+
+All available batch information were added to the sample annotation of the `angedSummarizedExperiment` object. The TCGA 
+READ RNA-seq data involved 10 normal (adjacent tissue) and 167 cancer tissue samples that were collected from 13 TSS, 
+distributed across 15 sequencing plates, and profiled over the 4 years 2010, 2012, 2013 and 2014.
+
+# Preparing the SummarizedExperiment object
+
+The `prepareSeObj()` function will be utilized to perform several preprocessing steps, including the identification and 
+removal of lowly expressed genes, calculation of library sizes, estimation of tumor purity, integration of multiple publicly
+available housekeeping gene lists, and stromal and immune gene signatures. For these tasks, the `RawCount` data will be used
+for library size calculation, while `FPKM.UQ` will be employed for tumor purity estimation. If a gene annotation file is 
+provided, it must contain at least one column with a name that includes `hgnc_symbol`, `entrezgene_id`, or `ensembl_gene_id`
+to enable the mapping of gene details and incorporation of housekeeping gene lists. Furthermore, the row names of the 
+`SummarizedExperiment` object must correspond to the identifiers in the specified column. In this analysis, the gene 
+annotation associated with the `read.se.obj` object includes a column named `gene_name`; therefore, the function will 
+generate a new column labeles `hgnc_symbol` accordingly. 
+
+```{r createSeObj, message=FALSE, warning=F}
+read.se.obj <- prepareSeObj(
+    data                          = read.se.obj, 
+    raw.count.assay.name          = 'RawCount', 
+    remove.lowly.expressed.genes  = TRUE, 
+    assay.name.to.estimate.purity = 'FPKM.UQ',
+    estimate.tumor.purity         = 'both',
+    scale.singscore.values        = TRUE,
+    calculate.library.size        = TRUE,
+    add.immun.stroma.genes        = TRUE, 
+    add.gene.details              = FALSE,
+    add.housekeeping.genes        = TRUE, 
+    column.name                   = 'gene_name',
+    gene.group                    = 'hgnc_symbol')
+```
+
+14,799 of 19,934 genes were kept as highly expressed genes. Tumor purity was estimated using both the ESTIMATE and singscore
+methods. These estimates are highly correlated, and the ESTIMATE values will be used for down-stream analyses. The tumor 
+purity estimated by the singscore method was re-scaled based on the tumor purity estimated by the ESTIMATE method. This 
+adjustment is necessary because the scores from the singscore method exceed 1, whereas the ESTIMATE method provides tumor
+purity estimates within a more conventional range which is between 0 and 1.
+
+
+## Visualizing the study outline
+The `plotStudyOutline()` function can be applied to visualize how various variables are distributed across the samples. 
+In addition, this can assess the association between all specified variables. This plot can be updated with more variables,
+such as cancer subtypes once they are calculated throughout the procedure. Before creating a study outline plot, the 
+`renameVariables()` function will be used to rename the variables for visualization purposes.
+
+```{r plotStudyOutline}
+read.se.obj <- renameVariables(
+    se.obj        = read.se.obj, 
+    current.names = c('tissue_type', 'tumour.purity.estimate', 'library.size'),
+    new.names     = c('Tissues', 'Tumour.purity', 'Library.size'))
+
+read.se.obj <- plotStudyOutline(
+    se.obj = read.se.obj, 
+    variables = c(
+        'Years', 
+        'Plates', 
+        'TSS', 
+        'Library.size', 
+        'Tumour.purity', 
+        'Tissues'))
+read.se.obj@metadata$StudyOutline
+read.se.obj@metadata$VariablesAssociation
+
+data.frame(
+    estimate = read.se.obj$`Tumour.purity`, 
+    singscore = read.se.obj$tumour.purity.singscore.scaled) %>% 
+    ggplot(., aes(x = estimate, y = singscore)) +
+    geom_point() +
+    xlab('Estimate') +
+    ylab('singscore (scaled)') +
+    stat_cor(size = 5) +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 15),
+        axis.text.x = element_text(size = 14),
+        axis.text.y = element_text(size = 14))
+```
+
+The output of the 1plotStudyOutline()1 function shows that the sample library sizes vary greatly between samples profiled
+in 2010 and the other samples. The experimental conditions that may explain this variation are not publicly available.
+All adjacent normal tissues were profiled in 2013-2014, indicating the presence of substantial confounding in the data.
+The variable associations plot shows the Plates, Years and library size are highly correlated with each other. Furthermore,
+the tumor purity estimates show no association with library size or known batch effects. The study outline plot reveals 
+substantial variation in library size across different years. To account for this, the years will be grouped into two 
+intervals, 2010 and 2011–2014, for downstream analysis. These intervals will be named as `Batch1` and `Batch2`, respectively.
+
+```{r MajorTimeInterval, message=FALSE, warning=F}
+read.se.obj[['Time.interval']] <- factor(
+  ifelse(read.se.obj$Years == 2010, 'Batch1', 'Batch2'),
+  levels = c('Batch1', 'Batch2')
+  )
+```
+
+# Identification of major variation
+
+In situations where all sources of  and the main gene expression-based biological variation are already known or estimated
+using suitable orthogonal platforms or methods, this stage becomes unnecessary. It is crucial to emphasize that any 
+significant biological variables should be discernible in the gene expression data. Variables not evident in the data are
+generally not applicable to the RUV-III normalization procedure. For instance, if there is no true association between 
+gene expression and gender, including gender as a factor will not aid in normalization. However, these variables can be 
+useful for normalization assessments. If genes show associations with those variables, this might be an indication of the
+presence of  in the data. Identification of major biological populations is not the primary focus of the RUVprps. Users 
+may apply any appropriate tools or approaches to estimate biological variation according to their study objectives.
+
+## Identification of biological variation
+
+To implement RUV-III with PRPS in a supervised manner and assess the performance of normalization, it is essential to 
+identify all or major gene expression-based biological populations within the data. This step is particularly challenging 
+for the TCGA READ RNA-seq data due to the substantial impact of library size and batches on both the raw and TCGA normalized
+datasets. To address this challenge, we suggest two strategies and evaluate both to ascertain the most reliable estimates
+of the biological populations in the data
+Colorectal cancers can be classified into four major gene expression–based biological subtypes, known as consensus molecular
+subtypes (CMS) . These subtypes have been shown to correlate with clinical outcomes, including overall patient survival. 
+Specifically, patients classified as CMS4 exhibit the poorest overall survival, whereas those with the CMS2 subtype are 
+associated with more favorable survival outcomes. RUVprps provides a wrapper function called `estimateCMS()` that leverages
+the CMScaller R package to assign CMS classifications to samples. The following section 
+outlines our approach for CMS identification and assessment.
+
+### CMS
+#### Strategy 1
+The CMS classifier is applied across all the cancer samples using the TCGA raw count and normalized data. The classifier 
+applies quantile normalization to the raw count data before estimating the CMS. All the estimated CMS will be added to the
+sample annotation of the `SummarizedExperiment` object for down-stream analysis. Note that, the normal tissues will
+be removed before applying the classifier.
+
+```{r estimateCMS}
+read.se.obj <- estimateCMS(
+    se.obj               = read.se.obj, 
+    assay.names          = 'all', 
+    raw.count.assay.name = 'RawCount', 
+    subtype              = 'CMS',
+    tissue.type          =  'Tissues', 
+    groups               = NULL,
+    templates            = CMScaller::templates.CMS,
+    seed                 = 122334,
+    apply.log            = TRUE,
+    nb.cores             = 4
+    )
+```
+
+#### Strategy 2
+The CMS classifier will be applied within the major time intervals (2010 or Batch1 and 2011-2014 or Batch2). This 
+adjustment aims to mitigate possible influence of library size and batches on the CMS classifier.
+
+```{r}
+read.se.obj <- estimateCMS(
+    se.obj               = read.se.obj, 
+    assay.names          = 'all', 
+    raw.count.assay.name = 'RawCount', 
+    subtype              = 'CMS',
+    templates            = CMScaller::templates.CMS,
+    tissue.type          =  'Tissues', 
+    groups               = 'Time.interval',
+    out.put.name         = 'TI',
+    apply.log            = TRUE,
+    seed                 = 12244,
+    nb.cores             = 1
+    )
+```
+
+#### Evaluating of the estimated CMS
+Two analyses will be conducted to evaluate the quality of the estimated CMS for the individual datasets. First, the 
+association between the derived subtypes and patient overall survival will be assessed. Second, the relationship between
+the estimated subtypes and library size will be examined. An ideal estimate of CMS should have significant association 
+with survival data and no or weak association with library size. RUVprps provides a function, `AddTcgaClinicInfo()`, which
+allows users to incorporate specified TCGA clinical data from Liu et al. into a `SummarizedExperiment` object.  The 
+clinical data, available as Supplementary Table 1 ("mmc1.xlsx") from that study. In this analysis, overall survival data 
+for the TCGA READ RNA-seq dataset will be extracted and incorporated to the `SummarizedExperiment` object. The function 
+assigns a value of -1 to the overall survival time and events for normal tissue samples to facilitate their exclusion from
+downstream survival analysis. Subsequently, the `computeSurvival()` function will be employed to generate Kaplan–Meier 
+survival curves for each CMS classification across the differently normalized TCGA datasets. Note that normal samples and
+those that could not be classified into any CMS subtype will be excluded prior to performing the survival analysis.
+
+##### Performing survival analysis
+```{r computeSurvival}
+read.se.obj <- addTcgaClinicalInfo(
+    se.obj      = read.se.obj, 
+    factors     = c("OS", "OS.time"),
+    tissue.type = 'Tissues'
+    )
+all.survivals <- lapply(
+    cms <- grep('CMS', colnames(colData(read.se.obj)), value = TRUE), 
+    function(i) {
+        idx <- read.se.obj$OS != -1 & read.se.obj[[i]] != 'Not.classified'
+        computeSurvival(
+            se.obj               = read.se.obj[, idx], 
+            variable             = i, 
+            survival.time        = 'OS.time', 
+            survival.events      = 'OS', 
+            genes                = NULL, 
+            return.survival.plot = TRUE, 
+            check.se.obj         = FALSE, 
+            save.se.obj          = FALSE)$plot })
+ggarrange(
+    plotlist = all.survivals, 
+    ncol = 4, 
+    nrow = 2, 
+    common.legend = TRUE
+    )
+```
+
+The results indicate that the CMS derived from the Quantile normalized data within the time intervals are more associated
+with patients' overall survival compared to the other normalized datasets.
+
+##### Assessing association with library size
+The `plotVariables()` function will be used to assess the association between the CMS estimates and library size. Further,
+the function will generate a heatmap of all the estimated CMS to explore the differences between different datasets and strategies.
+```{r plotVariables}
+plot.variables <- plotVariables(
+    se.obj           = read.se.obj, 
+    x.variables      = grep('CMS', colnames(colData(read.se.obj)), value = TRUE),
+    y.variables      = 'Library.size',
+    plot.out.put     = FALSE,
+    generate.heatmap = TRUE)
+plot.variables$p.x.y
+plot.variables$h.plot
+```
+
+The result shows that the CMS subtypes obtained in the strategy 2 are not significantly associated with library size. 
+As a result, the `Quantile.TI` (TI stands for time interval) will be used as reasonable initial estimation of known major
+biological populations for down-stream analyses. Further, the heatmap shows overall high agreement of estimated CMS between
+different normalized datasets and strategies.
+
+## Identification of unknow variation
+The study outline showed substantial library size variation and differences between the major time intervals. However, 
+there are situations where batch details are not available or are unknown. In these situations batches can be estimated 
+from the data using different robust approaches proposed by RUVprps. We now assume that the time interval details of the
+TCGA READ RNA-seq data are unknown and proceed to estimate them.
+The `identifyUnknownUV()` function will be applied using parameters specified for chronologically ordered samples. We will
+specify known biological and unwanted variables in order to perform an association analysis between the estimated batches 
+and those variables. This analysis is recommended if such information is available. The estimated batches will be added to
+the sample annotation file of the `SummarizedExperiment` object for down-stream analysis.
+
+```{r identifyUnknownUV}
+read.se.obj <- identifyUnknownUV(
+    se.obj                    = read.se.obj,
+    assay.name                = 'RawCount', 
+    approach                  = 'rle', 
+    chronological.detection   = TRUE, 
+    assess.bio.association    = TRUE,
+    bio.variables             = c('Quantile.CMS.TI', 'Tumour.purity'), 
+    assess.uv.association     = TRUE,
+    uv.variables              = c('Years', 'Plates'),
+    generate.association.plot = TRUE, 
+    add.to.sample.annotation  = TRUE,
+    col.name                  = 'Estimated.batches',
+    output.name               = 'iteration1', 
+    plot.output               = FALSE
+    )
+
+read.se.obj@metadata$UnKnownUV$RawCount$iteration1$plots$batch.plot + geom_point(size = 3) +
+       theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 14),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        strip.text.x = element_text(size = 12))
+
+read.se.obj@metadata$UnKnownUV$RawCount$iteration1$plots$uv.plot
+read.se.obj@metadata$UnKnownUV$RawCount$iteration1$plots$bio.plot
+```
+
+The results shows that the RLE medians of the TCGA raw count data (log_2+1) clearly separated the major time intervals in
+the data. Furthermore, it indicates that the analysis also captured certain plate effects present in the data. The smooth
+line across the RLE medians suggested that there might be more extra batch effects in the data. Then, we iterate the step
+above using a set of genes that are highly affected by the initially estimated batches. These genes were identified using the `computeGenesVariableAnova()` function, which applies ANOVA between individual genes and the estimated batches as a factor.
+The top 500 genes (arbitrary cut off) with the highest F-statistic are used to re-run the `identifyUnknownUV()` function.
+
+```{r identifyUnknownUV2}
+read.se.obj <- computeGenesVariableAnova(
+    se.obj      = read.se.obj, 
+    assay.names = 'RawCount', 
+    variable    = 'Estimated.batches'
+    )
+hag <- obtainMetric(
+    se.obj       = read.se.obj, 
+    slot         = 'Metrics', 
+    metric.group = 'gene.level', 
+    assay.name   = 'RawCount', 
+    metric.name  = 'ANOVA',
+    test.name    = 'aov',
+    variable     = 'Estimated.batches')
+hag <- hag[order(hag$statistic, decreasing = TRUE) , ]
+
+read.se.obj <- identifyUnknownUV(
+    se.obj                    = read.se.obj,
+    assay.name                = 'RawCount', 
+    approach                  = 'rle',
+    ncg                       = row.names(hag)[1:500],
+    chronological.detection   = TRUE, 
+    assess.bio.association    = TRUE, 
+    bio.variables             = c('Quantile.CMS.TI', 'Tumour.purity'), 
+    assess.uv.association     = TRUE,
+    uv.variables              = c('Years', 'Plates'),
+    generate.association.plot = TRUE, 
+    add.to.sample.annotation  = TRUE, 
+    col.name                  = 'Estimated.batches',
+    output.name               = 'iteration2'
+    )
+
+read.se.obj@metadata$UnKnownUV$RawCount$iteration2$plots$batch.plot + geom_point(size = 3) +
+       theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 14),
+        axis.text.x      = element_text(size = 15),
+        axis.text.y      = element_text(size = 15),
+        strip.text.x     = element_text(size = 12))
+
+
+read.se.obj@metadata$UnKnownUV$RawCount$iteration2$plots$uv.plot
+
+
+read.se.obj@metadata$UnKnownUV$RawCount$iteration2$variable.association$bio.association # 0.3198297 
+read.se.obj@metadata$UnKnownUV$RawCount$iteration2$variable.association$uv.association  # 0.9801556
+read.se.obj@metadata$UnKnownUV$RawCount$iteration1$variable.association$bio.association # 0.2728092
+read.se.obj@metadata$UnKnownUV$RawCount$iteration1$variable.association$uv.association #  0.9326153
+
+data.frame(
+    bio                  = c('0.27', '0.31'), 
+    uv                   = c('0.93', '0.98'), 
+    Group                = c('iteration1', 'iteration2') ) %>% 
+    ggplot(., aes(x      = bio, y = uv, color = Group)) +
+    geom_point(size      = 5) +
+    xlab('Contingency coefficient\n(Biology)') +
+    ylab('Contingency coefficient\n(Batch)') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 12),
+        axis.title.y     = element_text(size = 12),
+        plot.title       = element_text(size = 14),
+        axis.text.x      = element_text(size = 10),
+        axis.text.y      = element_text(size = 10),
+        strip.text.x     = element_text(size = 12))
+
+read.se.obj <- computePCA(
+    se.obj = read.se.obj, 
+    assay.names = 'RawCount'
+    )
+read.se.obj <- RUVprps::plotPCA(
+    se.obj = read.se.obj, 
+    assay.names = 'RawCount', 
+    variable = 'Estimated.batches', 
+    points.size = 4
+    )
+read.se.obj@metadata$Metrics$RawCount$global.level$PCA$fast.svd$Estimated.batches$scatter.plot
+
+read.se.obj[['Estimated.batches']][read.se.obj[['Estimated.batches']] == 'Batch3'] <- 'Batch1'
+read.se.obj[['Estimated.batches']][read.se.obj[['Estimated.batches']] == 'Batch4' & read.se.obj[['Time.interval']] == 'Batch2'] <- 'Batch5'
+
+read.se.obj <- RUVprps::plotPCA(
+    se.obj          = read.se.obj, 
+    assay.names     = 'RawCount',
+    variable        = 'Estimated.batches', 
+    points.size     = 4, 
+    variable.colors = selectColors(c(1,2,4,5))
+    )
+read.se.obj@metadata$Metrics$RawCount$global.level$PCA$fast.svd$Estimated.batches$scatter.plot
+```
+
+The results show that the RLE medians computed using the selected genes more effectively capture the plate effects present
+in the data. Further, they present Cramér’s V contingency coefficients, comparing the estimated batch assignments with 
+known technical and biological groupings. Specifically, the Y-axis reflects agreement with known batch groupings (defined as all combinations of time points and plates), while the X-axis shows agreement with known biological populations (defined by 
+combinations of tumor purity, categorized into three intervals, and CMS subtypes). This analysis showed that the iteration step captures more  in the data. However, the results suggest that certain batches with similar RLE medians can be aggregated for 
+downstream analysis. For example, Batch 1 and Batch 3 can be combined into a single batch. Similarly, the samples from 
+Batch 4, which originate from the Batch 2 time interval, can be aggregated with Batch 5.
+
+
+# Variation assessment
+Before proceeding with RUV-III normalization or any other normalization, it is crucial to assess the impact of both 
+biological and  on all data sets. At this stage a range of statistical metrics that are categorized into global and gene
+level will be applied on all the assays.
+
+## Checking the SummarizedExperiment object
+After selecting both biological and unwanted variables, applying the `checkSeObj()` function is recommended to 
+remove any `NA` or missing values in both the assays and the variables. Recall that the current RUV-III method does
+not support `NA` or missing values in the data. 
+
+```{r assessSeObject, message=FALSE, warning=F}
+read.se.obj$CMS <- read.se.obj$Quantile.CMS.TI
+read.se.obj <- checkSeObj(
+  se.obj      = read.se.obj,
+  assay.names = 'all',
+  variables   = c('CMS','Library.size','Tumour.purity','Time.interval', 'Estimated.batches'))
+```
+
+The result shows that there are no `NA` or missing values in either the data or the variables. Note that the `check.se.obj`
+argument of all the function used in subsequent analysis can be set to `FALSE`.
+
+## Creating all possible assessments (optional)
+The `getAssessmentMetrics()` function can be used to find all possible plots and assessments for all specified biological
+and unwanted variables. Plots or assessments that are not of interest can be excluded for the later steps. We recommend 
+generating all the plots to visually explore the variation and then deciding which ones to exclude for down-stream analyses.
+
+```{r getAssessmentMetrics}
+# Visualize all possible assessment metrics for the variables
+read.se.obj <- getAssessmentMetrics(
+    se.obj = read.se.obj, 
+    bio.variables = c('CMS', 'Tumour.purity'),
+    uv.variables = c('Library.size','Time.interval', 'Estimated.batches'),
+    plot.output = FALSE
+    )
+#--- export the plot
+read.se.obj@metadata$AssessmentMetrics$plot
+```
+
+The results shows that 67 plots and metrics will be generated to assess the impact of both biological and  in the data. 
+Note that the code for each assessment can be used to exclude specific assessments from downstream analysis.
+
+
+## Selecting genes for gene-gene correlation assessment and tumor purity estimation
+Forming partial gene-gene correlations is one of the metrics used in the variation assessment process. If this metric is
+selected, it is preferable to provide a list of genes whose expression is highly associated with the corresponding variable;
+otherwise, all genes will be used, which can be computationally expensive. The `selectGenesForPPcorr()` function will be 
+used to identify gene sets for library size and purity variation. Spearman correlation analysis will be performed within 
+each major time interval to account for the large batch effects in the data.
+Preserving the variation in tumor purity is one of the aims of this procedure. Gene set scoring analysis will be performed
+to estimate tumor purity in data sets, serving as one of the metrics in the variation assessment process. To estimate tumor
+purity for individual samples, predefined immune and stromal gene sets will be used. The `selectGeneSets()` will be used
+to retrieve an immune and stromal gene signature in the `SummarizedExperiment` object. Note that users may also provide 
+appropriate alternative gene signatures for estimating tumor purity.
+
+```{r geneSelection}
+ppcorr.gene.sets <- selectGenesForPPcorr(
+    se.obj      = read.se.obj, 
+    assay.names = c('RawCount', 'FPKM.UQ'), 
+    variables   = c('Library.size', 'Tumour.purity'), 
+    cor.cutoff  = 0.6,
+    groups      = 'Time.interval'
+    )
+lapply(ppcorr.gene.sets, length) # 870, 1535 genes
+tumour.purity.genes.sets <- RUVprps:::selectGenesSets(
+    se.obj   = read.se.obj, 
+    gene.set = "immune.stromal"
+    ) # 273
+```
+
+The 1,535 and 870 genes that have an absolute correlation of more than 0.6 with purity and library size are identified,
+respectively. A total of 273 genes are selected to estimate tumor purity in the data.
+
+## Assessing variation
+The `assessVariation()` function will apply all the statistical metrics for all specified variables. The results 
+including statistical summaries and plots of individual metrics will be stored in the `SummarizedExperiment` object. 
+The `plotAssessVariation()` function will create a PDF file that contains all the plots. This file will be stored
+in the current home directory.
+
+```{r assessVariation}
+read.se.obj <- assessVariation(
+    se.obj              = read.se.obj, 
+    assay.names         = 'all', 
+    assessment.level    = 'L2',
+    bio.variables       =  c('CMS', 'Tumour.purity'),
+    uv.variables        =  c('Library.size','Time.interval', 'Estimated.batches'),
+    pcorr.genes         = ppcorr.gene.sets,
+    gene.set.score.list = tumour.purity.genes.sets,
+    general.points.size = 3,
+    override.check      = FALSE, 
+    check.se.obj        = FALSE
+    )
+RUVprps:::plotAssessVariation(
+    se.obj           = read.se.obj, 
+    assay.names      = 'all', 
+    variables        =  c('CMS','Library.size','Tumour.purity','Time.interval'), 
+    output.file.name = paste0(figPathSc0, "RUVprps_TCGA_READ_InitialVariationAssessments")
+    )
+```
+
+The `RUVprps_TCGA_READ_InitialVariationAssessments.pdf` file displays all the plots of individual metrics applied by the \texttt{assessVariation()} function. Briefly, the first two PCs of the TCGA normalized data sets clearly show that the 
+effect of the major time intervals persists in these datasets. This conclusion is further supported by the other gene-level
+and global-level assessments. We will now apply RUV-III with PRPS to remove the impact of library size and the major time
+intervals from the raw count data while preserving variation in two major known biological variables including tumor purity
+and CMS. Ideal normalization should preserve all biological variation of interest in the data. The relatively high association
+between  and known biological variation is attributed to the presence of confounding in the data.
+
+
+```{r}
+# Test data
+data.list <-
+    list(
+        data = read.se.obj,
+        purity.gene.set = tumour.purity.genes.sets$Tumour.purity,
+        pcorr.genes.list = ppcorr.gene.sets
+    )
+read.se.obj <- data.list$data
+purity.gene.set <- data.list$purity.gene.set
+pcorr.genes.list <- data.list$pcorr.genes.list
+```
+
+# RUV-III-PRPS normalization
+RUV-III with PRPS will be applied in two different scenarios. The general process for each scenario involves identifying
+a suitable set of NCG, creating PRPS data for each source of , performing RUV-III normalization with multiple values for
+$k$, and finally assessing the normalization performance.
+
+## Supervised: both biological and unwanted variation are known
+In this scenario, only known sources of biological and  will be considered in the RUV-III normalization. Library size and
+the major time intervals will then be used as the known sources of , while CMS and tumor purity will be recognized as the
+major biological variation. RUV-III normalization will be conducted in a fully supervised manner.
+
+### Selecting negative control genes
+A set of NCG will be identified through implementation of the `findNcgSupervised()` function. All the available approaches
+will be tested and then the `compareNCGs()` function will be applied to select the most suitable set of genes as NCG. 
+All NCG sets will be stored in the `SummarizedExperiment` object. It should be noted that the results of the `comapreNCGs()`
+function are suggestive rather than definitive. Users may test all NCG sets and evaluate their performance accordingly.
+
+```{r findNcgSupervised}
+read.se.obj <- data.list$data
+ncg.options <- c(
+    'AnovaCorr.AcrossAllSamples', 
+    'AnovaCorr.PerBatchPerBiology', 
+    'LinearMixedModel', 
+    'TwoWayAnova'
+    )
+read.se.obj@metadata$NCG <- NULL
+for(i in 1:4){
+    read.se.obj <- findNcgSupervised(
+        se.obj               = read.se.obj,
+        assay.name           = 'RawCount',
+        bio.variables        = c('Tumour.purity', 'CMS'),
+        uv.variables         = c('Library.size', 'Time.interval'), 
+        samples.to.use       = 'all',
+        approach             = ncg.options[i],
+        form                 = ~ (1|Time.interval) + Library.size + (1|CMS) + Tumour.purity,
+        use.rank             = FALSE, 
+        bio.percentile       = NULL,
+        uv.percentile        = 0.8, 
+        pseudo.count         = 1, 
+        adjust.data          = TRUE,
+        adjustment.variables = "uv",
+        ncg.selection.method = 'quantile',
+        nb.ncg               = 0.05,
+        ncg.group.name       = 'read.scenario1',
+        ncg.set.name         = ncg.options[i], 
+        nb.cores             = 15,
+        check.se.obj         = FALSE,
+        assess.ncg           = TRUE)
+}
+
+countNCG(
+    se.obj              = read.se.obj, 
+    ncg.selection       = 'supervised', 
+    ncg.group.name      = 'read.scenario1', 
+    create.venn.diagram = FALSE
+    )
+
+ggarrange(
+    read.se.obj@metadata$NCG$supervised$read.scenario1$LinearMixedModel$assessment.plot,
+    read.se.obj@metadata$NCG$supervised$read.scenario1$AnovaCorr.AcrossAllSamples$assessment.plot,
+    read.se.obj@metadata$NCG$supervised$read.scenario1$AnovaCorr.PerBatchPerBiology$assessment.plot,
+    read.se.obj@metadata$NCG$supervised$read.scenario1$TwoWayAnova$assessment.plot,
+    ncol = 4)
+```
+
+The results show the satisfactory performance of all four NCG selection approaches. The 740 NCG identified by the `LinearMixedModel` approach show slightly better performance compared to other approaches. Then this set of NCG will be used for RUV-III normalization.
+
+#### Assessing the performance of NCG
+```{r compareNCGsSuper}
+read.se.obj <- compareNCGs(
+    se.obj         = read.se.obj,
+    assay.name     = 'RawCount', 
+    ncg.set.names  = "all",
+    bio.variables  = c('Tumour.purity', 'CMS'), 
+    uv.variables   = c('Library.size', 'Time.interval'), 
+    nb.pcs         = 10,
+    ncg.type       = 'supervised', 
+    ncg.group.name = 'read.scenario1',
+    check.se.obj   = FALSE
+    )
+```
+
+The bar plot summarizes the performance of the selected NCG sets, where a higher correlation indicates better performance.
+
+### Creating the PRPS data
+The PRPS data will be generated for individual sources of  using the `createPrPsSupervised()` function. The parameter `apply.other.uv.variables` will be set to `FALSE` due to insufficient sample size. In addition, both normal tissues and 
+samples annotated as “Not.classified” for CMS will be excluded. Normal tissues will be omitted because they were all 
+profiled within the second batch of the time interval and therefore are not informative for PRPS construction to remove 
+the batch effects. Samples annotated as “Not.classified” for CMS will be excluded because their subtypes were undefined,
+which could lead to unsatisfactory PRPS data. All PRPS data will be stored in the `SummarizedExperiment` object. Note that
+tumor purity will be divided into four categorical groups using k-means clustering (the default option) to find homogeneous
+biological groups for creating the PRPS data. Increasing the number of categories will result in smaller homogeneous 
+biological groups and may lead to insufficient samples to create PRPS data across batches. The function will print messages
+if the number of groups is too small or too large. PRPS data will be created using the RawCount (log_2+ 1) data (`apply.log = TRUE`).
+
+```{r}
+read.se.obj@metadata$PRPS <- NULL
+read.se.obj <- createPrPsSupervised(
+    se.obj                   = read.se.obj, 
+    assay.name               = 'RawCount', 
+    bio.variables            = c('Tumour.purity', 'CMS'), 
+    samples.to.use           = !read.se.obj$CMS %in%  c('Normal', 'Not.classified'),
+    uv.variables             = c('Library.size', 'Time.interval'),
+    bio.clustering.method    = "kmeans",
+    nb.bio.clusters          = 4, 
+    apply.log                = TRUE, 
+    pseudo.count             = 1,
+    check.prps.connectedness = FALSE,
+    apply.other.uv.variables = FALSE,
+    prps.group.name          = 'read.scenario1',
+    verbose                  = TRUE, 
+    plot.output              = FALSE
+    )
+read.se.obj@metadata$PRPS$supervised$read.scenario1$`Time.interval|Tumour.purity&CMS|RawCount`$prps.map.plot +
+    read.se.obj@metadata$PRPS$supervised$read.scenario1$`Library.size|Tumour.purity&CMS|RawCount`$prps.map.plot +
+    plot_layout(guides = "collect", ncol = 2) 
+```
+
+In total, 8 PR sets with a total of 16 PS were created to capture library size effects, and 8 PR sets from 18 PS were created for the major time interval batch difference.
+
+### Performing RUV-III normalization with multiple $k$ values
+First, the `getMaximumK()` function will be applied to find the possible maximum value, $K$, for the $k$. This shows that
+the maximum value for the current NCG and PRPS data is $K=16$. If any values bigger than 16 are provided, the `RUVIIIprps()`
+function will ignore them. Here, all ranges of values for $k$ will be then tested and the performance for each $k$ will
+be evaluated. All the RUV-III normalized data will be stored as assays in the `SummarizedExperiment` object. The RUV-III-PRPS
+normalization will be applied on the RawCount (log_2+ 1) data. 
+
+```{r RUVIIIprpsSuper}
+read.se.obj <- RUVIIIprps(
+    se.obj               = read.se.obj, 
+    assay.name           = 'RawCount', 
+    control.sample.types = 'prps',
+    prps.type            = 'supervised', 
+    prps.group           = 'read.scenario1',
+    prps.set.names       = 'all',
+    ncg.type             = 'supervised', 
+    ncg.group.names      = 'read.scenario1',
+    ncg.set.names        = 'LinearMixedModel',
+    k                    = c(1, seq(3, 16, 2)), 
+    apply.log            = TRUE,
+    data.to.log          = 'assay', 
+    pseudo.count         = 1,
+    return.wa            = TRUE, 
+    check.se.obj         = FALSE
+    )
+```
+
+
+#### Assessing the W matrix
+Prior to evaluating normalization performance, the `assessW()` function can be applied to assess the associations between
+the biological and unwanted variables and the unwanted factors estimated by RUV-III, represented by the columns of the 
+estimated matrix $W$. Ideally these factors should have strong and no or weak associations with the unwanted and biological
+variables, respectively.
+
+```{r}
+read.se.obj <- assessW(
+    se.obj        = read.se.obj, 
+    variables     = NULL,
+    compare.w     = TRUE, 
+    bio.variables = c('Tumour.purity', 'CMS'), 
+    uv.variables  = c('Library.size', 'Time.interval')
+    )
+read.se.obj@metadata$RUVIII$CompareW
+```
+
+The results show that the estimated unwanted factors have a strong association with library size and the major time intervals,
+but a relatively low association with CMS and tumor purity. This plot will be useful for selecting the most appropriate 
+$k$ value for RUV-III normalization. Overestimating the value of $k$ might result in removing variation between the CMS.
+Note that in RUV-III with PRPS normalization, we prefer to use lower values for $k$ as long as they reasonably capture the .
+
+
+## Evaluating normalizations
+To assess the performance of RUV-III and compare it with the TCGA normalizations, we will first estimate CMS for the 
+RUV-III normalized datasets. Then, the association between the CMS and overall survival will be assessed to select the 
+most suitable CMS for down-stream analysis. All the CMS estimates will be added to the sample annotation in the 
+`summarizedExperiment` object. Note that if the CMS estimates derived from the TCGA-normalized data are considered 
+reliable, this step becomes unnecessary.
+
+### Estimating CMS
+The association of the estimated CMS with patient survival will be assessed. This analysis will determine which estimated
+CMS should be used for evaluating variation and normalization. Furthermore, this analysis can inform the selection of an 
+appropriate value of $K$. Note that, in the next analysis, both CMS and survival analysis for the TCGA datasets 
+will not be re-calculated.
+
+```{r estimateCMSRuvDataRUV}
+read.se.obj <- estimateCMS(
+    se.obj               = read.se.obj, 
+    assay.names          = names(SummarizedExperiment::assays(read.se.obj))[-c(1:4)], 
+    raw.count.assay.name = NULL, 
+    tissue.type          = 'Tissues', 
+    groups               = NULL,
+    remove.na            = 'none', 
+    apply.log            = FALSE,
+    seed                 = 122334, 
+    nb.cores             = 14
+    )
+```
+
+#### Performing survival analysis of CMS
+```{r}
+all.survivals <- lapply(
+    cms <- grep('RUVIIIprps', colnames(colData(read.se.obj)), value = TRUE), 
+    function(i) {
+        idx <- read.se.obj$OS != -1 & read.se.obj[[i]] != 'Not.classified'
+        computeSurvival(
+            se.obj               = read.se.obj[, idx], 
+            variable             = i, 
+            survival.time        = 'OS.time', 
+            survival.events      = 'OS', 
+            genes                = NULL, 
+            return.survival.plot = TRUE, 
+            check.se.obj         = FALSE, 
+            plot.output          = FALSE,
+            save.se.obj          = FALSE)$plot})
+combined <- ggarrange(
+    plotlist = lapply(1:length(all.survivals), function(x) all.survivals[[x]] + ylab('') + xlab('')), 
+    ncol = 4, 
+    nrow = 2, 
+    common.legend = TRUE
+    )
+annotate_figure(
+  combined,
+  left = text_grob("Survival probability", rot = 90, size = 20),
+  bottom = text_grob("Time (days)", size = 18)
+  )
+```
+
+The result shows that the CMS estimated by RUV-III with $k=15$ yields the lowest p-value compared to the `Quantile.CMS.TI`
+method. These estimates will be used for variation assessment and evaluation of normalization performance.
+
+### Assessing variation and normalization
+
+Next, the `assessVariation()` function, followed by `assessNormalization()`, will be applied to all RUV-III normalized data
+in the `SummarizedExperiment` object. Note that there is no need to re-calculate the metrics for the TCGA datasets, as 
+they have already been computed and stored in the `SummarizedExperiment` object. By setting `override.check = TRUE`, the
+function will not recompute metrics already available for each dataset. However, if one wishes to re-calculate the metrics
+for the TCGA datasets, the data must first be log-transformed, after which the `assessVariation()` function can be applied with \texttt{apply.log = FALSE}, since all RUV-III normalized data are already in log scale.
+
+```{r}
+read.se.obj$CMS <- read.se.obj$RUVIIIprps_k_15.CMS
+read.se.obj <- assessVariation(
+    se.obj              = read.se.obj, 
+    assay.names         = 'all',  
+    assessment.level    = 'L2',
+    bio.variables       = c("Tumour.purity", "CMS"),
+    uv.variables        = c("Library.size", "Time.interval"),
+    pcorr.genes         = ppcorr.gene.sets, 
+    gene.set.score.list = tumour.purity.genes.sets,
+    pcorr.filter.genes  = FALSE,
+    general.points.size = 3,
+    override.check      = TRUE,
+    apply.log           = FALSE,
+    check.se.obj        = FALSE
+    )
+read.se.obj <- assessNormalization(
+    se.obj           = read.se.obj, 
+    assay.names      = 'all', 
+    assessment.level = 'L2',
+    select.top.ruv   = FALSE,
+    bio.variables    = c("Tumour.purity", "CMS"), 
+    uv.variables     = c("Library.size", "Time.interval"), 
+    bio.weight       = 0.6,
+    uv.weight        = 0.4, 
+    corr.cutoff      = list(Tumour.purity = .5, Library.size = .3),
+    output.name      = 'tcga.read.assessNormalization.scenario1'
+    )
+RUVprps:::plotAssessVariation(
+    se.obj           = read.se.obj, 
+    assay.names      = 'all', 
+    variables        =  c('CMS','Library.size','Tumour.purity','Time.interval'), 
+    output.file.name = paste0(figPathSc1 , "RUVprps_TCGA_READ_VariationAssessment_Supervised")
+    )
+```
+
+The result demonstrates, level 2 normalization assessment, that RUV-III-PRPS more effectively removes  while preserving 
+known biological variation compared to the TCGA normalization methods. The `RUVprps_TCGA_READ_VariationAssessment_Supervised.pdf`
+file contains all the plots summarized in the Supplementary Figure \ref{readScenario1Sf}e. Across all evaluation metrics, 
+RUV-III-PRPS with $k=11$ exhibits the strongest overall performance among the tested normalization approaches, however, 
+the differences between the RUV-III-PRPS normalized data are not significant. It should be noted that the choice of k may
+be tailored to the specific objectives of downstream analyses. For instance, while $k=11$ yields the most robust results
+across the full set of metrics, a higher value such as $k=15$ provides better association between the CMS and survival. 
+Thus, the flexibility of RUV-III-PRPS allows users to select an adjustment level that balances noise reduction and signal
+preservation in a manner most appropriate for their study.
+
+### Generating PCA plots
+#### Gene signature
+```{r}
+cms.gene.sig <- CMScaller::templates.CMS
+cms.gene.sig <- intersect(cms.gene.sig$symbol, row.names(read.se.obj))
+length(cms.gene.sig) == 473
+read.se.obj.a <- RUVprps:::createLogAssays(
+    se.obj = read.se.obj, 
+    assay.names = 'RawCount', 
+    new.name = '', 
+    replace.assays = TRUE
+    )
+read.se.obj.a <- computePCA(
+    se.obj = read.se.obj.a[cms.gene.sig , ], 
+    assay.names = c('RawCount', 'RUVIIIprps_k_15'), 
+    apply.log = FALSE
+    )
+read.se.obj.a <- RUVprps::plotPCA(
+    se.obj = read.se.obj.a, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_15'), 
+    variable = 'CMS', 
+    points.size = 2, points.alpha = 0.8,
+    variable.colors = selectColors(1:6, group = 'pan.selection.b')
+    )
+read.se.obj.a <- RUVprps::plotPCA(
+    se.obj = read.se.obj.a, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_15'),
+    variable = 'Time.interval', 
+    points.size = 2,
+    points.alpha = 0.8
+    )
+
+ggarrange(
+    read.se.obj.a@metadata$Metrics$RawCount$global.level$PCA$fast.svd$Time.interval$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RUVIIIprps_k_15$global.level$PCA$fast.svd$Time.interval$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RawCount$global.level$PCA$fast.svd$CMS$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RUVIIIprps_k_15$global.level$PCA$fast.svd$CMS$scatter.plot,
+    ncol = 2,
+    nrow = 2, common.legend = TRUE, legend = NULL
+    )
+```
+
+#### All genes
+```{r}
+read.se.obj.a <- RUVprps:::createLogAssays(
+    se.obj = read.se.obj, 
+    assay.names = 'RawCount', 
+    new.name = '', 
+    replace.assays = TRUE
+    )
+read.se.obj.a <- computePCA(
+    se.obj = read.se.obj.a, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_15'), 
+    apply.log = FALSE
+    )
+read.se.obj.a <- RUVprps::plotPCA(
+    se.obj = read.se.obj.a, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_15'), 
+    variable = 'CMS', 
+    points.size = 2, points.alpha = 0.8,
+    variable.colors = selectColors(1:6, group = 'pan.selection.b')
+    )
+read.se.obj.a <- RUVprps::plotPCA(
+    se.obj = read.se.obj.a, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_15'),
+    variable = 'Time.interval', 
+    points.size = 2,
+    points.alpha = 0.8
+    )
+ggarrange(
+    read.se.obj.a@metadata$Metrics$RawCount$global.level$PCA$fast.svd$Time.interval$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RUVIIIprps_k_15$global.level$PCA$fast.svd$Time.interval$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RawCount$global.level$PCA$fast.svd$CMS$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RUVIIIprps_k_15$global.level$PCA$fast.svd$CMS$scatter.plot,
+    ncol = 2,
+    nrow = 2
+    )
+```
+
+### Assessing library size
+```{r}
+read.se.obj <- computePCVariableRegression(
+    se.obj = read.se.obj, 
+    assay.names = 'all', 
+    variable = 'Library.size', 
+    nb.pcs = 10
+    )
+p1 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$LRA$fast.svd$Library.size$r.squared
+    }) %>% 
+    as.data.frame() %>% 
+    mutate(PCs = c('PC1', paste0('PC1:', 2:10))) %>% 
+    pivot_longer(-PCs, names_to = 'Datasets', values_to = 'rseq') %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    mutate(PCs = factor(PCs, levels = c('PC1', paste0('PC1:', 2:10)))) %>% 
+    ggplot(., aes(x = PCs, y = rseq, group = Datasets)) +
+    geom_line(aes(color = Datasets), size = 1) +
+    geom_point(aes(color = Datasets), size = 3) +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylim(0,1) +
+    ylab(expression(R^2)) +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1)
+    )
+
+p2 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$gene.level$Correlation$spearman$Library.size$correlations.pvalues[ ,2]
+    }) %>% 
+    as.data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Datasets', values_to = 'Corr') %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = Corr)) +
+    geom_boxplot() +
+    ylim(-1,1) +
+    ylab('Correlations') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1)
+    )
+```
+
+### Assessing purity variation
+```{r}
+tumour.purity <- tidyestimate::filter_common_genes(
+    df           = assay(x = read.se.obj, i = 'RUVIIIprps_k_15'),
+    id           = "hgnc_symbol",
+    tidy         = FALSE,
+    tell_missing = TRUE,
+    find_alias   = TRUE
+    )
+tumour.purity <- tidyestimate::estimate_score(df = tumour.purity, is_affymetrix = TRUE)
+tumour.purity.estimate <- tumour.purity$purity
+
+p3 <- data.frame(
+    estimate = read.se.obj$Tumour.purity, 
+    singscore = tumour.purity.estimate) %>% 
+    ggplot(., aes(x = estimate, y = singscore)) +
+    geom_point() +
+    xlab('ESTIMATE (FPKM.UQ)') +
+    ylab('ESTIMATE (RUV-III-PRPS)') +
+    stat_cor(size = 5) + 
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 15),
+        axis.text.x      = element_text(size = 14),
+        axis.text.y      = element_text(size = 14))
+
+
+read.se.obj <- computePCVariableRegression(
+    se.obj = read.se.obj, 
+    assay.names = 'all', 
+    variable = 'Tumour.purity', 
+    nb.pcs = 10
+    )
+p4 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$LRA$fast.svd$Tumour.purity$r.squared
+    }) %>% 
+    as.data.frame() %>% 
+    mutate(PCs = c('PC1', paste0('PC1:', 2:10))) %>% 
+    pivot_longer(-PCs, names_to = 'Datasets', values_to = 'rseq') %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    mutate(PCs = factor(PCs, levels = c('PC1', paste0('PC1:', 2:10)))) %>% 
+    ggplot(., aes(x = PCs, y = rseq, group = Datasets)) +
+    geom_line(aes(color = Datasets), size = 1) +
+    geom_point(aes(color = Datasets), size = 3) +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylim(c(0,1)) +
+    ylab(expression(R^2)) +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 15),
+        axis.text.y      = element_text(size = 14),
+        axis.text.x      = element_text(size = 14, angle = 45, hjust = 1)
+    )
+
+p5 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$gene.level$Correlation$spearman$Tumour.purity$correlations.pvalues[ ,2]
+    }) %>% 
+    as.data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Datasets', values_to = 'Corr') %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = Corr)) +
+    geom_boxplot() +
+    ylim(-1,1) +
+    ylab('Correlations') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 15),
+        axis.text.y      = element_text(size = 14),
+        axis.text.x      = element_text(size = 14, angle = 45, hjust = 1)
+    )
+
+ggarrange(p1, p2, p4, p5, p3, nrow = 1)
+```
+
+### Assessing time effects
+```{r}
+read.se.obj <- computePCVariableCorrelation(
+    se.obj = read.se.obj, 
+    assay.names = 'all', 
+    variable = 'Time.interval', 
+    nb.pcs = 10
+    )
+p1 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$VCA$fast.svd$Time.interval$vector.correlations
+    }) %>% 
+    as.data.frame() %>% 
+    mutate(PCs = c('PC1', paste0('PC1:', 2:10))) %>% 
+    pivot_longer(-PCs, names_to = 'Datasets', values_to = 'rseq') %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    mutate(PCs = factor(PCs, levels = c('PC1', paste0('PC1:', 2:10)))) %>% 
+    ggplot(., aes(x = PCs, y = rseq, group = Datasets)) +
+    geom_line(aes(color = Datasets), size = 1) +
+    geom_point(aes(color = Datasets), size = 3) +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylim(0,1) +
+    ylab('Vector correlation') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 15),
+        axis.text.y      = element_text(size = 14),
+        axis.text.x      = element_text(size = 14, angle = 45, hjust = 1)
+    )
+
+ggarrange(plotlist = read.se.obj@metadata$Plots$gene.level$DGE$limma$Time.interval$histogram[c(1,2,3,4,12)],p1, nrow = 1)
+
+
+p1 <- sapply(
+    names(assays(read.se.obj))[1:12], 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$Silhouette$sil.euclidian$Time.interval$silhouette.coeff
+    }) %>% 
+    as.data.frame(.) %>% 
+      data.frame(
+    Datasets = rownames(.),
+    Sil = .[[1]],
+    row.names = NULL) %>% 
+    mutate(Datasets = factor(x = Datasets, levels = names(assays(read.se.obj))[1:12])) %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = Sil)) +
+    geom_col() +
+    ylab('Silhouette coefficient') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1.2),
+        axis.title.x = element_text(size = 22),
+        axis.title.y = element_text(size = 22),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18, angle = 25, hjust = 1)
+    )
+
+p2 <- sapply(
+    names(assays(read.se.obj))[1:12], 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$LISI$fast.svd$Time.interval$lisi
+    }) %>% 
+    as.data.frame(.) %>% 
+    pivot_longer(everything(), names_to = 'Datasets', values_to = 'kBet') %>% 
+    mutate(Datasets = factor(x = Datasets, levels = names(assays(read.se.obj))[1:12])) %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = kBet)) +
+    geom_boxplot() +
+    ylab('LISI') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1.2),
+        axis.title.x = element_text(size = 22),
+        axis.title.y = element_text(size = 22),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18, angle = 25, hjust = 1)
+    )
+
+p3 <- sapply(
+    names(assays(read.se.obj))[1:12], 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$KBET$fast.svd$Time.interval$kBET
+    }) %>% 
+    as.data.frame(.) %>% 
+    pivot_longer(everything(), names_to = 'Datasets', values_to = 'kBet') %>% 
+    mutate(Datasets = factor(x = Datasets, levels = names(assays(read.se.obj))[1:12])) %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = kBet)) +
+    geom_boxplot() +
+    ylab('kBET') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1.2),
+        axis.title.x = element_text(size = 22),
+        axis.title.y = element_text(size = 22),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18, angle = 25, hjust = 1)
+    )
+
+p4 <- sapply(
+    names(assays(read.se.obj))[1:12], 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$ARI$hclust.complete.euclidian$Time.interval$ari
+    }) %>% 
+    data.frame(Sil = ., Datasets = names(.)) %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = Sil)) +
+    geom_col() +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylab('Ajusted Rand Index') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1.2),
+        axis.title.x = element_text(size = 22),
+        axis.title.y = element_text(size = 22),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18, angle = 25, hjust = 1)
+    )
+
+ggarrange(p1, p4, p3, p2, nrow = 1)
+```
+
+### Assessing CMS
+```{r}
+read.se.obj <- computePCVariableCorrelation(
+    se.obj      = read.se.obj, 
+    assay.names = 'all', 
+    variable    = 'CMS', 
+    nb.pcs      = 10
+    )
+p1 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$VCA$fast.svd$CMS$vector.correlations
+    }) %>% 
+    as.data.frame() %>% 
+    mutate(PCs = c('PC1', paste0('PC1:', 2:10))) %>% 
+    pivot_longer(-PCs, names_to = 'Datasets', values_to = 'rseq') %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    mutate(PCs = factor(PCs, levels = c('PC1', paste0('PC1:', 2:10)))) %>% 
+    ggplot(., aes(x = PCs, y = rseq, group = Datasets)) +
+    geom_line(aes(color = Datasets), size = 1) +
+    geom_point(aes(color = Datasets), size = 3) +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylab('Vector correlation') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 15),
+        axis.text.y      = element_text(size = 14),
+        axis.text.x      = element_text(size = 14, angle = 45, hjust = 1)
+    )
+
+read.se.obj <- computeSilhouette(
+    se.obj      = read.se.obj, 
+    assay.names = 'all', 
+    variable    = 'CMS', 
+    nb.pcs      = 3
+    )
+read.se.obj <- plotSilhouette(
+    se.obj      = read.se.obj, 
+    assay.names = 'all', 
+    variable    = 'CMS'
+    )
+
+p2 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$Silhouette$sil.euclidian$CMS$silhouette.coeff
+    }) %>% 
+    data.frame(Sil = ., Datasets = names(.)) %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = Sil)) +
+    geom_col() +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylab('Ajusted Rand Index') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1)
+    )
+
+
+read.se.obj <- computeARI(
+    se.obj = read.se.obj, 
+    assay.names = 'all', 
+    variable = 'CMS', 
+    nb.pcs = 2
+    )
+read.se.obj <- plotARI(
+    se.obj = read.se.obj, 
+    assay.names = 'all', 
+    variable = 'CMS'
+    )
+
+p3 <- sapply(
+    names(assays(read.se.obj)), 
+    function(x){
+        read.se.obj@metadata$Metrics[[x]]$global.level$ARI$hclust.complete.euclidian$CMS$ari
+    }) %>% 
+    data.frame(Sil = ., Datasets = names(.)) %>% 
+    mutate(Datasets = factor(Datasets, levels = names(assays(read.se.obj)))) %>% 
+    ggplot(., aes(x = Datasets, y = Sil)) +
+    geom_col() +
+    scale_color_manual(values = selectColors(nb.color = 1:12)) +
+    ylab('Ajusted Rand Index') +
+    theme(
+        panel.background = element_blank(),
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 15),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1)
+    )
+ggarrange(p1,p2,p3, nrow = 1)
+
+
+
+all.survivals <- lapply(
+    cms <- c('Quantile.CMS', 'TPM.CMS', 'FPKM.CMS', 'FPKM.UQ.CMS', 'RUVIIIprps_k_15.CMS'), 
+    function(i) {
+        idx <- read.se.obj$OS != -1 & read.se.obj[[i]] != 'Not.classified'
+        computeSurvival(
+            se.obj = read.se.obj[, idx], 
+            variable = i, 
+            survival.time = 'OS.time', 
+            survival.events = 'OS', 
+            genes = NULL, 
+            return.survival.plot = TRUE, 
+            check.se.obj = FALSE, 
+            save.se.obj = FALSE)$plot})
+
+combined <- ggarrange(
+    plotlist = lapply(1:length(all.survivals), function(x) all.survivals[[x]] + ylab('') + xlab('')), 
+    ncol = 5, 
+    nrow = 1, 
+    common.legend = TRUE
+    )
+annotate_figure(
+  combined,
+  left = text_grob("Survival probability", rot = 90, size = 20),
+  bottom = text_grob("Time (days)", size = 18)
+  )
+```
+
+### Applying linear mixed model
+```{r}
+read.se.obj <- RUVprps:::createLogAssays(
+    se.obj      = read.se.obj, 
+    assay.names = 'FPKM.UQ', 
+    new.name    = 'Log'
+    )
+read.se.obj <- computeGenesVarianceComposition(
+    se.obj      = read.se.obj, 
+    assay.names = c('LogFPKM.UQ', 'RUVIIIprps_k_15'), 
+    form        = ~(1|Time.interval) + (1|CMS) + Tumour.purity + Library.size, 
+    apply.log   = FALSE
+    )
+
+fpkm.var.decomp <- read.se.obj@metadata$Metrics$LogFPKM.UQ$gene.level$GeneVarDecompostion$LMM$`~Time.interval + CMS + Tumour.purity + Library.size`$gene.variance
+ruv.var.decomp <- read.se.obj@metadata$Metrics$RUVIIIprps_k_15$gene.level$GeneVarDecompostion$LMM$`~Time.interval + CMS + Tumour.purity + Library.size`$gene.variance
+
+p1 <- fpkm.var.decomp %>% 
+    data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Variable', values_to = 'Variance')  %>% 
+    mutate(Variable = factor(Variable, levels = c("Library.size","Time.interval", "Tumour.purity", "CMS","Residuals" ))) %>% 
+   ggplot(aes(x = Variable, y = Variance, fill = Variable)) +
+  geom_violin(
+    trim = FALSE,
+    scale = "width",
+    color = "grey30",
+    alpha = 0.8) +
+  stat_summary(
+    fun = median,
+    geom = "point",
+    size = 2,
+    color = "black") +
+  stat_summary(
+    fun.data = median_hilow,
+    fun.args = list(conf.int = 0.5),
+    geom = "errorbar",
+    width = 0.15,
+    color = "black") +
+  scale_fill_manual(values = selectColors(nb.color = 1:5, group = "pan.selection.b")) +
+    ylim(0,1) +
+  labs(
+    x = "",
+    y = "Variance explained") +
+  theme_classic(base_size = 14) +
+      theme(
+        panel.background = element_blank(),
+        legend.position = 'none',
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.y = element_text(size = 14),
+        legend.text  = element_text(size = 18),
+        axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 12, angle = 90, hjust = .5))
+
+p2 <- ruv.var.decomp %>% 
+    data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Variable', values_to = 'Variance')  %>% 
+    mutate(Variable = factor(Variable, levels = c("Library.size","Time.interval", "Tumour.purity", "CMS","Residuals" ))) %>% 
+   ggplot(aes(x = Variable, y = Variance, fill = Variable)) +
+  geom_violin(
+    trim = FALSE,
+    scale = "width",
+    color = "grey30",
+    alpha = 0.8) +
+  stat_summary(
+    fun = median,
+    geom = "point",
+    size = 2,
+    color = "black") +
+  stat_summary(
+    fun.data = median_hilow,
+    fun.args = list(conf.int = 0.5),
+    geom = "errorbar",
+    width = 0.15,
+    color = "black") +
+  scale_fill_manual(values = selectColors(nb.color = 1:5, group = "pan.selection.b")) +
+    ylim(0,1) +
+  labs(
+    x = "",
+    y = "Variance explained") +
+  theme_classic(base_size = 14) +
+      theme(
+        panel.background = element_blank(),
+        legend.position = 'none',
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.y = element_text(size = 14),
+        legend.text  = element_text(size = 18),
+        axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 12, angle = 90, hjust = .5))
+
+ggarrange(p1, p2, nrow = 1)
+```
+
+# Unsupervised: Both unwanted and biological variation unknown
+In this scenario, it is assumed that both the biological and  in the data are completely unknown. Both NCG and PRPS will be identified in an unsupervised manner
+
+### Selecting negative control genes
+A set of NCG will be obtained using both approaches in the \texttt{findNcgUnSupervised()} function. The estimated batches and library size will be regarded as sources of UV.
+```{r}
+read.se.obj <- data.list$data
+for(i in c( 'AnovaCorr', 'LinearMixedModel')){
+    read.se.obj <- findNcgUnSupervised(
+        se.obj                  = read.se.obj,
+        assay.name              = 'RawCount',
+        approach                = i,
+        nb.ncg                  = 0.05, 
+        use.rank                = FALSE,
+        ncg.selection.method    = 'quantile',
+        uv.variables            = c('Estimated.batches', 'Library.size'),
+        form                    =  ~ (1 | Time.interval) + Library.size,
+        bio.percentile          = NULL, 
+        uv.percentile           = .8,
+        variables.to.assess.ncg = c('Tumour.purity', 'CMS', 'Estimated.batches', 'Library.size'),
+        ncg.group.name          = 'read.unsupervised',
+        ncg.set.name            = i, 
+        nb.cores                = 14, 
+        plot.ncg.assessment     = FALSE)
+}
+countNCG(
+    se.obj = read.se.obj, 
+    ncg.selection = 'un.supervised', 
+    ncg.group.name = 'read.unsupervised'
+    )
+ggarrange(
+    read.se.obj@metadata$NCG$un.supervised$read.unsupervised$LinearMixedModel$assessment.plot,
+    read.se.obj@metadata$NCG$un.supervised$read.unsupervised$AnovaCorr$assessment.plot,
+    ncol = 2)
+```
+
+#### Assessing the performance of NCGs
+```{r}
+read.se.obj <- compareNCGs(
+    se.obj        = read.se.obj,
+    assay.name    = 'RawCount', 
+    apply.log     = TRUE,
+    variables     = NULL, 
+    bio.variables = c("Tumour.purity", "CMS"), 
+    uv.variables  = c("Estimated.batches", "Library.size"), 
+    ncg.type      = 'un.supervised', 
+    ncg.group     = 'read.unsupervised',
+    nb.pcs        = 10)
+```
+
+The results exhibit that the performance of NCGs selected by the `LinearMixedModel` approach is significantly better than
+a set that identified by the `AnovaCorr` approach. This set will be used as an NCG set for RUV-III normalization.
+
+### Creating the PRPS data
+Different sets of PRPS will be created for library size and the estimated batches using the the function `createPrPsUnSupervised()`
+function. Similar to scenario 3, we will first select a set highly variable genes to improved the procedure.
+
+The top 20\% of highly variable genes will be selected using the `findHVG()` function to improve the performance of CCA 
+and MNN in creating PRPS.
+```{r findHVG}
+hvg <- findHVG(
+    se.obj       = read.se.obj,
+    assay.name   = 'RawCount',
+    approach     = 'lmm',
+    uv.variables = c('Estimated.batches', 'Library.size'),
+    form         = ~ (1 | Time.interval) + Library.size,
+    nb.hvg       = .2,
+    nb.cores     = 14, 
+    save.se.obj  = FALSE
+    )
+sum(hvg) == 2959
+uv.variables <- c("Library.size", "Estimated.batches")
+max.prps.sets <- c(5, 2)
+for(i in c(1:2)){
+    read.se.obj <- createPrPsUnSupervised(
+        se.obj                = read.se.obj,
+        assay.name            = 'RawCount',
+        uv.variables          = uv.variables[i],
+        other.uv.variables    = NULL,
+        select.extreme.groups = TRUE,
+        approach              = 'cca',
+        nb.cca                = 4,
+        nb.pcs                = 5,
+        nb.clusters           = 3,
+        clustering.method     = 'quantile',
+        coordinates.to.use    = 'cca',
+        max.prps.sets         = max.prps.sets[i],
+        filter.prps.sets      = TRUE,
+        hvg                   = hvg,
+        apply.log.for.prps    = TRUE, 
+        create.prps.map       = TRUE,
+        prps.group.name       = 'read.unsupervised'
+    )
+}
+dim(read.se.obj@metadata$PRPS$un.supervised$read.unsupervised$`Estimated.batches|CcaPca|RawCount`$prps.data) # 24
+dim(read.se.obj@metadata$PRPS$un.supervised$read.unsupervised$`Library.size|CcaPca|RawCount`$prps.data) # 10
+
+ggarrange(
+    read.se.obj@metadata$PRPS$un.supervised$read.unsupervised$`Estimated.batches|CcaPca|RawCount`$prps.map.plot,
+    read.se.obj@metadata$PRPS$un.supervised$read.unsupervised$`Library.size|CcaPca|RawCount`$prps.map.plot
+    )
+```
+
+In total, 12 PR sets comprising 24 PS samples were generated to remove the effects of estimated batches, and 5 PR sets comprising 10 PS samples were constructed to account for library size variation. The plots show the distribution of the PRPS data across these sources of UV. 
+
+### Performing RUV-III normalization with multiple $k$ values
+The \texttt{getMaximumK()} function displays that the maximum $k$ for the scenario 4 is 17. Then RUV-III with all possible values of $k$ will  be applied using the selected set of NCG and all PRPS data.
+
+```{r RUVIIIprpsUnSuper}
+read.se.obj <- RUVIIIprps(
+    se.obj               = read.se.obj, 
+    assay.name           = 'RawCount', 
+    prps.type            = 'un.supervised', 
+    prps.group.names     = 'read.unsupervised', 
+    prps.set.names       = "all",
+    ncg.type             = 'un.supervised',
+    ncg.group.names      = 'read.unsupervised', 
+    ncg.set.names        = 'LinearMixedModel', 
+    technical.replicates = NULL,
+    k                    = c(1:10), 
+    apply.log            = TRUE,
+    data.to.log          = 'assay',
+    check.se.obj         = FALSE)
+```
+
+#### Assessing the W matrix
+The function `assessW()` will be applied to examine the association between the biological and unwanted variables with the unwanted factors estimated by RUV-III.
+```{r}
+read.se.obj <- assessW(
+    se.obj        = read.se.obj, 
+    compare.w     = TRUE, 
+    variables     = NULL,
+    bio.variables = c("Tumour.purity", "CMS"), 
+    uv.variables  = c("Estimated.batches", "Library.size")
+    )
+read.se.obj@metadata$RUVIII$CompareW
+```
+
+The plot shows that the columns of the W matrix exhibit very high association with  and low association with known 
+biological variation. This indicates that the unsupervised selection of NCGs using the PRPS data failed to adequately 
+capture the known biological variation present in the dataset.
+
+### Evaluating Normalizations
+#### Estimating CMS
+As in other scenarios, CMS will first be estimated using the RUV-III normalized datasets, after which the `assessVariation()
+function will be applied exclusively to the RUV-III normalized data. Finally, the `assessNormalization()` function
+will be performed across all available assays contained in the `SummarizedExperiment` object.
+
+```{r estimateCMS}
+read.se.obj <- estimateCMS(
+    se.obj               = read.se.obj, 
+    assay.names          = names(SummarizedExperiment::assays(read.se.obj))[-c(1:4)], 
+    raw.count.assay.name = NULL, 
+    apply.log            = FALSE,
+    tissue.type          = 'Tissues', 
+    remove.na            = 'none', 
+    seed                 = 122334, 
+    nb.cores             = 10
+    )
+```
+
+#### Performing survival analysis of  CMS
+Supplementary Figure \ref{ReadCmsSurScenario4} presents the survival analyses of CMS estimated from the RUV-III normalized datasets. RUV-III with $k = 10$ shows a reasonable association between CMS and survival, and therefore will be selected for variation and normalization assessment.
+
+```{r}
+all.survivals <- lapply(
+    cms <- grep('RUVIIIprps', colnames(colData(read.se.obj)), value = TRUE), 
+    function(i) {
+        idx <- read.se.obj$OS != -1 & read.se.obj[[i]] != 'Not.classified'
+        computeSurvival(
+            se.obj               = read.se.obj[, idx], 
+            variable             = i, 
+            survival.time        = 'OS.time', 
+            survival.events      = 'OS', 
+            genes                = NULL, 
+            return.survival.plot = TRUE, 
+            check.se.obj         = FALSE, 
+            plot.output          = FALSE,
+            save.se.obj          = FALSE)$plot
+})
+
+combined <- ggarrange(
+    plotlist = lapply(1:length(all.survivals), function(x) all.survivals[[x]] + ylab('') + xlab('')), 
+    ncol = 4, 
+    nrow = 3, 
+    common.legend = TRUE
+    )
+annotate_figure(
+  combined,
+  left = text_grob("Survival probability", rot = 90, size = 20),
+  bottom = text_grob("Time (days)", size = 18)
+  )
+```
+
+### Assess variation and normalization
+```{r}
+read.se.obj$CMS <- read.se.obj$RUVIIIprps_k_10.CMS
+read.se.obj <- assessVariation(
+    se.obj              = read.se.obj, 
+    assay.names         = 'all',  
+    assessment.level    = 'L2',
+    bio.variables       = c("Tumour.purity", "CMS"),
+    uv.variables        = c("Library.size", "Estimated.batches"),
+    pcorr.genes         = ppcorr.gene.sets, 
+    gene.set.score.list = tumour.purity.genes.sets,
+    pcorr.filter.genes  = FALSE,
+    general.points.size = 3,
+    override.check      = TRUE,
+    apply.log           = FALSE
+    )
+
+read.se.obj <- assessNormalization(
+    se.obj           = read.se.obj, 
+    assay.names      = 'all', 
+    bio.variables    = c('CMS', 'Tumour.purity'), 
+    uv.variables     = c('Library.size', 'Estimated.batches'), 
+    bio.weight       = 0.6, 
+    uv.weight        = 0.4,
+    assessment.level = 'L2',
+    select.top.ruv   = F,
+    corr.cutoff      = list(Tumour.purity = .5, Library.size = .3),
+    output.name      = 'tcga.read.assessNormalization.scenario4'
+    )
+
+plotAssessVariation(
+    se.obj           = read.se.obj, 
+    assay.names      = 'all', 
+    variables        =  c('CMS','Library.size','Tumour.purity','Time.interval'), 
+    output.file.name = paste0(figPathSc4, "RUVprps_TCGA_READ_VariationAssessment_UnSupervised"))
+```
+
+The results demonstrate that RUV-III-PRPS more effectively mitigates UV while preserving known biological signals compared with the TCGA normalization methods.
+
+### Generating PCA plots
+#### All genes
+```{r}
+read.se.obj.a <- RUVprps:::createLogAssays(
+    se.obj = read.se.obj, 
+    assay.names = 'RawCount', 
+    new.name = '', 
+    replace.assays = TRUE
+    )
+read.se.obj.a <- computePCA(
+    se.obj = read.se.obj, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_10'), 
+    apply.log = FALSE
+    )
+read.se.obj.a <- RUVprps::plotPCA(
+    se.obj = read.se.obj, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_10'), 
+    variable = 'CMS', 
+    points.size = 2, points.alpha = 0.8,
+    variable.colors = selectColors(1:6, group = 'pan.selection.b')
+    )
+read.se.obj.a <- RUVprps::plotPCA(
+    se.obj = read.se.obj, 
+    assay.names = c('RawCount', 'RUVIIIprps_k_10'),
+    variable = 'Time.interval', 
+    points.size = 2,
+    points.alpha = 0.8
+    )
+ggarrange(
+    read.se.obj.a@metadata$Metrics$RawCount$global.level$PCA$fast.svd$CMS$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RawCount$global.level$PCA$fast.svd$Time.interval$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RUVIIIprps_k_10$global.level$PCA$fast.svd$CMS$scatter.plot,
+    read.se.obj.a@metadata$Metrics$RUVIIIprps_k_10$global.level$PCA$fast.svd$Time.interval$scatter.plot,
+    ncol = 2,
+    nrow = 2
+)
+```
+
+### Assessing purity variation
+```{r}
+tumour.purity <- tidyestimate::filter_common_genes(
+    df           = assay(x = read.se.obj, i = 'RUVIIIprps_k_10'),
+    id           = "hgnc_symbol",
+    tidy         = FALSE,
+    tell_missing = TRUE,
+    find_alias   = TRUE
+    )
+tumour.purity <- tidyestimate::estimate_score(df = tumour.purity, is_affymetrix = TRUE)
+tumour.purity.estimate <- tumour.purity$purity
+data.frame(
+    estimate = read.se.obj$Tumour.purity, 
+    singscore = tumour.purity.estimate) %>% 
+    ggplot(., aes(x = estimate, y = singscore)) +
+    geom_point() +
+    xlab('ESTIMATE (FPKM.UQ)') +
+    ylab('ESTIMATE (RUV-III-PRPS)') +
+    stat_cor(size = 5) +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 18),
+        axis.title.y     = element_text(size = 18),
+        plot.title       = element_text(size = 15),
+        axis.text.x      = element_text(size = 14),
+        axis.text.y      = element_text(size = 14))
+
+```
+
+
+#### Applying linear mixed model
+```{r}
+read.se.obj <- RUVprps:::createLogAssays(
+    se.obj      = read.se.obj, 
+    assay.names = 'FPKM.UQ', 
+    new.name    = 'Log'
+    )
+read.se.obj <- computeGenesVarianceComposition(
+    se.obj      = read.se.obj, 
+    assay.names = c('LogFPKM.UQ', 'RUVIIIprps_k_10'), 
+    form        = ~(1|Estimated.batches) + (1|CMS) + Tumour.purity + Library.size, 
+    apply.log   = FALSE
+    )
+
+fpkm.var.decomp <- read.se.obj@metadata$Metrics$LogFPKM.UQ$gene.level$GeneVarDecompostion$LMM$`~Estimated.batches + CMS + Tumour.purity + Library.size`$gene.variance
+
+ruv.var.decomp <- read.se.obj@metadata$Metrics$RUVIIIprps_k_10$gene.level$GeneVarDecompostion$LMM$`~Estimated.batches + CMS + Tumour.purity + Library.size`$gene.variance
+
+fpkm.var.decomp %>% 
+    data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Variable', values_to = 'Variance')  %>% 
+    mutate(Variable = factor(Variable, levels = c("Library.size","Estimated.batches", "Tumour.purity", "CMS","Residuals" ))) %>% 
+   ggplot(aes(x = Variable, y = Variance, fill = Variable)) +
+  geom_violin(
+    trim = FALSE,
+    scale = "width",
+    color = "grey30",
+    alpha = 0.8) +
+  stat_summary(
+    fun = median,
+    geom = "point",
+    size = 2,
+    color = "black") +
+  stat_summary(
+    fun.data = median_hilow,
+    fun.args = list(conf.int = 0.5),
+    geom = "errorbar",
+    width = 0.15,
+    color = "black") +
+  scale_fill_manual(values = selectColors(nb.color = 1:5, group = "pan.selection.b")) +
+    ylim(0,1) +
+  labs(
+    x = "",
+    y = "Variance explained") +
+  theme_classic(base_size = 14) +
+      theme(
+        panel.background = element_blank(),
+        legend.position = 'none',
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.y = element_text(size = 14),
+        legend.text  = element_text(size = 18),
+        axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 12, angle = 90, hjust = .5))
+
+ruv.var.decomp %>% 
+    data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Variable', values_to = 'Variance')  %>% 
+    mutate(Variable = factor(Variable, levels = c("Library.size", "Estimated.batches", "Tumour.purity", "CMS","Residuals" ))) %>% 
+   ggplot(aes(x = Variable, y = Variance, fill = Variable)) +
+  geom_violin(
+    trim = FALSE,
+    scale = "width",
+    color = "grey30",
+    alpha = 0.8) +
+  stat_summary(
+    fun = median,
+    geom = "point",
+    size = 2,
+    color = "black") +
+  stat_summary(
+    fun.data = median_hilow,
+    fun.args = list(conf.int = 0.5),
+    geom = "errorbar",
+    width = 0.15,
+    color = "black") +
+  scale_fill_manual(values = selectColors(nb.color = 1:5, group = "pan.selection.b")) +
+    ylim(0,1) +
+  labs(
+    x = "",
+    y = "Variance explained") +
+  theme_classic(base_size = 14) +
+      theme(
+        panel.background = element_blank(),
+        legend.position = 'none',
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.y = element_text(size = 14),
+        legend.text  = element_text(size = 18),
+        axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 12, angle = 90, hjust = .5))
+```
