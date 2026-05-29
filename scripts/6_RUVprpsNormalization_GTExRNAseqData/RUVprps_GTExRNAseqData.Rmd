@@ -1,0 +1,1027 @@
+---
+title: "GTEx"
+output: html_document
+date: "2025-10-17"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Libraries
+```{r}
+library(SummarizedExperiment)
+library(matrixStats)
+library(data.table)
+library(patchwork)
+library(parallel)
+library(RUVprps)
+library(ggplot2)
+library(ggpubr)
+library(tidyr)
+library(dplyr)
+library(edgeR)
+```
+
+# Reading the data
+```{r}
+gtex.expr             <- fread('GTEx_Analysis_2022-06-06_v10_RNASeQCv2.4.2_gene_reads.gct')
+gene.annot            <- gtex.expr[, c(1:2)]
+gene.annot$gene.names <- gene.annot$Description
+index                 <- duplicated(gene.annot$Description)
+gene.annot$gene.names[index] <- paste0(
+    gene.annot$Description[index], 
+    '|', 
+    gene.annot$Name[index]
+    )
+gtex.expr            <- gtex.expr[ ,-(1:2) ]
+gtex.expr            <- as.matrix(gtex.expr)
+row.names(gtex.expr) <- gene.annot$gene.names
+
+sample.annot <- read.delim(
+    file      = 'Gtex_SampleAnnot_V10.txt',
+    row.names = 1
+    )
+common.samples <- intersect(
+    colnames(gtex.expr), 
+    row.names(sample.annot)
+    ) # 19788
+length(common.samples) == 19788
+sample.annot <- sample.annot[common.samples , ]
+all.equal(colnames(gtex.expr), row.names(sample.annot))
+```
+
+# Adding more possible batch
+```{r}
+sample.annot <- sample.annot[ , 1:19]
+sample.annot$year <- unlist(lapply(
+    sample.annot$SMNABTCHD,
+    function(x) strsplit(x, '[/]')[[1]][3]))
+sample.annot$year <- gsub('20', '', sample.annot$year)
+
+sample.annot$month <- unlist(lapply(
+    sample.annot$SMNABTCHD,
+    function(x) strsplit(x, '[/]')[[1]][1]))
+
+sample.annot$SMUBRID.id <- unlist(lapply(
+    sample.annot$SMUBRID,
+    function(x) strsplit(x, '[:]')[[1]][1]))
+sample.annot$SMUBRID.no <- unlist(lapply(
+    sample.annot$SMUBRID,
+    function(x) strsplit(x, '[:]')[[1]][2]))
+
+sample.annot$SMNABTCH.id <- unlist(lapply(
+    sample.annot$SMNABTCH,
+    function(x) strsplit(x, '[-]')[[1]][1]))
+
+sample.annot$SMNABTCH.no <- unlist(lapply(
+    sample.annot$SMNABTCH,
+    function(x) strsplit(x, '[-]')[[1]][2]))
+
+sample.annot$SMGEBTCH.id <- unlist(lapply(
+    sample.annot$SMGEBTCH,
+    function(x) strsplit(x, '[-]')[[1]][1]))
+sample.annot$SMGEBTCH.no <- unlist(lapply(
+    sample.annot$SMGEBTCH,
+    function(x) strsplit(x, '[-]')[[1]][2]))
+
+sample.annot$sample.a <- unlist(lapply(
+    row.names(sample.annot),
+    function(x) strsplit(x, '[-]')[[1]][1]))
+sample.annot$sample.b <- unlist(lapply(
+    row.names(sample.annot),
+    function(x) strsplit(x, '[-]')[[1]][2]))
+sample.annot$sample.c <- unlist(lapply(
+    row.names(sample.annot),
+    function(x) strsplit(x, '[-]')[[1]][3]))
+sample.annot$sample.d <- unlist(lapply(
+    row.names(sample.annot),
+    function(x) strsplit(x, '[-]')[[1]][4]))
+sample.annot$sample.e <- unlist(lapply(
+    row.names(sample.annot),
+    function(x) strsplit(x, '[-]')[[1]][5]))
+sum(is.na(sample.annot$SMTSISCH))
+index <- !is.na(sample.annot$SMTSISCH)
+sample.annot <- sample.annot[index , ]
+gtex.expr <- gtex.expr[ , index]
+all.equal(colnames(gtex.expr), row.names(sample.annot))
+
+library(dplyr)
+sample.annot <- arrange(sample.annot, SMTSISCH)
+gtex.expr <- gtex.expr[ , row.names(sample.annot)]
+sample.annot$SMTSISCH.g <- cut(sample.annot$SMTSISCH, 6)
+sample.annot$SMRIN <- cut(sample.annot$SMRIN, 6)
+table(sample.annot$SMTSISCH.g, sample.annot$year)
+```
+
+# Creating RLE plots after CPM normalization
+```{r}
+tissues <- names(table(sample.annot$SMTSD)[table(sample.annot$SMTSD) > 20]) # 56
+all.rle <- mclapply(tissues, function(x) {
+    message("Processing: ", x)
+    sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+    sub.data <- gtex.expr[, row.names(sub.info)]
+    se.obj <- SummarizedExperiment(
+        assays = list(RawCount = sub.data),
+        colData = sub.info
+        )
+    tcga.se.obj <- prepareSeObj(
+        data = se.obj,
+        raw.count.assay.name = 'RawCount',
+        remove.lowly.expressed.genes = TRUE,
+        estimate.tumor.purity = 'both',
+        assay.name.to.estimate.purity = 'RawCount',
+        scale.singscore.values = FALSE,
+        calculate.library.size = TRUE,
+        add.immun.stroma.genes = FALSE,
+        add.gene.details = FALSE,
+        add.housekeeping.genes = FALSE,
+        column.name = 'gene_name',
+        gene.group = 'hgnc_symbol'
+        )
+    tcga.se.obj <- RUVprps:::orderSeObj(
+        se.obj = tcga.se.obj,
+        factors.to.order = c('SMTSISCH')
+        )
+    tcga.se.obj <- applyOtherNormalizations(
+        se.obj = tcga.se.obj, 
+        assay.name = 'RawCount', 
+        new.assay.name = 'CPM'
+        )
+    tcga.se.obj <- computeRLE(se.obj = tcga.se.obj)
+    rle.data <- data.frame(
+        rle = tcga.se.obj@metadata$Metrics$CPM$global.level$RLE$gene.median.center$general$data$rle.med,
+        sample = 1:ncol(tcga.se.obj),
+        tissue = x
+    )
+    return(rle.data)
+}, mc.cores = 14)
+
+all.rle <- do.call(rbind, all.rle)
+pdf(paste0(gtex.fig, 'RUVprps_GTEx_AllData_RleAfterCpmNorm.pdf'), width = 16, height = 12)
+ggplot(all.rle, aes(x = sample, y = rle)) +
+    geom_point(size = .4) +
+    geom_smooth() +
+    xlab('Samples') +
+    ylab('RLE medians') +
+    facet_wrap(~tissue, scales = "free", nrow = 10)
+dev.off()
+```
+
+# Assessing all variation
+## Immune genes-RLE approach
+```{r}
+load('kh.im.genes.rda')
+head(kh.im.genes)
+norm.hk <- kh.im.genes$hgnc_symbol[kh.im.genes$single.cell.rnaseq.hk.genes == 'yes']
+pp.hk <- kh.im.genes$hgnc_symbol[kh.im.genes$immune.gene.signature == 'yes']
+all.hk <- c(norm.hk, pp.hk)
+
+tissues <- names(table(sample.annot$SMTSD)[table(sample.annot$SMTSD) > 20])
+all.esti.immune <- mclapply(
+    tissues,
+    function(x) {
+        message("Processing: ", x)
+        sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+        sub.data <- gtex.expr[, row.names(sub.info)]
+        se.obj <- SummarizedExperiment(assays = list(RawCount = sub.data),
+                                       colData = sub.info)
+        tcga.se.obj <- prepareSeObj(
+            data = se.obj,
+            raw.count.assay.name = 'RawCount',
+            remove.lowly.expressed.genes = TRUE,
+            estimate.tumor.purity = 'both',
+            assay.name.to.estimate.purity = 'RawCount',
+            scale.singscore.values = FALSE,
+            calculate.library.size = TRUE,
+            add.immun.stroma.genes = FALSE,
+            add.gene.details = FALSE,
+            add.housekeeping.genes = FALSE,
+            column.name = 'gene_name',
+            gene.group = 'hgnc_symbol'
+            )
+        ncg <- intersect(all.hk, row.names(tcga.se.obj))
+        tcga.se.obj <- applyOtherNormalizations(
+            se.obj = tcga.se.obj,
+            assay.name = 'RawCount',
+            new.assay.name = 'cpm',
+            apply.log = TRUE
+            )
+        temp.data <- assay(x = tcga.se.obj, 'cpm')
+        temp.data <- singscore::rankGenes(temp.data)
+        immune.scores <- singscore::simpleScore(
+            rankData = temp.data, 
+            upSet = pp.hk
+            )
+        immune.scores <- cut(immune.scores$TotalScore, breaks = 3)
+        tcga.se.obj$immune.scores <- immune.scores
+        tcga.se.obj <- orderSeObj(
+            se.obj = tcga.se.obj, 
+            factors.to.order = 'immune.scores'
+            )
+        tcga.se.obj <- tryCatch({
+            identifyUnknownUV(
+                se.obj = tcga.se.obj,
+                assay.name = 'cpm',
+                approach = 'rle',
+                apply.log = FALSE,
+                ncg = NULL ,
+                chronological.detection = TRUE,
+                clustering.methods = 'mclust',
+                assess.bio.association = FALSE,
+                assess.uv.association = FALSE,
+                generate.association.plot = FALSE,
+                add.to.sample.annotation = TRUE,
+                col.name = 'Estimated.batches',
+                output.name = 'iteration1'
+            )
+        }, error = function(e) {
+            message("identifyUnknownUV failed for ", x, ": ", e$message)
+            return(NULL)
+        })
+        # If identifyUnknownUV() failed, skip association part
+        if (is.null(tcga.se.obj) ||
+            !"Estimated.batches" %in% colnames(colData(tcga.se.obj))) {
+            return(data.frame(
+                pval = NA,
+                sig.test = NA,
+                batches = NA
+            ))
+        }
+        conf.mat <- data.frame(
+            batch = paste0(tcga.se.obj$immune.scores),
+            estimate.batch = tcga.se.obj$Estimated.batches
+            )
+        conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+        sig.test <- tryCatch({
+            DescTools::CramerV(conf.mat, bias.correct = TRUE)
+        }, error = function(e)
+            NA)
+        chi <- tryCatch({
+            chisq.test(conf.mat)
+        }, error = function(e)
+            list(p.value = NA))
+
+        return(data.frame(
+            pval = chi$p.value,
+            sig.test = sig.test,
+            batches = length(unique(tcga.se.obj$Estimated.batches))
+        ))
+    }, mc.cores = 14
+    )
+
+all.esti.immune <- do.call(rbind, all.esti.immune)
+all.esti.immune$cancer <- tissues
+all.esti.immune$type <- 'immune'
+```
+
+## Immune genes with RLE ncg approach
+```{r}
+all.esti.immune.ncg <- mclapply(
+    tissues,
+    function(x) {
+        message("Processing: ", x)
+        sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+        sub.data <- gtex.expr[, row.names(sub.info)]
+        gtex.se.obj <- SummarizedExperiment(
+            assays = list(RawCount = sub.data),
+            colData = sub.info
+            )
+        gtex.se.obj <- prepareSeObj(
+            data = gtex.se.obj,
+            raw.count.assay.name = 'RawCount',
+            remove.lowly.expressed.genes = TRUE,
+            estimate.tumor.purity = NULL,
+            assay.name.to.estimate.purity = 'RawCount',
+            scale.singscore.values = FALSE,
+            calculate.library.size = TRUE,
+            add.immun.stroma.genes = FALSE,
+            add.gene.details = FALSE,
+            add.housekeeping.genes = FALSE,
+            column.name = 'gene_name',
+            gene.group = 'hgnc_symbol'
+            )
+        gtex.se.obj <- applyOtherNormalizations(
+            se.obj = gtex.se.obj,
+            assay.name = 'RawCount',
+            new.assay.name = 'cpm',
+            apply.log = TRUE
+            )
+        temp.data <- assay(x = gtex.se.obj, 'cpm')
+        ranked.data <- singscore::rankGenes(temp.data)
+        immune.scores <- singscore::simpleScore(
+            rankData = ranked.data, 
+            upSet = pp.hk
+            )
+        immune.scores <- cut(immune.scores$TotalScore, breaks = 3)
+        gtex.se.obj$immune.scores <- immune.scores
+        gtex.se.obj <- orderSeObj(
+            se.obj = gtex.se.obj, 
+            factors.to.order = 'immune.scores'
+            )
+        gtex.se.obj <- tryCatch({
+            identifyUnknownUV(
+                se.obj = gtex.se.obj,
+                assay.name = 'cpm',
+                approach = 'rle',
+                apply.log = FALSE,
+                ncg = intersect(row.names(gtex.se.obj), pp.hk) ,
+                chronological.detection = TRUE,
+                clustering.methods = 'mclust',
+                assess.bio.association = FALSE,
+                assess.uv.association = FALSE,
+                generate.association.plot = FALSE,
+                add.to.sample.annotation = TRUE,
+                col.name = 'Estimated.batches',
+                output.name = 'iteration1'
+            )
+        }, error = function(e) {
+            message("identifyUnknownUV failed for ", x, ": ", e$message)
+            return(NULL)
+        })
+        # If identifyUnknownUV() failed, skip association part
+        if (is.null(gtex.se.obj) ||
+            !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+            return(data.frame(
+                pval = NA,
+                sig.test = NA,
+                batches = NA
+            ))
+        }
+        conf.mat <- data.frame(
+            batch = paste0(gtex.se.obj$immune.scores),
+            estimate.batch = gtex.se.obj$Estimated.batches
+            )
+        conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+        sig.test <- tryCatch({
+            DescTools::CramerV(conf.mat, bias.correct = TRUE)
+        }, error = function(e)
+            NA)
+        
+        chi <- tryCatch({
+            chisq.test(conf.mat)
+        }, error = function(e)
+            list(p.value = NA))
+
+        return(data.frame(
+            pval = chi$p.value,
+            sig.test = sig.test,
+            batches = length(unique(gtex.se.obj$Estimated.batches))
+        ))
+    }, mc.cores = 14
+    )
+
+all.esti.immune.ncg <- do.call(rbind, all.esti.immune.ncg)
+all.esti.immune.ncg$cancer <- tissues
+all.esti.immune.ncg$type <- 'immune.rle.ncg'
+```
+
+## Smrin factor
+```{r}
+all.esti.smrin <- mclapply(
+    tissues, 
+    function(x) {
+    message("Processing: ", x)
+    sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+    sub.data <- gtex.expr[, row.names(sub.info)]
+    gtex.se.obj <- SummarizedExperiment(
+        assays = list(RawCount = sub.data),
+        colData = sub.info
+        )
+    gtex.se.obj <- prepareSeObj(
+        data = gtex.se.obj,
+        raw.count.assay.name = 'RawCount',
+        remove.lowly.expressed.genes = TRUE,
+        estimate.tumor.purity = 'both',
+        assay.name.to.estimate.purity = 'RawCount',
+        scale.singscore.values = FALSE,
+        calculate.library.size = TRUE,
+        add.immun.stroma.genes = FALSE,
+        add.gene.details = FALSE,
+        add.housekeeping.genes = FALSE,
+        column.name = 'gene_name',
+        gene.group = 'hgnc_symbol'
+        )
+    gtex.se.obj <- applyOtherNormalizations(
+        se.obj = gtex.se.obj,
+        assay.name = 'RawCount',
+        new.assay.name = 'cpm',
+        apply.log = TRUE
+        )
+    gtex.se.obj <- orderSeObj(
+        se.obj = gtex.se.obj, 
+        factors.to.order = c('SMRIN')
+        )
+    gtex.se.obj <- tryCatch({
+        identifyUnknownUV(
+            se.obj = gtex.se.obj,
+            assay.name = 'cpm',
+            approach = 'rle',
+            ncg = NULL,
+            apply.log = FALSE,
+            chronological.detection = TRUE,
+            clustering.methods = 'mclust',
+            assess.bio.association = FALSE,
+            assess.uv.association = FALSE,
+            generate.association.plot = FALSE,
+            add.to.sample.annotation = TRUE,
+            col.name = 'Estimated.batches',
+            output.name = 'iteration1'
+        )
+    }, error = function(e) {
+        message("identifyUnknownUV failed for ", x, ": ", e$message)
+        return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(gtex.se.obj) ||
+        !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+        return(data.frame(
+            pval = NA,
+            sig.test = NA,
+            batches = NA
+        ))
+    }
+    conf.mat <- data.frame(
+        batch = droplevels(gtex.se.obj$SMRIN),
+        estimate.batch = gtex.se.obj$Estimated.batches
+        )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+        DescTools::CramerV(conf.mat, bias.correct = TRUE)
+    }, error = function(e)
+        NA)
+
+    chi <- tryCatch({
+        chisq.test(tbl)
+    }, error = function(e)
+        list(p.value = NA))
+    
+    return(data.frame(
+        pval = chi$p.value,
+        sig.test = sig.test,
+        batches = length(unique(gtex.se.obj$Estimated.batches))
+    ))
+}, mc.cores = 14)
+
+all.esti.smrin <- do.call(rbind, all.esti.smrin)
+all.esti.smrin$cancer <- tissues
+all.esti.smrin$type <- 'smrin'
+```
+
+## Smtsisch factor
+```{r}
+all.esti.smtsisch <- mclapply(tissues, function(x) {
+    message("Processing: ", x)
+    sub.info <- sample.annot[sample.annot$SMTSD == x , ]
+    sub.data <- gtex.expr[, row.names(sub.info)]
+    gtex.se.obj <- SummarizedExperiment(
+        assays = list(RawCount = sub.data),
+        colData = sub.info
+        )
+    gtex.se.obj <- prepareSeObj(
+        data = gtex.se.obj,
+        raw.count.assay.name = 'RawCount',
+        remove.lowly.expressed.genes = TRUE,
+        estimate.tumor.purity = NULL,
+        assay.name.to.estimate.purity = 'RawCount',
+        scale.singscore.values = FALSE,
+        calculate.library.size = TRUE,
+        add.immun.stroma.genes = FALSE,
+        add.gene.details = FALSE,
+        add.housekeeping.genes = FALSE,
+        column.name = 'gene_name',
+        gene.group = 'hgnc_symbol'
+        )
+    gtex.se.obj <- applyOtherNormalizations(
+        se.obj = gtex.se.obj,
+        assay.name = 'RawCount',
+        new.assay.name = 'cpm',
+        apply.log = TRUE
+        )
+    gtex.se.obj <- orderSeObj(
+        se.obj = gtex.se.obj, 
+        factors.to.order = c('SMTSISCH.g')
+        )
+    gtex.se.obj <- tryCatch({
+        identifyUnknownUV(
+            se.obj = gtex.se.obj,
+            assay.name = 'cpm',
+            approach = 'rle',
+            nb.pcs = 3,
+            ncg = NULL,
+            apply.log = FALSE,
+            chronological.detection = TRUE,
+            clustering.methods = 'mclust',
+            assess.bio.association = FALSE,
+            assess.uv.association = FALSE,
+            generate.association.plot = FALSE,
+            add.to.sample.annotation = TRUE,
+            col.name = 'Estimated.batches',
+            output.name = 'iteration1'
+        )
+    }, error = function(e) {
+        message("identifyUnknownUV failed for ", x, ": ", e$message)
+        return(NULL)
+    })
+    # If identifyUnknownUV() failed, skip association part
+    if (is.null(gtex.se.obj) ||
+        !"Estimated.batches" %in% colnames(colData(gtex.se.obj))) {
+        return(data.frame(
+            pval = NA,
+            sig.test = NA,
+            batches = NA
+        ))
+    }
+    conf.mat <- data.frame(
+        batch = droplevels(gtex.se.obj$SMTSISCH.g),
+        estimate.batch = gtex.se.obj$Estimated.batches
+    )
+    conf.mat <- table(conf.mat$batch, conf.mat$estimate.batch)
+    sig.test <- tryCatch({
+        DescTools::CramerV(conf.mat, bias.correct = FALSE)
+    }, error = function(e)
+        NA)
+    
+    chi <- tryCatch({
+        chisq.test(conf.mat)
+    }, error = function(e)
+        list(p.value = NA))
+    
+    return(data.frame(
+        pval = chi$p.value,
+        sig.test = sig.test,
+        batches = length(unique(gtex.se.obj$Estimated.batches))
+    ))
+}, mc.cores = 14)
+all.esti.smtsisch <- do.call(rbind, all.esti.smtsisch)
+all.esti.smtsisch$cancer <- tissues
+all.esti.smtsisch$type <- 'smtsisch'
+```
+
+## Putting all together
+```{r}
+all.res <- rbind(
+    all.esti.immune, 
+    all.esti.immune.ncg, 
+    all.esti.smrin, 
+    all.esti.smtsisch
+    )
+all.res <- all.res[order(all.res$sig.test, decreasing = TRUE) , ]
+all.res$cancer <- gsub(' - ', '-', all.res$cancer)
+
+all.res$cancer <- paste0(
+  toupper(substring(all.res$cancer, 1, 1)),
+  tolower(substring(all.res$cancer, 2))
+  )
+all.res$cancer <- gsub("\\s*\\([^\\)]*\\)", "", all.res$cancer)
+all.res$cancer <- factor(all.res$cancer, levels = unique(all.res$cancer))
+all.res <- all.res[all.res$sig.test != 'Inf' , ]
+
+## changing names
+all.res$type[all.res$type == 'immune'] <- 'Immune scores-a'
+all.res$type[all.res$type == 'smrin'] <- 'Smrin'
+all.res$type[all.res$type == 'smtsisch'] <- 'Smtsisch'
+all.res$type[all.res$type == 'immune.rle.ncg'] <- 'Immune scores-b'
+all.res <- all.res[!is.na(all.res$type) , ]
+
+library(ggplot2)
+pdf(paste0(gtex.fig, 'RUVprps_GTEx_EstimateUnKnownBatch_RLEandPCA.pdf'), width = 20, height = 5.2)
+ggplot(all.res, aes(x = cancer, y = sig.test, group = cancer, color = type)) +
+    geom_line(color = 'gray', size= 2) + 
+    geom_point(size = 5) +
+    xlab('Tissue types') +
+    ylab('Association') +
+    scale_color_manual(values = c('darkgreen', 'orange', 'purple4', 'cyan'))+
+    labs(size = "Batches", color = 'Batches') +
+     theme(
+        axis.line = element_line(colour = 'black', linewidth = 1),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        plot.title = element_text(size = 14),
+        axis.text.x = element_text(size = 13, angle = 35, hjust = 1),
+        axis.text.y = element_text(size = 15),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.background = element_blank(),
+        legend.key = element_blank()
+        )
+dev.off()
+# qs::qsave(all.res, 'RUVprps_GTEx_EstimateUnKnownBatch_RLEandPCA_AllResForPlotting.qs')
+```
+
+# Normalization by RUVIII-PRPS
+## Case example - Adipose Tissue
+### RUV normalization
+#### Preparing SE object
+```{r}
+
+library(dplyr)
+sample.annot            <- arrange(sample.annot, SMTSISCH)
+gtex.expr               <- gtex.expr[ , row.names(sample.annot)]
+sample.annot$SMTSISCH.g <- cut(sample.annot$SMTSISCH, 6)
+sample.annot$SMRIN      <- cut(sample.annot$SMRIN, 6)
+
+selected.tissue <- sample.annot$SMTS == 'Adipose Tissue'
+expr.data       <- gtex.expr[ , selected.tissue]
+dim(expr.data) # 59033  1301
+sample.info     <- sample.annot[selected.tissue , ]
+data.list       <- list(raw.count = expr.data)
+se.obj <- prepareSeObj(
+    data                         = data.list, 
+    sample.annotation            = sample.info, 
+    raw.count.assay.name         = 'raw.count',
+    remove.lowly.expressed.genes = TRUE,
+    calculate.library.size       = TRUE, 
+    estimate.tumor.purity        = NULL, 
+    create.gene.annotation       = TRUE, 
+    add.gene.details             = FALSE, 
+    gene.group                   = 'hgnc_symbol',
+    add.housekeeping.genes       = TRUE
+    ) # 20724 1301
+se.obj$library.size <- log2(se.obj$library.size)
+```
+
+#### Selection of NCG
+```{r}
+se.obj <- renameVariables(
+    se.obj        = se.obj, 
+    current.names = c('SMTSD', 'SMTSISCH.g', 'library.size'), 
+    new.names     = c('Smtsd', 'Smtsisch', 'Library.size')
+    )
+ncg.options <- c(
+    'AnovaCorr.AcrossAllSamples', 
+    'AnovaCorr.PerBatchPerBiology', 
+    'LinearMixedModel', 
+    'TwoWayAnova'
+    )
+for(i in 1:4){
+    se.obj <- findNcgSupervised(
+        se.obj               = se.obj,
+        assay.name           = 'raw.count',
+        bio.variables        = c('Smtsd'),
+        uv.variables         = c('Smtsisch', 'Library.size'), 
+        samples.to.use       = 'all',
+        approach             = ncg.options[i],
+        form                 = ~ (1|Smtsd) + (1|Smtsisch) +  Library.size,
+        use.rank             = FALSE, 
+        bio.percentile       = NULL,
+        uv.percentile        = 0.8, 
+        pseudo.count         = 0.5, 
+        adjust.data          = TRUE,
+        adjustment.variables = "uv",
+        ncg.selection.method = 'quantile',
+        nb.ncg               = 0.05, 
+        ncg.group.name       = 'getex',
+        ncg.set.name         = ncg.options[i], 
+        nb.cores             = 15,
+        check.se.obj         = FALSE,
+        assess.ncg           = TRUE)
+}
+
+countNCG(
+    se.obj = se.obj, 
+    ncg.selection = 'supervised', 
+    ncg.group.name = 'getex', 
+    create.venn.diagram = FALSE
+    )
+compareNCGs(
+    se.obj = se.obj, 
+    assay.name = 'raw.count',
+    bio.variables = 'Smtsd',
+    uv.variables = c('Smtsisch', 'Library.size'), 
+    ncg.type = 'supervised', 
+    ncg.group.name = 'getex'
+    )
+```
+
+#### Creating PRPS
+```{r}
+se.obj@metadata$PRPS <- NULL
+se.obj <- createPrPsSupervised(
+    se.obj                   = se.obj, 
+    assay.name               = 'raw.count', 
+    bio.variables            = c('Smtsd'), 
+    samples.to.use           = 'all',
+    uv.variables             = c('Smtsisch', 'Library.size'),
+    bio.clustering.method    = "kmeans",
+    nb.bio.clusters          = 4, 
+    apply.log                = FALSE,
+    check.prps.connectedness = FALSE,
+    apply.other.uv.variables = TRUE,
+    prps.group.name          = 'getex',
+    verbose                  = TRUE
+    )
+
+ggarrange(
+    se.obj@metadata$PRPS$supervised$getex$`Smtsisch|Smtsd|Library.size|raw.count`$prps.map.plot, 
+    se.obj@metadata$PRPS$supervised$getex$`Library.size|Smtsd|Smtsisch|raw.count`$prps.map.plot,
+    common.legend = FALSE, 
+    legend        = "right"
+)
+```
+
+#### RUV-III normalization
+```{r}
+se.obj <- RUVIIIprps(
+    se.obj               = se.obj, 
+    assay.name           = 'raw.count', 
+    control.sample.types = 'prps',
+    prps.type            = 'supervised', 
+    prps.group           = 'getex',
+    prps.set.names       = 'all',
+    ncg.type             = 'supervised', 
+    ncg.group.names      = 'getex',
+    ncg.set.names        = 'LinearMixedModel',
+    k                    = c(1:16), 
+    apply.log            = TRUE,
+    data.to.log          = 'both', 
+    pseudo.count         = 0.5,
+    return.wa            = TRUE, 
+    check.se.obj         = FALSE
+    )
+assessW(
+    se.obj = se.obj, 
+    bio.variables = c('Smtsd'), 
+    uv.variables = c('Smtsisch', 'Library.size'), 
+    compare.w = TRUE
+    )
+```
+
+#### Assesss normalization
+##### Gene variance composition
+```{r}
+se.obj <- createLogAssays(
+    se.obj         = se.obj, 
+    assay.names    = 'raw.count' , 
+    replace.assays = TRUE, 
+    new.name       = 'Log'
+    )
+names(assays(se.obj))[11] <- 'Raw.count'
+se.obj <- computeGenesVarianceComposition(
+    se.obj      = se.obj, 
+    assay.names = c('Raw.count' , 'RUVIIIprps_k_10'), 
+    form        = ~(1|Smtsd) + (1|Smtsisch) + (1|SMRIN) + Library.size,
+    apply.log   = FALSE
+    )
+raw.gene.var <- se.obj@metadata$Metrics$Raw.count$gene.level$GeneVarDecompostion$LMM$`~Smtsd + Smtsisch + SMRIN + Library.size`$gene.variance
+ruv.gene.var <- se.obj@metadata$Metrics$RUVIIIprps_k_10$gene.level$GeneVarDecompostion$LMM$`~Smtsd + Smtsisch + SMRIN + Library.size`$gene.variance
+
+raw.gene.var %>% 
+    data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Variable', values_to = 'Variance')  %>% 
+    mutate(Variable = if_else(Variable == "SMRIN", "Smrin", Variable)) %>% 
+    mutate(Variable = factor(Variable, levels = c("Smrin","Smtsisch","Library.size" ,"Smtsd","Residuals" ))) %>% 
+   ggplot(aes(x = Variable, y = Variance, fill = Variable)) +
+  geom_violin(
+    trim = FALSE,
+    scale = "width",
+    color = "grey30",
+    alpha = 0.8) +
+    ylim(0,1) +
+  stat_summary(
+    fun = median,
+    geom = "point",
+    size = 2,
+    color = "black") +
+  stat_summary(
+    fun.data = median_hilow,
+    fun.args = list(conf.int = 0.5),
+    geom = "errorbar",
+    width = 0.15,
+    color = "black") +
+  scale_fill_manual(values = selectColors(nb.color = 1:5, group = "pan.selection.b")) +
+  labs(
+    x = "",
+    y = "Variance explained (%)") +
+  theme_classic(base_size = 14) +
+      theme(
+        panel.background = element_blank(),
+        legend.position  = 'none',
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.y     = element_text(size = 14),
+        legend.text      = element_text(size = 18),
+        axis.text.x      = element_text(size = 12, angle = 90, hjust = 1),
+        axis.text.y      = element_text(size = 12, angle = 90))
+
+ruv.gene.var %>% 
+    data.frame() %>% 
+    pivot_longer(everything(), names_to = 'Variable', values_to = 'Variance')  %>% 
+    mutate(Variable = if_else(Variable == "SMRIN", "Smrin", Variable)) %>% 
+    mutate(Variable = factor(Variable, levels = c("Smrin","Smtsisch","Library.size" ,"Smtsd","Residuals" ))) %>% 
+   ggplot(aes(x = Variable, y = Variance, fill = Variable)) +
+  geom_violin(
+    trim = FALSE,
+    scale = "width",
+    color = "grey30",
+    alpha = 0.8) +
+    ylim(0,1) +
+  stat_summary(
+    fun = median,
+    geom = "point",
+    size = 2,
+    color = "black") +
+  stat_summary(
+    fun.data = median_hilow,
+    fun.args = list(conf.int = 0.5),
+    geom = "errorbar",
+    width = 0.15,
+    color = "black") +
+  scale_fill_manual(values = selectColors(nb.color = 1:5, group = "pan.selection.b")) +
+  labs(
+    x = "",
+    y = "Variance explained (%)") +
+  theme_classic(base_size = 14) +
+      theme(
+        panel.background = element_blank(),
+        legend.position  = 'none',
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.y     = element_text(size = 14),
+        legend.text      = element_text(size = 18),
+        axis.text.x      = element_text(size = 12, angle = 90, hjust = 1),
+        axis.text.y      = element_text(size = 12, angle = 90))
+
+
+data.frame(raw.count = raw.gene.var$Smtsd, ruv = ruv.gene.var$Smtsd) %>% 
+    ggplot(.,aes(x = ruv, y = raw.count)) +
+    geom_point(size = .5, alpha = .5, color = 'grey30') +
+       geom_abline(
+        slope = 1,
+        intercept = 0,
+        linewidth = 1,
+        linetype = "dashed",
+        color = 'red'
+    ) +
+    xlab('RUVprps_k_10') +
+    ylab('Raw.count') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 14),
+        axis.title.y     = element_text(size = 14),
+        axis.text.x      = element_text(size = 10),
+        axis.text.y      = element_text(size = 10)
+    )
+```
+
+##### PCA plots
+```{r}
+# PCA plots
+hag <- raw.gene.var$Smtsisch > .2
+sum(hag) == 1437
+
+se.obj.a <- computePCA(
+    se.obj    = se.obj[hag, ], 
+    apply.log = FALSE
+    )
+se.obj.a <- RUVprps::plotPCA(
+    se.obj        = se.obj.a, 
+    variable      = 'Smtsd',
+     points.alpha = .8, 
+    points.size   = 2, 
+    stroke.size   = .01
+    )
+
+se.obj.a@metadata$Metrics$Raw.count$global.level$PCA$fast.svd$Smtsd$scatter.plot +
+    se.obj.a@metadata$Metrics$RUVIIIprps_k_10$global.level$PCA$fast.svd$Smtsd$scatter.plot +
+      plot_layout(guides = "collect", ncol = 2) 
+
+
+se.obj.a <- RUVprps::plotPCA(
+    se.obj = se.obj.a, 
+    variable = 'Smtsisch', 
+    color.palette = 'pan.selection.b', 
+      points.alpha = .8, 
+    points.size = 2, 
+    stroke.size = .01
+    )
+
+se.obj.a@metadata$Metrics$Raw.count$global.level$PCA$fast.svd$Smtsisch$scatter.plot +
+    se.obj.a@metadata$Metrics$RUVIIIprps_k_10$global.level$PCA$fast.svd$Smtsisch$scatter.plot +
+      plot_layout(guides = "collect", ncol = 2) 
+```
+
+##### RLE plots
+```{r}
+se.obj <- computeRLE(
+    se.obj    = se.obj, 
+    apply.log = FALSE
+    )
+se.obj <- plotRLE(
+    se.obj          = se.obj, 
+    variable        = 'Smtsisch', 
+    variable.colors = selectColors(nb.color = 1:4, group = 'pan.selection.b')
+    )
+
+ggarrange(
+    se.obj@metadata$Metrics$Raw.count$global.level$RLE$gene.median.center$Smtsisch$colored + 
+        coord_cartesian(ylim = c(-2, 2)),
+    se.obj@metadata$Metrics$RUVIIIprps_k_10$global.level$RLE$gene.median.center$Smtsisch$colored + 
+        coord_cartesian(ylim = c(-2, 2)), 
+    common.legend = TRUE
+    )
+
+```
+
+##### Gene level anova anmd correlation
+```{r}
+se.obj <- computeGenesVariableAnova(
+    se.obj         = se.obj, 
+    assay.names    = 'all', 
+    variable       = 'Smtsisch', 
+    apply.log      = FALSE, 
+    plot.top.genes = FALSE
+    )
+raw.anova <- se.obj@metadata$Metrics$Raw.count$gene.level$ANOVA$aov$Smtsisch$fstatistics.pvalues
+ruv.anova <- se.obj@metadata$Metrics$RUVIIIprps_k_10$gene.level$ANOVA$aov$Smtsisch$fstatistics.pvalues
+
+data.frame(Raw.count = raw.anova$pvalue, RUVprps_k_10 = ruv.anova$pvalue) %>% 
+    pivot_longer(everything(), names_to = 'method', values_to = 'pval') %>% 
+    ggplot( aes(x = pval, fill = method)) +
+    geom_histogram(bins = 20) +
+    xlab('p-values') +
+    ylab('Frequency') +
+    labs(fill = "Datasets") +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 14),
+        axis.title.y     = element_text(size = 14),
+        axis.text.x      = element_text(size = 10),
+        axis.text.y      = element_text(size = 10),
+        legend.position  = c(0.7, 0.5)
+        )
+
+se.obj <- computeGenesVariableCorrelation(
+    se.obj = se.obj, 
+    assay.names = 'all', 
+    variable = 'SMTSISCH', 
+    apply.log = FALSE
+    )
+
+raw.corr <- se.obj@metadata$Metrics$Raw.count$gene.level$Correlation$spearman$SMTSISCH$correlations.pvalues
+ruv.corr <- se.obj@metadata$Metrics$RUVIIIprps_k_10$gene.level$Correlation$spearman$SMTSISCH$correlations.pvalues
+
+data.frame(Raw.count = raw.corr[,2], RUVprps_k_10 = ruv.corr[,2]) %>% 
+    pivot_longer(everything(), names_to = 'method', values_to = 'pval') %>% 
+    ggplot( aes(x = pval, fill = method)) +
+    geom_histogram(bins = 20) +
+    xlab('Correlations') +
+    ylab('Frequency') +
+    labs(fill = "Datasets") +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 14),
+        axis.title.y     = element_text(size = 14),
+        axis.text.x      = element_text(size = 10),
+        axis.text.y      = element_text(size = 10),
+        legend.position  = 'none'
+        )
+
+
+## an example
+raw.corr <- raw.corr[order(raw.corr[,2], decreasing = T) , ]
+head(raw.corr)
+raw.data <- assay(se.obj, 'Raw.count')
+ruv.data <- assay(se.obj, 'RUVIIIprps_k_10')
+
+data.frame(
+    Raw.count = raw.data['ACSL1' , ],
+    RUVprps_k_10 = ruv.data['ACSL1' , ],
+    var = se.obj$SMTSISCH) %>%
+    pivot_longer(-var, names_to = 'method', values_to = 'expr') %>%
+    ggplot(aes(x = var, y = expr)) +
+    geom_point(color = 'grey30', size = .5) +
+    facet_wrap( ~ method) +
+    xlab('SMTSISCH') +
+    ylab('Gene expression (ACSL1)') +
+    geom_smooth(color = 'red') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 14),
+        axis.title.y     = element_text(size = 14),
+        axis.text.x      = element_text(size = 10),
+        axis.text.y      = element_text(size = 10),
+        strip.text.x     = element_text(size = 14)
+    )
+
+data.frame(
+    Raw.count = raw.data['CCSER1' , ],
+    RUVprps_k_10 = ruv.data['CCSER1' , ],
+    var = se.obj$SMTSISCH) %>%
+    pivot_longer(-var, names_to = 'method', values_to = 'expr') %>%
+    ggplot(aes(x = var, y = expr)) +
+    geom_point(color = 'grey30', size = .5) +
+    facet_wrap( ~ method) +
+    xlab('SMTSISCH') +
+    ylab('Gene expression (CCSER1)') +
+    geom_smooth(color = 'red') +
+    theme(
+        panel.background = element_blank(),
+        axis.line        = element_line(colour = 'black', linewidth = 1),
+        axis.title.x     = element_text(size = 14),
+        axis.title.y     = element_text(size = 14),
+        axis.text.x      = element_text(size = 10),
+        axis.text.y      = element_text(size = 10),
+        strip.text.x     = element_text(size = 14)
+    )
+```
