@@ -55,6 +55,30 @@ If you use **RUVprps**, please cite:
 > https://doi.org/10.1038/s41587-022-01440-w
 ---
 
+---
+
+## 📚 Vignettes
+
+We provide a two vignettes covering different aspects of the package, from data preparation to supervised and unsupervised
+normalization workflows.
+
+### Available Vignettes
+
+| Vignette | Description |
+|-----------|------------|
+| Introduction to RUVprps | Overview of the package and core workflow |
+| Data preprocessing | Creating and managing `SummarizedExperiment` objects |
+| Identifying unwanted variation | Detecting known and unknown sources of unwanted variation |
+| Supervised normalization | RUV-III normalization using known biological and technical variables |
+| Unsupervised normalization | RUV-III normalization when both biological and unwanted variation are unknown |
+| Integrating multiple studies | Cross-study normalization using PRPS |
+| Assessing normalization performance | Using variation assessment and composite scores |
+
+### Accessing Vignettes
+
+After installing the package, available vignettes can be listed with:
+
+
 ## ⚙️ Installation
 
 After installing the required dependencies, install **RUVprps** from GitHub with:  
