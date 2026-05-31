@@ -1,13 +1,13 @@
 Package: RUVprps
 Title: RUVprps: Fast, accurate and scalable normalization for RNA sequencing data
-Version: 0.0.0.9000
+Version: 0.99.0
 Authors@R: 
     person("Ramyar", "Molania", email="molania.r@wehi.edu.au", role = c("aut", "cre"))
 Description: We propose a strategy, called pseudo-replicates of pseudo-samples (PRPS), for deploying our recently developed normalization method, called removing unwanted variation III (RUV-III), to remove the variation caused by library size, tumor purity and batch effects in TCGA RNA-seq data. RUV-III with PRPS can be used to integrate and normalize other large transcriptomic datasets coming from multiple laboratories or platforms.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 LinkingTo: Rcpp, RcppEigen
 Imports: 
     RColorBrewer,
@@ -76,17 +76,10 @@ Imports:
 Suggests: 
     rmarkdown,
     testthat (>= 3.0.0)
-URL: https://github.com/RMolania/RUVIIIPRPS
-BugReports: https://github.com/RMolania/RUVIIIPRPS/issues
+URL: https://github.com/RMolania/RUVprps
+BugReports: https://github.com/RMolania/RUVprps/issues
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)
 LazyData: true
-
-
-
-
-
-
-
