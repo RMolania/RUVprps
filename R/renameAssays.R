@@ -7,7 +7,6 @@
 #' @importFrom SummarizedExperiment assays
 #'
 #' @export
-#'
 renameAssays <- function(
         se.obj,
         new.names

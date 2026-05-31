@@ -2,7 +2,7 @@
 % Please edit documentation in R/addTcgaBatchInfo.R
 \name{addTcgaBatchInfo}
 \alias{addTcgaBatchInfo}
-\title{Adds the TCGA RNA-seq batch information}
+\title{Add the TCGA RNA-seq batch information}
 \usage{
 addTcgaBatchInfo(
   se.obj,

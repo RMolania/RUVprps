@@ -123,7 +123,7 @@ or a list of the RUV-III normalized gene expression data set(s).
 This function applies the RUV-III with PRPS or technical replicates (TR) on transcriptions data.
 }
 \details{
-RUV-III normalization. Before we can describe the linear model underlying RUV-III, we need to introduce the m × m1
+Before we can describe the linear model underlying RUV-III, we need to introduce the m × m1
 mapping matrix M connecting assays to distinct samples, which captures the pattern of replication in our assays. Here,
 m is the number of assays, and m1 is the number of distinct samples being assayed. M(i,h) = 1if assay i is on sample
 h and M(i,h) = 0 otherwise. Each row of M sums to 1, and the columns sum to the distinct sample replication numbers, the

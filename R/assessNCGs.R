@@ -184,7 +184,7 @@ assessNCGs <- function(
     assess.ncg.plot <- assess.ncg.plot / p.pca.percentage + plot_layout(heights = c(3, 1))
     if (isTRUE(plot.output)) print(assess.ncg.plot)
     printColoredMessage(
-        message = '------------The assessNCGs function finished:',
+        message = '------------The assessNCGs function finished.',
         color = 'white',
         verbose = verbose
         )

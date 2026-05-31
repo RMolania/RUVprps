@@ -1,4 +1,4 @@
-#' Adds the TCGA RNA-seq batch information
+#' Add the TCGA RNA-seq batch information
 #'
 #' @author Ramyar Molania
 #'
@@ -27,10 +27,10 @@
 
 addTcgaBatchInfo <- function(
         se.obj,
-        batch.info = 'all',
-        cancer.type = NULL,
-        keep.all.samples = TRUE,
-        use.lables = FALSE,
+        batch.info           = 'all',
+        cancer.type          = NULL,
+        keep.all.samples     = TRUE,
+        use.lables           = FALSE,
         missing.samples.name = 'DF'
         ){
     colnames(tcga.batch.info)[11:13] <- c('Years', 'Months', 'Days')

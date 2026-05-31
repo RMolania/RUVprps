@@ -34,43 +34,42 @@
 preProcessData <- function(
         se.obj ,
         assay.name,
-        normalization = 'CPM',
+        normalization         = 'CPM',
         regress.out.variables = NULL,
-        regress.out.rle.med = FALSE,
-        apply.log = TRUE,
-        pseudo.count = 1,
-        check.se.obj = TRUE,
-        remove.na = 'assay',
-        verbose = TRUE
+        regress.out.rle.med   = FALSE,
+        apply.log             = TRUE,
+        pseudo.count          = 1,
+        check.se.obj          = TRUE,
+        remove.na             = 'assay',
+        verbose               = TRUE
         ){
     printColoredMessage(
         message =  '------------The preProcessData function starts:',
-        color = 'white',
+        color   = 'white',
         verbose = verbose
         )
-
     # checking the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)){
         se.obj <- checkSeObj(
-            se.obj = se.obj,
+            se.obj      = se.obj,
             assay.names = assay.name,
-            variables = NULL,
-            remove.na = remove.na,
-            verbose = verbose
+            variables   = NULL,
+            remove.na   = remove.na,
+            verbose     = verbose
             )
     }
     # Applying library size normalization ####
     if (!is.null(normalization)){
         expr.data <- applyOtherNormalizations(
-            se.obj = se.obj,
-            assay.name = assay.name,
-            method = normalization,
+            se.obj       = se.obj,
+            assay.name   = assay.name,
+            method       = normalization,
             pseudo.count = pseudo.count,
-            apply.log = apply.log,
+            apply.log    = apply.log,
             check.se.obj = FALSE,
-            save.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
+            save.se.obj  = FALSE,
+            remove.na    = 'none',
+            verbose      = verbose
         )
     }
     # Regressing out unwanted variables ####
@@ -105,12 +104,12 @@ preProcessData <- function(
     if (!is.null(regress.out.variables) & is.null(normalization)){
         if (isTRUE(apply.log)){
             expr.data <- applyLog(
-                se.obj = se.obj,
-                assay.names = assay.name,
+                se.obj       = se.obj,
+                assay.names  = assay.name,
                 pseudo.count = pseudo.count,
                 check.se.obj = FALSE,
-                remove.na = 'none',
-                verbose = verbose
+                remove.na    = 'none',
+                verbose      = verbose
                 )[[assay.name]]
         }
         if (isFALSE(apply.log)){
@@ -133,26 +132,26 @@ preProcessData <- function(
             color = 'red',
             verbose = verbose
             )
-        expr.data <- t(expr.data)
+        expr.data        <- t(expr.data)
         uv.variables.all <- paste('se.obj', regress.out.variables, sep = '$')
         expr.data <- lm(as.formula(paste(
             'expr.data',
             paste0(uv.variables.all, collapse = '+') ,
             sep = '~'
             )))
-        expr.data <- t(expr.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
+        expr.data            <- t(expr.data$residuals)
+        colnames(expr.data)  <- colnames(se.obj)
         row.names(expr.data) <- row.names(se.obj)
     }
     if (is.null(regress.out.variables) & is.null(normalization)){
         if (isTRUE(apply.log)){
             expr.data <- applyLog(
-                se.obj = se.obj,
-                assay.names = assay.name,
+                se.obj       = se.obj,
+                assay.names  = assay.name,
                 pseudo.count = pseudo.count,
                 check.se.obj = FALSE,
-                remove.na = 'none',
-                verbose = verbose
+                remove.na    = 'none',
+                verbose      = verbose
                 )[[assay.name]]
         }
         if (isFALSE(apply.log)){
@@ -160,15 +159,15 @@ preProcessData <- function(
         }
     }
     if (isTRUE(regress.out.rle.med)){
-        rle.med <- matrixStats::colMedians(expr.data - matrixStats::rowMedians(expr.data))
-        expr.data <- lm(t(expr.data) ~ rle.med)
-        expr.data <- t(expr.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
+        rle.med              <- matrixStats::colMedians(expr.data - matrixStats::rowMedians(expr.data))
+        expr.data            <- lm(t(expr.data) ~ rle.med)
+        expr.data            <- t(expr.data$residuals)
+        colnames(expr.data)  <- colnames(se.obj)
         row.names(expr.data) <- row.names(se.obj)
     }
     printColoredMessage(
         message =  '------------The preProcessData function finished.',
-        color = 'white',
+        color   = 'white',
         verbose = verbose
     )
     return(expr.data)

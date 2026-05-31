@@ -31,6 +31,10 @@ tidyGenes <- function(
         change.row.names = TRUE,
         new.row.names = NULL
         ){
+    if (class(data)[1] == 'SummarizedExperiment' | class(data)[1] == 'RangedSummarizedExperiment')
+
+
+
     # Checking the input ####
     gene.annot <- rowData(x = se.obj)
     # subset to protein coding genes and remove duplicated gene names
