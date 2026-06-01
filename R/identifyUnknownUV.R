@@ -154,61 +154,61 @@
 identifyUnknownUV <- function(
         se.obj,
         assay.name,
-        approach = 'rle',
-        rle.comp = 'median',
-        uv.gene.sets = NULL,
-        chronological.detection = FALSE,
-        changepoint.type = 'meanvar',
-        clustering.methods = 'nbClust',
-        ncg = NULL,
+        approach                  = 'rle',
+        rle.comp                  = 'median',
+        uv.gene.sets              = NULL,
+        chronological.detection   = FALSE,
+        changepoint.type          = 'meanvar',
+        clustering.methods        = 'nbClust',
+        ncg                       = NULL,
         regress.out.bio.variables = NULL,
         regress.out.bio.gene.sets = NULL,
-        nbClust.diss = NULL,
-        nbClust.distance = "euclidean",
-        nbClust.min.nc = 3,
-        nbClust.max.nc = 30,
-        nbClust.method = 'kmeans',
-        nbClust.index = 'silhouette',
-        nbClust.alphaBeale = 0.1,
-        max.samples.per.batch = NULL,
-        mclust.max.clusters = 20,
-        nb.clusters = 3,
-        cpt.penalty = 'MBIC',
-        cpt.pen.value = 0,
-        cpt.method = 'PELT',
-        cpt.q = 5,
-        cpt.test.stat = 'Normal',
-        cpt.minseglen = 1,
-        apply.log = TRUE,
-        pseudo.count = 1,
-        nb.pcs = 2,
-        center = TRUE,
-        scale = FALSE,
-        svd.bsparam = bsparam(),
-        remove.current.estimates = FALSE,
-        assess.bio.association = FALSE,
-        bio.variables = NULL,
-        nb.bio.clusters = 3,
-        bio.clustering.method = 'kmeans',
-        assess.uv.association = FALSE,
-        uv.variables = NULL,
-        nb.uv.clusters = 3,
-        uv.clustering.method = 'kmeans',
+        nbClust.diss              = NULL,
+        nbClust.distance          = "euclidean",
+        nbClust.min.nc            = 3,
+        nbClust.max.nc            = 30,
+        nbClust.method            = 'kmeans',
+        nbClust.index             = 'silhouette',
+        nbClust.alphaBeale        = 0.1,
+        max.samples.per.batch     = NULL,
+        mclust.max.clusters       = 20,
+        nb.clusters               = 3,
+        cpt.penalty               = 'MBIC',
+        cpt.pen.value             = 0,
+        cpt.method                = 'PELT',
+        cpt.q                     = 5,
+        cpt.test.stat             = 'Normal',
+        cpt.minseglen             = 1,
+        apply.log                 = TRUE,
+        pseudo.count              = 1,
+        nb.pcs                    = 2,
+        center                    = TRUE,
+        scale                     = FALSE,
+        svd.bsparam               = bsparam(),
+        remove.current.estimates  = FALSE,
+        assess.bio.association    = FALSE,
+        bio.variables             = NULL,
+        nb.bio.clusters           = 3,
+        bio.clustering.method     = 'kmeans',
+        assess.uv.association     = FALSE,
+        uv.variables              = NULL,
+        nb.uv.clusters            = 3,
+        uv.clustering.method      = 'kmeans',
         generate.association.plot = FALSE,
-        plot.output = TRUE,
-        color.palette = 'pan.selection.a',
-        order.batches = FALSE,
-        add.to.sample.annotation = TRUE,
-        col.name = 'Estimated.batches',
-        output.name = NULL,
-        check.se.obj = TRUE,
-        remove.na = 'none',
-        save.se.obj = TRUE,
-        verbose = TRUE
+        plot.output               = TRUE,
+        color.palette             = 'pan.selection.a',
+        order.batches             = FALSE,
+        add.to.sample.annotation  = TRUE,
+        col.name                  = 'Estimated.batches',
+        output.name               = NULL,
+        check.se.obj              = TRUE,
+        remove.na                 = 'none',
+        save.se.obj               = TRUE,
+        verbose                   = TRUE
         ){
     printColoredMessage(
         message = '------------The indentifyUnknownUV function starts:',
-        color = 'white',
+        color   = 'white',
         verbose = verbose
         )
     # Checking function inputs ####
@@ -334,13 +334,13 @@ identifyUnknownUV <- function(
     if (isTRUE(remove.current.estimates)){
         printColoredMessage(
             message = paste0('- The current estimated unknown batches:'),
-            color = 'magenta',
+            color   = 'magenta',
             verbose = verbose
             )
         if (!'UnKnownUV' %in%  names(se.obj@metadata)) {
             printColoredMessage(
                 message = paste0('- There is not any estimated unknown batches in the SummarizedExperiment object.'),
-                color = 'blue',
+                color   = 'blue',
                 verbose = verbose
                 )
         } else if (assay.name %in% names(se.obj@metadata[['UnKnownUV']])) {
@@ -349,7 +349,7 @@ identifyUnknownUV <- function(
                     '- The current estimated unknown batches for the  ',
                     assay.name,
                     ' data is removed.'),
-                color = 'blue',
+                color   = 'blue',
                 verbose = verbose
                 )
             se.obj@metadata[['UnKnownUV']][[assay.name]] <- list()
@@ -359,7 +359,7 @@ identifyUnknownUV <- function(
                     '- There is not any estimated unknown batches for the  ',
                     assay.name,
                     ' data.'),
-                color = 'blue',
+                color   = 'blue',
                 verbose = verbose
                 )
         }
@@ -368,11 +368,11 @@ identifyUnknownUV <- function(
     # Checking the SummarizedExperiment object ####
     if (isTRUE(check.se.obj)) {
         se.obj <- checkSeObj(
-            se.obj = se.obj,
+            se.obj      = se.obj,
             assay.names = assay.name,
-            variables = c(regress.out.bio.variables),
-            remove.na = remove.na,
-            verbose = verbose
+            variables   = c(regress.out.bio.variables),
+            remove.na   = remove.na,
+            verbose     = verbose
             )
     }
     # Applying data log transformation ####
@@ -383,10 +383,11 @@ identifyUnknownUV <- function(
             verbose = verbose
             )
         expr.data <- applyLog(
-            se.obj = se.obj,
-            assay.names = assay.name,
+            se.obj       = se.obj,
+            assay.names  = assay.name,
             check.se.obj = FALSE,
             pseudo.count = pseudo.count,
+            verbose      = verbose
             )[[assay.name]]
     }
     if (isFALSE(apply.log)){
@@ -410,11 +411,11 @@ identifyUnknownUV <- function(
             color = 'blue',
             verbose = verbose
         )
-        expr.data <- t(expr.data)
-        lm.formula <- paste('se.obj', regress.out.bio.variables, sep = '$')
-        adjusted.data <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
-        expr.data <- t(adjusted.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
+        expr.data            <- t(expr.data)
+        lm.formula           <- paste('se.obj', regress.out.bio.variables, sep = '$')
+        adjusted.data        <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
+        expr.data            <- t(adjusted.data$residuals)
+        colnames(expr.data)  <- colnames(se.obj)
         row.names(expr.data) <- row.names(se.obj)
         }
     ## Regressing out biological gene sets ####
@@ -429,7 +430,7 @@ identifyUnknownUV <- function(
             regress.out.bio.gene.sets,
             function(x) singscore::simpleScore(
                 rankData = ranked.data,
-                upSet = x)$TotalScore
+                upSet    = x)$TotalScore
         )
         rm(ranked.data)
         printColoredMessage(
@@ -440,10 +441,10 @@ identifyUnknownUV <- function(
                 ' please make sure your data is log transformed.'),
             color = 'blue',
             verbose = verbose)
-        expr.data <- t(expr.data)
-        adjusted.data <- lm(expr.datab~ regress.out.bio.gene.sets)
-        expr.data <- t(adjusted.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
+        expr.data            <- t(expr.data)
+        adjusted.data        <- lm(expr.datab~ regress.out.bio.gene.sets)
+        expr.data            <- t(adjusted.data$residuals)
+        colnames(expr.data)  <- colnames(se.obj)
         row.names(expr.data) <- row.names(se.obj)
         }
     ## Regressing out biological variable and biological gene sets ####
@@ -463,17 +464,17 @@ identifyUnknownUV <- function(
             regress.out.bio.gene.sets,
             function(x) singscore::simpleScore(
                 rankData = ranked.data,
-                upSet = x)$TotalScore
+                upSet    = x)$TotalScore
             )
         all.variables <- as.data.frame(cbind(
             regress.out.bio.gene.sets,
             as.data.frame(colData(se.obj)[, regress.out.bio.variables, drop = FALSE]))
             )
-        lm.formula <- paste('all.variables', colnames(all.variables), sep = '$')
-        expr.data <- t(expr.data)
-        adjusted.data <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
-        expr.data <- t(adjusted.data$residuals)
-        colnames(expr.data) <- colnames(se.obj)
+        lm.formula           <- paste('all.variables', colnames(all.variables), sep = '$')
+        expr.data            <- t(expr.data)
+        adjusted.data        <- lm(as.formula(paste('expr.data', paste0(lm.formula, collapse = '+') , sep = '~')))
+        expr.data            <- t(adjusted.data$residuals)
+        colnames(expr.data)  <- colnames(se.obj)
         row.names(expr.data) <- row.names(se.obj)
         }
 
@@ -497,11 +498,11 @@ identifyUnknownUV <- function(
             )
             set.seed(2233)
             sv.dec <- runSVD(
-                x = t(expr.data),
-                k = nb.pcs,
+                x       = t(expr.data),
+                k       = nb.pcs,
                 BSPARAM = svd.bsparam,
-                center = center,
-                scale = scale
+                center  = center,
+                scale   = scale
             )
             input.data <- sv.dec$u
             colnames(input.data) <- c(paste0('PC', 1:ncol(input.data)))
@@ -531,11 +532,11 @@ identifyUnknownUV <- function(
             )
             set.seed(2233)
             sv.dec <- runSVD(
-                x = t(expr.data[ncg , ]),
-                k = nb.pcs,
+                x       = t(expr.data[ncg , ]),
+                k       = nb.pcs,
                 BSPARAM = svd.bsparam,
-                center = center,
-                scale = scale
+                center  = center,
+                scale   = scale
                 )
             input.data = sv.dec$u
             if (clustering.methods == 'nbClust'){
@@ -635,7 +636,7 @@ identifyUnknownUV <- function(
             message = paste0(
                 '- Calculating sample scores for individual gene set(s) of the ',
                 '"uv.gene.sets" and using the scores as input for clustering.'),
-            color = 'blue',
+            color   = 'blue',
             verbose = verbose
             )
         ranked.data <- rankGenes(expr.data)
@@ -665,7 +666,7 @@ identifyUnknownUV <- function(
     if (isFALSE(chronological.detection)){
         printColoredMessage(
             message = '- Clustering the inpute data',
-            color = 'magenta',
+            color   = 'magenta',
             verbose = verbose
         )
         ## kmeans ####
@@ -712,10 +713,13 @@ identifyUnknownUV <- function(
                 color = 'blue',
                 verbose = verbose
             )
-            quantiles <- quantile(x = input.data, probs = seq(0, 1, 1 / nb.clusters))
+            quantiles <- quantile(
+                x     = input.data,
+                probs = seq(0, 1, 1 / nb.clusters)
+                )
             groups <- as.numeric(cut(
-                x = input.data,
-                breaks = quantiles,
+                x              = input.data,
+                breaks         = quantiles,
                 include.lowest = TRUE
             ))
             uv.sources <- paste0('Batch' , groups)
@@ -729,8 +733,8 @@ identifyUnknownUV <- function(
             )
             set.seed(3344)
             groups <- Mclust(
-                data = input.data,
-                G = 2:mclust.max.clusters,
+                data    = input.data,
+                G       = 2:mclust.max.clusters,
                 verbose = verbose)
             uv.sources <- paste0('Batch' , groups$classification)
         }
@@ -744,21 +748,21 @@ identifyUnknownUV <- function(
                     verbose = verbose
                 )
                 initial.clusters <- NbClust(
-                    data = input.data,
-                    diss = nbClust.diss,
-                    distance = nbClust.distance,
-                    min.nc = nbClust.min.nc,
-                    max.nc = nbClust.max.nc,
-                    method = nbClust.method,
-                    index = nbClust.index,
+                    data       = input.data,
+                    diss       = nbClust.diss,
+                    distance   = nbClust.distance,
+                    min.nc     = nbClust.min.nc,
+                    max.nc     = nbClust.max.nc,
+                    method     = nbClust.method,
+                    index      = nbClust.index,
                     alphaBeale = nbClust.alphaBeale
                 )
                 batch.samples <- data.frame(
-                    id = colnames(se.obj),
+                    id    = colnames(se.obj),
                     batch = initial.clusters$Best.partition
                 )
                 selected.clusters <- findRepeatingPatterns(
-                    vec = batch.samples$batch,
+                    vec      = batch.samples$batch,
                     n.repeat = round(max.samples.per.batch * ncol(se.obj), digits = 0)
                 )
                 while (length(selected.clusters) > 0) {
@@ -771,17 +775,17 @@ identifyUnknownUV <- function(
                             } else
                                 sub.input.data <- input.data[index]
                             sub.clusters <- NbClust(
-                                data = sub.input.data,
-                                diss = nbClust.diss,
-                                distance = nbClust.distance,
-                                min.nc = nbClust.min.nc,
-                                max.nc = nbClust.max.nc,
-                                method = nbClust.method,
-                                index = nbClust.index,
+                                data       = sub.input.data,
+                                diss       = nbClust.diss,
+                                distance   = nbClust.distance,
+                                min.nc     = nbClust.min.nc,
+                                max.nc     = nbClust.max.nc,
+                                method     = nbClust.method,
+                                index      = nbClust.index,
                                 alphaBeale = nbClust.alphaBeale
                             )
                             data.frame(
-                                id = batch.samples$id[index],
+                                id    = batch.samples$id[index],
                                 batch = paste0(x, sub.clusters$Best.partition)
                             )
                         })
@@ -789,7 +793,7 @@ identifyUnknownUV <- function(
                     batch.samples$batch[match(more.clusters$id, batch.samples$id)] <-
                         more.clusters$batch
                     selected.clusters <- findRepeatingPatterns(
-                        vec = batch.samples$batch,
+                        vec      = batch.samples$batch,
                         n.repeat = round(max.samples.per.batch * ncol(se.obj), digits = 0)
                     )
                 }
@@ -798,13 +802,13 @@ identifyUnknownUV <- function(
             ## Without considering maximum samples per clusters ####
             if (is.null(max.samples.per.batch)){
                 nb.clusters <- NbClust(
-                    data = input.data,
-                    diss = nbClust.diss,
-                    distance = nbClust.distance,
-                    min.nc = nbClust.min.nc,
-                    max.nc = nbClust.max.nc,
-                    method = nbClust.method,
-                    index = nbClust.index,
+                    data       = input.data,
+                    diss       = nbClust.diss,
+                    distance   = nbClust.distance,
+                    min.nc     = nbClust.min.nc,
+                    max.nc     = nbClust.max.nc,
+                    method     = nbClust.method,
+                    index      = nbClust.index,
                     alphaBeale = nbClust.alphaBeale
                 )
                 uv.sources <- paste0('Batch', nb.clusters$Best.partition)
@@ -821,14 +825,14 @@ identifyUnknownUV <- function(
         ### Chronological order analysis using mean ####
         if (changepoint.type == 'mean'){
             cpt <- cpt.mean(
-                data = input.data,
-                penalty = cpt.penalty,
-                pen.value = cpt.pen.value,
-                method = cpt.method,
-                Q = cpt.q,
-                test.stat = cpt.test.stat,
-                minseglen = cpt.minseglen,
-                class = TRUE,
+                data            = input.data,
+                penalty         = cpt.penalty,
+                pen.value       = cpt.pen.value,
+                method          = cpt.method,
+                Q               = cpt.q,
+                test.stat       = cpt.test.stat,
+                minseglen       = cpt.minseglen,
+                class           = TRUE,
                 param.estimates = TRUE
                 )
             cpts <- cpts(cpt)
@@ -844,14 +848,14 @@ identifyUnknownUV <- function(
         ### Chronological order analysis using mean and variance ####
         if (changepoint.type == 'meanvar'){
             cpt <- cpt.meanvar(
-                data = input.data,
-                penalty = cpt.penalty,
-                pen.value = cpt.pen.value,
-                method = cpt.method,
-                Q = cpt.q,
-                test.stat = cpt.test.stat,
-                minseglen = cpt.minseglen,
-                class = TRUE,
+                data            = input.data,
+                penalty         = cpt.penalty,
+                pen.value       = cpt.pen.value,
+                method          = cpt.method,
+                Q               = cpt.q,
+                test.stat       = cpt.test.stat,
+                minseglen       = cpt.minseglen,
+                class           = TRUE,
                 param.estimates = TRUE
             )
             cpts <- cpts(cpt)
@@ -900,15 +904,15 @@ identifyUnknownUV <- function(
             ylab(paste0('Input data (', approach, ')')) +
             theme(
                 panel.background = element_blank(),
-                legend.key = element_blank(),
-                legend.text = element_text(size = 12),
-                legend.title = element_text(size = 14),
-                axis.line = element_line(colour = 'black', linewidth = 1),
-                axis.title.x = element_text(size = 14),
-                axis.title.y = element_text(size = 14),
-                axis.text.x = element_text(size = 12),
-                axis.text.y = element_text(size = 12)) +
-            guides(colour = guide_legend(override.aes = list(size = 5)))
+                legend.key       = element_blank(),
+                legend.text      = element_text(size = 12),
+                legend.title     = element_text(size = 14),
+                axis.line        = element_line(colour = 'black', linewidth = 1),
+                axis.title.x     = element_text(size = 14),
+                axis.title.y     = element_text(size = 14),
+                axis.text.x      = element_text(size = 12),
+                axis.text.y      = element_text(size = 12)) +
+            guides(colour        = guide_legend(override.aes = list(size = 5)))
         if (isTRUE(plot.output)) print(p.batches)
     } else {
         if (ncol(input.data) == 1) {
@@ -931,45 +935,45 @@ identifyUnknownUV <- function(
                 scale_color_manual(values = colors.selected, name = 'Batch') +
                 theme(
                     panel.background = element_blank(),
-                    legend.key = element_blank(),
-                    legend.text = element_text(size = 12),
-                    legend.title = element_text(size = 14),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 12),
-                    axis.title.y = element_text(size = 12),
-                    axis.text.x = element_text(size = 9),
-                    axis.text.y = element_text(size = 9)) +
+                    legend.key       = element_blank(),
+                    legend.text      = element_text(size = 12),
+                    legend.title     = element_text(size = 14),
+                    axis.line        = element_line(colour = 'black', linewidth = 1),
+                    axis.title.x     = element_text(size = 12),
+                    axis.title.y     = element_text(size = 12),
+                    axis.text.x      = element_text(size = 9),
+                    axis.text.y      = element_text(size = 9)) +
                 guides(colour = guide_legend(override.aes = list(size = 5)))
             if (isTRUE(plot.output)) print(p.batches)
         } else {
             data.to.plot <- as.data.frame(input.data)
             data.to.plot$batches <- factor(
-                x = paste0('Batch', as.numeric(as.factor(uv.sources))),
+                x      = paste0('Batch', as.numeric(as.factor(uv.sources))),
                 levels = paste0('Batch', sort(unique(as.numeric(as.factor(uv.sources)))))
                 )
             p.batches <- GGally::ggpairs(
-                data = data.to.plot[, 1:(ncol(data.to.plot) - 1)],
-                mapping = ggplot2::aes(colour = data.to.plot[, ncol(data.to.plot)]),
+                data       = data.to.plot[, 1:(ncol(data.to.plot) - 1)],
+                mapping    = ggplot2::aes(colour = data.to.plot[, ncol(data.to.plot)]),
                 showStrips = FALSE,
-                switch = 'y',
-                labeller = NULL,
-                diag = list(continuous = wrap("diagAxis", labelSize = 8, diagAxis = 0)),
-                upper = "blank") +
+                switch     = 'y',
+                labeller   = NULL,
+                diag       = list(continuous = wrap("diagAxis", labelSize = 8, diagAxis = 0)),
+                upper      = "blank") +
                 theme(
-                    panel.background = element_blank(),
-                    legend.key = element_blank(),
-                    legend.text = element_text(size = 12),
-                    legend.title = element_text(size = 14),
-                    panel.grid.major = element_blank(),
-                    axis.ticks = element_blank(),
-                    strip.background = element_blank(),
+                    panel.background    = element_blank(),
+                    legend.key          = element_blank(),
+                    legend.text         = element_text(size = 12),
+                    legend.title        = element_text(size = 14),
+                    panel.grid.major    = element_blank(),
+                    axis.ticks          = element_blank(),
+                    strip.background    = element_blank(),
                     strip.text.x.bottom = element_text(size = 0),
-                    strip.text = element_text(size = 0),
-                    axis.line = element_line(colour = 'black', linewidth = 1),
-                    axis.title.x = element_text(size = 12),
-                    axis.title.y = element_text(size = 2),
-                    axis.text.x = element_text(size = 0),
-                    axis.text.y = element_text(size = 0)) +
+                    strip.text          = element_text(size = 0),
+                    axis.line           = element_line(colour = 'black', linewidth = 1),
+                    axis.title.x        = element_text(size = 12),
+                    axis.title.y        = element_text(size = 2),
+                    axis.text.x         = element_text(size = 0),
+                    axis.text.y         = element_text(size = 0)) +
                 scale_color_manual(values = colors.selected)
             if (isTRUE(plot.output)) print(p.batches)
         }
@@ -979,14 +983,14 @@ identifyUnknownUV <- function(
     ## Biological variables ####
     if (isTRUE(assess.bio.association)){
         homo.bio.groups <- createHomogeneousBioGroups(
-            se.obj = se.obj,
-            bio.variables = bio.variables,
-            nb.clusters = nb.bio.clusters,
+            se.obj            = se.obj,
+            bio.variables     = bio.variables,
+            nb.clusters       = nb.bio.clusters,
             clustering.method = bio.clustering.method,
-            check.se.obj = FALSE,
-            save.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
+            check.se.obj      = FALSE,
+            save.se.obj       = FALSE,
+            remove.na         = 'none',
+            verbose           = verbose
             )
         bio.association <- DescTools::CramerV(
             x = uv.sources,
@@ -1010,7 +1014,6 @@ identifyUnknownUV <- function(
                     title_gp = gpar(fontsize = 22),
                     legend_direction = 'horizontal', legend_width = unit(7, "cm"))
             )
-            h.bio <- draw(h.bio, heatmap_legend_side = 'top' )
             if (isTRUE(plot.output)) print(h.bio)
         } else h.bio <- NULL
     }
@@ -1018,14 +1021,14 @@ identifyUnknownUV <- function(
     ## Unwanted variables ####
     if (isTRUE(assess.uv.association)){
         homo.uv.groups <- createHomogeneousUVGroups(
-            se.obj = se.obj,
-            uv.variables = uv.variables,
-            nb.clusters = nb.uv.clusters,
+            se.obj            = se.obj,
+            uv.variables      = uv.variables,
+            nb.clusters       = nb.uv.clusters,
             clustering.method = uv.clustering.method,
-            check.se.obj = FALSE,
-            save.se.obj = FALSE,
-            remove.na = 'none',
-            verbose = verbose
+            check.se.obj      = FALSE,
+            save.se.obj       = FALSE,
+            remove.na         = 'none',
+            verbose           = verbose
             )
         uv.association <- DescTools::CramerV(
             x = uv.sources,
@@ -1037,19 +1040,19 @@ identifyUnknownUV <- function(
                 homo.uv.groups
                 )
             h.uv <- Heatmap(
-                matrix = batches,
-                cluster_rows = FALSE,
-                cluster_columns = FALSE,
-                col = c('grey90', 'darkgreen'),
-                name = 'Frequency',
-                row_names_gp = gpar(fontsize = 18),
-                column_names_gp = gpar(fontsize = 16),
+                matrix               = batches,
+                cluster_rows         = FALSE,
+                cluster_columns      = FALSE,
+                col                  = c('grey90', 'darkgreen'),
+                name                 = 'Frequency',
+                row_names_gp         = gpar(fontsize = 18),
+                column_names_gp      = gpar(fontsize = 16),
                 heatmap_legend_param = list(
-                    labels_gp = gpar(fontsize = 22),
-                    title_gp = gpar(fontsize = 22),
-                    legend_direction = 'horizontal', legend_width = unit(7, "cm"))
-            )
-            h.uv <- draw(h.uv, heatmap_legend_side = 'top' )
+                    labels_gp        = gpar(fontsize = 22),
+                    title_gp         = gpar(fontsize = 22),
+                    legend_direction = 'horizontal',
+                    legend_width     = unit(7, "cm"))
+                )
             if (isTRUE(plot.output)) print(h.uv)
         } else h.uv <- NULL
     }
@@ -1113,12 +1116,12 @@ identifyUnknownUV <- function(
         }
         printColoredMessage(
             message = 'The potentail unknow sources of variation are saved to the metadata of the SummarizedExperiment object',
-            color = 'blue',
+            color   = 'blue',
             verbose = verbose
             )
         printColoredMessage(
             message = '------------The indentifyUnknownUV function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
         return(se.obj)
@@ -1127,18 +1130,18 @@ identifyUnknownUV <- function(
     if (isFALSE(save.se.obj)) {
         printColoredMessage(
             message = 'The results are outputed as list.',
-            color = 'blue',
+            color   = 'blue',
             verbose = verbose
             )
         printColoredMessage(
             message = '------------The indentifyUnknownUV function finished.',
-            color = 'white',
+            color   = 'white',
             verbose = verbose
             )
         return(list(
-            batches = uv.sources,
+            batches    = uv.sources,
             input.data = input.data,
-            plot = p.batches)
+            plot       = p.batches)
             )
     }
 }
