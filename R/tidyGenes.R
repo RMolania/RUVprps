@@ -28,21 +28,19 @@ tidyGenes <- function(
         gene.type.col.name,
         remove.duplicates.ids = TRUE,
         ids.col.name,
-        change.row.names = TRUE,
-        new.row.names = NULL
+        change.row.names      = TRUE,
+        new.row.names         = NULL
         ){
-    if (class(data)[1] == 'SummarizedExperiment' | class(data)[1] == 'RangedSummarizedExperiment')
-
-
-
-    # Checking the input ####
-    gene.annot <- rowData(x = se.obj)
-    # subset to protein coding genes and remove duplicated gene names
-    to.remove <- gene.annot[[gene.type.col.name]] != keep.gene.type | duplicated(gene.annot[[ids.col.name]])
-    se.obj <- se.obj[!to.remove, ]
-    if (isTRUE(change.row.names)){
-        row.names(se.obj) <- rowData(x = se.obj)[[new.row.names]]
-    }
+    if (class(se.obj)[1] == 'SummarizedExperiment' | class(se.obj)[1] == 'RangedSummarizedExperiment'){
+        # Checking the input ####
+        gene.annot <- rowData(x = se.obj)
+        # subset to protein coding genes and remove duplicated gene names
+        to.remove <- gene.annot[[gene.type.col.name]] != keep.gene.type | duplicated(gene.annot[[ids.col.name]])
+        se.obj <- se.obj[!to.remove, ]
+        if (isTRUE(change.row.names)){
+            row.names(se.obj) <- rowData(x = se.obj)[[new.row.names]]
+            }
+    } else stop("The 'se.obj' is not a class of 'SummarizedExperiment'.")
     return(se.obj)
 }
 
