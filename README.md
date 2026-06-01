@@ -64,24 +64,16 @@ normalization workflows.
 
 ### Available Vignettes
 
-| Vignette | Description |
-|-----------|------------|
-| Introduction to RUVprps | Overview of the package and core workflow |
-| Data preprocessing | Creating and managing `SummarizedExperiment` objects |
-| Identifying unwanted variation | Detecting known and unknown sources of unwanted variation |
-| Supervised normalization | RUV-III normalization using known biological and technical variables |
-| Unsupervised normalization | RUV-III normalization when both biological and unwanted variation are unknown |
-| Integrating multiple studies | Cross-study normalization using PRPS |
-| Assessing normalization performance | Using variation assessment and composite scores |
-
-### Accessing Vignettes
-
-After installing the package, available vignettes can be listed with:
-
+| Vignette | Description | Data |
+|-----------|------------|---------|
+| RUVprps normalization on TCGA BRCA RNA-seq data-data pre-processing | Data preprocessing using RUVprps | single study |
+| Supervised RUV-III-PRPS normalization on TCGA BRCA RNA-seq data with RUVprps | How to use RUVprps for supervised normalization  | single study |
+| Uuspervised RUV-III-PRPS normalization on TCGA BRCA RNA-seq data with RUVprps | How to use RUVprps for unsupervised normalization | single study |
+| Cross-study normalization with RUVprps | Data preprocessing using RUVprps | multiple studies |
+| Cross-study normalization with RUVprps-supervised   | How to use RUVprps for supervised normalization  | multiple studies |
+| Cross-study normalization with RUVprps-unsupervised | How to use RUVprps for supervised normalization| multiple studies |
 
 ## ⚙️ Installation
-
-After installing the required dependencies, install **RUVprps** from GitHub with:  
 
 ```r
 library(devtools)
