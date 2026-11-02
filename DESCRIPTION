@@ -1,21 +1,30 @@
 Package: RUVprps
-Title: RUVprps: Fast, accurate and scalable normalization for RNA sequencing data
+Title: Removing Unwanted Variation Using Pseudo-Replicates of Pseudo-Samples
 Version: 0.99.0
 Authors@R: 
     person("Ramyar", "Molania", email="molania.r@wehi.edu.au", role = c("aut", "cre"))
-Description: We propose a strategy, called pseudo-replicates of pseudo-samples (PRPS), for deploying our recently developed normalization method, called removing unwanted variation III (RUV-III), to remove the variation caused by library size, tumor purity and batch effects in TCGA RNA-seq data. RUV-III with PRPS can be used to integrate and normalize other large transcriptomic datasets coming from multiple laboratories or platforms.
+Description: Normalization of RNA sequencing data using removing unwanted
+    variation III (RUV-III) with pseudo-replicates of pseudo-samples (PRPS).
+    Provides supervised and unsupervised selection of negative control genes,
+    construction of pseudo-replicates, normalization, and assessment of biological
+    signal preservation and unwanted variation removal. The method is described
+    by Molania et al. (2023) <doi:10.1038/s41587-022-01440-w>.
+    Optional packages available outside standard repositories are 'kBET'
+    <https://github.com/theislab/kBET>, 'lisi'
+    <https://github.com/immunogenomics/LISI>, and 'CMScaller'
+    <https://github.com/Lothelab/CMScaller>.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 LinkingTo: Rcpp, RcppEigen
 Imports: 
+    grid,
+    tools,
     RColorBrewer,
-    ggforestplot,
     qvalue,
-    viridis,
+    viridisLite,
     gtools,
-    fastDummies,
     ruv,
     scales,
     DescTools,
@@ -36,7 +45,6 @@ Imports:
     RANN,
     BiocParallel,
     grDevices,
-    gridExtra,
     dplyr,
     tidyr,
     cluster,
@@ -47,7 +55,6 @@ Imports:
     matrixStats,
     car,
     changepoint,
-    purrr,
     stringr,
     variancePartition,
     Matrix,
@@ -59,27 +66,34 @@ Imports:
     irlba,
     lsa,
     Biobase,
+    singscore,
+    survival,
+    GGally (>= 2.4.0)
+Suggests:
+    shiny (>= 1.8.0),
+    bslib (>= 0.6.0),
+    DT,
+    digest,
+    zip,
+    qs,
+    biomaRt,
+    survminer,
     kBET,
     lisi,
-    DESeq2,
-    EDASeq,
+    tidyestimate,
     genefu,
     CMScaller,
-    biomaRt,
-    singscore,
-    tidyestimate,
-    survminer,
-    survival,
+    DESeq2,
+    EDASeq,
     scran,
-    GGally,
-    ggVennDiagram
-Suggests: 
+    ggVennDiagram,
     rmarkdown,
+    withr,
     testthat (>= 3.0.0)
-URL: https://github.com/RMolania
+URL: https://github.com/RMolania/RUVprps
 BugReports: https://github.com/RMolania/RUVprps/issues
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Depends: 
-    R (>= 3.5)
+    R (>= 4.3.0)
 LazyData: true
